@@ -353,31 +353,50 @@ class PPStructureRedactor:
         return any(section in line_upper for section in PRESERVE_SECTIONS)
     
     def _post_process_text(self, text: str) -> str:
-        """Post-process extracted text - format nicely"""
+        """Post-process extracted text - format nicely with one blank line between sections"""
         # Remove excessive whitespace
         text = re.sub(r'\n\s*\n\s*\n', '\n\n', text)
         
         lines = text.split('\n')
         formatted_lines = []
+        last_was_section = False
+        
+        # Major sections use "====" (equals), minor/subsections use "----" (dashes)
+        major_sections = {
+            'PROFILE', 'SUMMARY', 'PROFILE SUMMARY',
+            'SKILLS', 'TECHNICAL SKILLS', 'CORE COMPETENCIES',
+            'EXPERIENCE', 'WORK EXPERIENCE', 'WORK HISTORY', 'PROFESSIONAL EXPERIENCE',
+            'PROJECTS', 'KEY PROJECTS',
+            'CERTIFICATIONS', 'EDUCATION',
+            'ACHIEVEMENTS', 'AWARDS'
+        }
         
         for line in lines:
             line = line.strip()
             if not line:
-                if formatted_lines and formatted_lines[-1] != '':
-                    formatted_lines.append('')
                 continue
             
             # Format section headers
             if self._is_section_header(line):
-                if formatted_lines and formatted_lines[-1] != '':
+                # Add blank line before section (except for first section)
+                if formatted_lines:
                     formatted_lines.append('')
-                formatted_lines.append(line.upper())
-                formatted_lines.append('=' * len(line))
+                
+                line_upper = line.upper()
+                formatted_lines.append(line_upper)
+                
+                # Use "====" for major sections, "----" for subsections
+                is_major = any(major_sec in line_upper for major_sec in major_sections)
+                underline_char = '=' if is_major else '-'
+                formatted_lines.append(underline_char * len(line_upper))
+                last_was_section = True
             # Format bullet points
             elif line.startswith('•') or line.startswith('-') or line.startswith('*'):
                 formatted_lines.append('  • ' + line.lstrip('•-* '))
+                last_was_section = False
             else:
                 formatted_lines.append(line)
+                last_was_section = False
         
         return '\n'.join(formatted_lines)
     
