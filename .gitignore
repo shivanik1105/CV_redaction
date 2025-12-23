@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+resume/
+venv/
+env/
+
+# Output folders
+debug_output/
+redacted_resumes/
+
+# IDE
+.vscode/
+.idea/
+
+# Ignore vscode AI rules
+.github/instructions/codacy.instructions.md
