@@ -1,0 +1,112 @@
+2025-12-23 15:01:05,796 - INFO - 
+============================================================
+2025-12-23 15:01:05,797 - INFO - Processing: Anandprakash_Tandale_Resume (2).pdf
+2025-12-23 15:01:05,798 - INFO - ============================================================
+2025-12-23 15:01:10,830 - INFO - Presidio initialized
+2025-12-23 15:01:12,232 - INFO - spaCy NER model loaded
+2025-12-23 15:01:12,232 - INFO - Processing Anandprakash_Tandale_Resume (2).pdf (Level: medium)
+2025-12-23 15:01:12,234 - INFO - Using text extraction fallback
+2025-12-23 15:01:14,094 - INFO - Processing complete in 1.86s
+2025-12-23 15:01:14,095 - INFO -   Pages: 0
+2025-12-23 15:01:14,096 - INFO -   Blocks: 0 processed
+2025-12-23 15:01:14,096 - INFO -   Blocks kept: 0
+2025-12-23 15:01:14,097 - INFO -   PII items removed: 20
+2025-12-23 15:01:14,097 - INFO -   Detected name: Ansible| Jenkins|
+2025-12-23 15:01:14,100 - INFO - Saved to: cleaned_resumes\LAYOUT_CLEANED_Anandprakash_Tandale_Resume _2__20251223_150114.txt
+2025-12-23 15:01:14,101 - INFO - 
+============================================================
+2025-12-23 15:01:14,102 - INFO - Processing: Naukri_ChirayuYelane[5y_2m].pdf
+2025-12-23 15:01:14,103 - INFO - ============================================================
+2025-12-23 15:01:19,024 - INFO - Presidio initialized
+2025-12-23 15:01:20,221 - INFO - spaCy NER model loaded
+2025-12-23 15:01:20,238 - INFO - Processing Naukri_ChirayuYelane[5y_2m].pdf (Level: medium)
+2025-12-23 15:01:20,239 - INFO - Using text extraction fallback
+2025-12-23 15:01:21,997 - INFO - Processing complete in 1.76s
+2025-12-23 15:01:21,997 - INFO -   Pages: 0
+2025-12-23 15:01:21,997 - INFO -   Blocks: 0 processed
+2025-12-23 15:01:21,998 - INFO -   Blocks kept: 0
+2025-12-23 15:01:21,999 - INFO -   PII items removed: 16
+2025-12-23 15:01:21,999 - INFO -   Detected name: Cloud Platform
+2025-12-23 15:01:22,001 - INFO - Saved to: cleaned_resumes\LAYOUT_CLEANED_Naukri_ChirayuYelane_5y_2m__20251223_150121.txt
+2025-12-23 15:01:22,003 - INFO - 
+============================================================
+2025-12-23 15:01:22,004 - INFO - Processing: Naukri_jyotiSaxena[9y_1m].pdf
+2025-12-23 15:01:22,005 - INFO - ============================================================
+2025-12-23 15:01:26,481 - INFO - Presidio initialized
+2025-12-23 15:01:27,629 - INFO - spaCy NER model loaded
+2025-12-23 15:01:27,641 - INFO - Processing Naukri_jyotiSaxena[9y_1m].pdf (Level: medium)
+2025-12-23 15:01:27,642 - INFO - Using text extraction fallback
+2025-12-23 15:01:29,600 - INFO - Processing complete in 1.96s
+2025-12-23 15:01:29,601 - INFO -   Pages: 0
+2025-12-23 15:01:29,601 - INFO -   Blocks: 0 processed
+2025-12-23 15:01:29,602 - INFO -   Blocks kept: 0
+2025-12-23 15:01:29,602 - INFO -   PII items removed: 17
+2025-12-23 15:01:29,603 - INFO -   Detected name: Jyoti Saxena
+2025-12-23 15:01:29,606 - INFO - Saved to: cleaned_resumes\LAYOUT_CLEANED_Naukri_jyotiSaxena_9y_1m__20251223_150129.txt
+2025-12-23 15:01:29,606 - INFO - 
+============================================================
+2025-12-23 15:01:29,608 - INFO - Processing: Naukri_KetanJaytalkar[5y_0m] (2).docx
+2025-12-23 15:01:29,609 - INFO - ============================================================
+2025-12-23 15:01:34,058 - INFO - Presidio initialized
+2025-12-23 15:01:34,961 - INFO - spaCy NER model loaded
+2025-12-23 15:01:34,972 - INFO - Processing Naukri_KetanJaytalkar[5y_0m] (2).docx (Level: medium)
+2025-12-23 15:01:34,973 - INFO - Using text extraction fallback
+2025-12-23 15:01:35,811 - INFO - Processing complete in 0.84s
+2025-12-23 15:01:35,811 - INFO -   Pages: 0
+2025-12-23 15:01:35,812 - INFO -   Blocks: 0 processed
+2025-12-23 15:01:35,812 - INFO -   Blocks kept: 0
+2025-12-23 15:01:35,812 - INFO -   PII items removed: 11
+2025-12-23 15:01:35,813 - INFO -   Detected name: Ketan Jaytalkar
+2025-12-23 15:01:35,815 - INFO - Saved to: cleaned_resumes\LAYOUT_CLEANED_Naukri_KetanJaytalkar_5y_0m_ _2__20251223_150135.txt
+2025-12-23 15:01:35,815 - INFO - 
+============================================================
+2025-12-23 15:01:35,816 - INFO - Processing: Naukri_Mohitmadan[8y_8m].docx
+2025-12-23 15:01:35,816 - INFO - ============================================================
+2025-12-23 15:01:39,007 - INFO - Presidio initialized
+2025-12-23 15:01:40,033 - INFO - spaCy NER model loaded
+2025-12-23 15:01:40,042 - INFO - Processing Naukri_Mohitmadan[8y_8m].docx (Level: medium)
+2025-12-23 15:01:40,043 - INFO - Using text extraction fallback
+2025-12-23 15:01:41,346 - INFO - Processing complete in 1.30s
+2025-12-23 15:01:41,347 - INFO -   Pages: 0
+2025-12-23 15:01:41,347 - INFO -   Blocks: 0 processed
+2025-12-23 15:01:41,349 - INFO -   Blocks kept: 0
+2025-12-23 15:01:41,349 - INFO -   PII items removed: 31
+2025-12-23 15:01:41,349 - INFO -   Detected name: RELIANCE JIO
+2025-12-23 15:01:41,351 - INFO - Saved to: cleaned_resumes\LAYOUT_CLEANED_Naukri_Mohitmadan_8y_8m__20251223_150141.txt
+2025-12-23 15:01:41,353 - INFO - 
+============================================================
+2025-12-23 15:01:41,354 - INFO - Processing: Resume_preeti_wadhwani 06.10.24.pdf
+2025-12-23 15:01:41,354 - INFO - ============================================================
+2025-12-23 15:01:45,201 - INFO - Presidio initialized
+2025-12-23 15:01:46,499 - INFO - spaCy NER model loaded
+2025-12-23 15:01:46,520 - INFO - Processing Resume_preeti_wadhwani 06.10.24.pdf (Level: medium)
+2025-12-23 15:01:46,532 - INFO - Using text extraction fallback
+2025-12-23 15:01:48,326 - INFO - Processing complete in 1.80s
+2025-12-23 15:01:48,326 - INFO -   Pages: 0
+2025-12-23 15:01:48,327 - INFO -   Blocks: 0 processed
+2025-12-23 15:01:48,327 - INFO -   Blocks kept: 0
+2025-12-23 15:01:48,328 - INFO -   PII items removed: 10
+2025-12-23 15:01:48,328 - INFO -   Detected name: Amarlal Wadhwani
+2025-12-23 15:01:48,331 - INFO - Saved to: cleaned_resumes\LAYOUT_CLEANED_Resume_preeti_wadhwani 06.10.24_20251223_150148.txt
+2025-12-23 15:01:48,332 - INFO - 
+============================================================
+2025-12-23 15:01:48,333 - INFO - Processing: TitikshaWankhedkar.pdf
+2025-12-23 15:01:48,333 - INFO - ============================================================
+2025-12-23 15:01:52,159 - INFO - Presidio initialized
+2025-12-23 15:01:54,097 - INFO - spaCy NER model loaded
+2025-12-23 15:01:54,106 - INFO - Processing TitikshaWankhedkar.pdf (Level: medium)
+2025-12-23 15:01:54,107 - INFO - Using text extraction fallback
+2025-12-23 15:01:55,078 - INFO - Processing complete in 0.97s
+2025-12-23 15:01:55,079 - INFO -   Pages: 0
+2025-12-23 15:01:55,079 - INFO -   Blocks: 0 processed
+2025-12-23 15:01:55,080 - INFO -   Blocks kept: 0
+2025-12-23 15:01:55,080 - INFO -   PII items removed: 15
+2025-12-23 15:01:55,080 - INFO -   Detected name: Titiksha Wankhedkar
+2025-12-23 15:01:55,083 - INFO - Saved to: cleaned_resumes\LAYOUT_CLEANED_TitikshaWankhedkar_20251223_150155.txt
+2025-12-23 15:01:55,083 - INFO - 
+============================================================
+2025-12-23 15:01:55,083 - INFO - SUMMARY
+2025-12-23 15:01:55,083 - INFO - ============================================================
+2025-12-23 15:01:55,084 - INFO - Successful: 7
+2025-12-23 15:01:55,084 - INFO - Failed: 0
+2025-12-23 15:01:55,086 - INFO - ============================================================
