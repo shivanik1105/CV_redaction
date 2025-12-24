@@ -348,20 +348,151 @@ class PPStructureRedactor:
         return self._post_process_text(result_text)
     
     def _is_section_header(self, line: str) -> bool:
-        """Check if line is a section header"""
+        """Check if line is a section header - must be exact or start with the section name"""
         line_upper = line.strip().upper()
-        return any(section in line_upper for section in PRESERVE_SECTIONS)
+        # Remove common punctuation
+        line_clean = re.sub(r'[:\-=]+$', '', line_upper).strip()
+        
+        # Check if it's an exact match or the line IS ONLY the section name (not containing it)
+        return line_clean in PRESERVE_SECTIONS or any(
+            line_clean == section or line_clean.startswith(section + ' ') 
+            for section in PRESERVE_SECTIONS
+        )
     
     def _post_process_text(self, text: str) -> str:
-        """Post-process extracted text - format nicely with one blank line between sections"""
-        # Remove excessive whitespace
-        text = re.sub(r'\n\s*\n\s*\n', '\n\n', text)
+        """Post-process extracted text - format nicely with comprehensive cleaning"""
+        
+        # ===== STEP 0: Improve header/skills section spacing =====
+        # Add simple line breaks to make the dense skills section more readable
+        
+        # Add blank line before major skill sections
+        text = re.sub(r'(?<!\n)\n(Specialisation:|Programming:|Current Role:|Past one year:|Embedded Linux and OS:|Engineering practices:|Others:)', r'\n\n\1', text)
+        
+        # Separate items that were joined on same line  
+        # For role descriptions
+        text = re.sub(r'(Technical lead)\s+(System architecture)', r'\1\n\2', text)
+        text = re.sub(r'(System architecture)\s+(Android and Yocto)', r'\1\n\2', text)
+        text = re.sub(r'(Android and Yocto linux)\s+(Systems and TARA)', r'\1\n\2', text)
+        text = re.sub(r'(Cyber security product owner)\s+Programming\s+Primary:', r'\1\n\nProgramming:\nPrimary:', text)
+        text = re.sub(r'(Primary:[^\n]+)\s+Additional:', r'\1\nAdditional:', text)
+        
+        # Separate firmware skills
+        text = re.sub(r'(ARM core and internals)\s+(Assembly code)', r'\1\n\2', text)
+        text = re.sub(r'(Assembly code understanding)\s+(Schematics)', r'\1\n\2', text)
+        
+        # Separate OS/Linux skills to individual lines  
+        text = re.sub(r'(BT, network)\s+(Audio, Multimedia)', r'\1\n\2', text)
+        text = re.sub(r'(Audio, Multimedia)\s+(USB, SPI)', r'\1\n\2', text)
+        text = re.sub(r'(USB, SPI, I2C)\s+(Yocto linux)', r'\1\n\2', text)
+        text = re.sub(r'(Peripheral bring-up)\s+(Embedded hardware modules)', r'\1\n\2', text)
+        text = re.sub(r'(QEMU)\s+(Kernel driver)', r'\1\n\2', text)
+        
+        # Separate engineering practices
+        text = re.sub(r'(Product Lifecycle Management)\s+(Product roadmap)', r'\1\n\2', text)
+        text = re.sub(r'(Agile model)\s+(Requirement grooming)', r'\1\n\2', text)
+        text = re.sub(r'(System design \(UML\))\s+(Concept, HLD)', r'\1\n\2', text)
+        
+        # Separate others section  
+        text = re.sub(r'(Hardware debugging and probing)\s+(AWS cloud)', r'\1\n\2', text)
+        text = re.sub(r'(AWS cloud infra)\s+(Entrepreneurship)', r'\1\n\2', text)
+        
+        # ===== STEP 1: Remove empty PII placeholders =====
+        # Remove patterns like "E: | M:" or "L: |"
+        text = re.sub(r'\b[A-Z]:\s*\|\s*[A-Z]?:?\s*', '', text)
+        text = re.sub(r'\b[A-Z]:\s*\|', '', text)
+        
+        # Remove ", ," patterns
+        text = re.sub(r',\s*,+', ',', text)
+        text = re.sub(r'^,\s*', '', text, flags=re.MULTILINE)
+        text = re.sub(r'\s*,+$', '', text, flags=re.MULTILINE)
+        
+        # Remove empty brackets
+        text = re.sub(r'\[\s*\]', '', text)
+        text = re.sub(r'\(\s*\)', '', text)
+        
+        # Remove lines that are just separators or placeholders
+        text = re.sub(r'^[\s|,\-=]+$', '', text, flags=re.MULTILINE)
+        
+        # ===== STEP 2: Remove broken all-caps lines (mid-sentence text) =====
+        # These are lines that are ALL CAPS but clearly not headers - they're broken text
+        lines = text.split('\n')
+        cleaned_lines = []
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            # Remove lines that are all caps AND:
+            # 1. Long (>40 chars) but not recognizable section headers, OR
+            # 2. End with "AND" or "ON" or other conjunctions (mid-sentence), OR
+            # 3. Start with common words but in all caps like "POWER STATES", "ANALYTICAL SKILLS", etc.
+            if re.match(r'^[A-Z\s\[\],\.\-;:&]+$', line):
+                # Check if it's a recognized section header
+                if self._is_section_header(line):
+                    cleaned_lines.append(line)
+                    continue
+                    
+                # If it's all caps and long, likely broken text - remove it
+                if (len(line) > 40 or 
+                    re.search(r'\b(AND|ON|OF|WITH|FOR|IN|TO|FROM|AT)\s*$', line) or
+                    line.startswith(('POWER ', 'ANALYTICAL ', 'DESCRIPTION:', 'PRODUCTION '))):
+                    # Skip this broken line
+                    continue
+            cleaned_lines.append(line)
+        
+        text = '\n'.join(cleaned_lines)
+        
+        # ===== STEP 3: Fix broken word spacing - join split lines =====
+        lines = text.split('\n')
+        joined_lines = []
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            
+            # Check if this line should be joined with the next
+            if (line and i + 1 < len(lines) and 
+                not line[-1] in '.!?:' and  # Doesn't end with punctuation
+                not self._is_section_header(line) and
+                not re.match(r'^\d{4}[-/]', line) and  # Not a date
+                not re.match(r'^\[', line) and  # Not a project tag
+                not re.match(r'^(Description|Platform|Programming|Duration|Role|Business):', line, re.IGNORECASE) and
+                len(line) < 120):  # Not too long
+                
+                next_line = lines[i + 1].strip()
+                # Join if next line also doesn't look like a new section
+                if (next_line and 
+                    not self._is_section_header(next_line) and
+                    not re.match(r'^\d{4}[-/]', next_line) and
+                    not re.match(r'^\[', next_line) and
+                    not re.match(r'^(Description|Platform|Programming|Duration|Role|Business):', next_line, re.IGNORECASE)):
+                    joined_lines.append(line + ' ' + next_line)
+                    i += 2
+                    continue
+            
+            joined_lines.append(line)
+            i += 1
+        
+        text = '\n'.join(joined_lines)
+        
+        # Remove multiple spaces
+        text = re.sub(r' {2,}', ' ', text)
+        text = re.sub(r' +$', '', text, flags=re.MULTILINE)
+        
+        # ===== STEP 4: Fix date formatting =====
+        def fix_dates(match):
+            match_text = match.group(0)
+            match_text = re.sub(r'\s+to\s+present\b', ' - Present', match_text, flags=re.IGNORECASE)
+            match_text = re.sub(r'\s+to\s+till\s+date\b', ' - Present', match_text, flags=re.IGNORECASE)
+            match_text = re.sub(r'(\d{4}(?:-\d{2})?)\s+to\s+(\d{4}(?:-\d{2})?)', r'\1 - \2', match_text, flags=re.IGNORECASE)
+            return match_text
+        
+        text = re.sub(r'\d{4}(?:-\d{2})?\s+to\s+(?:present|till date|\d{4}(?:-\d{2})?)', fix_dates, text, flags=re.IGNORECASE)
+        
+        # ===== STEP 5: Format sections and add structure =====
+        text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text)
         
         lines = text.split('\n')
         formatted_lines = []
-        last_was_section = False
         
-        # Major sections use "====" (equals), minor/subsections use "----" (dashes)
         major_sections = {
             'PROFILE', 'SUMMARY', 'PROFILE SUMMARY',
             'SKILLS', 'TECHNICAL SKILLS', 'CORE COMPETENCIES',
@@ -371,34 +502,73 @@ class PPStructureRedactor:
             'ACHIEVEMENTS', 'AWARDS'
         }
         
+        last_was_date = False
+        
         for line in lines:
             line = line.strip()
             if not line:
                 continue
             
+            # Check if this is a date line (start of new job entry)
+            is_date_line = bool(re.match(r'^\d{4}[-/]', line))
+            
             # Format section headers
             if self._is_section_header(line):
-                # Add blank line before section (except for first section)
                 if formatted_lines:
                     formatted_lines.append('')
+                formatted_lines.append(line.upper())
+                is_major = any(sec in line.upper() for sec in major_sections)
+                formatted_lines.append(('=' if is_major else '-') * 50)
+                last_was_date = False
                 
-                line_upper = line.upper()
-                formatted_lines.append(line_upper)
+            # Add spacing and separator before each job entry (date lines)
+            elif is_date_line:
+                if formatted_lines:
+                    formatted_lines.append('')
+                    formatted_lines.append('-' * 50)
+                formatted_lines.append('')
+                formatted_lines.append(line)
+                last_was_date = True
                 
-                # Use "====" for major sections, "----" for subsections
-                is_major = any(major_sec in line_upper for major_sec in major_sections)
-                underline_char = '=' if is_major else '-'
-                formatted_lines.append(underline_char * len(line_upper))
-                last_was_section = True
+            # Add spacing before Description/Platform/etc.
+            elif re.match(r'^(Description|Platform|Programming|Duration|Role|Business):', line, re.IGNORECASE):
+                if formatted_lines and not last_was_date:
+                    formatted_lines.append('')
+                formatted_lines.append(line)
+                last_was_date = False
+                
+            # Add spacing before [startup]/[contractor] tags
+            elif re.match(r'^\[.*?\]', line):
+                if formatted_lines:
+                    formatted_lines.append('')
+                formatted_lines.append(line)
+                last_was_date = False
+                
             # Format bullet points
             elif line.startswith('•') or line.startswith('-') or line.startswith('*'):
-                formatted_lines.append('  • ' + line.lstrip('•-* '))
-                last_was_section = False
+                clean_line = line.lstrip('•-* ')
+                if (re.match(r'^[A-Z]', clean_line) and 
+                    'PROJECT:' not in clean_line.upper() and
+                    not re.match(r'^(?:Developed|Implemented|Created|Built|Designed|Led)', clean_line) and
+                    ':' in clean_line and len(clean_line) < 100):
+                    clean_line = 'PROJECT: ' + clean_line
+                formatted_lines.append('  • ' + clean_line)
+                last_was_date = False
             else:
                 formatted_lines.append(line)
-                last_was_section = False
+                last_was_date = False
         
-        return '\n'.join(formatted_lines)
+        # ===== STEP 6: Final cleanup =====
+        text = '\n'.join(formatted_lines)
+        
+        # Remove excessive blank lines (max 2)
+        text = re.sub(r'\n{4,}', '\n\n\n', text)
+        
+        # Clean up separator duplicates
+        text = re.sub(r'(-{50}\n)+', '-' * 50 + '\n', text)
+        text = re.sub(r'(={50}\n)+', '=' * 50 + '\n', text)
+        
+        return text
     
     def process(self) -> str:
         """Main processing function"""
@@ -501,13 +671,13 @@ def main():
             
             result = redactor.process()
             
-            # Generate output filename
+            # Generate output filename (simple .txt extension)
             base_name = os.path.splitext(os.path.basename(filepath))[0]
             safe_name = re.sub(r'[^\w\-_\. ]', '_', base_name)
-            output_name = f"{safe_name}_cleaned.txt"
+            output_name = f"{safe_name}.txt"
             output_path = os.path.join(output_dir, output_name)
             
-            # Save result
+            # Save result (no need for separate formatted file)
             with open(output_path, 'w', encoding='utf-8') as f:
                 f.write(f"PROFESSIONAL RESUME\n")
                 f.write(f"{'=' * 50}\n\n")
