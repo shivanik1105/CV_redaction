@@ -413,14 +413,32 @@ class PPStructureRedactor:
         # Remove lines that are just separators or placeholders
         text = re.sub(r'^[\s|,\-=]+$', '', text, flags=re.MULTILINE)
         
-        # ===== STEP 2: Remove broken all-caps lines (mid-sentence text) =====
-        # These are lines that are ALL CAPS but clearly not headers - they're broken text
+        # ===== STEP 2: Remove broken all-caps lines AND education section =====
+        # Remove broken all-caps lines (mid-sentence text)
         lines = text.split('\n')
         cleaned_lines = []
-        for line in lines:
+        skip_education = False
+        
+        for i, line in enumerate(lines):
             line = line.strip()
             if not line:
+                if not skip_education:
+                    cleaned_lines.append(line)
                 continue
+            
+            # Remove education section completely
+            if re.match(r'^Education\s*$', line, re.IGNORECASE):
+                skip_education = True
+                continue
+            
+            # Stop skipping when we hit Work Experience or other major section
+            if skip_education and (re.match(r'^(Work Experience|Professional Experience|Experience|Projects)', line, re.IGNORECASE) or
+                                  re.match(r'^[-=]{20,}$', line)):
+                skip_education = False
+            
+            if skip_education:
+                continue
+            
             # Remove lines that are all caps AND:
             # 1. Long (>40 chars) but not recognizable section headers, OR
             # 2. End with "AND" or "ON" or other conjunctions (mid-sentence), OR
@@ -441,25 +459,27 @@ class PPStructureRedactor:
         
         text = '\n'.join(cleaned_lines)
         
-        # ===== STEP 3: Fix broken word spacing - join split lines =====
+        # ===== STEP 3: Fix broken word spacing - CONSERVATIVE line joining =====
+        # Only join lines that are clearly broken mid-sentence, not separate items
         lines = text.split('\n')
         joined_lines = []
         i = 0
         while i < len(lines):
             line = lines[i].strip()
             
-            # Check if this line should be joined with the next
+            # Only join if it's CLEARLY a broken sentence (ends with conjunction/preposition)
+            # and is relatively short
             if (line and i + 1 < len(lines) and 
-                not line[-1] in '.!?:' and  # Doesn't end with punctuation
+                len(line) < 100 and  # Short line
+                re.search(r'\b(and|or|with|for|in|on|at|to|from|of|the|a|an)\s*$', line, re.IGNORECASE) and  # Ends with connector word
                 not self._is_section_header(line) and
-                not re.match(r'^\d{4}[-/]', line) and  # Not a date
-                not re.match(r'^\[', line) and  # Not a project tag
-                not re.match(r'^(Description|Platform|Programming|Duration|Role|Business):', line, re.IGNORECASE) and
-                len(line) < 120):  # Not too long
+                not re.match(r'^\d{4}[-/]', line) and
+                not re.match(r'^\[', line) and
+                not re.match(r'^(Description|Platform|Programming|Duration|Role|Business):', line, re.IGNORECASE)):
                 
                 next_line = lines[i + 1].strip()
-                # Join if next line also doesn't look like a new section
-                if (next_line and 
+                # Join only if next line continues naturally (starts lowercase or is short)
+                if (next_line and len(next_line) < 100 and
                     not self._is_section_header(next_line) and
                     not re.match(r'^\d{4}[-/]', next_line) and
                     not re.match(r'^\[', next_line) and
@@ -490,6 +510,35 @@ class PPStructureRedactor:
         # ===== STEP 5: Format sections and add structure =====
         text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text)
         
+        # Add spacing between items that run together (e.g., "Development. Work requires" -> "Development.\n\nWork requires")
+        text = re.sub(r'(\w)\.\s+([A-Z][a-z]+\s+(requires|involves|worked|implemented|built|used|did|also))', r'\1.\n\n\2', text)
+        
+        # Add spacing after sentences that end distinct thoughts
+        text = re.sub(r'(development|implementation|requirements|analysis|support|partnership|traction|control stack|security|findings|NodeJS|app implementation)\.\s+([A-Z])', r'\1.\n\n\2', text, flags=re.IGNORECASE)
+        
+        # Fix awkwardly broken descriptions - join single words that are on separate lines within descriptions
+        # Pattern: lines that are just 1-2 words and lowercase/small, should join with previous line
+        lines = text.split('\n')
+        rejoined = []
+        i = 0
+        while i < len(lines):
+            current = lines[i].strip()
+            if i + 1 < len(lines):
+                next_line = lines[i + 1].strip()
+                # If current line is very short (1-3 words) and next line starts lowercase or is continuation
+                if (current and len(current.split()) <= 3 and 
+                    not re.match(r'^(Description|Platform|Programming|Duration|Role|Business|\[|---):', current, re.IGNORECASE) and
+                    next_line and len(next_line.split()) <= 3 and
+                    not re.match(r'^[A-Z]', next_line) and
+                    not re.match(r'^(Description|Platform|Programming|Duration|Role|Business|\[|---):', next_line, re.IGNORECASE)):
+                    # Join these short fragments
+                    rejoined.append(current + ' ' + next_line)
+                    i += 2
+                    continue
+            rejoined.append(current)
+            i += 1
+        text = '\n'.join(rejoined)
+        
         lines = text.split('\n')
         formatted_lines = []
         
@@ -503,6 +552,7 @@ class PPStructureRedactor:
         }
         
         last_was_date = False
+        last_was_description = False
         
         for line in lines:
             line = line.strip()
@@ -512,6 +562,9 @@ class PPStructureRedactor:
             # Check if this is a date line (start of new job entry)
             is_date_line = bool(re.match(r'^\d{4}[-/]', line))
             
+            # Check if this is a description/platform line
+            is_desc_line = bool(re.match(r'^(Description|Platform|Programming|Duration|Role|Business):', line, re.IGNORECASE))
+            
             # Format section headers
             if self._is_section_header(line):
                 if formatted_lines:
@@ -520,6 +573,7 @@ class PPStructureRedactor:
                 is_major = any(sec in line.upper() for sec in major_sections)
                 formatted_lines.append(('=' if is_major else '-') * 50)
                 last_was_date = False
+                last_was_description = False
                 
             # Add spacing and separator before each job entry (date lines)
             elif is_date_line:
@@ -529,20 +583,27 @@ class PPStructureRedactor:
                 formatted_lines.append('')
                 formatted_lines.append(line)
                 last_was_date = True
+                last_was_description = False
                 
             # Add spacing before Description/Platform/etc.
-            elif re.match(r'^(Description|Platform|Programming|Duration|Role|Business):', line, re.IGNORECASE):
-                if formatted_lines and not last_was_date:
+            elif is_desc_line:
+                # Add extra space if there was a previous description (separate descriptions)
+                if last_was_description and formatted_lines:
+                    formatted_lines.append('')
+                elif formatted_lines and not last_was_date:
                     formatted_lines.append('')
                 formatted_lines.append(line)
                 last_was_date = False
+                last_was_description = True
                 
             # Add spacing before [startup]/[contractor] tags
             elif re.match(r'^\[.*?\]', line):
                 if formatted_lines:
                     formatted_lines.append('')
+                    formatted_lines.append('')  # Double space before project tags
                 formatted_lines.append(line)
                 last_was_date = False
+                last_was_description = False
                 
             # Format bullet points
             elif line.startswith('•') or line.startswith('-') or line.startswith('*'):
