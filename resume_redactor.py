@@ -86,7 +86,10 @@ class PIIRedactor:
         'redis', 'elasticsearch', 'kafka', 'spark', 'hadoop', 'terraform',
         'ansible', 'tensorflow', 'pytorch', 'scikit-learn', 'matplotlib',
         'directors', 'director', 'manager', 'managers', 'engineer', 'engineers',
-        'l&t', 'larsen & toubro', 'scientific games', 'alcatel lucent'
+        'l&t', 'larsen & toubro', 'scientific games', 'alcatel lucent',
+        'asp.net', 'asp', '.net', 'c#', 'sencha', 'mobile', 'ext.js', 'extjs',
+        'jquery', 'web api', 'webapi', 'mvc', 'blazor', 'soapui', 'fiddler',
+        'capgemini', 'nbs', 'r&l', 'carriers', 'izel', 'technologies'
     ]
     
     def __init__(self):
@@ -109,24 +112,9 @@ class PIIRedactor:
         # LinkedIn profile URLs only
         text = re.sub(r'linkedin\.com/in/[a-zA-Z0-9-]+', '', text)
         
-        # Person names - but ONLY if not a protected company/tech term
-        if nlp:
-            try:
-                doc = nlp(text)
-                for ent in reversed(doc.ents):
-                    if ent.label_ == "PERSON":
-                        name_lower = ent.text.lower()
-                        # Skip if it's a protected term
-                        if any(protected in name_lower for protected in self.PROTECTED_NAMES):
-                            continue
-                        # Skip if it's all caps (likely a company/acronym)
-                        if ent.text.isupper() and len(ent.text) > 2:
-                            continue
-                        # Remove only actual person names
-                        text = text[:ent.start_char] + text[ent.end_char:]
-                        self.stats['pii_redacted'] += 1
-            except:
-                pass
+        # DISABLE person name removal - it causes too many false positives
+        # (removes "Developed", "Mobile", "C#", profile text, etc.)
+        # Person names will be removed by email/phone/LinkedIn removal above
         
         return text
 
@@ -251,8 +239,12 @@ class TextPolisher:
             cleaned_line = re.sub(r'\s{2,}', ' ', cleaned_line)
             cleaned_line = cleaned_line.strip()
             
-            # Skip if too short or just punctuation
-            if len(cleaned_line) < 3 or re.match(r'^[,.\-:|•\s]+$', cleaned_line):
+            # Skip if too short or just punctuation (BUT preserve important short terms like C#, Go, R)
+            important_short_terms = ['c#', 'c++', 'go', 'r', 'js', 'ai', 'ml', 'ui', 'ux', 'qa']
+            if len(cleaned_line) < 3:
+                if cleaned_line.lower() not in important_short_terms:
+                    continue
+            elif re.match(r'^[,.\-:|•\s]+$', cleaned_line):
                 continue
             
             # Skip lines that are just location fragments like "| , india"
@@ -328,6 +320,7 @@ class TextPolisher:
         
         # Process main content - detect sections and organize
         i = 0
+        seen_sections = set()  # Track sections we've already processed
         while i < len(main_content):
             line = main_content[i]
             line_lower = line.lower().strip()
@@ -351,20 +344,28 @@ class TextPolisher:
                         break
             
             if is_section and section_title:
+                # Skip if we've already processed this section (prevents duplication)
+                if section_title in seen_sections:
+                    i += 1
+                    continue
+                
+                seen_sections.add(section_title)
+                
                 # Found a section header - check if next line is also a section header (2-column layout)
-                next_is_section = False
-                if i + 1 < len(main_content):
-                    next_line = main_content[i + 1]
-                    next_lower = next_line.lower().strip()
-                    if not next_line.strip().endswith('.') and len(next_line.split()) >= 2 and len(next_line.split()) <= 5:
-                        for keyword in section_keywords:
-                            if keyword == next_lower or keyword in next_lower:
-                                next_is_section = True
-                                break
+                # DISABLED: This was causing duplication issues
+                # next_is_section = False
+                # if i + 1 < len(main_content):
+                #     next_line = main_content[i + 1]
+                #     next_lower = next_line.lower().strip()
+                #     if not next_line.strip().endswith('.') and len(next_line.split()) >= 2 and len(next_line.split()) <= 5:
+                #         for keyword in section_keywords:
+                #             if keyword == next_lower or keyword in next_lower:
+                #                 next_is_section = True
+                #                 break
                 
                 # If next line is also a section, skip it (2-column layout handling)
-                if next_is_section:
-                    i += 1  # Skip the duplicate/adjacent section header
+                # if next_is_section:
+                #     i += 1  # Skip the duplicate/adjacent section header
                 
                 # Output current section header
                 if result and result[-1].strip():
@@ -483,10 +484,55 @@ class TextPolisher:
                 result.append(line)
                 i += 1
         
+        # Remove duplicate sections before joining
+        result = TextPolisher._remove_large_duplicates(result)
+        
         # Join and normalize excessive spacing
         final = '\n'.join(result)
         final = re.sub(r'\n{4,}', '\n\n\n', final)
         return final
+    
+    @staticmethod
+    def _remove_large_duplicates(lines):
+        """Remove large duplicate consecutive blocks by finding exact repeating sequences"""
+        if len(lines) < 30:
+            return lines
+        
+        # Convert to string with line numbers for easier matching
+        text_with_nums = '\n'.join(f"{i}:{line}" for i, line in enumerate(lines))
+        
+        # Look for repeating blocks of at least 15 consecutive lines
+        min_block_size = 15
+        i = 0
+        to_remove = set()
+        
+        while i < len(lines) - min_block_size:
+            # Get block starting at i
+            block = [l.strip() for l in lines[i:i+min_block_size]]
+            
+            # Look for this same block later in the text
+            for j in range(i + min_block_size, len(lines) - min_block_size + 1):
+                next_block = [l.strip() for l in lines[j:j+min_block_size]]
+                
+                # Check for exact match
+                if block == next_block:
+                    # Found exact duplicate - mark entire duplicate section
+                    # Find where duplicate ends
+                    dup_len = min_block_size
+                    while (i + dup_len < len(lines) and j + dup_len < len(lines) and 
+                           lines[i + dup_len].strip() == lines[j + dup_len].strip()):
+                        dup_len += 1
+                    
+                    # Mark duplicate for removal
+                    for k in range(j, min(j + dup_len, len(lines))):
+                        to_remove.add(k)
+                    
+                    break
+            
+            i += 1
+        
+        # Return lines without duplicates
+        return [lines[idx] for idx in range(len(lines)) if idx not in to_remove]
     
     @staticmethod
     def polish(text: str) -> str:
@@ -535,15 +581,17 @@ class ResumePipeline:
         print("  > Filtering content...")
         lines = text.split('\n')
         kept_lines = []
+        important_short_terms = ['c#', 'c++', 'go', 'r', 'js', 'ai', 'ml', 'ui', 'ux', 'qa']
         for line in lines:
             stripped = line.strip()
             if not stripped:
                 continue
             
             # Only skip truly useless lines
-            # Skip single characters or numbers
+            # Skip single characters or numbers (unless it's an important term)
             if len(stripped) <= 2:
-                continue
+                if stripped.lower() not in important_short_terms:
+                    continue
             # Skip lines that are just punctuation
             if all(not c.isalnum() for c in stripped):
                 continue
