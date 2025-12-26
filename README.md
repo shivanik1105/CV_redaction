@@ -1,20 +1,49 @@
-# Hybrid Resume Redaction Pipeline - Quick Start Guide
+# Resume Redaction Pipeline
 
 ## 🚀 Quick Start
 
-### Run the Pipeline
-
 ```bash
 cd c:\Users\shiva\Downloads\samplecvs
-python hybrid_resume_pipeline.py --debug
+python resume_redactor.py
 ```
 
-This will:
-- ✅ Process all PDF files in the directory
-- ✅ Redact personal information (emails, phones, URLs)
-- ✅ Preserve skills and experience sections 100%
-- ✅ Generate output in `redacted_resumes/`
-- ✅ Create debug visualizations in `debug_output/`
+**Features:**
+- ✅ **NO blank resumes** - Guaranteed content preservation
+- ✅ **NO placeholders** - Clean output without `<EMAIL>`, `<PHONE>`, etc.
+- ✅ Process all PDF files in the samples directory
+- ✅ Remove personal information completely (emails, phones, URLs, names)
+- ✅ Preserve **100% of skills and experience** sections
+- ✅ Protect tech keywords, bullets, and dates
+- ✅ Professional formatting with proper spacing
+- ✅ Generate output in `samples/redacted_resumes/`
+
+---
+
+## 🏗️ How It Works
+
+### 1. Text Extraction
+- **Primary**: PyMuPDF (fast, accurate)
+- **Fallback**: pdfplumber (handles complex layouts)
+- **Result**: Reliable extraction from any PDF
+
+### 2. PII Removal
+- **Regex**: Removes emails, phones, URLs
+- **spaCy NER**: Removes full names (2+ words)
+- **Result**: Complete PII removal, NO placeholders
+
+### 3. Content Protection
+- **Protects**:
+  - Tech keywords (Python, AWS, Docker, React, etc.)
+  - Date ranges (2020-2023, Present)
+  - Bullet points (skills/achievements)
+  - Section headers (SKILLS, EXPERIENCE, etc.)
+- **Result**: Prevents over-redaction
+
+### 4. Text Polishing
+- Remove empty contact labels
+- Normalize bullets to standard format (•)
+- Add proper spacing between sections
+- **Result**: Clean, professional output
 
 ---
 
@@ -22,33 +51,29 @@ This will:
 
 **Redacted Resumes:**
 ```
-c:\Users\shiva\Downloads\samplecvs\redacted_resumes\HYBRID_REDACTED_[timestamp].txt
-```
-
-**Debug Visualizations:**
-```
-c:\Users\shiva\Downloads\samplecvs\debug_output\[filename]_layout.png
+c:\Users\shiva\Downloads\samplecvs\samples\redacted_resumes\REDACTED_[filename].txt
 ```
 
 ---
 
-## 🎯 What Gets Redacted
+## 🎯 What Gets Removed vs. Preserved
 
-### ✅ Always Redacted
-- Email addresses → `<email_redacted>`
-- Phone numbers → `<phone_redacted>`
-- URLs (LinkedIn, GitHub, etc.) → `<url_redacted>`
-- Label patterns (Email: xxx, Phone: xxx) → `<label_redacted>`
+### ❌ Completely Removed (No Placeholders)
+- Email addresses
+- Phone numbers  
+- URLs (LinkedIn, GitHub, etc.)
+- Full names (2+ words, only in non-protected sections)
+- Education sections
+- Contact labels (Email:, Phone:, etc.)
 
-### ✅ Always Preserved
-- Skills sections (100% intact)
-- Experience sections (100% intact)
-- Work history (100% intact)
-- Technical details (100% intact)
-- Project descriptions (100% intact)
-
-### ✅ Completely Removed
-- Education sections (logged separately)
+### ✅ Always Preserved (100% Intact)
+- **Skills sections** - All technical skills preserved
+- **Experience sections** - Full work history maintained
+- **Technical keywords** - Python, AWS, Docker, React, Kubernetes, etc.
+- **Bullet points** - All achievements and responsibilities
+- **Date ranges** - 2020-2023, Jan 2020 - Present, Current
+- **Project descriptions** - Complete project details
+- **Certifications & Achievements** - All professional accomplishments
 
 ---
 
