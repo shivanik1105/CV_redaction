@@ -32,15 +32,6 @@ except:
     HAS_SPACY = False
     nlp = None
 
-try:
-    from presidio_analyzer import AnalyzerEngine
-    from presidio_anonymizer import AnonymizerEngine
-    HAS_PRESIDIO = True
-    analyzer = AnalyzerEngine()
-    anonymizer = AnonymizerEngine()
-except:
-    HAS_PRESIDIO = False
-
 
 class TextExtractor:
     """Extract text from PDFs"""
@@ -75,46 +66,65 @@ class TextExtractor:
 
 
 class PIIRedactor:
-    """Remove all PII completely - no placeholders"""
+    """Remove only personal contact info - preserve professional content"""
+    
+    # Protected terms - never redact these
+    PROTECTED_NAMES = [
+        'google', 'microsoft', 'amazon', 'apple', 'samsung', 'intel', 'qualcomm',
+        'netflix', 'cisco', 'oracle', 'sap', 'ibm', 'adobe', 'tesla', 'nvidia',
+        'harman', 'technicolor', 'infosys', 'wipro', 'tcs', 'bosch', 'siemens',
+        'linkedin', 'facebook', 'twitter', 'github', 'gitlab', 'jira', 'aws',
+        'azure', 'docker', 'kubernetes', 'jenkins', 'android', 'ios', 'linux',
+        'windows', 'java', 'python', 'javascript', 'react', 'angular', 'node',
+        'mulesoft', 'salesforce', 'workday', 'servicenow', 'slack', 'zoom',
+        'vmware', 'dell', 'hp', 'lenovo', 'asus', 'acer', 'sony', 'lg',
+        'philips', 'jindal', 'tata', 'reliance', 'mahindra', 'birla',
+        'collabera', 'kyocera', 'alcatel', 'lucent', 'linaro', 'hughes',
+        'red hat', 'infobeans', 'openstack', 'openshift', 'sandisk',
+        'django', 'flask', 'pandas', 'numpy', 'seaborn', 'boto3', 'tempest',
+        'hashicorp', 'vault', 'cassandra', 'mongodb', 'mysql', 'postgresql',
+        'redis', 'elasticsearch', 'kafka', 'spark', 'hadoop', 'terraform',
+        'ansible', 'tensorflow', 'pytorch', 'scikit-learn', 'matplotlib',
+        'directors', 'director', 'manager', 'managers', 'engineer', 'engineers',
+        'l&t', 'larsen & toubro', 'scientific games', 'alcatel lucent'
+    ]
     
     def __init__(self):
         self.stats = {'pii_redacted': 0}
     
     def redact(self, text: str) -> str:
-        """Remove PII completely"""
+        """Remove only contact info - keep company/product names"""
         # Email
+        emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
         text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '', text)
-        self.stats['pii_redacted'] += len(re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text))
+        self.stats['pii_redacted'] += len(emails)
         
-        # Phone numbers - multiple patterns
-        text = re.sub(r'[\+]?[\d]{1,3}[-.\s]?[\(]?[\d]{1,4}[\)]?[-.\s]?[\d]{1,4}[-.\s]?[\d]{1,9}', '', text)
+        # Phone numbers (but preserve 4-digit years like 2023, 2021)
+        text = re.sub(r'[\+]?[\d]{1,3}[-\.\s]?[\(]?[\d]{1,4}[\)]?[-\.\s]?[\d]{1,4}[-\.\s]?[\d]{5,9}', '', text)
         text = re.sub(r'\b\d{10,}\b', '', text)
         
-        # URLs
+        # URLs (but keep domain names in text)
         text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '', text)
-        text = re.sub(r'www\.[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '', text)
         
-        # LinkedIn
+        # LinkedIn profile URLs only
         text = re.sub(r'linkedin\.com/in/[a-zA-Z0-9-]+', '', text)
         
-        # Person names with spaCy
+        # Person names - but ONLY if not a protected company/tech term
         if nlp:
             try:
                 doc = nlp(text)
                 for ent in reversed(doc.ents):
                     if ent.label_ == "PERSON":
+                        name_lower = ent.text.lower()
+                        # Skip if it's a protected term
+                        if any(protected in name_lower for protected in self.PROTECTED_NAMES):
+                            continue
+                        # Skip if it's all caps (likely a company/acronym)
+                        if ent.text.isupper() and len(ent.text) > 2:
+                            continue
+                        # Remove only actual person names
                         text = text[:ent.start_char] + text[ent.end_char:]
                         self.stats['pii_redacted'] += 1
-            except:
-                pass
-        
-        # Presidio fallback
-        if HAS_PRESIDIO:
-            try:
-                results = analyzer.analyze(text=text, language='en', entities=["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER"])
-                for result in sorted(results, key=lambda x: x.start, reverse=True):
-                    text = text[:result.start] + text[result.end:]
-                    self.stats['pii_redacted'] += 1
             except:
                 pass
         
@@ -184,11 +194,16 @@ class TextPolisher:
     
     @staticmethod
     def clean(text: str) -> str:
-        """Remove empty lines and contact labels"""
+        """Remove empty lines, contact labels, and fix orphaned commas"""
         lines = text.split('\n')
         cleaned = []
+        skip_next = False
         
-        for line in lines:
+        for i, line in enumerate(lines):
+            if skip_next:
+                skip_next = False
+                continue
+                
             stripped = line.strip()
             
             if not stripped:
@@ -198,7 +213,7 @@ class TextPolisher:
             if re.match(r'^(E-mail|Email|Phone|Mobile|Address|LinkedIn|Link|Contact|Location|E:|M:|L:)\s*:?\s*$', stripped, re.IGNORECASE):
                 continue
             
-            # Skip lines that are ONLY contact markers like "(+91)" or "E:" without content
+            # Skip lines that are ONLY contact markers
             if re.match(r'^[\(\)\+\d\s\-]+$', stripped) and len(stripped) < 20:
                 continue
             
@@ -206,21 +221,45 @@ class TextPolisher:
             if re.match(r'^[\|\-•:,\s=]+$', stripped):
                 continue
             
-            # Remove contact label prefixes from lines
+            # Skip header lines with just name and fragments
+            if i < 3 and ',' in stripped and len(stripped) < 100:
+                # This is likely "NAME , fragment, fragment" - skip it
+                continue
+            
+            # Remove contact label prefixes
             cleaned_line = re.sub(r'^(E-mail|Email|Phone|Mobile|E:|M:|L:)\s*:?\s*', '', stripped, flags=re.IGNORECASE)
             
             # Remove orphaned phone prefixes
             cleaned_line = re.sub(r'\(\+\d{1,3}\)\s*$', '', cleaned_line)
             
-            # Clean punctuation
-            cleaned_line = re.sub(r'\s*\|\s*', ' ', cleaned_line)
-            cleaned_line = re.sub(r'^\s*[,|•\-]\s*', '', cleaned_line)
-            cleaned_line = re.sub(r'\s*[,|]\s*$', '', cleaned_line)
+            # Fix orphaned commas: ", , ," or " , "
+            cleaned_line = re.sub(r'[,\s]*,\s*,\s*,?', ', ', cleaned_line)
+            cleaned_line = re.sub(r'\s*,\s*,\s*', ', ', cleaned_line)
+            
+            # Remove leading/trailing commas and pipes
+            cleaned_line = re.sub(r'^[,|:\s]+', '', cleaned_line)
+            cleaned_line = re.sub(r'[,|:\s]+$', '', cleaned_line)
+            
+            # Fix patterns like "word , , word"
+            cleaned_line = re.sub(r'(\w)\s*,\s*,\s*(\w)', r'\1, \2', cleaned_line)
+            
+            # Remove orphaned brackets
+            cleaned_line = re.sub(r'\[\s*,?\s*\]', '', cleaned_line)
+            cleaned_line = re.sub(r'\(\s*,?\s*\)', '', cleaned_line)
+            
+            # Clean multiple spaces
             cleaned_line = re.sub(r'\s{2,}', ' ', cleaned_line)
             cleaned_line = cleaned_line.strip()
             
-            if cleaned_line and len(cleaned_line) > 2:
-                cleaned.append(cleaned_line)
+            # Skip if too short or just punctuation
+            if len(cleaned_line) < 3 or re.match(r'^[,.\-:|•\s]+$', cleaned_line):
+                continue
+            
+            # Skip lines that are just location fragments like "| , india"
+            if re.match(r'^\|\s*,\s*\w+\s*$', cleaned_line):
+                continue
+            
+            cleaned.append(cleaned_line)
         
         return '\n'.join(cleaned)
     
@@ -232,33 +271,221 @@ class TextPolisher:
     
     @staticmethod
     def add_spacing(text: str) -> str:
-        """Add proper spacing - only keep separators that follow section headers"""
+        """Add proper spacing and detect section headers"""
         lines = text.split('\n')
         result = []
-        last_was_separator = False
+        header_lines = []
+        main_content = []
         
+        # Strict section header keywords
+        section_keywords = [
+            'summary', 'profile', 'objective', 'experience', 'work experience', 
+            'professional experience', 'employment history', 'work history', 'skills', 'technical skills',
+            'key skills', 'expertise', 'projects', 'certifications', 'certification', 'achievements', 
+            'career', 'activities', 'interests', 'personal details', 'languages'
+        ]
+        
+        # First pass - separate header from main content, but detect early section headers
         for i, line in enumerate(lines):
             stripped = line.strip()
             if not stripped:
                 continue
             
-            # Check if this is a separator line
-            is_separator = stripped.startswith('=') and len(set(stripped)) == 1
+            # Check if this line is a major section header even in first 20 lines
+            is_major_section = False
+            line_lower = stripped.lower()
+            major_sections = ['work history', 'work experience', 'professional experience', 
+                            'employment history', 'projects', 'certifications']
+            if not stripped.endswith('.') and len(stripped.split()) >= 2 and len(stripped.split()) <= 5:
+                for section in major_sections:
+                    if section == line_lower:
+                        is_major_section = True
+                        break
             
-            # Skip separators that don't follow section headers
-            if is_separator:
-                if result and ContentProtector.is_section_header(result[-1]):
-                    result.append(stripped)
-                    last_was_separator = True
+            # If we hit a major section, everything from here goes to main_content
+            if is_major_section and i < 20:
+                # Everything before this goes to header
+                main_content.append(stripped)
+                for j in range(i + 1, len(lines)):
+                    s = lines[j].strip()
+                    if s:
+                        main_content.append(s)
+                break
+            elif not is_major_section and i < 12:
+                header_lines.append(stripped)
+            else:
+                main_content.append(stripped)
+        
+        # Add formatted header section
+        if header_lines:
+            result.append("SUMMARY & KEY SKILLS")
+            result.append("=" * 60)
+            result.append("")
+            for line in header_lines:
+                result.append(line)
+            result.append("")
+            result.append("")
+        
+        # Process main content - detect sections and organize
+        i = 0
+        while i < len(main_content):
+            line = main_content[i]
+            line_lower = line.lower().strip()
+            
+            # Skip standalone separator lines
+            if line.startswith('=') and len(set(line)) == 1:
+                i += 1
                 continue
             
-            # Add the line
-            result.append(stripped)
-            last_was_separator = False
+            # Detect section headers - STRICT RULES
+            is_section = False
+            section_title = None
+            
+            # Must be short (2-5 words) and NOT end with period
+            if not line.strip().endswith('.') and len(line.split()) >= 2 and len(line.split()) <= 5:
+                # Check for section keywords
+                for keyword in section_keywords:
+                    if keyword == line_lower or keyword in line_lower:
+                        is_section = True
+                        section_title = line.upper()
+                        break
+            
+            if is_section and section_title:
+                # Found a section header - check if next line is also a section header (2-column layout)
+                next_is_section = False
+                if i + 1 < len(main_content):
+                    next_line = main_content[i + 1]
+                    next_lower = next_line.lower().strip()
+                    if not next_line.strip().endswith('.') and len(next_line.split()) >= 2 and len(next_line.split()) <= 5:
+                        for keyword in section_keywords:
+                            if keyword == next_lower or keyword in next_lower:
+                                next_is_section = True
+                                break
+                
+                # If next line is also a section, skip it (2-column layout handling)
+                if next_is_section:
+                    i += 1  # Skip the duplicate/adjacent section header
+                
+                # Output current section header
+                if result and result[-1].strip():
+                    result.append("")
+                    result.append("")
+                result.append(section_title)
+                result.append("=" * 60)
+                result.append("")
+                
+                # Collect content for this section
+                i += 1
+                section_content = []
+                work_exp_indicators = ['engineer', 'developer', 'manager', 'lead', 'architect', 
+                                      'analyst', 'consultant', 'specialist', 'technologist', 
+                                      'intern', 'associate', 'director']
+                switched_to_work_exp = False
+                
+                while i < len(main_content):
+                    next_line = main_content[i]
+                    next_lower = next_line.lower().strip()
+                    
+                    # Check if this is a new section header
+                    is_next_section = False
+                    next_section_title = None
+                    if not next_line.strip().endswith('.') and len(next_line.split()) >= 2 and len(next_line.split()) <= 5:
+                        for keyword in section_keywords:
+                            if keyword == next_lower or keyword in next_lower:
+                                is_next_section = True
+                                next_section_title = keyword
+                                break
+                    
+                    # Smart detection: if in KEY SKILLS section and we hit a job title, switch to WORK EXPERIENCE
+                    if 'SKILL' in section_title and not switched_to_work_exp:
+                        is_job_title = any(indicator in next_lower for indicator in work_exp_indicators)
+                        if is_job_title and len(next_line.split()) <= 10 and len(next_line.split()) >= 2:
+                            # Output skills section
+                            result.extend(section_content)
+                            result.append("")
+                            result.append("")
+                            result.append("WORK EXPERIENCE")
+                            result.append("=" * 60)
+                            result.append("")
+                            # Now we're collecting work experience
+                            section_content = []
+                            section_title = "WORK EXPERIENCE"
+                            switched_to_work_exp = True
+                    
+                    # If we hit ACTIVITIES while in WORK EXPERIENCE, handle specially
+                    if is_next_section and next_section_title and 'activit' in next_section_title and 'WORK' in section_title:
+                        # Output current work experience
+                        result.extend(section_content)
+                        section_content = []  # Clear it!
+                        result.append("")
+                        result.append("")
+                        
+                        # Collect activity items
+                        result.append("ACTIVITIES AND INTEREST")
+                        result.append("=" * 60)
+                        result.append("")
+                        i += 1
+                        while i < len(main_content):
+                            act_line = main_content[i]
+                            act_lower = act_line.lower().strip()
+                            # Activity items are short and non-technical
+                            if len(act_line.split()) <= 4 and not any(tech in act_lower for tech in ['tech:', 'c++', 'python', 'pvt', 'ltd', 'engineer', 'technologist']):
+                                result.append(act_line)
+                                i += 1
+                            else:
+                                # Hit work experience again - start continued section
+                                if any(indicator in act_lower for indicator in work_exp_indicators):
+                                    result.append("")
+                                    result.append("")
+                                    result.append("WORK EXPERIENCE (CONTINUED)")
+                                    result.append("=" * 60)
+                                    result.append("")
+                                    # Continue with rest of work experience - don't break
+                                    section_title = "WORK EXPERIENCE (CONTINUED)"
+                                    break
+                                else:
+                                    # End of activities
+                                    break
+                        continue
+                    
+                    # If we hit another section, output and break
+                    if is_next_section:
+                        result.extend(section_content)
+                        break
+                    
+                    # Add content with spacing logic
+                    if next_line.startswith('[') and ']' in next_line:
+                        if section_content and section_content[-1].strip():
+                            section_content.append("")
+                    
+                    has_date = re.search(r'20\d{2}|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|Present', next_line)
+                    if has_date and len(next_line) < 120:
+                        if section_content and section_content[-1].strip() and len(section_content[-1]) > 30:
+                            section_content.append("")
+                    
+                    section_content.append(next_line)
+                    i += 1
+                
+                # Output any remaining content
+                if section_content:
+                    result.extend(section_content)
+            else:
+                # Not a section header, just add the line
+                if line.startswith('[') and ']' in line:
+                    if result and result[-1].strip():
+                        result.append("")
+                
+                has_date = re.search(r'20\d{2}|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|Present', line)
+                if has_date and len(line) < 120:
+                    if result and result[-1].strip() and len(result[-1]) > 30:
+                        result.append("")
+                
+                result.append(line)
+                i += 1
         
-        # Normalize excessive line breaks
+        # Join and normalize excessive spacing
         final = '\n'.join(result)
-        final = re.sub(r'\n{3,}', '\n\n', final)
+        final = re.sub(r'\n{4,}', '\n\n\n', final)
         return final
     
     @staticmethod
@@ -296,30 +523,35 @@ class ResumePipeline:
         self.stats['extracted_chars'] = len(text)
         print(f"  OK Extracted: {len(text)} characters")
         
-        # Parse sections
-        print("  > Parsing sections...")
-        sections = self._parse_sections(text)
-        print(f"  OK Found: {len(sections)} sections")
+        # Remove education section first
+        print("  > Removing education...")
+        text = self._remove_education(text)
         
-        # Process each section
+        # Redact PII
         print("  > Redacting PII...")
-        processed = []
-        for section_name, section_content in sections:
-            # Redact PII first
-            redacted = self.redactor.redact(section_content)
-            
-            # Filter lines - keep only protected content
-            lines = redacted.split('\n')
-            kept_lines = [
-                line for line in lines 
-                if ContentProtector.should_preserve(line)
-            ]
-            
-            if kept_lines:
-                processed.append((section_name, '\n'.join(kept_lines)))
+        text = self.redactor.redact(text)
         
-        # Combine
-        result = self._combine(processed)
+        # Filter lines - keep meaningful content (minimal filtering)
+        print("  > Filtering content...")
+        lines = text.split('\n')
+        kept_lines = []
+        for line in lines:
+            stripped = line.strip()
+            if not stripped:
+                continue
+            
+            # Only skip truly useless lines
+            # Skip single characters or numbers
+            if len(stripped) <= 2:
+                continue
+            # Skip lines that are just punctuation
+            if all(not c.isalnum() for c in stripped):
+                continue
+            
+            # Keep everything else
+            kept_lines.append(line)
+        
+        result = '\n'.join(kept_lines)
         
         # Polish
         result = TextPolisher.polish(result)
@@ -330,74 +562,36 @@ class ResumePipeline:
         
         return result
     
-    def _parse_sections(self, text: str) -> List[Tuple[str, str]]:
-        """Parse into sections"""
-        sections = []
+    def _remove_education(self, text: str) -> str:
+        """Remove education section from text"""
         lines = text.split('\n')
-        current_section = "HEADER"
-        current_content = []
+        result = []
+        in_education = False
+        skip_count = 0
         
-        for line in lines:
-            # Check if this is a section header
+        for i, line in enumerate(lines):
             line_upper = line.strip().upper()
             
-            # Look for education section to skip it
-            if 'EDUCATION' in line_upper and len(line_upper) < 30:
-                # Save current section
-                if current_content:
-                    sections.append((current_section, '\n'.join(current_content)))
-                current_section = "EDUCATION_SKIP"
-                current_content = []
+            # Detect education section start
+            if 'EDUCATION' in line_upper and len(line_upper) < 40:
+                in_education = True
+                skip_count = 0
                 continue
             
-            # Skip content if we're in education section
-            if current_section == "EDUCATION_SKIP":
-                # Check if we hit a new section
-                if ContentProtector.is_section_header(line):
-                    current_section = line.strip()
-                    current_content = []
-                continue
-            
-            # Regular section detection
-            if ContentProtector.is_section_header(line):
-                if current_content:
-                    sections.append((current_section, '\n'.join(current_content)))
-                current_section = line.strip()
-                current_content = []
-            else:
-                current_content.append(line)
-        
-        # Save last section (unless it's education)
-        if current_content and current_section != "EDUCATION_SKIP":
-            sections.append((current_section, '\n'.join(current_content)))
-        
-        return sections
-    
-    def _combine(self, sections: List[Tuple[str, str]]) -> str:
-        """Combine sections without adding separators in content"""
-        output = []
-        
-        for section_name, content in sections:
-            content = content.strip()
-            
-            # Skip header if mostly empty or just contact info
-            if section_name == "HEADER":
-                lines = [l for l in content.split('\n') if len(l.strip()) > 5]
-                if len(lines) < 3:
+            # Stay in education section for next 30 lines or until clear new section
+            if in_education:
+                skip_count += 1
+                # Exit if we see clear non-education content
+                if skip_count > 30:
+                    in_education = False
+                elif any(keyword in line_upper for keyword in ['WORK EXPERIENCE', 'PROFESSIONAL', 'EMPLOYMENT', 'PROJECTS', 'SKILLS', 'CERTIFICATION']):
+                    in_education = False
+                else:
                     continue
             
-            if content and len(content) > 20:
-                # Add section header
-                if output:  # Add spacing before new section
-                    output.append('')
-                output.append('')
-                output.append(section_name.upper())
-                output.append('=' * 60)
-                output.append('')
-                # Add content as-is (no processing here)
-                output.append(content)
+            result.append(line)
         
-        return '\n'.join(output)
+        return '\n'.join(result)
 
 
 def main():
