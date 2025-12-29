@@ -38,32 +38,175 @@ class TextExtractor:
     
     @staticmethod
     def extract(pdf_path: str) -> str:
-        """Extract with fallback"""
+        """Extract with fallback - handles 2-column layouts properly"""
         text = ""
         
-        # Try PyMuPDF first
-        if HAS_FITZ:
-            try:
-                doc = fitz.open(pdf_path)
-                text = "\n".join([page.get_text() for page in doc])
-                doc.close()
-                if text.strip():
-                    return text
-            except:
-                pass
-        
-        # Fallback to pdfplumber
+        # Try pdfplumber first with smart mixed-layout extraction
         if HAS_PDFPLUMBER:
+            print("Using pdfplumber extraction...")
             try:
                 with pdfplumber.open(pdf_path) as pdf:
-                    text = "\n".join([page.extract_text() or "" for page in pdf.pages])
-                if text.strip():
-                    return text
-            except:
-                pass
+                    all_text = []
+                    
+                    for i, page in enumerate(pdf.pages):
+                        print(f"Processing page {i+1}...")
+                        page_width = page.width
+                        page_height = page.height
+                        
+                        # Smart column detection: find the gap between columns
+                        words = page.extract_words(x_tolerance=2, y_tolerance=2)
+                        
+                        if words:
+                            print(f"Found {len(words)} words")
+                            
+                            # Method 1: Analyze word distribution across page width
+                            # Divide page into vertical strips and count words in each
+                            strip_width = page_width / 20
+                            strip_counts = {}
+                            for strip_idx in range(20):
+                                strip_counts[strip_idx] = 0
+                            
+                            for w in words:
+                                word_center = (w['x0'] + w['x1']) / 2
+                                strip_idx = int(word_center / strip_width)
+                                if 0 <= strip_idx < 20:
+                                    strip_counts[strip_idx] += 1
+                            
+                            # Find the strip with minimum words in middle region (strips 5-15)
+                            min_count = float('inf')
+                            min_strip_idx = 10
+                            for strip_idx in range(5, 15):
+                                if strip_counts[strip_idx] < min_count:
+                                    min_count = strip_counts[strip_idx]
+                                    min_strip_idx = strip_idx
+                            
+                            # Use this as initial split point
+                            split_point = (min_strip_idx + 0.5) * strip_width
+                            
+                            # Method 2: Refine by finding actual gap
+                            # Get all unique x-coordinates
+                            x_coords = sorted(set([w['x0'] for w in words] + [w['x1'] for w in words]))
+                            
+                            # Find the largest gap in the middle region around our initial split
+                            search_start = split_point - page_width * 0.15
+                            search_end = split_point + page_width * 0.15
+                            
+                            max_gap = 0
+                            best_split = split_point
+                            for i in range(len(x_coords) - 1):
+                                if search_start < x_coords[i] < search_end:
+                                    gap_size = x_coords[i+1] - x_coords[i]
+                                    if gap_size > max_gap:
+                                        max_gap = gap_size
+                                        best_split = (x_coords[i] + x_coords[i+1]) / 2
+                            
+                            split_point = best_split
+                            print(f"Found column split at {split_point:.1f} (gap: {max_gap:.1f})")
+
+                            # Find vertical zones based on crossing words
+                            # Words that cross the Robust Split Point are defacto Headers
+                            crossing_intervals = []
+                            if split_point:
+                                for w in words:
+                                    if w['x0'] < split_point < w['x1']:
+                                        crossing_intervals.append((w['top'], w['bottom']))
+                            
+                            # 2. Merge overlapping intervals
+                            crossing_intervals.sort()
+                            merged_intervals = []
+                            if crossing_intervals:
+                                curr_start, curr_end = crossing_intervals[0]
+                                for next_start, next_end in crossing_intervals[1:]:
+                                    # Merge if overlapping or very close
+                                    if next_start < curr_end + 5: 
+                                        curr_end = max(curr_end, next_end)
+                                    else:
+                                        merged_intervals.append((curr_start, curr_end))
+                                        curr_start, curr_end = next_start, next_end
+                                merged_intervals.append((curr_start, curr_end))
+                            
+                            # 3. Define all Zones with PADDING to prevent clipping
+                            zones = []
+                            current_y = 0
+                            
+                            for start, end in merged_intervals:
+                                # Apply padding to Single Col Zone
+                                zone_top = max(0, start - 2)
+                                zone_bottom = min(page_height, end + 2)
+                                
+                                # Add Two-Col Zone before this
+                                if zone_top > current_y + 1:
+                                    zones.append({'type': 'two_col', 'top': current_y, 'bottom': zone_top})
+                                
+                                zones.append({'type': 'single_col', 'top': zone_top, 'bottom': zone_bottom})
+                                current_y = zone_bottom
+                            
+                            # Add final Two-Col Zone
+                            if current_y < page_height:
+                                zones.append({'type': 'two_col', 'top': current_y, 'bottom': page_height})
+                            
+                            # 4. Extract text from zones - collect left and right columns separately
+                            left_column_parts = []
+                            right_column_parts = []
+                            
+                            for zone in zones:
+                                # Use tolerances to prevent excessive merging
+                                x_tol, y_tol = 2, 2
+                                
+                                if zone['type'] == 'single_col':
+                                    bbox = (0, zone['top'], page_width, zone['bottom'])
+                                    crop = page.crop(bbox)
+                                    text = crop.extract_text(x_tolerance=x_tol, y_tolerance=y_tol)
+                                    if text:
+                                        # Single column zones go to left column
+                                        left_column_parts.append(text.strip())
+                                        
+                                elif zone['type'] == 'two_col':
+                                    # For two-column zones, extract each column separately
+                                    left_bbox = (0, zone['top'], split_point, zone['bottom'])
+                                    left_crop = page.crop(left_bbox)
+                                    left_text = left_crop.extract_text(x_tolerance=x_tol, y_tolerance=y_tol)
+                                    
+                                    right_bbox = (split_point, zone['top'], page_width, zone['bottom'])
+                                    right_crop = page.crop(right_bbox)
+                                    right_text = right_crop.extract_text(x_tolerance=x_tol, y_tolerance=y_tol)
+                                    
+                                    if left_text and left_text.strip():
+                                        left_column_parts.append(left_text.strip())
+                                    
+                                    if right_text and right_text.strip():
+                                        right_column_parts.append(right_text.strip())
+                            
+                            # Combine: left column first, then separator, then right column
+                            page_parts = []
+                            if left_column_parts:
+                                page_parts.append("\n\n".join(left_column_parts))
+                            if right_column_parts:
+                                page_parts.append("\n" + "=" * 60 + "\n")
+                                page_parts.append("\n\n".join(right_column_parts))
+                            
+                            page_text = "\n\n".join(page_parts)
+                        else:
+                            # No words found, try basic extraction
+                            print("No words found, using basic extraction")
+                            page_text = page.extract_text()
+                        
+                        if page_text:
+                            all_text.append(page_text)
+                    
+                    text = "\n\n".join(all_text)
+                    if text.strip():
+                        print("Successfully extracted text with pdfplumber")
+                        return text
+            except Exception as e:
+                print(f"pdfplumber extraction failed: {e}")
+                # Re-raise to verify failure
+                raise e
+        
+        # Fallback removed - we must use pdfplumber for correct layout handling
+        # if HAS_FITZ: ...
         
         return text
-
 
 class PIIRedactor:
     """Remove only personal contact info - preserve professional content"""
@@ -181,6 +324,112 @@ class TextPolisher:
     """Clean and format output"""
     
     @staticmethod
+    def remove_duplicates(text: str) -> str:
+        """Remove consecutive duplicate lines and duplicate multi-line sections"""
+        lines = text.split('\n')
+        
+        # Step 1: Remove consecutive duplicates
+        deduplicated = []
+        prev_line = None
+        
+        for line in lines:
+            stripped = line.strip()
+            # Only add if not duplicate of previous line
+            if stripped != prev_line or len(stripped) < 5:  # Keep short lines even if duplicate
+                deduplicated.append(line)
+                prev_line = stripped
+        
+        # Step 2: Remove duplicate single lines (even if not consecutive)
+        # Track lines we've seen, remove exact duplicates of substantial lines
+        seen_lines = {}
+        dedup2 = []
+        for i, line in enumerate(deduplicated):
+            stripped = line.strip().lower()
+            # Only dedupe substantial lines (> 40 chars, not headers)
+            if len(stripped) > 40 and not stripped.startswith('=') and '•' not in stripped[:3]:
+                if stripped in seen_lines:
+                    continue  # Skip duplicate
+                seen_lines[stripped] = i
+            dedup2.append(line)
+        
+        # Step 3: Remove duplicate multi-line blocks using sliding window
+        # Create fingerprints of 3-line windows
+        final_lines = []
+        seen_fingerprints = set()
+        skip_until = -1
+        
+        for i in range(len(dedup2)):
+            # If we're in a skip zone, continue
+            if i < skip_until:
+                continue
+                
+            line = dedup2[i].strip()
+            
+            # Build a fingerprint from current line and next 2 lines
+            if line and len(line) > 25:  # Only for substantial lines
+                fingerprint_lines = []
+                for j in range(i, min(i + 4, len(dedup2))):
+                    fp_line = dedup2[j].strip()
+                    if fp_line and not fp_line.startswith('=') and len(fp_line) > 10:
+                        fingerprint_lines.append(fp_line.lower()[:40])  # First 40 chars
+                
+                if len(fingerprint_lines) >= 2:
+                    fingerprint = '|'.join(fingerprint_lines[:2])
+                    
+                    if fingerprint in seen_fingerprints:
+                        # Found duplicate block, skip the next several lines
+                        skip_until = i + len(fingerprint_lines)
+                        continue
+                    else:
+                        seen_fingerprints.add(fingerprint)
+            
+            final_lines.append(dedup2[i])
+        
+        return '\n'.join(final_lines)
+    
+    @staticmethod
+    def fix_spacing(text: str) -> str:
+        """Fix missing spaces between concatenated words"""
+        # Fix specific common concatenations first
+        text = re.sub(r'([a-z])into([a-z])', r'\1 into \2', text)
+        text = re.sub(r'([a-z])andthe([a-z])', r'\1 and the \2', text)
+        text = re.sub(r'([a-z])tothe([a-z])', r'\1 to the \2', text)
+        text = re.sub(r'([a-z])withthe([a-z])', r'\1 with the \2', text)
+        text = re.sub(r'([a-z])forthe([a-z])', r'\1 for the \2', text)
+        text = re.sub(r'([a-z])fromthe([a-z])', r'\1 from the \2', text)
+        
+        # Add space between lowercase and uppercase letters (camelCase) but not single caps
+        text = re.sub(r'([a-z])([A-Z][a-z])', r'\1 \2', text)
+        
+        # Add space between word and number (but preserve things like "C 3" -> keep as is)
+        text = re.sub(r'([a-z]{3,})(\d)', r'\1 \2', text)
+        # Add space between number and letter
+        text = re.sub(r'(\d)([a-zA-Z]{2,})', r'\1 \2', text)
+        
+        # Add space after comma if missing
+        text = re.sub(r',([a-zA-Z])', r', \1', text)
+        
+        # Fix product names that got split
+        text = re.sub(r'Io\s+T', 'IoT', text)
+        text = re.sub(r'Py\s+Spark', 'PySpark', text)
+        text = re.sub(r'Java\s+Script', 'JavaScript', text)
+        text = re.sub(r'My\s+SQL', 'MySQL', text)
+        text = re.sub(r'Postgre\s+SQL', 'PostgreSQL', text)
+        text = re.sub(r'Mongo\s+DB', 'MongoDB', text)
+        text = re.sub(r'Dev\s+Ops', 'DevOps', text)
+        text = re.sub(r'Git\s+Hub', 'GitHub', text)
+        text = re.sub(r'Git\s+Lab', 'GitLab', text)
+        text = re.sub(r'Mule\s+Soft', 'MuleSoft', text)
+        text = re.sub(r'Power\s+Point', 'PowerPoint', text)
+        text = re.sub(r'Fast\s+Api', 'FastAPI', text)
+        text = re.sub(r'Saa\s+S', 'SaaS', text)
+        text = re.sub(r'Web\s+API', 'WebAPI', text)
+        text = re.sub(r'San\s+Disk', 'SanDisk', text)
+        text = re.sub(r'Clear\s+Case', 'ClearCase', text)
+        
+        return text
+    
+    @staticmethod
     def clean(text: str) -> str:
         """Remove empty lines, contact labels, and fix orphaned commas"""
         lines = text.split('\n')
@@ -206,13 +455,10 @@ class TextPolisher:
                 continue
             
             # Skip lines with just punctuation/separators
-            if re.match(r'^[\|\-•:,\s=]+$', stripped):
+            if re.match(r'^[\.\|\-•:,=\s]+$', stripped):
                 continue
             
-            # Skip header lines with just name and fragments
-            if i < 3 and ',' in stripped and len(stripped) < 100:
-                # This is likely "NAME , fragment, fragment" - skip it
-                continue
+            # REMOVED aggressive header skip - it was deleting summary lines containing commas
             
             # Remove contact label prefixes
             cleaned_line = re.sub(r'^(E-mail|Email|Phone|Mobile|E:|M:|L:)\s*:?\s*', '', stripped, flags=re.IGNORECASE)
@@ -345,11 +591,13 @@ class TextPolisher:
             
             if is_section and section_title:
                 # Skip if we've already processed this section (prevents duplication)
-                if section_title in seen_sections:
+                # Use case-insensitive comparison to catch variations
+                section_title_normalized = section_title.upper()
+                if section_title_normalized in seen_sections:
                     i += 1
                     continue
                 
-                seen_sections.add(section_title)
+                seen_sections.add(section_title_normalized)
                 
                 # Found a section header - check if next line is also a section header (2-column layout)
                 # DISABLED: This was causing duplication issues
@@ -537,6 +785,11 @@ class TextPolisher:
     @staticmethod
     def polish(text: str) -> str:
         """Complete polish pipeline"""
+        # First remove duplicates
+        text = TextPolisher.remove_duplicates(text)
+        # Fix spacing issues
+        text = TextPolisher.fix_spacing(text)
+        # Then clean
         text = TextPolisher.clean(text)
         text = TextPolisher.normalize_bullets(text)
         text = TextPolisher.add_spacing(text)
@@ -562,6 +815,11 @@ class ResumePipeline:
         # Extract
         print("  > Extracting text...")
         text = self.extractor.extract(pdf_path)
+        
+        # DEBUG: Save raw text
+        with open("debug_raw_text.txt", "w", encoding="utf-8") as f:
+            f.write(text)
+            
         if not text:
             print("  X Failed to extract text")
             return ""
