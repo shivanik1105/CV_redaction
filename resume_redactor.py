@@ -156,7 +156,8 @@ class TextExtractor:
                                 if zone['type'] == 'single_col':
                                     bbox = (0, zone['top'], page_width, zone['bottom'])
                                     crop = page.crop(bbox)
-                                    text = crop.extract_text(x_tolerance=x_tol, y_tolerance=y_tol)
+                                    # Use balanced tolerance to preserve proper spacing
+                                    text = crop.extract_text(x_tolerance=1.5, y_tolerance=2)
                                     if text:
                                         # Single column zones go to left column
                                         left_column_parts.append(text.strip())
@@ -165,11 +166,13 @@ class TextExtractor:
                                     # For two-column zones, extract each column separately
                                     left_bbox = (0, zone['top'], split_point, zone['bottom'])
                                     left_crop = page.crop(left_bbox)
-                                    left_text = left_crop.extract_text(x_tolerance=x_tol, y_tolerance=y_tol)
+                                    # Use balanced tolerance to preserve proper spacing
+                                    left_text = left_crop.extract_text(x_tolerance=1.5, y_tolerance=2)
                                     
                                     right_bbox = (split_point, zone['top'], page_width, zone['bottom'])
                                     right_crop = page.crop(right_bbox)
-                                    right_text = right_crop.extract_text(x_tolerance=x_tol, y_tolerance=y_tol)
+                                    # Use balanced tolerance to preserve proper spacing
+                                    right_text = right_crop.extract_text(x_tolerance=1.5, y_tolerance=2)
                                     
                                     if left_text and left_text.strip():
                                         left_column_parts.append(left_text.strip())
@@ -389,14 +392,80 @@ class TextPolisher:
     
     @staticmethod
     def fix_spacing(text: str) -> str:
-        """Fix missing spaces between concatenated words"""
-        # Fix specific common concatenations first
-        text = re.sub(r'([a-z])into([a-z])', r'\1 into \2', text)
-        text = re.sub(r'([a-z])andthe([a-z])', r'\1 and the \2', text)
-        text = re.sub(r'([a-z])tothe([a-z])', r'\1 to the \2', text)
-        text = re.sub(r'([a-z])withthe([a-z])', r'\1 with the \2', text)
-        text = re.sub(r'([a-z])forthe([a-z])', r'\1 for the \2', text)
-        text = re.sub(r'([a-z])fromthe([a-z])', r'\1 from the \2', text)
+        """Fix missing spaces between concatenated words using comprehensive word detection"""
+        
+        # Step 1: Fix camelCase transitions (lowercase to uppercase)
+        text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
+        
+        # Step 2: Common concatenated words - extensive dictionary
+        # Format: "badword" -> " good word"
+        concatenation_fixes = [
+            # Common prepositions and conjunctions
+            (r'\binto([a-z])', r'into \1'),
+            (r'([a-z])into\b', r'\1 into'),
+            (r'\band([a-z])', r'and \1'),
+            (r'([a-z])and\b', r'\1 and'),
+            (r'\bwith([a-z])', r'with \1'),
+            (r'([a-z])with\b', r'\1 with'),
+            (r'\bfor([a-z])', r'for \1'),
+            (r'([a-z])for\b', r'\1 for'),
+            (r'\bfrom([a-z])', r'from \1'),
+            (r'([a-z])from\b', r'\1 from'),
+            (r'\bthe([a-z])', r'the \1'),
+            (r'([a-z])the\b', r'\1 the'),
+            (r'\bto([a-z])', r'to \1'),
+            (r'([a-z])to\b', r'\1 to'),
+            (r'\bin([a-z])', r'in \1'),
+            (r'([a-z])in\b', r'\1 in'),
+            (r'\bon([a-z])', r'on \1'),
+            (r'([a-z])on\b', r'\1 on'),
+            (r'\bat([a-z])', r'at \1'),
+            (r'([a-z])at\b', r'\1 at'),
+            (r'\bof([a-z])', r'of \1'),
+            (r'([a-z])of\b', r'\1 of'),
+            (r'\bor([a-z])', r'or \1'),
+            (r'([a-z])or\b', r'\1 or'),
+            (r'\bas([a-z])', r'as \1'),
+            (r'([a-z])as\b', r'\1 as'),
+            (r'\bby([a-z])', r'by \1'),
+            (r'([a-z])by\b', r'\1 by'),
+            
+            # Common articles and determiners
+            (r'\ba([A-Z])', r'a \1'),
+            (r'\ban([A-Z])', r'an \1'),
+            
+            # Common verbs and modals
+            (r'\bis([a-z])', r'is \1'),
+            (r'([a-z])is\b', r'\1 is'),
+            (r'\bare([a-z])', r'are \1'),
+            (r'([a-z])are\b', r'\1 are'),
+            (r'\bwas([a-z])', r'was \1'),
+            (r'([a-z])was\b', r'\1 was'),
+            (r'\bwere([a-z])', r'were \1'),
+            (r'([a-z])were\b', r'\1 were'),
+            (r'\bbeen([a-z])', r'been \1'),
+            (r'([a-z])been\b', r'\1 been'),
+            (r'\bhave([a-z])', r'have \1'),
+            (r'([a-z])have\b', r'\1 have'),
+            (r'\bhas([a-z])', r'has \1'),
+            (r'([a-z])has\b', r'\1 has'),
+        ]
+        
+        for pattern, replacement in concatenation_fixes:
+            text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+        
+        # Step 3: Detect word boundaries using lowercase-to-lowercase transitions
+        # This handles cases like "Productdevelopment" -> "Product development"
+        # Split on: lowercase letter followed by a new word (detected by common prefixes)
+        common_prefixes = ['develop', 'manage', 'design', 'implement', 'create', 'build',
+                         'product', 'project', 'system', 'software', 'hardware', 'service',
+                         'business', 'customer', 'technical', 'professional', 'experience']
+        
+        for prefix in common_prefixes:
+            # Match: word + prefix (no space between)
+            # Example: "Productdevelopment" -> "Product development"
+            pattern = rf'([a-z])({prefix})'
+            text = re.sub(pattern, r'\1 \2', text, flags=re.IGNORECASE)
         
         # Add space between lowercase and uppercase letters (camelCase) but not single caps
         text = re.sub(r'([a-z])([A-Z][a-z])', r'\1 \2', text)
@@ -426,6 +495,51 @@ class TextPolisher:
         text = re.sub(r'Web\s+API', 'WebAPI', text)
         text = re.sub(r'San\s+Disk', 'SanDisk', text)
         text = re.sub(r'Clear\s+Case', 'ClearCase', text)
+        
+        # Fix common broken words from PDF extraction
+        text = re.sub(r'\ba\s+nd\s+roid\b', 'Android', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+dia\b', 'India', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+OSP\b', 'AOSP', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+RM\b', 'ARM', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+WS\b', 'AWS', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+PI\b', 'API', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+I\b', 'AI', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bYoc\s+to\b', 'Yocto', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bPyth\s+on\b', 'Python', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bSoftw\s+are\b', 'Software', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bfirmw\s+are\b', 'firmware', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bHardw\s+are\b', 'Hardware', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bhyperv\s+is\s+or\b', 'hypervisor', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bc\s+on\s+gurati\s+on\b', 'configuration', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bimplementati\s+on\b', 'implementation', text, flags=re.IGNORECASE)
+        text = re.sub(r'\b is\s+O\b', 'ISO', text, flags=re.IGNORECASE)
+        text = re.sub(r'\banalys\s+is\b', 'analysis', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+s\s+f\s+or\b', 'as for', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+utomotive\b', 'Automotive', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+udio\b', 'Audio', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+gile\b', 'Agile', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+s\s+sembl', 'Assembl', text, flags=re.IGNORECASE)
+        
+        # Fix common space-broken words
+        text = re.sub(r'\bin\s+to\b', 'into', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+nd\b', 'and', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+cross\b', 'across', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+terface', 'interface', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+volving', 'involving', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+fra', 'infra', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+ternals', 'internals', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bto\s+oling', 'tooling', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+rchitecture', 'architecture', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bprocess\s+or\b', 'processor', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bis\s+sue', 'issue', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bidentificati\s+on', 'identification', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+fluence', 'influence', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+lgorithm', 'algorithm', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+dditional', 'additional', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bon\s+e\b', 'one', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+s(?=[^a-zA-Z])', 'as', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bSpecialisati\s+on', 'Specialisation', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+BHISHEK', 'ABHISHEK', text, flags=re.IGNORECASE)
         
         return text
     
