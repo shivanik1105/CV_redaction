@@ -1,0 +1,82 @@
+SUMMARY & KEY SKILLS
+============================================================
+
+a bhinav Solapurkar
+Seni or System Engineer
+A highly motivated pers on with strong technical, team player and problem solving skills who like to
+enhance a potential and a pply technical knowledge while facing new challenges, resulting in growth and
+development of company.
+Pune, Maharashtra, India
+
+
+WORK EXPERIENCE
+============================================================
+
+Seni or System Engineer
+IBM
+12/2021 - Present, Pune
+Client- NBS (Banking Doma in-UK)
+a chievements/Tasks
+Developed and maintained scalable web a pplications using
+as P.NET MVC, a dhering to best practices and design
+patterns.
+Designed and implemented RESTful Web a P is using as P.NET
+Web API, facilitating seamless communicati on between
+client and server.
+in tegrated WCF services into existing a pplications, ensuring
+efficient data exchange and communicati on across
+distributed systems. Utilized Ext.js, Sencha and JavaScript to
+enhance user interface functionalities and improve overall
+user experience.
+Collaborated with cross-functional teams in a n Agile
+environment to deliver features and enhancements with in
+tight deadlines.
+Conducted code reviews and provided constructive feedback
+to peers, ensuring code quality and a dherence to coding
+standards.
+Participated in sprint planning, daily st and-ups, and
+retrospective meetings to continuously improve team
+performance and project delivery.
+Software Engineer
+Capgemini
+04/2019 - 12/2021, Navi Mumbai
+Client- R&L Carriers(Logistic Doma in-USA)
+a chievements/Tasks
+Developed and maintained as P.NET web a pplications
+following in dustry best practices and coding standards.
+Implemented client-side scripting using j Query to enhance
+user in teractivity and responsiveness.
+in tegrated third-party a P is/In-house services into web
+a pplications, expanding functionality and improving user
+experience.
+Participated in requirement a nalys is, design discussions, and
+sprint planning meetings to define project scope and
+deliverables.
+Collaborated with QA team to identify and resolve bugs and
+issues in a timely manner.
+as sisted in the deployment and configurati on of web
+a pplications on producti on, staging servers, ensuring
+smooth and seamless deployment processes.
+SKILLS
+as p.Net C# Blaz or MVC 5 Web API
+Web Services HTML JavaScript j Query
+SQL a zure Agile Unit Testing SOAPUI
+Visual Studio Fiddler Documentati on
+PROJECT a CHIEVEMENTS
+SAMM Team
+Recognized f or consistently delivering high-quality code and
+in novative problem-solving, contributing significantly to project
+success and team performance.
+R&L Carriers
+Successfully navigated through complex code base to identify and
+resolve elusive bugs, enhancing system stability and user
+experience. in strumental in a rchitecting in novative solutions to
+in tricate feature requests, optimizing performance and
+functionality while a dhering to strict deadlines.
+Full Professional Proficiency Elementary Proficiency
+
+Hindi Marathi
+Professional Working Proficiency Native or Bilingual Proficiency
+in TERESTS
+Cricket Chess Mobile and Gadgets
+a u to Cars

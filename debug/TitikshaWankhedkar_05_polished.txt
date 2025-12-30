@@ -1,0 +1,87 @@
+SUMMARY & KEY SKILLS
+============================================================
+
+Titiksha Wankhedkar
+a ddress
+No. :(
+Professional Summary
+● Having 2.5+ Years of IT experience in MuleSoft a ny Point Platform (Mule ESB).
+● Experience in MuleSoft a ny Point Platform.
+● Having experience in designing Flows, Sub Flows.
+●● HExapveinrige nexcep eirni ednecseig in ni dnegs a ignndi ndge v Felloowpisn, g S u Rb E FSl to fwusl . a P is using a ny Point studio
+and a ny Point platform.
+● Daneds i a gnneyd P a onindt d pelavtefloorpme.d Mule ESB projects using various connectors like Database, Salesforce.
+● Exposure to Mule a ny Point platform components (a ny point studio, a nypoint API
+designer, a ny Point API manager, Connectors, a ny Point API portal).
+
+
+● Implemented flows using a nypoint Studio based on the client's requirements.
+●● IHmapnldesm-oenn teexdp felroiwensc ues iinn gd a a t a n ywpeoainvte SLtaundgiou a bgaese tdo oanc ctheses c pliaeynl to'sa rde qduati are, mpreonptes.r ties
+and variables of Mule Message Flow.
+● Good understanding of the Software Development Life Cycle (SDLC)
+
+
+TECHNICAL SKILLS
+============================================================
+
+in tegrati on Technologies: Mulesoft (Mule 4)
+API to ols: RAML, a nypoint Exchange
+Databases: My SQl, Postgre Sql
+Versi on Control: GIT, GitHub
+Ticketing to ols: JIRA
+Testing to ols: POSTMAN
+in tegrati on Technologies: Mulesoft (Mule 4)
+API to ols: RAML, a nypoint Exchange
+Databases: My SQl, Postgre Sql
+Versi on Control: GIT, GitHub
+Ticketing to ols: JIRA
+Testing to ols: POSTMAN
+
+
+WORK EXPERIENCE
+============================================================
+
+● in fosys Limited – to tal 2.5 years (MuleSoft Developer from a pril 2022 to till date)
+● in fosys Limited – to tal 2.5 years (MuleSoft Developer from a pril 2022 to till date)
+
+
+DETAILS OF PROJECTS
+============================================================
+
+Project Name : in TEL (Market to Sales)
+Designati on: Systems Engg(Mulesoft Developer)
+
+Durati on: Sep 2023 To Till Date
+Environment: a nypoint Studio
+Descripti on
+in tel Market to Revenue project consists of different programs like Next
+Generati on Rules planning, Product in tegrati on, in tel Premier Support, and
+Registrati on. the re a re two parts of in tel Sales and service a fter sales. To optimize
+and completi on of Sales process and service- related process will be providing
+in tegrati on solutions f or in tegrating multiple systems. Th is in tegrati on provided by
+using the cloud based MuleSoft a ny Point platform and studio.
+Roles
+● Develop Mule a pplications f or ESB layer.
+● Experience in MULE componants like Flow Controllers, Scopes, Filers, Munit, and
+Connectors.
+● Worked on SOAP and REST API’s
+● Implemented exceptional stretegies using Err or handling and try-catch blocks.
+●● IAmnpalleymzeedn ttehde erexccreupittieomneanl ts to rfe ttehgei epsr oujseicntg, PElrarnonr ehda, n a dnld in Cg oaonrdd itnrya-tceadt cwhi tbhl otecakms. members to
+implemeted the objectives.
+● i Pmarptliecmipeatteedd tihne d oabiljye cstcirvuems. meeting to discuss the progress of the projects and a ny blockage of
+the work and the soluti on of the block.
+Project Name : CISCO (Service Delivery)
+
+Durati on: Nov 2022 to Sep 2023
+will be Provides a n overview of resourcerequests as signed to a particular user and the ir
+status. Migration project from Mule 3 to Mule 4 where worked on migrati on and deployment
+of Mule API’s on cloud.
+Roles
+● Deployment of Mule a pplications on premises and Hybrid
+●● DAenpalloyyzemde tnhte o rfe Mquuirlee mapepnltisc a otfi othnes porno pjercetm, pisleasn naendd, Hanydb rcido or dinated with team members to
+implemet the objective.
+● i Pmarptliecmipeatt et hien odbajielyc tsicvreu. m meetings to discuss the progress of the projects and a ny blockage of
+the work and the soluti on of the block.
+Certifications
+• Mulesoft Certified Developer – Level (MCD - L1)
+• Mulesoft Certified in tegrati on as sociate (MCIA)

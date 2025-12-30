@@ -241,28 +241,253 @@ class PIIRedactor:
     def __init__(self):
         self.stats = {'pii_redacted': 0}
     
-    def redact(self, text: str) -> str:
-        """Remove only contact info - keep company/product names"""
-        # Email
+    def redact(self, text: str, debug_dir=None) -> str:
+        """Remove ONLY safe PII: email, phone, URLs, DOB. Keep everything else."""
+        # DEBUG: Save checkpoint 1 - before redaction
+        if debug_dir:
+            Path(debug_dir).mkdir(exist_ok=True)
+            Path(debug_dir, '01_before_redaction.txt').write_text(text, encoding='utf-8')
+        
+        # Email - ONLY remove email, keep rest of line
         emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
-        text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '', text)
+        text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[EMAIL]', text)
         self.stats['pii_redacted'] += len(emails)
         
-        # Phone numbers (but preserve 4-digit years like 2023, 2021)
-        text = re.sub(r'[\+]?[\d]{1,3}[-\.\s]?[\(]?[\d]{1,4}[\)]?[-\.\s]?[\d]{1,4}[-\.\s]?[\d]{5,9}', '', text)
-        text = re.sub(r'\b\d{10,}\b', '', text)
+        # Phone numbers - ONLY remove phone span (but preserve 4-digit years like 2023, 2021)
+        text = re.sub(r'[\+]?[\d]{1,3}[-\.\s]?[\(]?[\d]{1,4}[\)]?[-\.\s]?[\d]{1,4}[-\.\s]?[\d]{5,9}', '[PHONE]', text)
+        text = re.sub(r'\b\d{10,}\b', '[PHONE]', text)
         
-        # URLs (but keep domain names in text)
-        text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '', text)
+        # URLs - ONLY remove URL span (but keep domain names in text)
+        text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '[URL]', text)
         
-        # LinkedIn profile URLs only
-        text = re.sub(r'linkedin\.com/in/[a-zA-Z0-9-]+', '', text)
+        # LinkedIn profile URLs and usernames - remove span only
+        text = re.sub(r'LinkedIn[:\s]+[a-zA-Z0-9-_/]+', '[LINKEDIN]', text, flags=re.IGNORECASE)
+        text = re.sub(r'linkedin\.com/in/[a-zA-Z0-9-]+', '[LINKEDIN]', text)
         
-        # DISABLE person name removal - it causes too many false positives
-        # (removes "Developed", "Mobile", "C#", profile text, etc.)
-        # Person names will be removed by email/phone/LinkedIn removal above
+        # Contact labels - remove label only, keep rest of line
+        text = re.sub(r'\bContact No[:\s]*', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bMOB[\s]*[-:]\s*', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bMobile[:\s]*', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bTel[:\s]*', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bPhone[:\s]*', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bEmail[\s]*id[:\s]*[-–]', '', text, flags=re.IGNORECASE)
+        
+        # DOB patterns - multiple formats
+        text = re.sub(r'\bDate of Birth[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bDOB[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bBorn[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\b\d{1,2}[-/]\w{3}[-/]\d{4}\b', '', text)  # 23-JAN-1994 format
+        text = re.sub(r'\b\d{1,2}[-/]\d{1,2}[-/]\d{4}\b', '', text)  # 23/01/1994 format
+        
+        # Marital status and gender
+        text = re.sub(r'\bMarital Status[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\b(MARRIED|Unmarried|Single)\b', '', text)
+        text = re.sub(r'\bGender[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\b(Male|Female)\b', '', text)
+        
+        # Nationality
+        text = re.sub(r'\bNationality[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bPassport[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\b(INDIAN|in DIAN)\b', '', text)  # Handle broken spacing
+        
+        # Family details
+        text = re.sub(r"\bFather['\u2019]?s? Name[:\s]+[^\n]+", '', text, flags=re.IGNORECASE)
+        text = re.sub(r"\bMother['\u2019]?s? Name[:\s]+[^\n]+", '', text, flags=re.IGNORECASE)
+        
+        # Government IDs
+        text = re.sub(r'\bPAN[:\s]+[A-Z0-9]+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\b(Aadhar|Aadhaar)[:\s]+[\d\s]+', '', text, flags=re.IGNORECASE)
+        
+        # Addresses - comprehensive patterns
+        text = re.sub(r'\b(Address|Permanent|Current)[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bResidence[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
+        
+        # Indian locations - states, cities
+        locations = ['Maharashtra', 'Karnataka', 'Gujarat', 'Delhi', 'Tamil Nadu', 'Kerala', 
+                    'Pune', 'Mumbai', 'Bangalore', 'Chennai', 'Hyderabad', 'Kolkata', 
+                    'Mahalunge', 'Balewadi', 'a manora Park', 'to wn']
+        for loc in locations:
+            text = re.sub(r'\b' + re.escape(loc) + r'\b', '', text, flags=re.IGNORECASE)
+        
+        # Country names
+        text = re.sub(r',\s*India\b', '', text)
+        text = re.sub(r'\bIndia\b', '', text)
+        
+        # ZIP/PIN codes (6 digits)
+        text = re.sub(r'\b\d{6}\b', '', text)
+        
+        # Declaration sections
+        text = re.sub(r'I here ?by declare.*?$', '', text, flags=re.MULTILINE|re.DOTALL)
+        text = re.sub(r'\bPlace[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bDate[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bSignature[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
+        
+        # Titles
+        text = re.sub(r'\b(Mrs?|Mr|Ms|Dr)\.?\s+', '', text)
+        
+        # Remove "PERSONAL INFORMATION" section headers
+        text = re.sub(r'\bPERSONAL INFORMATION\b', '', text, flags=re.IGNORECASE)
+        
+        # Remove OBJECTIVE sections (contains personal statements)
+        text = re.sub(r'OBJECTIVE[:\s]+.*?(?=\n[A-Z\s]{5,}|\Z)', '', text, flags=re.DOTALL|re.IGNORECASE)
+        text = re.sub(r'DECLARATION[:\s]+.*?(?=\n[A-Z\s]{5,}|\Z)', '', text, flags=re.DOTALL|re.IGNORECASE)
+        
+        # DEBUG: Save checkpoint 2 - after safe PII removal
+        if debug_dir:
+            Path(debug_dir, '02_after_safe_pii.txt').write_text(text, encoding='utf-8')
+        
+        # Remove ALL person names from header section (before WORK EXPERIENCE)
+        text = self._remove_all_header_names(text)
+        
+        # DEBUG: Save checkpoint 3 - after header name removal
+        if debug_dir:
+            Path(debug_dir, '03_after_header_redaction.txt').write_text(text, encoding='utf-8')
         
         return text
+    
+    def _remove_all_header_names(self, text: str) -> str:
+        """Remove ALL person names from header area (everything before WORK EXPERIENCE/PROFESSIONAL EXPERIENCE)"""
+        lines = text.split('\n')
+        result = []
+        in_header = True
+        
+        # Common title prefixes that indicate names
+        title_prefixes = ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.']
+        
+        # Section markers that indicate end of header
+        work_section_markers = [
+            'work experience', 'professional experience', 'employment history',
+            'work history', 'career history', 'experience'
+        ]
+        
+        for line_num, line in enumerate(lines):
+            stripped = line.strip()
+            
+            # Check if we've reached work experience section - end of header
+            if in_header:
+                for marker in work_section_markers:
+                    if marker in stripped.lower() and len(stripped) < 60:
+                        in_header = False
+                        break
+            
+            # If we're past header, keep everything
+            if not in_header:
+                result.append(line)
+                continue
+            
+            # Skip empty lines
+            if not stripped:
+                result.append(line)
+                continue
+            
+            # Remove entire lines that start with titles in header
+            skip_line = False
+            for prefix in title_prefixes:
+                if stripped.startswith(prefix):
+                    skip_line = True
+                    break
+            if skip_line:
+                continue
+            
+            # MORE AGGRESSIVE: Remove ANY line with 2-4 capitalized words in header
+            # This catches names even when mixed with other content
+            words = stripped.split()
+            if len(words) >= 2 and len(words) <= 4:
+                # Count capitalized words (potential name parts)
+                cap_words = [w for w in words if w and len(w) > 1 and w[0].isupper() and w.replace('-', '').replace("'", '').isalpha()]
+                
+                # If 2+ capitalized words, likely a name
+                if len(cap_words) >= 2:
+                    # Exceptions: Keep if it contains protected terms or technical keywords
+                    lower_line = stripped.lower()
+                    is_protected = any(protected in lower_line for protected in [
+                        'key skills', 'profile', 'summary', 'objective', 'developer', 
+                        'engineer', 'lead', 'senior', 'architect', 'consultant', 'analyst',
+                        'manager', 'director', 'specialist', 'technologist', 'activities',
+                        'interest', 'skills', 'product'
+                    ] + self.PROTECTED_NAMES)
+                    
+                    if not is_protected:
+                        # This is likely a person name - skip it
+                        continue
+            
+            # Also remove lines that are JUST a single capitalized word (first/last name alone)
+            if len(words) == 1 and len(stripped) > 2 and stripped[0].isupper() and stripped.isalpha():
+                # Exception: Keep if it's a known section header or keyword
+                if stripped.upper() not in ['PROFILE', 'SUMMARY', 'SKILLS', 'OBJECTIVE', 'KEY', 'ACTIVITIES', 'INTEREST', 'SOCIAL']:
+                    continue
+            
+            # Keep everything else in header
+            result.append(line)
+        
+        return '\n'.join(result)
+    
+    def _remove_header_names(self, text: str) -> str:
+        """Remove person names and locations from header section (first 30 lines)"""
+        lines = text.split('\n')
+        result = []
+        
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            
+            # Only process first 35 lines (header area - extended to catch more names)
+            if i >= 35:
+                result.append(line)
+                continue
+            
+            # Skip if empty
+            if not stripped:
+                result.append(line)
+                continue
+            
+            # Skip if it's a section header (preserve these)
+            if any(keyword in stripped.lower() for keyword in ['summary', 'skills', 'experience', 'profile', 'objective', 'key skills', 'work experience', 'technical skills', 'profile summary']):
+                result.append(line)
+                continue
+            
+            # FIRST: Remove location patterns from ALL lines (City, Country anywhere in the text)
+            # Match patterns like "Bangalore, India" or "New York, USA" 
+            # But NOT programming languages like "Python, Java"
+            # Location names typically: Bangalore, Mumbai, Delhi, Chennai, Hyderabad, Pune, Kolkata
+            #                           India, USA, UK, Canada, Singapore
+            location_cities = ['Bangalore', 'Mumbai', 'Delhi', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Noida', 'Gurgaon', 'Ahmedabad']
+            location_countries = ['India', 'USA', 'UK', 'Canada', 'Singapore', 'Australia', 'Germany', 'France']
+            
+            for city in location_cities:
+                line = re.sub(rf'\b{city}\b,?\s*', '', line, flags=re.IGNORECASE)
+            for country in location_countries:
+                line = re.sub(rf'\b{country}\b,?\s*', '', line, flags=re.IGNORECASE)
+            
+            stripped = line.strip()
+            
+            # If line became empty or too short after location removal, skip it
+            if not stripped or len(stripped) < 3:
+                continue
+            
+            # Skip if it contains protected company/tech names
+            lower_line = stripped.lower()
+            if any(protected in lower_line for protected in self.PROTECTED_NAMES):
+                result.append(line)
+                continue
+            
+            # Skip if line contains technical content, dates, or job titles
+            if any(x in lower_line for x in ['c++', 'python', 'java', 'linux', 'android', 'years', '20', 'exp:', 'specialisation', 'product :', 'programming :']):
+                result.append(line)
+                continue
+            
+            # Remove lines that look like names (1-4 capitalized words, no numbers)
+            words = stripped.split()
+            if 1 <= len(words) <= 4:
+                # Check if all words are capitalized and alphanumeric (names)
+                # BUT not job titles like "Lead Engineer" or "Software Developer"
+                if all(w and w[0].isupper() and re.match(r"^[A-Za-z\-']+$", w) for w in words):
+                    # Skip this line - it's likely a person name
+                    continue
+            
+            # Keep the line (possibly modified with location removed)
+            result.append(line)
+        
+        return '\n'.join(result)
 
 
 class ContentProtector:
@@ -328,67 +553,24 @@ class TextPolisher:
     
     @staticmethod
     def remove_duplicates(text: str) -> str:
-        """Remove consecutive duplicate lines and duplicate multi-line sections"""
+        """Remove ONLY consecutive duplicate lines (not global dedup)"""
         lines = text.split('\n')
+        if not lines:
+            return text
         
-        # Step 1: Remove consecutive duplicates
-        deduplicated = []
-        prev_line = None
+        result = [lines[0]]  # Always keep first line
         
-        for line in lines:
-            stripped = line.strip()
-            # Only add if not duplicate of previous line
-            if stripped != prev_line or len(stripped) < 5:  # Keep short lines even if duplicate
-                deduplicated.append(line)
-                prev_line = stripped
-        
-        # Step 2: Remove duplicate single lines (even if not consecutive)
-        # Track lines we've seen, remove exact duplicates of substantial lines
-        seen_lines = {}
-        dedup2 = []
-        for i, line in enumerate(deduplicated):
-            stripped = line.strip().lower()
-            # Only dedupe substantial lines (> 40 chars, not headers)
-            if len(stripped) > 40 and not stripped.startswith('=') and '•' not in stripped[:3]:
-                if stripped in seen_lines:
-                    continue  # Skip duplicate
-                seen_lines[stripped] = i
-            dedup2.append(line)
-        
-        # Step 3: Remove duplicate multi-line blocks using sliding window
-        # Create fingerprints of 3-line windows
-        final_lines = []
-        seen_fingerprints = set()
-        skip_until = -1
-        
-        for i in range(len(dedup2)):
-            # If we're in a skip zone, continue
-            if i < skip_until:
+        for i in range(1, len(lines)):
+            current = lines[i].strip()
+            previous = lines[i-1].strip()
+            
+            # Only skip if EXACT consecutive duplicate
+            if current == previous and current:  # Don't skip empty lines
                 continue
-                
-            line = dedup2[i].strip()
             
-            # Build a fingerprint from current line and next 2 lines
-            if line and len(line) > 25:  # Only for substantial lines
-                fingerprint_lines = []
-                for j in range(i, min(i + 4, len(dedup2))):
-                    fp_line = dedup2[j].strip()
-                    if fp_line and not fp_line.startswith('=') and len(fp_line) > 10:
-                        fingerprint_lines.append(fp_line.lower()[:40])  # First 40 chars
-                
-                if len(fingerprint_lines) >= 2:
-                    fingerprint = '|'.join(fingerprint_lines[:2])
-                    
-                    if fingerprint in seen_fingerprints:
-                        # Found duplicate block, skip the next several lines
-                        skip_until = i + len(fingerprint_lines)
-                        continue
-                    else:
-                        seen_fingerprints.add(fingerprint)
-            
-            final_lines.append(dedup2[i])
+            result.append(lines[i])
         
-        return '\n'.join(final_lines)
+        return '\n'.join(result)
     
     @staticmethod
     def fix_spacing(text: str) -> str:
@@ -520,9 +702,270 @@ class TextPolisher:
         text = re.sub(r'\ba\s+gile\b', 'Agile', text, flags=re.IGNORECASE)
         text = re.sub(r'\ba\s+s\s+sembl', 'Assembl', text, flags=re.IGNORECASE)
         
-        # Fix common space-broken words
-        text = re.sub(r'\bin\s+to\b', 'into', text, flags=re.IGNORECASE)
+        # Additional fixes for common broken words seen in outputs
+        text = re.sub(r'\ba\s+ny\s*[Pp]oint', 'AnyPoint', text)
+        text = re.sub(r'\bin\s+tegrati\s*on', 'Integration', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bDesignati\s*on', 'Designation', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bDurati\s*on', 'Duration', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bDescripti\s*on', 'Description', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bRegistrati\s*on', 'Registration', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bGenerati\s*on', 'Generation', text, flags=re.IGNORECASE)
+        
+        # COMPREHENSIVE fixes for all broken spacing issues found in output files
+        text = re.sub(r'\ba\s+nalys\s*is\b', 'analysis', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+nalytical\b', 'analytical', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+formati\s*on\b', 'information', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+bove\b', 'above', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bor\s+ganizati\s*on\b', 'organization', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bto\s+morrow\b', 'tomorrow', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+dexing\b', 'indexing', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+loha\b', 'Aloha', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+manora\b', 'Amanora', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+pplicati\s*on\b', 'application', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+pplocati\s*on\b', 'application', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+pproach\b', 'approach', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+bility\b', 'ability', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ctivities\b', 'activities', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ctions\b', 'actions', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+gents\b', 'agents', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ppreciati\s*on\b', 'appreciation', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+uth\s*or\b', 'author', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+uthenticati\s*on\b', 'authentication', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+utomated\b', 'automated', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+utomatically\b', 'automatically', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+vanced\b', 'advanced', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+dvance\b', 'advance', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+JAX\b', 'AJAX', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+llows?\b', 'allows', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+merican\b', 'American', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+marlal\b', 'Amarlal', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+PAC\b', 'APAC', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+BAP\b', 'ABAP', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+CCA\b', 'ACCA', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+CHIEVEMENTS\b', 'ACHIEVEMENTS', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ssist\b', 'assist', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ssociati\s*on\b', 'association', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+t\b(?!\s+the)', 'at', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ustria\b', 'Austria', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+warded\b', 'awarded', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ward\b', 'award', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+rticles\b', 'articles', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+bstracti\s*on\b', 'abstraction', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bCategorizati\s*on\b', 'Categorization', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bcha\s+in\b', 'chain', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bCommunicati\s*on\b', 'Communication', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bCollaborati\s*on\b', 'Collaboration', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bContributi\s*on\b', 'Contribution', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bco\s*-\s*or\s+dinated\b', 'coordinated', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bdecisi\s*on\b', 'decision', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bfor\s+ecasting\b', 'forecasting', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bgre\s+a\s+t\b', 'great', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+sights\b', 'insights', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+tegrat\s*or\b', 'Integrator', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+teractions\b', 'interactions', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+tuitive\b', 'intuitive', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+volved\b', 'involved', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bmaj\s+or\b', 'major', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bMainta\s+in\b', 'Maintain', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bMonitoring\b(?=\s+SI)', 'Monitoring', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bof\s+fering\b', 'offering', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bof\s+fers\b', 'offers', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bof\s+fice\b', 'office', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bParticipate\b(?!\s+in)', 'Participate', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bprep\s+are\b', 'prepare', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bproactive\b(?!\s+approach)', 'proactive', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bproducti\s*on\b', 'production', text, flags=re.IGNORECASE)
+        text = re.sub(r'\breducti\s*on\b', 'reduction', text, flags=re.IGNORECASE)
+        text = re.sub(r'\brecogniti\s*on\b', 'recognition', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bregi\s*on\b', 'region', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bResponsive\b(?!\s+UI)', 'Responsive', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bsatisfacti\s*on\b', 'satisfaction', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bsections?\b(?!\s+from)', 'sections', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bSeni\s*or\b', 'Senior', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bspecificati\s*ons\b', 'specifications', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bstatistic\b', 'statistics', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bsubscripti\s*ons?\b', 'subscriptions', text, flags=re.IGNORECASE)
+        text = re.sub(r'\btransmissi\s*on\b', 'transmission', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bTransiti\s*on\b', 'Transition', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bto\s+wards\b', 'towards', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bto\s+wn\b', 'town', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bvalidati\s*on\b', 'validation', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bvisualizati\s*on\b', 'visualization', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bwill\b(?!\s+in)', 'well', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bto\s+tal\b', 'total', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+pril\b', 'April', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bVersi\s*on', 'Version', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+pplications?\b', 'application', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bEnvironment', 'Environment', text)
+        text = re.sub(r'\bor\s+iented', 'oriented', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+FORMATI\s+on', 'INFORMATION', text)
+        text = re.sub(r'\ba\s+MIT', 'AMIT', text)
+        
+        # More broken word patterns found in outputs
+        text = re.sub(r'\ba\s+nalyze\b', 'analyze', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+cidents\b', 'incidents', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bfuncti\s*on\b', 'function', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+maz\s*on\b', 'Amazon', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+zure\b', 'Azure', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ugust\b', 'August', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ims\b', 'aims', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+bstracts\b', 'abstracts', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+chieving\b', 'achieving', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+re\b(?!\s+you)', 'are', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+s\s+sist\b', 'assist', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bE\s+at\s+on\b', 'Eaton', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bgre\s+a\s+t\b', 'great', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bQuali\s*ficati\s*on\b', 'Qualification', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bexperti\s+se\b', 'expertise', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bchiev\s*ing\b', 'achieving', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bfoster\s*ing\b', 'fostering', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bextracti\s*on\b', 'extraction', text, flags=re.IGNORECASE)
+        
+        # Additional broken patterns from latest check
+        text = re.sub(r'\ba\s+dvanced\b', 'advanced', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+dex\b', 'index', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+tegrating\b', 'integrating', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bprecisi\s*on\b', 'precision', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+nalytics\b', 'analytics', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bor\s+ganizational\b', 'organizational', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bpreparati\s*on\b', 'preparation', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bpresentati\s*on\b', 'presentation', text, flags=re.IGNORECASE)
+        text = re.sub(r'\btransacti\s*on\b', 'transaction', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bdoma\s+in\b', 'domain', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bflow\s+\.', 'flow.', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ccounting\b', 'accounting', text, flags=re.IGNORECASE)
+        
+        # Final fixes for remaining broken words
+        text = re.sub(r'\bin\s+tercompany\b', 'intercompany', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+greement\b', 'agreement', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bcreati\s*on\b', 'creation', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+itiatives\b', 'initiatives', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bobta\s+in\b', 'obtain', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bpositi\s*on\b', 'position', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ngular\b', 'Angular', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+utomati\s*on\b', 'automation', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bCalculati\s*on\b', 'Calculation', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+ce\b', 'once', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bide\s+as\b', 'ideas', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+nnum\b', 'annum', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bth\s+at\b', 'that', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bthe\s+me\b', 'theme', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bto\s+p\b', 'top', text, flags=re.IGNORECASE)
+        
+        # MORE patterns from verification (critical fixes)
+        text = re.sub(r'EFFICIENT\s+SOLUTIONS\.\s*-SOLVING\s+SKILLS', 'EFFICIENT SOLUTIONS. PROBLEM-SOLVING SKILLS', text)
+        text = re.sub(r'\bpers\s+on\b', 'person', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+pply\b', 'apply', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bst\s+and-ups\b', 'stand-ups', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+dustry\b', 'industry', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+teractivity\b', 'interactivity', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bconfigurati\s*on\b', 'configuration', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bBlaz\s+or\b', 'Blazor', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bCertificati\s*on\b', 'Certification', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+dopt\b', 'adopt', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+dividual\b', 'individual', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+fotech\b', 'infotech', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bor\s+der\b', 'order', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bSoft-?\s*w\s+are\b', 'Software', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bc\s+on-?\s*trol\b', 'control', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bthe\s+mes\b', 'themes', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+pr\b', 'Apr', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bdistracti\s*on\b', 'distraction', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+rchitect\b', 'architect', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+udi\b', 'Audi', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+utomo-?\s*tive\b', 'automotive', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bKotl\s+in\b', 'Kotlin', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bper\s+for-?\s*mance\b', 'performance', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ctivity\b', 'activity', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ltran\b', 'Altran', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bpa\s+in\b', 'pain', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bEdit\s+or\b', 'Editor', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bwith\s+in\b', 'within', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+dhering\b', 'adhering', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bas\s+sisted\b', 'assisted', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bwith\s+out\b', 'without', text, flags=re.IGNORECASE)
+        
+        # Remove weird symbol patterns
+        text = re.sub(r'●●\s+[a-z]\s+[a-z]+\s*', '', text)
+        text = re.sub(r'\(cid:\d+\)', '', text)  # Remove (cid:123) patterns
+        text = re.sub(r'\(cid\s*\)', '', text)
+        text = re.sub(r'\(cid\s+', '', text)
+        text = re.sub(r'○\s+', '• ', text)  # Convert hollow bullets to solid
+        
+        # Clean up incomplete URLs and orphaned text
+        text = re.sub(r'\bwww\.\s*$', '', text, flags=re.MULTILINE)
+        text = re.sub(r'\bwww\.\s*\n', '\n', text, flags=re.MULTILINE)
+        text = re.sub(r'\bhttp[s]?://\s*$', '', text, flags=re.MULTILINE)
+        
+        # ALL remaining broken word patterns - comprehensive fix
+        text = re.sub(r'\ba\s+bout\b', 'about', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+fter\b', 'after', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ll\b', 'all', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+lso\b', 'also', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+n\s+', 'an ', text)
         text = re.sub(r'\ba\s+nd\b', 'and', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ny\b', 'any', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+s\s+', 'as ', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+t\b', 'at', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+uth\s*or\b', 'author', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+uthenticati\s*on\b', 'authentication', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+utomated\b', 'automated', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+vailable\b', 'available', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ware\b', 'aware', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bco\s+or\s+dinati\s*on\b', 'coordination', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bf\s+or\b', 'for', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bfor\s+ecasting\b', 'forecasting', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+clude\b', 'include', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+come\b', 'income', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+dependently\b', 'independently', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+fosys\b', 'Infosys', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+formati\s*on\b', 'information', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+itiatives\b', 'initiatives', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+tel\b', 'Intel', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+tercompany\b', 'intercompany', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+to\b', 'into', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bm\s+onitoring\b', 'monitoring', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bon\s+ce\b', 'once', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bover\s+view\b', 'overview', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bP\s+apis\b', 'APIs', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+P\s+is\b', 'APIs', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bper\s+form\b', 'perform', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bper\s+formed\b', 'performed', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bpre\s+pared\b', 'prepared', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bpre\s+pare\b', 'prepare', text, flags=re.IGNORECASE)
+        text = re.sub(r'\breconciliati\s*on\b', 'reconciliation', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bs\s+ame\b', 'same', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bsoluti\s*on\b', 'solution', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bt\s+o\b', 'to', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bthe\s+ir\b', 'their', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bthe\s+re\b', 'there', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bth\s+is\b', 'this', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bto\s+ols?\b', 'tool', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bW\s+as\b', 'Was', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bwell\s+be\b', 'will be', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bw\s+ork\b', 'work', text, flags=re.IGNORECASE)
+        
+        # Fix specific broken patterns
+        text = re.sub(r'\ba\s+s\s+sociate\b', 'Associate', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+s\s+sociati\s*on\b', 'association', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+s\s+signed\b', 'assigned', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+s\s+sist\b', 'assist', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+s\s+sisted\b', 'assisted', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+u\s+dit\b', 'audit', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+UG\b', 'AUG', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bas\s+P\.NET\b', 'ASP.NET', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bat\s+OS\b', 'TCS', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bcomponent\s*s\b', 'components', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bDECLARATI\s*on\b', 'DECLARATION', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bF\s+is\b', 'FIS', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bide\s+as\b', 'ideas', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bide\s+a\b', 'idea', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bimplemeted\b', 'implemented', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bJ\s+S\s+on\b', 'JSON', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bJalga\s+on\b', 'Jalgaon', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bmigrati\s*on\b', 'migration', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bstretegies\b', 'strategies', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bV\s+at\b', 'VAT', text, flags=re.IGNORECASE)
         text = re.sub(r'\ba\s+cross\b', 'across', text, flags=re.IGNORECASE)
         text = re.sub(r'\bin\s+terface', 'interface', text, flags=re.IGNORECASE)
         text = re.sub(r'\bin\s+volving', 'involving', text, flags=re.IGNORECASE)
@@ -531,6 +974,96 @@ class TextPolisher:
         text = re.sub(r'\bto\s+oling', 'tooling', text, flags=re.IGNORECASE)
         text = re.sub(r'\ba\s+rchitecture', 'architecture', text, flags=re.IGNORECASE)
         text = re.sub(r'\bprocess\s+or\b', 'processor', text, flags=re.IGNORECASE)
+        
+        # Remove garbled/nonsense text patterns
+        text = re.sub(r'\b[A-Z][a-z]{2,}[a-z]{2,}[a-z]{2,}\s+[a-z]{3,}[a-z]{3,}\s+[a-z]{3,}[a-z]{3,}\b', '', text)
+        # Remove specific garbled patterns
+        text = re.sub(r'●●\s*H[A-Z][a-z]+\s+[a-z]+\s+[a-z]+\s+[a-z]+.*?\.', '●', text)
+        text = re.sub(r'[A-Z][a-z]{8,}\s+[a-z]{8,}\s+[a-z]{8,}.*?\.', '', text)
+        
+        # Clean up standalone single letters and fragments
+        text = re.sub(r'\bC\s+O\s*\n', '\n', text)  # "C O" on its own line
+        text = re.sub(r'\bP\s+Q\s*\n', '\n', text)  # "P Q" on its own line
+        text = re.sub(r'\bD\s+IFRS\b', 'DIPLOMA IFRS', text)
+        text = re.sub(r'\bC\s+A\b', 'CA', text)
+        text = re.sub(r'\bD\s+eveloper', 'Developer', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bE\s+SB\b', 'ESB', text)
+        text = re.sub(r'\bR\s+EST\b', 'REST', text)
+        text = re.sub(r'\bS\s+OAP\b', 'SOAP', text)
+        text = re.sub(r'\bW\s+in\b', 'Win', text)
+        
+        # Fix common typos and misspellings
+        text = re.sub(r'\bFilers\b', 'Filters', text)
+        text = re.sub(r'\bMunit\b', 'MUnit', text)
+        text = re.sub(r'\bcomponants\b', 'components', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bcompletication\b', 'completion', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bcompleti\s*on\b', 'completion', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bwell\s+be\s+providing\b', 'will be providing', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bwell\s+be\s+Provides\b', 'will be Provides', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bresourcerequests\b', 'resource requests', text, flags=re.IGNORECASE)
+        
+        # Final cleanup for remaining broken words - COMPREHENSIVE
+        text = re.sub(r'\ba\s+ccept\b', 'accept', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ccuracy\b', 'accuracy', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+chieve\b', 'achieve', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+dapt\b', 'adapt', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+dherence\b', 'adherence', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+DO\.NET\b', 'ADO.NET', text)
+        text = re.sub(r'\ba\s+iming\b', 'aiming', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+lcatel\b', 'Alcatel', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+lign\b', 'align', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+LM\b', 'ALM', text)
+        text = re.sub(r'\ba\s+nalyst\b', 'analyst', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+nalyzing\b', 'analyzing', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+nti-Executable\b', 'Anti-Executable', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+ntivirus\b', 'Antivirus', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+pache\b', 'Apache', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+pplicants\b', 'applicants', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+rchitects\b', 'architects', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+s\s+sessments\b', 'assessments', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba\s+utomates\b', 'automates', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bas\s+sociati\s*on\b', 'association', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bdept\b', 'adept', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bdirecti\s*on\b', 'direction', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bdocumentati\s*on\b', 'documentation', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bErr\s+or\b', 'Error', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bfor\s+m\b', 'form', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bfor\s+matting\b', 'formatting', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bgre\s+at\b', 'great', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bh\s+as\b', 'has', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bhas\s+sle-free\b', 'hassle-free', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bimplemet\b', 'implement', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+cluding\b', 'including', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+tern\b', 'Intern', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+novative\b', 'innovative', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+put\b', 'input', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin\s+tegrated\b', 'integrated', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bj\s+Query\b', 'jQuery', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bJS\s+on\b', 'JSON', text)
+        text = re.sub(r'\blog\s+in\b', 'login', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bMeditati\s*on\b', 'Meditation', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bor\s+dinati\s*on\b', 'ordination', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bpersonalizati\s*on\b', 'personalization', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bPredicti\s*on\b', 'Prediction', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bRequirment\b', 'Requirement', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bto\s+mc\s+at\b', 'Tomcat', text, flags=re.IGNORECASE)
+        
+        # Remove complete garbled nonsense lines
+        text = re.sub(r'●●\s*[A-Z][a-z]+[a-z]+[a-z]+\s+[a-z]+[a-z]+\s+.*?\.', '', text)
+        text = re.sub(r'Daneds\s+i\s+a\s+gnneyd.*?\.', '', text)
+        text = re.sub(r'IHmapnldesm-oenn.*?\.', '', text)
+        text = re.sub(r'IAmnpalleymzeedn.*?\.', '', text)
+        text = re.sub(r'DAenpalloyyzemde.*?\.', '', text)
+        text = re.sub(r'i\s+Pmarptliecmipeatteedd.*?\.', '', text)
+        
+        # Clean up "id. –" and similar fragments
+        text = re.sub(r'\bid\.\s*[-–—]\s*\n', '\n', text)
+        text = re.sub(r'\bNo\.\s*:\(\s*\n', '\n', text)
+        
+        # Remove "www." on its own line or at end of line
+        text = re.sub(r'^www\.\s*$', '', text, flags=re.MULTILINE)
+        text = re.sub(r'\nwww\.\s*\n', '\n', text)
+        text = re.sub(r'Consultant\s*\nwww\.', 'Consultant', text)
         text = re.sub(r'\bis\s+sue', 'issue', text, flags=re.IGNORECASE)
         text = re.sub(r'\bidentificati\s+on', 'identification', text, flags=re.IGNORECASE)
         text = re.sub(r'\bin\s+fluence', 'influence', text, flags=re.IGNORECASE)
@@ -983,7 +1516,7 @@ class ResumePipeline:
         return result
     
     def _remove_education(self, text: str) -> str:
-        """Remove education section from text"""
+        """Remove education section COMPLETELY with enhanced detection"""
         lines = text.split('\n')
         result = []
         in_education = False
@@ -991,9 +1524,23 @@ class ResumePipeline:
         
         for i, line in enumerate(lines):
             line_upper = line.strip().upper()
+            line_lower = line.strip().lower()
             
             # Detect education section start
             if 'EDUCATION' in line_upper and len(line_upper) < 40:
+                in_education = True
+                skip_count = 0
+                continue
+            
+            # Also detect lines with degree keywords
+            if any(x in line_lower for x in ['b.tech', 'b.e.', 'm.tech', 'm.e.', 'bachelor', 'master',
+                                              'diploma', 'ph.d', 'phd', 'university', 'college', 'institute']):
+                in_education = True
+                skip_count = 0
+                continue
+            
+            # Also detect CGPA/GPA/percentage lines (education details)
+            if any(x in line_lower for x in ['cgpa:', 'gpa:', 'percentage:', 'marks:', 'score:']):
                 in_education = True
                 skip_count = 0
                 continue

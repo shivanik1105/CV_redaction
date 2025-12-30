@@ -1,0 +1,86 @@
+SUMMARY & KEY SKILLS
+============================================================
+
+Pune, Maharashtra, 421501 •
+Chirayu Yelane •
+Chirayu Yelane
+Chirayu Yelane •
+Python DEVELOPER
+PROFILE
+Software developer of fering 5 years of product-based a pplications extensive experience and
+exceptional a nalytical and critical thinking skills. Delivering a proactive a pproach, gre a t work ethic
+and the a bility to functi on will in fast-paced/deadline-driven team environments.
+SKILLS
+Python Programming Cloud platforms like a maz on Web Services
+Microsoft a zure, Terraform, GCP
+
+
+Micro services, REST API's, HTTP REQUEST Fast API, Flask, Django, Fast API, Pyspark, Streamlit, Plotly-dash
+Git, JIRA, Jenkins, CI/CD, Kubernetes dashboard AWS services like – AWS Step Functions, Lambda
+Jmeter, Rally, a zure DevOps, Elasticsearch S3, Ec2, ECS, SNS
+SQLite, PostgreSQL, SQL, MongoDB a dvance Microsoft of fice, Excel and PowerPoint
+Fluent with English speaking and writing Html, css, Javascript, React.js
+
+
+PROFESSIONAL EXPERIENCE
+============================================================
+
+Springer Nature Publishing Technologies
+
+Python Developer, October 2023 – Present
+Th is project a ims to build a n a utomated system f or journal a bstracti on and in dexing, emphasizing efficiency, user-friendliness, and
+a dvanced a nalytics. It combines Python Django f or the backend, HTML, JavaScript, a JAX, and CSS f or the frontend, and MySQL f or data
+management. Using Google Cloud Platform (GCP) f or scalable storage of journal PDFs and Plotly Dash f or dynamic dashboards, it of fers
+robust a nalytics. Tableau further enhances decisi on-making with a dvanced data visualizati on.
+Key Contributi on
+1. Journal a bstracti on and in dexing
+o a utomatically in dex journals by metadata (title, a uth or, keywords).
+o Extract a bstracts and key sections from a rticles.
+o Provide in tuitive search and categorizati on.
+2. Cloud Storage and File Management
+o Securely store PDFs on GCP.
+o a llow users to upload, download, and manage files with privacy controls.
+3. Backend (Django)
+o Role-based user a uthenticati on and subscripti on management.
+o MySQL in tegrati on f or structured metadata and user records.
+o Python scripts f or metadata extracti on and keyword in dexing.
+4. Frontend
+o Responsive UI with a JAX f or smooth in teractions.
+o Personalized dashboards and embedded PDF viewers.
+5. a nalytics
+o Use Plotly Dash f or sales, subscriptions, and user engagement in sights
+Paytm(Paytm m’loyal)
+Software Engineer, June 2022 – a ugust 2023
+m’loyal™ is a n a dvanced mobile loyalty, data a nalytics, and precisi on marketing platform seamlessly in tegrating mobile
+technology, web-based CRM, and visual a nalytics. Designed to drive exceptional results f or retail brands, it combines cutting-
+edge to ols like PySpark f or large-scale data processing, AWS cloud services f or secure, scalable infrastructure, and SQL f or
+a dvanced data management.
+The platform leverages machine learning algorithms and real-time a nalytics to empower marketers with personalized
+campaigns, improving customer engagement and maximizing ROI. Its has sle-free SaaS model ensures effortless deployment and
+functionality, making it a trusted soluti on f or retail brands a iming f or unprecedented growth.
+Key Contributions
+• Backend Development: Created Django a P is based on business logic; used Flask with Pickle f or log in and data in put pages.
+• Frontend Enhancements: Designed user-friendly HTML pages using React.js and coordinated with the design team f or
+better UI/UX. Implemented validations f or email and mobile in put.
+• Data Management: Filtered data from MySQL to create MongoDB collections; designed and optimized SQL queries f or
+personalized reporting.
+• a nalytics: Created dynamic dashboards using Tableau and Python’s Plotly library f or graphical in sights.
+• Cloud Management: Managed AWS infrastructure (S3, EC2) f or scalability and cost-efficiency.
+• Testing & Reporting: Conducted rigorous testing, documented issues in JIRA/a LM, and generated reports.
+With its focus on scalability, real-time in sights, and personalizati on, m’loyal™ empowers retail brands to a chieve significant
+business growth.
+Pay as Systems pvt ltd
+Software Engineer, a ugust 2019 – a pril 2022
+The Loan Predicti on Using Machine Learning project a utomates loan eligibility as sessments f or bank customers by predicting
+the ir eligibility based on in put data from a n on line a pplicati on f or m. The system processes customer data, in cluding a ge
+in come, and credit score, using a machine learning model trained to classify a pplicants as eligible or not eligible f or a loan.
+Key Contributions
+Data Preparati on: Collected and preprocessed loan datasets, in cluding handling missing values, scaling features, and encoding
+categorical variables.
+Model in tegrati on: Serialized the machine learning model using Pickle and in tegrated it into the Fast API a pplicati on.
+API Development: Developed a Fast API endpoint to a ccept user data and return loan eligibility predictions.
+Web interface Design: Designed and in tegrated the data in put f or m with the Fast API backend f or loan predicti on.
+Data Validati on: Implemented in put validati on using Pydantic to ensure data a ccuracy and proper f or matting.
+Visualizati on: Used Seaborn f or creating visualizations to a nalyze loan predicti on trends and model performance.
+Collaborati on: Coordinated with cross-functional teams to gather requirements and a lign development progress with project
+goals.

@@ -1,0 +1,120 @@
+SUMMARY & KEY SKILLS
+============================================================
+
+RESUME
+PERSONAL DETAILS
+NAME
+a DDRESS
+DATE OF BIRTH
+Contact No
+MARITAL STATUS
+NATIONALITY
+CURRENT OCCUPATI on
+Rajeshwari Sakharkar
+a manora Park to wn, Pune
+Maharashtra, 411028
+
+
+23-JAN-1994
+MARRIED
+in DIAN
+Seni or as sociate Consultant
+Bachel or Of Computer a pplicati on RTMNU
+Master Of Computer a pplicati on from RCOEM
+
+Nagpur (2019)
+S2871386 (11 th December 2028)
+C, C++, Java, or a cle PL/SQL
+HTML
+Windows 7/8/8.1, Windows Server
+or a cle 11g, 12c, SQL Developer
+B2B Products: IBM Sterling B2B in tegrat or, IBM
+Sterling File Gateway, SAP a BAP, or a CLE
+11i/12g
+Others: Sterling Map Edit or, Putty, SQL
+Developer, Citrix Comm and Center, Lia is on EDI
+Notepad
+Citrix Comm and Center, Service Now, GitLab
+Microsoft Sh are Point, Solman
+Page 1 of 4
+• Developing/Enhancing Maps f or EDI standards X12(850,855,856,810,820,180), XML, EDIFACT.
+• Resoluti on of issues related to business process, maps, SAP document processing errors and
+communicati on protocols.
+• Worked on as2, SFTP and FTP connecti on setup (End – to – End).
+• Profile creati on f or various trading partner using Communicati on protocol (as2, FTP, SFTP)
+• Envelope creati on f or various trading partners
+• Uploading and creating Map using IBM sterling in tegrat or, Envelopes, TP setup in SI(U a t/PROD)
+• Configured/ Enhanced Business Process.
+• Well, exposed to Business (B2B) a pplicati on a pplicati on and Supply Cha in Doma in and h as worked on EDI
+Development/Support f or IBM customers.
+• Experience in communicating with trading partners, sending documents through VAN, using FTP, as2, FTPS
+SFTP, FTP.
+• Configured Communicati on Profiles f or Partners f or EMEA and NALA.
+• Developed and deployed Maps & Business process , resulting in a 30% reducti on in system errors and
+improving a pplicati on performance by 25%
+• Mainta in well customer satisfacti on statistic.
+
+Durati on : Feb 2024 : Present
+Software/a pplocati on : IBM Sterling in tegrat or, SAP a BAP, Service Now, GitLab
+Sol MN, Map Edit or .
+2. Project Name ULTA BEAUTY
+Client : Leading a merican cha in of beauty stores.
+Role : as sociate Consultant
+Responsibility
+• Collaborated with cross-functional teams to a nalyze Requirements
+Collaborate with the Bas is team in managing and monitoring a BAP jobs, SAP interfaces, and EDI
+transactions
+• Enhance and mainta in the a pplications supported IBM Sterling B2B in tegrat or to ols.
+• Prioritizing the Producti on defects/in cidents/Service requests and work on the issue to fix as per the
+urgency.
+• Developing specifications f or mapping and validati on of output.
+• Monitoring SI failures in producti on and basic knowledge in creating business processes using generic
+processes in Sterling in tegrat or.
+• Co-or dinated with related technical teams to resolve the problems reported by customer or others.
+Ticket handling a ctivities as part of system support using Jira
+& CHERWELL.
+• Participate in KT sessions, help prep are system a ppreciati on documents and support the Transiti on
+process.
+• Deployment and validati on of monitoring a gents f or B2B a pplications.
+• Work closely with business partners & trading partners on EDI setups and testing to ensure err or-free
+data transmissi on.
+• Taking Corrective a ctions and preventive measures to ensure On-Time Delivery with Highest Quality.
+
+Durati on : SEPT 2022 – Feb 2024
+Page 2 of 4
+Software : Sterling B2B in tegrat or, Map Edit or, SAP a BAP, TIBCO, CHERWELL
+Open Text, Jira, POSTMAN.
+2. Company : E a t on Technologies Private Limited.
+Durati on : 3 years
+Designati on : as sociate a nalyst
+Descripti on of the project
+Worked on Vehicle and electrical doma in f or new partners on-boarding with end-to-end EDI
+transacti on flow .Upgrading 11i E-business suite to R12 E-Business Suite
+Role : EDI a nalyst
+Responsibility
+• a nalys is of existing business flows
+• Uploading and creating Map from Gentran file layout, envelopes, TP setup in SI(U a t/PROD
+• Well, exposed to Business to Business (B2B) a pplicati on and Supply Cha in Doma in and h as worked on
+EDI Development/Support f or IBM’s customers.
+• Developed map as per customer requirement.
+• in tegrating Sterling in tegrat or with SAP and or a cle
+• Implemented the Release Management f or the customer. Created the processing rules f or or der
+Management level. Communicated the Translators and end customer f or SPSI and SSSI transactions.
+Created Matching rules. Resolved the stagnated dem and schedules from transacti on work bench. •
+SAP IDOCS monitoring, issue resoluti on and reporting
+• Experience in communicating with trading partners, sending documents through VAN, using FTP, as2
+FTPS, SFTP, POP3, FTP .
+• Mainta in well customer satisfacti on statistic.
+• Perform work-related tasks with minimal supervisi on and handle a mbiguous situati on with little
+supervisory as sistance.
+Durati on : June 2019 – Sept 2022
+Software : Sterling B2B in tegrat or 5.2.4, Sterling map edit or, or a CLE
+11i/12g, VISTA, REMEDY.
+DETAILS OF in FOSYS TRAINING UNDERGONE
+# Trained On Period(in Days)
+1 Overview o f API and 1
+Micro services
+2 SEEBURGER 7
+3 a XWAY File Transfer 4
+Page 3 of 4
+Page 4 of 4

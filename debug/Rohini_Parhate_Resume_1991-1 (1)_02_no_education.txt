@@ -1,0 +1,86 @@
+Rohini Parhate
+Senior Software Engineer
+
+Senior Software Engineer offering 7 years of experience. Enthusiastic about developing forward-
+thinking solutions to tomorrow's productivity problems. Resourceful and adaptable approach to
+
+challenges.
+rohinisp1991@gmail.com +91 9834870348
+WORK EXPERIENCE
+Senior Software Engineer
+Luxoft LLP
+07/2022 - Present, Banglore, India
+Remote
+Achievements/Tasks
+Worked on multiple projects as a full stack developer.
+Experience in developing commercial legal and finance
+softwares using the Asp.Net CORE framework and Entity
+framework ORM.
+Also having experience in backend development using
+Asp.Net CORE for REST APIs and frontend development
+using Angular 13 and React JS 18.
+Software Developer
+Tudip Technologies
+07/2018 - 07/2022, Pune, India
+Remote
+Achievements/Tasks
+Experience in developing commercial healthcare and finance
+software using the .NET Framework MVC architecture and
+Entity framework.
+Worked on multiple projects as front end and back end
+developer.
+Hands of experience in implementing Stripe payment
+gateway, webhooks and web APIs.
+Experience in leading a team of 4-6 people.
+Software Engineer
+Evolveware Inc
+01/2015 - 12/2015 Ahmedabad, India
+Achievements/Tasks
+Designing and coding for the change requests for the
+application.
+SKILLS
+Framework: Asp.Net CORE 7, Asp.Net MVC, Angular 13
+Web: HTML, AJAX, CSS, JAVASCRIPT, TYPESCRIPT, React
+JS 18
+Language: C# Database: SQL server 2019
+ORM: Dapper, Entity framework
+Payment Gateway: Stripe, Plaid
+Web Server: Amazon AWS Version Control: Git
+Project management tools: JIRA, Slack, Trello, Basecamp
+PROJECTS
+Luxoft LLP | Legal Solution Suite (LSS)
+(01/2023 - Present)
+LSS ia a software product provides end-to-end litigation
+management solution that automates the processes.
+Worked on admin part which is used to manage matter, analyze
+invoices.
+Worked on implementing the admin module using Asp.Net Core
+for APIs and Angular 13 for UI part.
+Also worked on complex admin sub module UI where using React
+JS 18.
+Luxoft LLP | Ultra (07/2023 - 12/2023)
+Worked on Zurich NA - Ultra application which is used to create and
+manage various policies where maintaining the current application.
+In this application policies can be created using different products.
+Policies can be quoted, booked, rebind and issue from this
+application.
+Worked on migrating the existing application using Asp.Net core
+for APIs and Angular 13 for UI.
+Tudip Technologies | BoomCloud (07/2018 - 07/2022)
+Worked on migrating the Asp.Net web form application to MVC.
+Implemented a Stripe payment gateway, Plaid API and webhooks
+for payments using Asp.Net web API 2.
+Worked on frontend using Angular 13.
+Managed a team of 4 developers to maintain the application and
+release monthly software updates (client communication).
+Tudip Technologies | RupeeBoss (06/2021 - 07/2022)
+Responsible for task identification, work effort estimates, and work
+schedules for development and maintenance activities Estimate,
+plan and manage development tasks (lead a group of 4 developers).
+Implemented Web API using Asp.Net web API 2 and UI using
+Angular 13.
+Migrated existing application to Asp.NET MVC architecture.
+Integrated WhatsApp APIs to implement WhatsApp chatbot.
+Evolveware Inc | MedERP (01/2015 - 12/2015)
+Worked on designing responsive web forms.
+Dapper ORM implementation.
