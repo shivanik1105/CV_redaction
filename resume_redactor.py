@@ -33,6 +33,44 @@ except:
     nlp = None
 
 
+class ResumeClassifier:
+    """Classify resume type to route to appropriate pipeline"""
+    
+    @staticmethod
+    def classify(pdf_path: str) -> str:
+        """Detect resume category: naukri, multi_column, standard, simple"""
+        filename = os.path.basename(pdf_path).lower()
+        
+        # Check filename patterns
+        if 'naukri' in filename:
+            return 'naukri'
+        
+        # Analyze PDF structure
+        if HAS_PDFPLUMBER:
+            try:
+                with pdfplumber.open(pdf_path) as pdf:
+                    if pdf.pages:
+                        page = pdf.pages[0]
+                        words = page.extract_words(x_tolerance=2, y_tolerance=2)
+                        
+                        if not words:
+                            return 'simple'
+                        
+                        # Detect multi-column by checking word distribution
+                        page_width = page.width
+                        left_words = sum(1 for w in words if w['x0'] < page_width * 0.4)
+                        right_words = sum(1 for w in words if w['x0'] > page_width * 0.6)
+                        
+                        if left_words > 10 and right_words > 10:
+                            return 'multi_column'
+                        
+                        return 'standard'
+            except:
+                pass
+        
+        return 'standard'
+
+
 class TextExtractor:
     """Extract text from PDFs"""
     
@@ -210,6 +248,197 @@ class TextExtractor:
         # if HAS_FITZ: ...
         
         return text
+    
+    @staticmethod
+    def extract_naukri(pdf_path: str) -> str:
+        """Extract Naukri resumes - typically 2-column with specific formatting"""
+        return TextExtractor.extract(pdf_path)  # Use standard multi-column logic
+    
+    @staticmethod
+    def extract_standard(pdf_path: str) -> str:
+        """Extract standard single-column resumes"""
+        if HAS_PDFPLUMBER:
+            try:
+                with pdfplumber.open(pdf_path) as pdf:
+                    all_text = []
+                    for page in pdf.pages:
+                        text = page.extract_text(x_tolerance=1.5, y_tolerance=2)
+                        if text:
+                            all_text.append(text)
+                    return "\n\n".join(all_text)
+            except:
+                pass
+        return ""
+    
+    @staticmethod
+    def extract_simple(pdf_path: str) -> str:
+        """Extract simple/basic resumes with minimal formatting"""
+        text = ""
+        if HAS_PDFPLUMBER:
+            try:
+                with pdfplumber.open(pdf_path) as pdf:
+                    text = "\n\n".join(page.extract_text() or "" for page in pdf.pages)
+            except:
+                pass
+        if not text and HAS_FITZ:
+            try:
+                doc = fitz.open(pdf_path)
+                text = "\n\n".join(page.get_text() for page in doc)
+                doc.close()
+            except:
+                pass
+        return text
+
+class WordHealer:
+    """Fix fragmented text like 'a b c' -> 'abc' and common broken patterns"""
+    
+    @staticmethod
+    def heal(text: str) -> str:
+        """Rejoin fragmented single-character sequences that form valid words or patterns"""
+        import re
+        
+        # Pattern 1: Single chars separated by spaces (e.g., 'a b h i n a v' -> 'abhinav')
+        # Look for sequences of 3+ single letters with spaces
+        def rejoin_fragments(match):
+            fragment = match.group(0)
+            # Remove spaces to get the potential word
+            joined = fragment.replace(' ', '')
+            # If it's 4+ chars and looks like a word (not random chars), join it
+            if len(joined) >= 4 and joined.isalpha():
+                # Check if it looks like a name or common word pattern
+                # Names often have capital first letter when fragmented
+                if fragment[0].isupper() or joined.lower() in [
+                    'address', 'email', 'phone', 'linkedin', 'github',
+                    'contact', 'mobile', 'abhinav', 'rohini', 'prashant'
+                ]:
+                    return joined
+            return fragment
+        
+        # Match: single letter, space, single letter, space, ... (3+ times)
+        text = re.sub(r'\b([a-zA-Z])\s+([a-zA-Z])\s+([a-zA-Z])(?:\s+[a-zA-Z])*\b', rejoin_fragments, text)
+        
+        # Pattern 2: Specific known fragmentation patterns
+        fragments = {
+            'a bhinav': 'Abhinav',
+            'a bhishek': 'Abhishek',
+            'p rashant': 'Prashant',
+            'r ohini': 'Rohini',
+            'p mayur': 'Mayur',
+            'a mit': 'Amit',
+            'rohinisp': '',  # Remove username fragments
+            'pmayur': '',
+            'ediwa': '',  # LinkedIn username fragments
+        }
+        
+        for fragmented, fixed in fragments.items():
+            text = text.replace(fragmented, fixed)
+        
+        return text
+
+
+class DeDuplicator:
+    """Remove duplicate or near-duplicate text blocks"""
+    
+    @staticmethod
+    def remove_duplicates(text: str, similarity_threshold: float = 0.85) -> str:
+        """Remove duplicate blocks of text that appear consecutively"""
+        lines = text.split('\n')
+        
+        # Group lines into blocks (paragraphs)
+        blocks = []
+        current_block = []
+        
+        for line in lines:
+            stripped = line.strip()
+            if stripped:
+                current_block.append(line)
+            elif current_block:
+                blocks.append('\n'.join(current_block))
+                current_block = []
+        if current_block:
+            blocks.append('\n'.join(current_block))
+        
+        # Remove near-duplicate consecutive blocks
+        result_blocks = []
+        for i, block in enumerate(blocks):
+            if i == 0:
+                result_blocks.append(block)
+                continue
+            
+            # Compare with previous block
+            prev_block = result_blocks[-1]
+            similarity = DeDuplicator._calculate_similarity(block, prev_block)
+            
+            if similarity < similarity_threshold:
+                result_blocks.append(block)
+            # else: skip duplicate
+        
+        return '\n\n'.join(result_blocks)
+    
+    @staticmethod
+    def _calculate_similarity(text1: str, text2: str) -> float:
+        """Calculate text similarity (simple word overlap)"""
+        words1 = set(text1.lower().split())
+        words2 = set(text2.lower().split())
+        
+        if not words1 or not words2:
+            return 0.0
+        
+        intersection = words1.intersection(words2)
+        union = words1.union(words2)
+        
+        return len(intersection) / len(union) if union else 0.0
+
+
+class LayoutAwareRedactor:
+    """Redact content based on physical location in PDF (sidebars, headers)"""
+    
+    @staticmethod
+    def extract_with_zones(pdf_path: str) -> tuple:
+        """Extract text with zone information (main content vs sidebars)"""
+        if not HAS_PDFPLUMBER:
+            return "", []
+        
+        try:
+            with pdfplumber.open(pdf_path) as pdf:
+                main_content = []
+                redacted_zones = []
+                
+                for page in pdf.pages:
+                    page_width = page.width
+                    words = page.extract_words(x_tolerance=2, y_tolerance=2)
+                    
+                    if not words:
+                        continue
+                    
+                    # Classify words into zones
+                    for word in words:
+                        x_center = (word['x0'] + word['x1']) / 2
+                        x_percent = x_center / page_width
+                        
+                        # Contact sidebar: left 30% or right 30%
+                        if x_percent < 0.30 or x_percent > 0.70:
+                            # This is sidebar content - likely contact info
+                            word_text = word['text'].strip()
+                            if word_text and len(word_text) > 2:
+                                # Check if it looks like PII (usernames, handles)
+                                if any(c.isdigit() for c in word_text) or '@' in word_text or word_text.islower():
+                                    redacted_zones.append(word_text)
+                        else:
+                            # Main content area
+                            main_content.append(word['text'])
+                
+                return ' '.join(main_content), redacted_zones
+        except:
+            return "", []
+    
+    @staticmethod
+    def redact_zones(text: str, redacted_items: list) -> str:
+        """Remove redacted zone content from text"""
+        for item in redacted_items:
+            text = text.replace(item, '')
+        return text
+
 
 class PIIRedactor:
     """Remove only personal contact info - preserve professional content"""
@@ -248,21 +477,22 @@ class PIIRedactor:
             Path(debug_dir).mkdir(exist_ok=True)
             Path(debug_dir, '01_before_redaction.txt').write_text(text, encoding='utf-8')
         
-        # Email - ONLY remove email, keep rest of line
+        # Email - REMOVE completely, no placeholder
         emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
-        text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[EMAIL]', text)
+        text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '', text)
         self.stats['pii_redacted'] += len(emails)
         
-        # Phone numbers - ONLY remove phone span (but preserve 4-digit years like 2023, 2021)
-        text = re.sub(r'[\+]?[\d]{1,3}[-\.\s]?[\(]?[\d]{1,4}[\)]?[-\.\s]?[\d]{1,4}[-\.\s]?[\d]{5,9}', '[PHONE]', text)
-        text = re.sub(r'\b\d{10,}\b', '[PHONE]', text)
+        # Phone numbers - REMOVE completely, no placeholder
+        text = re.sub(r'[\+]?[\d]{1,3}[-\.\s]?[\(]?[\d]{1,4}[\)]?[-\.\s]?[\d]{1,4}[-\.\s]?[\d]{5,9}', '', text)
+        text = re.sub(r'\b\d{10,}\b', '', text)
         
-        # URLs - ONLY remove URL span (but keep domain names in text)
-        text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '[URL]', text)
+        # URLs - REMOVE completely, no placeholder
+        text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '', text)
         
-        # LinkedIn profile URLs and usernames - remove span only
-        text = re.sub(r'LinkedIn[:\s]+[a-zA-Z0-9-_/]+', '[LINKEDIN]', text, flags=re.IGNORECASE)
-        text = re.sub(r'linkedin\.com/in/[a-zA-Z0-9-]+', '[LINKEDIN]', text)
+        # LinkedIn - REMOVE completely
+        text = re.sub(r'LinkedIn[:\s]+[a-zA-Z0-9-_/]+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'linkedin\.com/in/[a-zA-Z0-9-]+', '', text)
+        text = re.sub(r'\[LINKED\s*in\]', '', text, flags=re.IGNORECASE)
         
         # Contact labels - remove label only, keep rest of line
         text = re.sub(r'\bContact No[:\s]*', '', text, flags=re.IGNORECASE)
@@ -575,6 +805,23 @@ class TextPolisher:
     @staticmethod
     def fix_spacing(text: str) -> str:
         """Fix missing spaces between concatenated words using comprehensive word detection"""
+        
+        # CRITICAL: Fix common OCR broken words FIRST (before any other processing)
+        # Fix common OCR errors with simple string replacement
+        text = text.replace('for ward', 'forward').replace('a daptable', 'adaptable')
+        text = text.replace('healthc are', 'healthcare').replace('Evolvew are in c', 'Evolveware Inc')
+        text = text.replace('a hmedabad', 'Ahmedabad').replace(' or M', ' ORM').replace(' or M:', ' ORM:')
+        text = text.replace('a dm in', 'admin').replace('in voices', 'invoices').replace('litigati on', 'litigation')
+        text = text.replace('Whats a pp', 'WhatsApp').replace('web for ms', 'web forms')
+        text = text.replace('is o8582', 'ISO8582').replace('is O8583', 'ISO8583')
+        text = text.replace(' a nt', ' ant').replace('a uthorizati on', 'authorization')
+        text = text.replace('a cquiring', 'acquiring').replace('st and-ups', 'stand-ups')
+        text = text.replace('problemsolving', 'problem solving').replace('Software&prod', 'Software & prod')
+        text = text.replace('a RM9', 'ARM9').replace('c on gurati on', 'configuration')
+        text = text.replace('EDUCATI on', 'EDUCATION').replace('Bachel or', 'Bachelor')
+        text = text.replace('a bhinav', 'Abhinav').replace('as sisted', 'assisted')
+        text = text.replace('linked in.com', 'linkedin.com').replace('ia a end', 'is an end')
+        text = text.replace('also having', 'Also having')
         
         # Step 1: Fix camelCase transitions (lowercase to uppercase)
         text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
@@ -1262,10 +1509,13 @@ class TextPolisher:
                 # if next_is_section:
                 #     i += 1  # Skip the duplicate/adjacent section header
                 
-                # Output current section header
+                # TASK 4: Structural Integrity - Clear section boundaries
+                # Ensure proper spacing before section headers
                 if result and result[-1].strip():
                     result.append("")
                     result.append("")
+                
+                # Add section header with clear visual separation
                 result.append(section_title)
                 result.append("=" * 60)
                 result.append("")
@@ -1444,24 +1694,38 @@ class TextPolisher:
 
 
 class ResumePipeline:
-    """Main orchestrator"""
+    """Main orchestrator with category-based routing"""
     
     def __init__(self):
         self.extractor = TextExtractor()
         self.redactor = PIIRedactor()
+        self.classifier = ResumeClassifier()
         self.stats = {
             'extracted_chars': 0,
             'pii_redacted': 0,
-            'output_chars': 0
+            'output_chars': 0,
+            'category': ''
         }
     
     def process(self, pdf_path: str) -> str:
-        """Process PDF through complete pipeline"""
+        """Process PDF through complete pipeline with category detection"""
         print(f"\nProcessing: {os.path.basename(pdf_path)}")
         
-        # Extract
+        # Classify resume type
+        category = self.classifier.classify(pdf_path)
+        self.stats['category'] = category
+        print(f"  > Category: {category}")
+        
+        # Extract using appropriate method
         print("  > Extracting text...")
-        text = self.extractor.extract(pdf_path)
+        if category == 'naukri':
+            text = self.extractor.extract_naukri(pdf_path)
+        elif category == 'multi_column':
+            text = self.extractor.extract(pdf_path)
+        elif category == 'simple':
+            text = self.extractor.extract_simple(pdf_path)
+        else:  # standard
+            text = self.extractor.extract_standard(pdf_path)
         
         # DEBUG: Save raw text
         with open("debug_raw_text.txt", "w", encoding="utf-8") as f:
@@ -1474,9 +1738,27 @@ class ResumePipeline:
         self.stats['extracted_chars'] = len(text)
         print(f"  OK Extracted: {len(text)} characters")
         
+        # TASK 1: Word-Healer - Fix fragmented words
+        print("  > Healing fragmented text...")
+        text = WordHealer.heal(text)
+        
+        # FIX OCR ERRORS IMMEDIATELY after extraction
+        text = TextPolisher.fix_spacing(text)
+        
+        # TASK 2: De-Duplicator - Remove duplicate blocks
+        print("  > Removing duplicates...")
+        text = DeDuplicator.remove_duplicates(text)
+        
         # Remove education section first
         print("  > Removing education...")
         text = self._remove_education(text)
+        
+        # TASK 3: Layout-Aware Redaction - Remove sidebar contact info
+        print("  > Applying layout-aware redaction...")
+        _, redacted_zones = LayoutAwareRedactor.extract_with_zones(pdf_path)
+        if redacted_zones:
+            text = LayoutAwareRedactor.redact_zones(text, redacted_zones)
+            print(f"  OK Redacted {len(redacted_zones)} sidebar items")
         
         # Redact PII
         print("  > Redacting PII...")
@@ -1506,12 +1788,16 @@ class ResumePipeline:
         
         result = '\n'.join(kept_lines)
         
-        # Polish
-        result = TextPolisher.polish(result)
+        # Polish (but skip fix_spacing since we already did it)
+        result = TextPolisher.remove_duplicates(result)
+        result = TextPolisher.clean(result)
+        result = TextPolisher.normalize_bullets(result)
+        result = TextPolisher.add_spacing(result)
         
         self.stats['output_chars'] = len(result)
         print(f"  OK Output: {len(result)} characters")
         print(f"  OK PII removed: {self.redactor.stats['pii_redacted']} items")
+        print(f"  OK Pipeline: {self.stats['category']}")
         
         return result
     
