@@ -1,0 +1,118 @@
+Lead Software Engineer with 10+ years of Experience
+
+one
+
+akash- -6
+
+E-mail
+
+Industrious Senior Consultant, Individual Contributor with excellent critical thinking and team-building
+talents Familiar with the policies and procedures of product development and operations.
+Competent in staff management and proposal development.
+
+Skills
+
+Python| Backend Development| APIs| Flask| Django| Design patterns| Data Science|
+Machine Learning| Artificial Intelligence| Ansible| Jenkins| Docker| Kubernetes| AWS|
+Azure| OpenSTack| OpenShift| Kubernetes| Linux| Windows| OpenSource
+Contributions| Go| MySQL| MongoDB| Cassandra| Team Leading| Project
+Management| Scrum Master
+
+Work History
+
+May 2023 -
+
+Senior Consultant & Team Lead
+
+Current
+
+InfoBeans,
+
+Developed the code to get the continuous health checked, configuration
+details, and validate it with rules, and provide suggestions.
+Leading the team to meet the deadlines.
+Enhance the product as per the new requirements.
+Work with Product Manager, Engineer Manager, and Directors to improve
+the products.
+Tech stack use - Python, Django, machine learning algorithms,  ,
+Node JS.
+Platforms used - Linux, Windows, MAC
+
+Apr 2021 -
+
+Senior Software Engineer
+
+Apr 2023
+
+Red Hat India Pvt. Ltd,
+
+Wrote APIs to change the behavior of OpenShift APIs as per the customer's
+requirement.
+Integrated multiple stacks of Red Hat, as per the scenario.
+Link -
+Tech stack used - Python, REST APIs, Django, OpenShift, AWS, Azure,
+Docker, Kubernetes, Ansible, Pandas.
+
+Sep 2019 -
+
+Software Engineer
+
+Apr 2021
+
+SAP Labs India Pvt. Ltd., Pune
+
+Developed a code for the products are databases that are supposed to
+move to AWS, Azure clouds from on-premises.
+Contributed in bug fixes.
+Tech stack and tools: Python, Azure, AWS,  ,  ,  ,
+pipelines, Docker, Kubernetes, HashiCorp Vault.
+Platforms used - Linux, Windows.
+
+Jun 2016 -
+
+Associate Software Engineer
+
+Sep 2019
+
+Red Hat India Pvt. Ltd., Pune
+
+Developed a product to certify different components of OpenStack like
+cinder,  , neutron etc
+Checked the insights of the customers and manipulate it as per the
+requirement
+Tech stack and tools - Python, BDD framework,  , Django, REST APIs,
+ , tempest, numpy, pandas, seaborn
+
+Jun 2015 -
+
+Associate Software Engineer
+
+Jun 2016
+
+Izel Technologies,
+
+Developed a product that was a wrapper on top of different OpenStack
+services to execute different apps on the cloud. Contributed in an Open
+Source project.
+Tech stack and tools - Python, Django, Java, OpenStack,  , Ansible.
+
+Jun 2014 -
+
+Intern
+
+Nov 2014
+
+SAP Labs India,
+
+Developed the code to automate scenarios of the databases.
+Supported staff members in their daily tasks, reducing workload burden
+and allowing for increased focus on higher-priority assignments.
+Contributed to a positive team environment by collaborating with fellow
+interns on group projects and presentations.
+Gained hands-on experience in various software programs, increasing
+proficiency and expanding technical skill set.
+
+Certifications
+
+Red Hat Certified Developer in Containerized Applications| Red Hat Certified
+System administrator| Crucial conversations| GO basics

@@ -10,7 +10,7 @@ env/
 
 # Output folders
 debug_output/
-redacted_resumes/
+
 
 # IDE
 .vscode/

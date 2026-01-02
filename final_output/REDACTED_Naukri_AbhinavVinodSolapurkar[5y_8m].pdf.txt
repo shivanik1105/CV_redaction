@@ -1,0 +1,128 @@
+Senior System Engineer
+
+A highly motivated person with strong technical, team player and problem solving skills who like to
+enhance a potential and apply technical knowledge while facing new challenges, resulting in growth and
+development of company.
+
+
+
+
+ ,  ,
+
+
+WORK EXPERIENCE
+
+SKILLS
+
+Asp.Net
+C#
+Blazor
+MVC 5
+WebAPI
+
+Senior System Engineer
+IBM
+
+Web Services
+HTML
+JavaScript
+jQuery
+
+12/2021 - Present,
+Pune
+
+Client- NBS (Banking Domain-UK)
+
+Achievements/Tasks
+
+SQL
+Azure
+Agile
+Unit Testing
+SOAPUI
+
+VisualStudio
+Fiddler
+Documentation
+
+Developed and maintained scalable web applications using
+ASP.NET MVC, adhering to best practices and design
+patterns.
+
+Designed and implemented RESTful Web APIs using ASP.NET
+Web API, facilitating seamless communication between
+client and server.
+
+PROJECT ACHIEVEMENTS
+
+SAMM Team
+
+Integrated WCF services into existing applications, ensuring
+eﬃcient data exchange and communication across
+distributed systems. Utilized Ext.js, Sencha and JavaScript to
+enhance user interface functionalities and improve overall
+user experience.
+
+Recognized for consistently delivering high-quality code and
+innovative problem-solving, contributing signiﬁcantly to project
+success and team performance.
+
+R&L Carriers
+
+Collaborated with cross-functional teams in an Agile
+environment to deliver features and enhancements within
+tight deadlines.
+
+Successfully navigated through complex code base to identify and
+resolve elusive bugs, enhancing system stability and user
+experience. Instrumental in architecting innovative solutions to
+intricate feature requests, optimizing performance and
+functionality while adhering to strict deadlines.
+
+Conducted code reviews and provided constructive feedback
+to peers, ensuring code quality and adherence to coding
+standards.
+
+Participated in sprint planning, daily stand-ups, and
+retrospective meetings to continuously improve team
+performance and project delivery.
+
+LANGUAGES
+
+Implemented client-side scripting using jQuery to enhance
+user interactivity and responsiveness.
+
+English
+Full Professional Proﬁciency
+
+German (A1)
+Elementary Proﬁciency
+
+Integrated third-party APIs/In-house services into web
+applications, expanding functionality and improving user
+experience.
+
+Hindi
+Professional Working Proﬁciency
+
+Marathi
+Native or Bilingual Proﬁciency
+
+Participated in requirement analysis, design discussions, and
+sprint planning meetings to deﬁne project scope and
+deliverables.
+
+INTERESTS
+
+Collaborated with QA team to identify and resolve bugs and
+issues in a timely manner.
+
+Cricket
+Chess
+and Gadgets
+
+Assisted in the deployment and conﬁguration of web
+applications on production, staging servers, ensuring
+smooth and seamless deployment processes.
+
+AutoCars
