@@ -1,0 +1,89 @@
+SUMMARY & KEY SKILLS
+============================================================
+
+Professional Summary
+● Having 2.5+ Years of IT experience in MuleSoft AnyPoint Platform (Mule ESB).
+● Experience in MuleSoft AnyPoint Platform.
+● Having experience in designing Flows, Sub Flows.
+●● HExapveinrige nexcep eirni ednecseig inni dnegs aignndi ndge vFelloowpisn, gS uRbE FSlTofwusl . APIs using AnyPoint studio
+and AnyPoint platform.
+● Daneds iAgnneydP aonindt d pelavtefloorpme.d Mule ESB projects using various connectors like Database, Salesforce.
+● Exposure to Mule AnyPoint platform components (Any point studio, Anypoint API
+designer, Any Point API manager, Connectors, AnyPoint API portal).
+● Implemented flows using Anypoint Studio based on the client's requirements.
+●● IHmapnldesm-oenn teexdp felroiwensc ues iinn gd aAtan ywpeoainvte SLtaundgiou abgaese tdo oanc ctheses c pliaeynlto'sa rde qduatiare, mpreonptes.r ties
+and variables ofMule Message Flow.
+
+
+● Good understanding of the Software Development Life Cycle (SDLC)
+
+
+TECHNICAL SKILLS
+============================================================
+
+Integration Technologies: Mulesoft (Mule4)
+API Tools: RAML, Anypoint Exchange
+Databases: MySQl, PostgreSql
+Version Control: GIT, GitHub
+Ticketing Tools: JIRA
+Testing Tools: POSTMAN
+Integration Technologies: Mulesoft (Mule4)
+API Tools: RAML, Anypoint Exchange
+Databases: MySQl, PostgreSql
+Version Control: GIT, GitHub
+Ticketing Tools: JIRA
+Testing Tools: POSTMAN
+
+
+WORK EXPERIENCE
+============================================================
+
+● Infosys Limited – Total 2.5 years (MuleSoft Developer from April 2022 to till date)
+● Infosys Limited – Total 2.5 years (MuleSoft Developer from April 2022 to till date)
+
+
+DETAILS OF PROJECTS
+============================================================
+
+Project Name : INTEL (Market to Sales)
+Designation: Systems Engg(Mulesoft Developer)
+
+Duration: Sep 2023 To Till Date
+Environment: Anypoint Studio
+Description
+Intel Market to Revenue project consists of different programs like Next
+Generation Rules planning, Product integration, Intel Premier Support, and
+Registration. There are two parts of Intel Sales and service after sales. To optimize
+and completion of Sales process and service- related process will be providing
+integration solutions for integrating multiple systems. This integration provided by
+using the cloud based MuleSoft Any Point platform and studio.
+Roles
+● Develop Mule applications for ESB layer.
+● Experience in MULE componants like Flow Controllers, Scopes, Filers, Munit, and
+Connectors.
+● Worked on SOAP and REST API’s
+● Implemented exceptional stretegies using Error handling and try-catch blocks.
+●● IAmnpalleymzeedn ttehde erexccreupittieomneanl ts torfe ttehgei epsr oujseicntg, PElrarnonr ehda,n adnldin Cg oaonrdd itnrya-tceadt cwhi tbhl otecakms. members to
+implemeted the objectives.
+● iPmarptliecmipeatteedd tihne d oabiljye cstcirvuems. meeting to discuss the progress of the projects and any blockage of
+the work and the solution of the block.
+Project Name : CISCO (Service Delivery)
+Designation: Systems Engg(Mulesoft Developer)
+
+Duration: Nov 2022 to Sep 2023
+Environment: Anypoint Studio
+Description
+CISCO project consist of different programs like Service Delivery, Customer
+Success. To optimize and completion of Sales process and service-related process
+will be Provides an overview of resourcerequests assigned to a particular userand their
+status. Migrationproject from Mule3 to Mule4 where worked on migration anddeployment
+of Mule API’s on cloud.
+Roles
+● Deployment of Mule applications on premises and Hybrid
+●● DAenpalloyyzemde tnhte o rfe Mquuirlee mapepnltisc aotfi othnes porno pjercetm, pisleasn naendd, Hanydb rcido ordinated with team members to
+implemet the objective.
+● iPmarptliecmipeatt et hien odbajielyc tsicvreu. m meetings to discuss the progress of the projects and any blockage of
+the work and the solution of the block.
+Certifications
+• Mulesoft Certified Developer – Level (MCD - L1)
+• Mulesoft Certified Integration Associate (MCIA)

@@ -471,103 +471,58 @@ class PIIRedactor:
         self.stats = {'pii_redacted': 0}
     
     def redact(self, text: str, debug_dir=None) -> str:
-        """Remove ONLY safe PII: email, phone, URLs, DOB. Keep everything else."""
+        """Remove ONLY personal PII. Keep all professional content including work locations."""
         # DEBUG: Save checkpoint 1 - before redaction
         if debug_dir:
             Path(debug_dir).mkdir(exist_ok=True)
             Path(debug_dir, '01_before_redaction.txt').write_text(text, encoding='utf-8')
         
-        # Email - REMOVE completely, no placeholder
+        # Step 1: Remove emails completely
         emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
         text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '', text)
         self.stats['pii_redacted'] += len(emails)
         
-        # Phone numbers - REMOVE completely, no placeholder
-        text = re.sub(r'[\+]?[\d]{1,3}[-\.\s]?[\(]?[\d]{1,4}[\)]?[-\.\s]?[\d]{1,4}[-\.\s]?[\d]{5,9}', '', text)
+        # Step 2: Remove phone numbers (but not version numbers like 11/14/17)
+        # Match international format: +91-9886172376 or (123) 456-7890
+        text = re.sub(r'[\+]?\d{1,3}[-\.\s]?\(?\d{2,4}\)?[-\.\s]?\d{3,4}[-\.\s]?\d{4,}', '', text)
+        # Match 10+ digit sequences that look like phone numbers
         text = re.sub(r'\b\d{10,}\b', '', text)
         
-        # URLs - REMOVE completely, no placeholder
-        text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '', text)
+        # Step 3: Remove URLs
+        text = re.sub(r'https?://[^\s<>"{}|\\^`\[\]]+', '', text)
+        text = re.sub(r'www\.[^\s<>"{}|\\^`\[\]]+', '', text)
         
-        # LinkedIn - REMOVE completely
+        # Step 4: Remove LinkedIn profiles
+        text = re.sub(r'linkedin\.com/in/[a-zA-Z0-9-]+', '', text, flags=re.IGNORECASE)
         text = re.sub(r'LinkedIn[:\s]+[a-zA-Z0-9-_/]+', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'linkedin\.com/in/[a-zA-Z0-9-]+', '', text)
-        text = re.sub(r'\[LINKED\s*in\]', '', text, flags=re.IGNORECASE)
         
-        # Contact labels - remove label only, keep rest of line
-        text = re.sub(r'\bContact No[:\s]*', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bMOB[\s]*[-:]\s*', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bMobile[:\s]*', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bTel[:\s]*', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bPhone[:\s]*', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bEmail[\s]*id[:\s]*[-–]', '', text, flags=re.IGNORECASE)
+        # Step 5: Clean up contact labels (remove label, keep rest)
+        text = re.sub(r'\b(E-?mail|Mobile|Phone|Contact)(\s+(No|Number|Address))?[\s]*[:\-–—]?\s*', '', text, flags=re.IGNORECASE)
         
-        # DOB patterns - multiple formats
-        text = re.sub(r'\bDate of Birth[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bDOB[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bBorn[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\b\d{1,2}[-/]\w{3}[-/]\d{4}\b', '', text)  # 23-JAN-1994 format
-        text = re.sub(r'\b\d{1,2}[-/]\d{1,2}[-/]\d{4}\b', '', text)  # 23/01/1994 format
+        # Step 6: Remove DOB
+        text = re.sub(r'\b(Date of Birth|DOB)[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\b\d{1,2}[-/](Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|[0-1]?\d)[-/]\d{2,4}\b', '', text, flags=re.IGNORECASE)
         
-        # Marital status and gender
-        text = re.sub(r'\bMarital Status[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\b(MARRIED|Unmarried|Single)\b', '', text)
-        text = re.sub(r'\bGender[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\b(Male|Female)\b', '', text)
+        # Step 7: Remove gender/marital status LINES only
+        text = re.sub(r'^\s*(Gender|Marital Status|Nationality|Passport)[:\s]+[^\n]+\n?', '', text, flags=re.MULTILINE|re.IGNORECASE)
         
-        # Nationality
-        text = re.sub(r'\bNationality[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bPassport[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\b(INDIAN|in DIAN)\b', '', text)  # Handle broken spacing
+        # Step 8: Remove address LINES only
+        text = re.sub(r'^\s*(Address|Residence|Permanent Address|Current Address)[:\s]+[^\n]+\n?', '', text, flags=re.MULTILINE|re.IGNORECASE)
         
-        # Family details
-        text = re.sub(r"\bFather['\u2019]?s? Name[:\s]+[^\n]+", '', text, flags=re.IGNORECASE)
-        text = re.sub(r"\bMother['\u2019]?s? Name[:\s]+[^\n]+", '', text, flags=re.IGNORECASE)
+        # Step 9: Keep work locations - they are professional context
+        # Only remove from personal address lines (already handled above)
+        pass
         
-        # Government IDs
-        text = re.sub(r'\bPAN[:\s]+[A-Z0-9]+', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\b(Aadhar|Aadhaar)[:\s]+[\d\s]+', '', text, flags=re.IGNORECASE)
-        
-        # Addresses - comprehensive patterns
-        text = re.sub(r'\b(Address|Permanent|Current)[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bResidence[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
-        
-        # Indian locations - states, cities
-        locations = ['Maharashtra', 'Karnataka', 'Gujarat', 'Delhi', 'Tamil Nadu', 'Kerala', 
-                    'Pune', 'Mumbai', 'Bangalore', 'Chennai', 'Hyderabad', 'Kolkata', 
-                    'Mahalunge', 'Balewadi', 'a manora Park', 'to wn']
-        for loc in locations:
-            text = re.sub(r'\b' + re.escape(loc) + r'\b', '', text, flags=re.IGNORECASE)
-        
-        # Country names
-        text = re.sub(r',\s*India\b', '', text)
-        text = re.sub(r'\bIndia\b', '', text)
-        
-        # ZIP/PIN codes (6 digits)
-        text = re.sub(r'\b\d{6}\b', '', text)
-        
-        # Declaration sections
-        text = re.sub(r'I here ?by declare.*?$', '', text, flags=re.MULTILINE|re.DOTALL)
-        text = re.sub(r'\bPlace[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bDate[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bSignature[:\s]+[^\n]+', '', text, flags=re.IGNORECASE)
-        
-        # Titles
-        text = re.sub(r'\b(Mrs?|Mr|Ms|Dr)\.?\s+', '', text)
-        
-        # Remove "PERSONAL INFORMATION" section headers
-        text = re.sub(r'\bPERSONAL INFORMATION\b', '', text, flags=re.IGNORECASE)
-        
-        # Remove OBJECTIVE sections (contains personal statements)
-        text = re.sub(r'OBJECTIVE[:\s]+.*?(?=\n[A-Z\s]{5,}|\Z)', '', text, flags=re.DOTALL|re.IGNORECASE)
-        text = re.sub(r'DECLARATION[:\s]+.*?(?=\n[A-Z\s]{5,}|\Z)', '', text, flags=re.DOTALL|re.IGNORECASE)
+        # Step 11: Remove declaration sections
+        text = re.sub(r'(^|\n)\s*DECLARATION\s*\n.*?(?=\n[A-Z\s]{5,}|\Z)', '', text, flags=re.DOTALL|re.IGNORECASE)
+        text = re.sub(r'I here ?by declare.*?$', '', text, flags=re.MULTILINE|re.DOTALL|re.IGNORECASE)
         
         # DEBUG: Save checkpoint 2 - after safe PII removal
         if debug_dir:
             Path(debug_dir, '02_after_safe_pii.txt').write_text(text, encoding='utf-8')
         
-        # Remove ALL person names from header section (before WORK EXPERIENCE)
-        text = self._remove_all_header_names(text)
+        # Step 12: Remove person names from header only (first 3 lines max)
+        text = self._remove_header_names_simple(text)
         
         # DEBUG: Save checkpoint 3 - after header name removal
         if debug_dir:
@@ -575,29 +530,127 @@ class PIIRedactor:
         
         return text
     
+    def _remove_header_names_simple(self, text: str) -> str:
+        """Remove person names from first 5 lines only"""
+        lines = text.split('\n')
+        result = []
+        
+        for i, line in enumerate(lines):
+            # Only check first 5 lines for names
+            if i < 5:
+                stripped = line.strip()
+                # Skip empty lines
+                if not stripped:
+                    result.append(line)
+                    continue
+                
+                # Skip if it's clearly a standalone name (1-4 title-case words, all alpha)
+                words = stripped.split()
+                if 1 <= len(words) <= 4:
+                    if all(w and w[0].isupper() and w.replace('-', '').replace("'", '').isalpha() for w in words):
+                        # But keep if it has job titles or section headers
+                        if any(keyword in stripped.lower() for keyword in [
+                            'engineer', 'developer', 'manager', 'lead', 'senior', 'architect',
+                            'director', 'profile', 'summary', 'skills', 'consultant', 'analyst', 
+                            'specialist', 'technologist', 'key', 'technical', 'staff', 'principal'
+                        ]):
+                            result.append(line)
+                            continue
+                        # Otherwise skip (it's a name)
+                        continue
+                
+                # Keep other content from header
+                result.append(line)
+            else:
+                # After first 5 lines, keep everything
+                result.append(line)
+        
+        return '\n'.join(result)
+    
+    def _format_contact_section(self, text: str) -> str:
+        """Format contact information section with placeholders in a clean layout"""
+        lines = text.split('\n')
+        result = []
+        
+        # Find lines with placeholders and group them
+        contact_placeholders = []
+        in_early_section = True
+        line_count = 0
+        
+        for line in lines:
+            line_count += 1
+            stripped = line.strip()
+            
+            # Only process first 20 lines for contact info
+            if line_count > 20:
+                in_early_section = False
+            
+            # Check if line has contact placeholders
+            has_placeholder = any(p in stripped for p in ['[EMAIL]', '[PHONE]', '[LINKEDIN]', '[LOCATION]'])
+            
+            if in_early_section and has_placeholder:
+                # Clean up the line - remove extra markers
+                cleaned = stripped
+                cleaned = re.sub(r'^[E|M|L]:\s*', '', cleaned)
+                # Don't add extra spacing around pipes
+                cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+                
+                # Don't duplicate if already added
+                if cleaned and cleaned not in contact_placeholders:
+                    contact_placeholders.append(cleaned)
+            elif not in_early_section or not has_placeholder:
+                # After collecting contact info, add it formatted
+                if contact_placeholders and not result:
+                    result.append('[CANDIDATE NAME]')
+                    result.append('')
+                    # Format contact info on single line if possible
+                    if len(contact_placeholders) <= 3:
+                        result.append(' | '.join(contact_placeholders))
+                    else:
+                        result.extend(contact_placeholders)
+                    result.append('')
+                    contact_placeholders = []  # Clear so we don't add again
+                
+                # Add regular content
+                if stripped:
+                    result.append(line)
+        
+        # If we still have contact info at the end, add it
+        if contact_placeholders:
+            result.extend(contact_placeholders)
+        
+        return '\n'.join(result)
+    
     def _remove_all_header_names(self, text: str) -> str:
-        """Remove ALL person names from header area (everything before WORK EXPERIENCE/PROFESSIONAL EXPERIENCE)"""
+        """Remove person names from header area - simplified to avoid breaking content"""
         lines = text.split('\n')
         result = []
         in_header = True
-        
-        # Common title prefixes that indicate names
-        title_prefixes = ['Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.']
+        name_found = False
         
         # Section markers that indicate end of header
         work_section_markers = [
             'work experience', 'professional experience', 'employment history',
-            'work history', 'career history', 'experience'
+            'work history', 'career history', 'experience', 'summary', 'profile',
+            'key skills', 'technical skills', 'skills', 'objective'
         ]
         
         for line_num, line in enumerate(lines):
             stripped = line.strip()
             
-            # Check if we've reached work experience section - end of header
+            # Check if we've reached a major section - end of header
             if in_header:
                 for marker in work_section_markers:
-                    if marker in stripped.lower() and len(stripped) < 60:
+                    if marker in stripped.lower() and len(stripped) < 60 and not stripped.endswith('.'):
                         in_header = False
+                        # Add candidate name placeholder before first section
+                        if not name_found and result:
+                            result.insert(0, '[CANDIDATE NAME]')
+                            result.insert(1, '')
+                        elif not name_found:
+                            result.append('[CANDIDATE NAME]')
+                            result.append('')
+                        name_found = True
                         break
             
             # If we're past header, keep everything
@@ -610,45 +663,39 @@ class PIIRedactor:
                 result.append(line)
                 continue
             
-            # Remove entire lines that start with titles in header
-            skip_line = False
-            for prefix in title_prefixes:
-                if stripped.startswith(prefix):
-                    skip_line = True
-                    break
-            if skip_line:
-                continue
-            
-            # MORE AGGRESSIVE: Remove ANY line with 2-4 capitalized words in header
-            # This catches names even when mixed with other content
+            # In header: Only remove lines that are CLEARLY just names (very conservative)
+            # (2-3 capitalized words in first 3 lines, all alphabetic, no keywords)
             words = stripped.split()
-            if len(words) >= 2 and len(words) <= 4:
-                # Count capitalized words (potential name parts)
-                cap_words = [w for w in words if w and len(w) > 1 and w[0].isupper() and w.replace('-', '').replace("'", '').isalpha()]
+            if len(words) >= 1 and len(words) <= 3 and line_num < 3:  # Only first 3 lines
+                all_name_words = all(
+                    w and len(w) > 1 and 
+                    w[0].isupper() and 
+                    w.replace('-', '').replace("'", '').isalpha() 
+                    for w in words
+                )
                 
-                # If 2+ capitalized words, likely a name
-                if len(cap_words) >= 2:
-                    # Exceptions: Keep if it contains protected terms or technical keywords
+                if all_name_words:
+                    # Check it's not a section header or job title
                     lower_line = stripped.lower()
-                    is_protected = any(protected in lower_line for protected in [
-                        'key skills', 'profile', 'summary', 'objective', 'developer', 
+                    is_content = any(keyword in lower_line for keyword in [
+                        'key', 'skills', 'profile', 'summary', 'objective', 'developer',
                         'engineer', 'lead', 'senior', 'architect', 'consultant', 'analyst',
-                        'manager', 'director', 'specialist', 'technologist', 'activities',
-                        'interest', 'skills', 'product'
-                    ] + self.PROTECTED_NAMES)
+                        'manager', 'director', 'specialist', 'technologist', 'staff',
+                        'principal', 'associate', 'intern'
+                    ])
                     
-                    if not is_protected:
-                        # This is likely a person name - skip it
+                    if not is_content:
+                        # This is a standalone name - skip it
+                        name_found = True
                         continue
             
-            # Also remove lines that are JUST a single capitalized word (first/last name alone)
-            if len(words) == 1 and len(stripped) > 2 and stripped[0].isupper() and stripped.isalpha():
-                # Exception: Keep if it's a known section header or keyword
-                if stripped.upper() not in ['PROFILE', 'SUMMARY', 'SKILLS', 'OBJECTIVE', 'KEY', 'ACTIVITIES', 'INTEREST', 'SOCIAL']:
-                    continue
-            
-            # Keep everything else in header
+            # Keep everything else
             result.append(line)
+        
+        # If never added placeholder and we found a name, add at start
+        if name_found and result and result[0] != '[CANDIDATE NAME]':
+            result.insert(0, '[CANDIDATE NAME]')
+            result.insert(1, '')
         
         return '\n'.join(result)
     
@@ -783,22 +830,43 @@ class TextPolisher:
     
     @staticmethod
     def remove_duplicates(text: str) -> str:
-        """Remove ONLY consecutive duplicate lines (not global dedup)"""
+        """Remove consecutive duplicate lines and near-duplicate sections"""
         lines = text.split('\n')
         if not lines:
             return text
         
-        result = [lines[0]]  # Always keep first line
+        result = []
+        seen_lines = set()
         
-        for i in range(1, len(lines)):
+        for i in range(len(lines)):
             current = lines[i].strip()
-            previous = lines[i-1].strip()
             
-            # Only skip if EXACT consecutive duplicate
-            if current == previous and current:  # Don't skip empty lines
+            # Skip empty lines tracking
+            if not current:
+                # Only add empty line if previous wasn't empty
+                if result and result[-1].strip():
+                    result.append(lines[i])
                 continue
             
+            # Skip if EXACT duplicate of previous line
+            if result and current == result[-1].strip():
+                continue
+            
+            # Skip if we've seen this exact line in last 10 lines (catches scattered duplicates)
+            if current in seen_lines:
+                continue
+            
+            # Add the line
             result.append(lines[i])
+            seen_lines.add(current)
+            
+            # Keep only last 10 lines in seen set to avoid memory issues
+            if len(seen_lines) > 10:
+                seen_lines.clear()
+                # Re-add last few lines
+                for j in range(max(0, len(result)-10), len(result)):
+                    if result[j].strip():
+                        seen_lines.add(result[j].strip())
         
         return '\n'.join(result)
     
@@ -1340,8 +1408,13 @@ class TextPolisher:
             if not stripped:
                 continue
             
-            # Skip contact label lines
+            # Skip contact label lines but keep if they have placeholders
             if re.match(r'^(E-mail|Email|Phone|Mobile|Address|LinkedIn|Link|Contact|Location|E:|M:|L:)\s*:?\s*$', stripped, re.IGNORECASE):
+                continue
+            
+            # Keep lines with placeholders even if they look like markers
+            if any(placeholder in stripped for placeholder in ['[EMAIL]', '[PHONE]', '[LINKEDIN]', '[LOCATION]', '[URL]']):
+                cleaned.append(stripped)
                 continue
             
             # Skip lines that are ONLY contact markers
@@ -1742,8 +1815,9 @@ class ResumePipeline:
         print("  > Healing fragmented text...")
         text = WordHealer.heal(text)
         
-        # FIX OCR ERRORS IMMEDIATELY after extraction
-        text = TextPolisher.fix_spacing(text)
+        # Basic OCR fixes only - preserve all content
+        print("  > Fixing OCR errors...")
+        text = self._fix_basic_ocr(text)
         
         # TASK 2: De-Duplicator - Remove duplicate blocks
         print("  > Removing duplicates...")
@@ -1754,11 +1828,8 @@ class ResumePipeline:
         text = self._remove_education(text)
         
         # TASK 3: Layout-Aware Redaction - Remove sidebar contact info
-        print("  > Applying layout-aware redaction...")
-        _, redacted_zones = LayoutAwareRedactor.extract_with_zones(pdf_path)
-        if redacted_zones:
-            text = LayoutAwareRedactor.redact_zones(text, redacted_zones)
-            print(f"  OK Redacted {len(redacted_zones)} sidebar items")
+        # DISABLED: This was incorrectly removing professional content like "2.5+ Years"
+        # The sidebar extraction was too aggressive and removing main content
         
         # Redact PII
         print("  > Redacting PII...")
@@ -1800,6 +1871,25 @@ class ResumePipeline:
         print(f"  OK Pipeline: {self.stats['category']}")
         
         return result
+    
+    def _fix_basic_ocr(self, text: str) -> str:
+        """Fix only obvious OCR errors without removing content"""
+        # Fix common broken words
+        text = re.sub(r'\bfor ward\b', 'forward', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba daptable\b', 'adaptable', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bhealthc are\b', 'healthcare', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba hmedabad\b', 'Ahmedabad', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bin voices\b', 'invoices', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba uthorizati on\b', 'authorization', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba cquiring\b', 'acquiring', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bproblemsolving\b', 'problem solving', text, flags=re.IGNORECASE)
+        text = re.sub(r'\ba bhinav\b', 'Abhinav', text, flags=re.IGNORECASE)
+        text = re.sub(r'\bas sisted\b', 'assisted', text, flags=re.IGNORECASE)
+        
+        # Remove (cid:xxx) patterns
+        text = re.sub(r'\(cid:\d+\)', '', text)
+        
+        return text
     
     def _remove_education(self, text: str) -> str:
         """Remove education section COMPLETELY with enhanced detection"""
