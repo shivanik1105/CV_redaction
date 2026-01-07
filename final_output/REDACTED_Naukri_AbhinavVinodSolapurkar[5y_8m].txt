@@ -1,35 +1,34 @@
-Senior System engineer A highly motivated pers on with Strong technical, team p layer and problem solving skills who like to enhance a potential and apply technical knowledge while facing new challenges, resulting in growth and
-development of company. WORK EXPERIENCE SKILLS as p.Net
-C# Blazor MVC 5 WebAPI Senior System engineer IBM HTML JavaScript j Query
+Senior System engineer A highly motivated person with Strong technical, team player and problem solving skills who like to enhance a Potential and apply technical knowledge while facing new challenges, resulting in growth and
+development of company. WORK EXPERIENCE SKILLS Asp. Net
+C# Blazor MVC 5 Web API Senior System engineer IBM HTML Java Script j Query
 12/2021 - Present,
-Client- NBS (Banking Doma in-UK)
-Achievements/T as ks SQL Azure Agile SOAPUI V is ual Studio Developed and Maintained scalable web application s using
-as P.NET MVC, adhering to best practices and design
-p at terns.
-Designed and implemented RESTful Web AP is using as P.NET
-Web API, facilit ating seamless communication between
-client and server. PROJECT ACHIEVEMENTS SAMM Team in tegrated WCF service s in to ex is ting application s, ensuring
-eﬃcient Data exchange and communication across
-d is tributed systems. Utilized Ext.js, Sencha and JavaScript to enhance user interface functi on alities and improve over all
+Client- NBS (Banking Domain-UK)
+Achievements/Tasks SQL Azure Agile SOAPUI Visual Studio Developed and Maintained scalable web applic at ions using
+ASP. NET MVC, adhering to best practices and design
+patterns.
+Designed and implemented RESTful Web APIs using ASP. NET
+Web API, facilit at ing seamless communic at ion between
+client and server. PROJECT ACHIEVEMENTS SAMM Team Integrated WCF services in to existing applic at ions, ensuring
+eﬃcient data exchange and communic at ion across
+distributed systems. Utilized Ext.js, Sencha and Java Script to enhance user interface functi on alities and improve Overall
 user experience.
-Recognized for c on s is tently delivering high-quality code and
-Innovative problem-solving, c on tributing signiﬁcantly to project
-success and team performance.
+Recognized for cons is tently delivering high-quality code and
+Innovative problem-solving, contributing signiﬁcantly to project
+success and team perform.
 R&L Carriers
 collaborated with cross-Functional teams in an Agile
-Environment to deliver fe at ures and enhancements within
-tight deadl in es.
-Successfully navigated through complex code b as e to identify and
+Environment to deliver features and enhancements within
+tight deadlines.
+Successfully navigated through complex code base to identify and
 resolve elusive bugs, enhancing system stability and user
-experience. in strumental in architecting Innovative solutions to
-in tric at e Feature requests, optimizing performance and
-functi on ality while adhering to strict deadl in es.
-conducted code reviews and provided c on structive feedback
-to peers, ensuring code quality and adherence to coding
-Standards.
-Participated in spr in t planning, daily st and-ups, and
-retrospective meet in gs to c on t in uously improve team
-performance and project delivery. H in di Pr of essi on al Working Proﬁciency Mar at hi N at ive or Bil in gual Proﬁciency
-Participated in requirement Analysis, design d is cussi on s, and
-spr in t planning meet in gs to deﬁne project scope and
+experience. Instrumental in architecting Innovative solutions to
+intricate Feature requests, optimizing perform and
+functi on ality while adhering to strict deadlines.
+conducted code reviews and provided constructive feedback
+to peers, ensuring code quality and adherenceto Coding standards.
+Participated in sprint planning, daily stand-ups, and
+retrospective meetings to cont in uously improve team
+perform and project delivery. Hindi Professional Working Proﬁciency Marathi Native or Bil in gual Proﬁciency
+Participated in requirement Analysis, design discussions, and
+sprint planning meetings to deﬁne project scope and
 deliverables.

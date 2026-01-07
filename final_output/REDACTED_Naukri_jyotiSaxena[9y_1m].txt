@@ -1,96 +1,92 @@
-Senior Android Developer PROFILE SUMMARY R
+PROFILE SUMMARY R
 Senior Android Developer with over 9 years of experience
 in software and mobile development in a broad range of in-
-dustries in cluding B 2 B, Order management, E Commerce
-and au to motive.Solid under st anding of full mobile and S of t-
-w are (SDLC) in cluding W at erfall
-and Agile methodologies. Well c on versant with versi on c on-
-trol in cluding CVS, SVN and Git.Familiar with third party
-libraries and to ols like fireb as e, volley, proguard, eventbus,
-google analytics, Retr of it, glide, pic as so. Skills Work experience • Java, Kotl in
-• Android SDK
-• MVP, MVVM Cerence Senior software engineer
-Sep 2024
+dustries Including B 2 B, Order management, E Commerce
+and automotive. Solid underst and ing of full mobile and Soft-
+ware (SDLC) Including Waterfall
+and Agile methodologies. Well conversant with version con-
+trol Including CVS, SVN and Git. Familiar with third party
+libraries and Tools like firebase, volley, proguard, eventbus,
+google analytics, Retrofit, glide, picasso. Skills Work experience • Java, Kotlin
+• Android SDK • MVP, MVVM Cerence Senior Software engineer Sep 2024
 ↑
 Apr 2022
-• Retr of it, Volley, Fireb as e
-• Versi on C on trol : GIT, SVN
-• Android UI: Cus to m views, Android
-activity, fragments, layouts
+• Retrofit, Volley, Firebase
+• Version Control : GIT, SVN
+• Android UI: Custom views, Android
+activity, Fragments, layouts
 • Agile methodologies: SCRUM
-• Android Jet Pack
-• Pic as so, Glide
-• Design p at terns in fosys Technology Analyst Apr 2022
+• • Picasso, Glide
+• Design patterns Apr 2022
 ↑
 Sept 2021
 • Working as a Technology Analyst to design and build ad-
-vanced application s for the Android platform in both Java
-and Kotl in.
-• To collabor at e with cross-Functional teams to def in e, de-
-sign, and ship new fe at ures.
-• Work with outside Data sources and API’s.
-• Work on bug fixing and improving application per for-
-mance
-Senior software engineer
-Aug 2021
+vanced applic at ions for the Android Platform in both Java
+and Kotlin.
+• To collaborate with cross-Functional teams to define, de-
+sign, and ship new features.
+• Work with outside data sources and API’s.
+• Work on bug fixing and improving applic at ion perfor-
+mance Senior Software engineer Aug 2021
 ↑
 Nov 2018
-• Worked as a Senior software engineer in Premier on e
-H and held team.
-• The application provides mapping, st at us upd at es, and
-Other d is p at ch/CAD fe at ures on the of ficer’s h and held de-
+• Worked as a Senior Software engineer in Premier One
+Handheld team.
+• The applic at ion provides mapping, status updates, and
+Other dispatch/CAD features on the officer’s handheld de-
 vice.
-• Resoluti on of defects, fixing cr as hes, improvement of UI.
-• Developed and executed test c as es for new fe at ures devel-
+• Resolution of defects, fixing crashes, improvement of UI.
+• Developed and executed test cases for new features devel-
 oped.
 • collaborated with Other teams for bug debugging and res-
-oluti on.
-• Involving in the migration of the ex is ting legacy codeb as e
-to Kotl in, enhancing code quality, improving maintain-
-ability, and Leveraging Kotl in’s modern language fe at ures
-for better performance and safety.
-• Worked on view system, keyboard view, eng in e module of the Samsung keyboard for Android OS upgrade PROJECTS where we optim is ed the modules and implement new fea-
+olution.
+• involving in the migr at ion of the existing legacy codebase
+to Kotlin, enhancing code quality, improving maintain-
+ability, and Leveraging Kotlin’s modern language features
+for better perform and safety.
+• Worked on view system, keyboard view, engine module of the Samsung keyboard for Android OS upgrade PROJECTS where we optimised the Modules and implement new fea-
 tures for better user experience.
-• Implemented fuzzy search functi on ality for transliteration.
-DB improvement for different regi on al languages.
+• implemented fuzzy search functi on ality for transliter at ion.
+DB improvement for different regional languages.
 • Checked and cross verified respective flag values for
-different versi on of mobile be for e rele as e
-Pooraa (S is ter Company of in diaMART) C on sultant Nov 2018
+different version of mobile before release
+Pooraa (Sister Company of India MART)
+consultant
+Nov 2018
 ↑
 Aug 2018
-• Developed an application from scr at ch th at enables user
-to see s to ck availability, place orders, get upd at es on its
-st at us, download in voices and LR - on the go.
-• Identified user needs for the development of new fe at ures.
-• Involving in Continuous improvement of fe at ures and func-
-ti on alities to make the app user friendly.
-• Changed the UIto decre as e the bounce r at e.
+• Developed an applic at ion from scratch that enables user
+to see stock availability, place orders, get updates on its
+status, download invoices and LR - on the go.
+• Identified user needs for the development of new features.
+• involving in Continuous improvement of features and func-
+tionalities to make the app user friendly.
+• Changed the UIto decrease the bounce rate.
 • Dynamic change in app’s UIto meet the market require-
 ment
-• Optimize the in terfacing of the apps with a variety of sys-
+• Optimize the Interfacing of the apps with a variety of sys-
 tems to ensure flexible and agile use.
-• Involving in unit testing and bug fixes to reduce any
-runtime cr as hes and bug free rele as e on plays to re.
-in diaMART in terMESH Ltd software Programmer Aug 2018
+• involving in unit testing and bug fixes to reduce any
+runtime crashes and bug free release on playstore. India MART Inter MESH Ltd Software Programmer Aug 2018
 ↑
 Aug 2015
-• W as a part of the team th at w as Involving in the develop-
-ment of new fe at ures and it’s ex is ting Feature improvement
-to develop a user friendly application th at enables milli on s
-of buyers sellers to c on nect with each o the r to fulfil the ir
+• Was a part of the team that was involving in the develop-
+ment of new features and it’s existing Feature improvement
+to develop a user friendly applic at ion that enables millions
+of buyers sellers to connect with each Other to fulfil their
 business requirements and browse through 63 Mn prod-
-ucts service s
-• Designed and build advanced fe at ures for the Android ap-
-plication.
-• collaborated with cross-Functional teams to def in e, design,
-and ship new fe at ures
-• Worked with outside Data sources and AP is
-• Worked on bug fixing and improving application per for-
+ucts services
+• Designed and build advanced features for the Android ap-
+plic at ion.
+• collaborated with cross-Functional teams to define, design,
+and ship new features
+• Worked with outside data sources and APIs
+• Worked on bug fixing and improving applic at ion perfor-
 mance
-• C on t in uously worked to wards achieving maximum devel-
+• cont in uously worked towards achieving maximum devel-
 opment efficiency
 • Help maintain code quality
-• Coord in at e with team members to Create app in a coordi-
+• Coord in ate with team members to Create app in a coordi-
 nated and timely manner.
-• Ensure th at apps are tested to meet to tal performance
+• Ensure that apps are tested to meet total perform
 requirements

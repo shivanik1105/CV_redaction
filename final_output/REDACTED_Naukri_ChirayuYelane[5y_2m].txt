@@ -1,79 +1,77 @@
 421501 •
-• Python DEVELOPER • PROFILE software developer of fering 5 years of product-b as ed application s extensive experience and
-Exceptional Analytical and critical th in king skills. Delivering a proactive approach, gre at work ethic,
-and the ability to functi on will in f as t-paced/deadl in e-driven team envir on ments. SKILLS Python Programming Cloud pl at for ms like ,
-Micros of t Azure, Terraform, GCP ,
-Micro service s, REST API's, HTTP REQUEST
-F as t API, Fl as k, Django, F as tAPI, Pyspark, Streamlit, Plotly-dash
-Git, JIRA, Jenk in s, CI/CD, Kubernetes d as hboard
-AWS service s like – AWS Step Functi on s, Lambda,
-Jmeter, Rally, Azure Dev Ops, El as ticsearch
+• PYTHON DEVELOPER • PROFILE Software developer offering 5 years of product-based applic at ions extensive experience and
+Exceptional Analytical and critical thinking skills. Delivering a proactive approach, great work ethic,
+and the ability to function will in fast-paced/deadline-driven team envir on ments. SKILLS Python programming Cloud platforms like ,
+Microsoft Azure, Terraform, GCP ,
+Microservices, REST API's, HTTP REQUEST
+Fast API, Flask, Django, Fast API, Pyspark, Streamlit, Plotly-dash
+Git, JIRA, Jenkins, CI/CD, Kubernetes dashboard
+AWS services like – AWS Step Functions, Lambda,
+Jmeter, Rally, Azure Dev Ops, Elasticsearch
 S 3, Ec 2, ECS, SNS
-SQLite, PostgreSQL, SQL, M on goDB
-Advance Micros of t of fice, Excel and Power Po in t
-Fluent with Engl is h speaking and writing
-Html, css, JavaScript, React.js PR of ESSI on AL EXPERIENCE Python Developer, Oc to ber 2023 – Present
-Th is project aims to build an au to mated system for journal abstracti on and in dexing, emph as izing efficiency, user-friendl in ess, and
-advanced analytics. It comb in es Python Django for the backend, HTML, JavaScript, AJAX, and CSS for the fr on tend, and MySQL for Data
-management. Using Google Cloud platform (GCP) for scalable s to rage of journal PDFs and Plotly Dash for dynamic d as hboards, it of fers
-robust analytics. Tableau fur the r enhances dec is i on-making with advanced Data v is ualization.
-Key C on tributi on:
-1. Journal Abstracti on and in dexing
+SQLite, Postgre SQL, SQL, Mongo DB
+Advance Microsoft Office, Excel and Power Point Fluent with English speaking and writing Html, css, JavaScript, React.js PROFESSIONAL EXPERIENCE Python Developer, October 2023 – Present
+This project aims to build an automated system for journal abstraction and indexing, emph as izing efficiency, user-friendl in ess, and
+advanced analytics. It combines Python Django for the backend, HTML, Java Script, AJAX, and CSS for the frontend, and My SQL for data
+management. Using Google Cloud Platform (GCP) for scalable storage of journal PDFs and Plotly Dash for dynamic dashboards, it offers
+robust analytics. Tableau Further enhances dec is ion-making with advanced data visualiz at ion.
+Key contribution:
+1. Journal Abstraction and Indexing
 o
-Au to m at ically in dex journals by metad at a (title, author, keywords).
+Autom at ically index journals by metadata (title, author, keywords).
 o
-Extract abstracts and key secti on s from articles.
+Extract abstracts and key sections from articles.
 o
-Provide in tuitive search and c at egorization.
-2. Cloud Sto rage and File Management
+Provide intuitive search and categoriz at ion.
+2. Cloud Storage and File Management
 o
-Securely s to re PDFs on GCP.
+Securely store PDFs on GCP.
 o
-Allow users to upload, download, and manage files with privacy c on trols.
+Allow users to upload, download, and manage files with privacy controls.
 3. Backend (Django)
 o
-Role-b as ed user au the ntication and subscripti on management.
+Role-based user authentic at ion and subscription management.
 o
-MySQL integration for structured metad at a and user records.
+My SQL integr at ion for structured metadata and user records.
 o
-Python scripts for metad at a extracti on and keyword in dexing.
-4. Fr on tend
+Python scripts for metadata extraction and keyword indexing.
+4. Frontend
 o
-Resp on sive UI with AJAX for smooth in teracti on s.
+Resp on sive UI with AJAX for smooth interactions.
 o
-Pers on alized d as hboards and embedded PDF viewers.
+Pers on alized dashboards and embedded PDF viewers.
 5. Analytics
 o
-Use Plotly Dash for sales, subscripti on s, and user engagement in sights
+Use Plotly Dash for sales, subscriptions, and user Engagement insights
 Paytm(Paytm m’loyal)
-software engineer, June 2022 – August 2023
-m’loyal™ is an advanced mobile loyalty, Data analytics, and prec is i on marketing platform seamlessly integrating technology, web-b as ed CRM, and v is ual analytics. Designed to drive Exceptional results for retail br and s, it comb in es cutting-
-edge to ols like Py Spark for large-scale Data processing, AWS cloud service s for secure, scalable in fr as tructure, and SQL for
-advanced Data management.
-The platform leverages mach in e learning algorithms and real-time analytics to empower marketers with pers on alized
-campaigns, improving cus to mer engagement and maximizing ROI. Its h as sle-free Sa as model ensures ef for tless deployment and
-functi on ality, making it a trusted solution for retail br and s aiming for unprecedented growth.
-Key C on tributi on s:
-• Backend Development: Created Django AP is b as ed on business logic; used Fl as k with Pickle for log in and Data in put pages.
-• Fr on tend Enhancements: Designed user-friendly HTML pages using React.js and coord inated with the design team for
-better UI/UX. Implemented validation s for mobile in put.
-• Data Management: Filtered Data from MySQLto Create M on goDB collecti on s; designed and optimized SQL queries for
+Software engineer, June 2022 – August 2023
+m’loyal™ is an advanced mobile loyalty, data analytics, and prec is ion Marketing Platform seamlessly integr at ing technology, web-based CRM, and visual analytics. Designed to drive Exceptional results for retail brands, it combines cutting-
+edge Tools like Py Spark for large-scale data processing, AWS Cloud services for secure, scalable infr as tructure, and SQL for
+advanced data management.
+The Platform leverages machine Learning algorithms and real-time analytics to empower marketers with pers on alized
+campaigns, improving cus to mer Engagement and maximizing ROI. Its hassle-free Saa S model ensures effortless deployment and
+functi on ality, making it a trusted Solution for retail brands aiming for unprecedented growth.
+Key contributions:
+• Backend Development: Created Django APIs based on business logic; used Flask with Pickle for login and data input pages.
+• Frontend Enhancements: Designed user-friendly HTML pages using React.js and coord in ated with the design team for
+better UI/UX. implemented valid at ions for mobile input.
+• Data Management: Filtered data from My SQLto Create Mongo DB collections; designed and optimized SQL queries for
 pers on alized reporting.
-• Analytics: Created dynamic d as hboards using Tableau and Python’s Plotly library for graphical in sights.
-• Cloud Management: Managed AWS in fr as tructure (S 3, EC 2) for scalability and cost-efficiency.
-• testing & Reporting: conducted rigorous testing, documented Issues in JIRA/ALM, and generated reports.
-With its focus on scalability, real-time in sights, and pers on alization, m’loyal™ empowers retail br and s to achieve significant
-business growth. Pay as systems pvt ltd software engineer, August 2019 – April 2022
-The Loan Predicti on Using Mach in e learning project au to m at es loan eligibility as sessments for bank cus to mers by predicting
-the ir eligibility b as ed on in put Data from an on l in e applicationform. The system processes cus to mer Data, in cluding age,
-in come, and credit score, using a mach in e learning model tra in ed to cl as sify applicants as eligible or not eligible for a loan.
-Key C on tributi on s:
-Data Preparation: Collected and preprocessed loan d at as ets, in cluding h and ling m is sing values, scaling fe at ures, and en coding
-c at egorical variables.
-Model integration: Serialized the mach in e learning model using Pickle and in tegrated it in to the F as tAPI application.
-API Development: Developed a F as tAPI endpo in t to accept user Data and return loan eligibility predicti on s.
-Web interface Design: Designed and in tegrated the Data in putform with the F as tAPI backend for loan predicti on.
-Data Validation: Implemented in put validation using Pydantic to ensure Data accuracy and properform at ting.
-V is ualization: Used Seaborn for cre ating v is ualization s to analyze loan predicti on trends and model performance.
-Collaboration: Coord inated with cross-Functional teams to g at her requirements and align development progress with project
+• Analytics: Created dynamic dashboards using Tableau and Python’s Plotly library for graphical insights.
+• Cloud Management: Managed AWS infr as tructure (S 3, EC 2) for scalability and cost-efficiency.
+• Testing & Reporting: conducted rigorous testing, documented Issues in JIRA/ALM, and generated reports.
+With its focus on scalability, real-time insights, and pers on aliz at ion, m’loyal™ empowers retail brands to achieve significant
+business growth. Payas Systems pvt ltd Software engineer, August 2019 – April 2022
+The Loan Prediction Using Machine Learning project automates loan eligibility assessments for bank cus to mers by predicting
+their eligibility based on input data from an online applic at ion form. The system processes cus to mer data, Including age,
+income, and credit score, using a machine Learning model trained to classify applicants as eligible or not eligible for a loan.
+Key contributions:
+Data Prepar at ion: Collected and preprocessed loan dat as ets, Including handling missing values, scaling features, and encoding
+categorical variables.
+Model Integr at ion: Serialized the machine Learning model using Pickle and integrated it in to the Fast API applic at ion.
+API Development: Developed a Fast API endpoint to accept user data and return loan eligibility predictions.
+Web Interface Design: Designed and integrated the data input form with the Fast API backend for loan prediction.
+Data Valid at ion: implemented input valid at ion using Pydantic to ensure data accuracy and proper form at ting.
+Visualiz at ion: used Seaborn for cre at ing visualiz at ions to analyze loan prediction trends and model perform.
+Collabor at ion: Coord in ated with cross-Functional teams to gather requirements and align development progress with project
 goals.

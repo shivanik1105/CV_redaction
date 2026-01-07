@@ -1,66 +1,63 @@
-C on sultant MOB - : OBJECTIVE: To obta in a positi on th at will help me to grow my knowledge and lead me to wards the success of myself
-and my organization. SUMMARY: 8 + years of work experience in IT c are er.
-➢ as C on sultant in Ato S from Feb -2022 till d at e.
-➢ I have been working as Technology Analyst in from March-2019to Feb-2022.
-➢ W as working with as a software Developer for 3.4 yrs. of experience in
+consultant MOB - : OBJECTIVE: To obtain a position that will help me to grow my knowledge and lead me towards the success of myself
+and my organiz at ion. SUMMARY: 8 + years of work experience in IT career.
+➢ as consultant in ATOS from Feb -2022 till date.
+➢ I have been Working as Technology Analyst in from March-2019to Feb-2022.
+➢ Was Working with as a Software Developer for 3.4 yrs. of experience in
 .
-➢ Experienced in Programming and testing of web, windows, and d is tributed application s.
-➢ Having b as ic knowledge about Angular.
-➢ Having good experience on j Query and JavaScript.
+➢ Experienced in programming and Testing of web, windows, and distributed applic at ions.
+➢ Having basic knowledge about Angular.
+➢ Having good experience on j Query and Java Script.
 ➢ Having good knowledge on HTML 5, CSS 3, Bootstrap CSS.
 ➢ Having good exposure in GIT, GITHUB.
-➢ Proficient in TDMto ols like JIRA .
+➢ Proficient in TDM Tools like JIRA .
 ➢ Experience in Agile methodology.
 ➢ Experience in end-to-end delivery of PROJECTS .
-➢ Good Analytical, debugging & problem-solving skills. TECHNICAL SKILLS: C# .Net MVC Web support languages Angular, HTML 5, JavaScript, JQUERY, JS on, CSS 3, BOOTSTRAP
-AP is & framework s
-.Net 3.0,4.0,4.5, as P.NET MVC, ENTITY FRAMEWROK, Web API
-to ols
-V is ual studio 10/12/13/15to 22
-Selenium, RPA
-PR of ESSI on AL EXPERIENCE:
-Feb-2022 Present Ato S C on sultant C#, .Net Framework, .Net Core,
-Web API, Sql D at ab as e, Angular
-Web service s, V is ual Studio
-C#, .Net Framework, .Net Core, Web API, Sql Technology MAR-2019 Feb-2022 Analyst D at ab as e, Angular
-Web service s, V is ual Studio, RPA
-C#.Net, VB.Net, as P.NET, SQL SERVER,
-as P.NET MVC, Entity Framework, FEB-2015 AUG-2018 Pvt Ltd. software Developer ADO.NET, WCF, JavaScript, JQuery, HTML,
+➢ Good Analytical, Debugging & Problem-solving skills. TECHNICAL SKILLS: C# . Net MVC Web support languages Angular, HTML 5, JavaScript, JQUERY, JSON, CSS 3, BOOTSTRAP
+APIs & Frameworks
+. Net 3.0,4.0,4.5, ASP. NET MVC, ENTITY FRAMEWROK, Web API Tools Visual studio 10/12/13/15to 22
+Selenium, RPA PROFESSIONAL EXPERIENCE: Feb-2022 Present ATOS consultant
+C#, . Net Framework, . Net Core,
+Web API, Sql Database, Angular
+Web Services, Visual Studio
+C#, . Net Framework, . Net Core, Web API, Sql Technology MAR-2019 Feb-2022 Analyst Database, Angular
+Web Services, Visual Studio, RPA
+C#. Net, VB. Net, ASP. NET, SQL SERVER,
+ASP. NET MVC, Entity Framework, FEB-2015 AUG-2018 Pvt Ltd. Software Developer ADO. NET, WCF, Java Script, JQuery, HTML,
 CSS, Bootstrap
-EDUCATION AL QUALIFIC at I on: Degree Board/University
-Marks % M.C.A university
+EDUC at IONAL QUALIFIC at ION: Degree Board/University
+Marks % M. C. A university
 2015
-66.20 % B.C.A University 2012
-62.28 % H.S.C Board 2009
-53.83 % S.S.C Board 2006
-65.20 % PROJECT DETAILS: PROJECT 1 : Ato s Client Moody’s Analytics Project BVD Orb is Feb-2022
-C#, .Net Framework, .Net MVC , V is ual Studio C on sultant • Leaded some modules of the project Roles and Resp on sibilities • Involving in designing the framework
-• Writing code def in iti on s.
-• Added Quality c on trol at tributes in the cshtml files for QA under st anding.
-PROJECT 2 : in fosys Limited.
+66.20 % B. C. A University 2012
+62.28 % H. S. C Board 2009
+53.83 % S. S. C Board 2006
+65.20 % PROJECT DETAILS: PROJECT 1 : Atos Client Moody’s Analytics Project BVD Orbis Feb-2022
+C#, . Net Framework, . Net MVC , Visual Studio
+consultant
+• Leaded some Modules of the project Roles and Resp on sibilities • involving in designing the framework
+• Writing code def in itions.
+• added Quality Control attributes in the cshtml files for QA underst and ing.
+PROJECT 2 : Infosys Limited.
 Dec-2019
-Feb-2022 Environment C#, .Net Framework, .Net Core, Web API, Sql D at ab as e, Web service s, V is ual
-Studio, RPA Technology Analyst Roles and Resp on sibilities • Requirement G at hering and Estimation preparation.
-• managing application development, testing and deployment
-• Knowledge Sharing – Helped team members under st and application
+Feb-2022 Environment C#, . Net Framework, . Net Core, Web API, Sql Database, Web Services, Visual
+Studio, RPA Technology Analyst Roles and Resp on sibilities • Requirement Gathering and Estim at ion prepar at ion.
+• Managing applic at ion development, testing and deployment
+• knowledge Sharing – Helped team members understand applic at ion
 Architecture.
-PROJECT 3: in fosys Limited. Client as s is tegde RPA Project KM Portal Duration of Project March-2019
-Dec-2019 Environment Angular, C#, .Net Framework, Sql D at ab as e, Web service s, V is ual Studio Technology Analyst Roles and Resp on sibilities • Requirement G at hering.
-• Build end to end Web application and deployed on server.
+PROJECT 3: Infosys Limited. Client Ass is tegde RPA Project KM Portal Dur at ion of Project March-2019
+Dec-2019 Environment Angular, C#, . Net Framework, Sql Database, Web Services, Visual Studio Technology Analyst Roles and Resp on sibilities • Requirement Gathering.
+• Build end-to-end Web applic at ion and deployed on server.
 PROJECT 4: Aloha Technology Pvt. Ltd. Title April-2015
-Aug-2018
-in for mation
-Far on ics Web C on sole is a product developed and Maintained by Aloha
-technology. It is a web c on sole c on ta ining multiple product s like Deep freeze
-cloud, Antivirus, Anti-Executable, Deep Freeze On Dem and s, W in Select,
-Campus affairs, MDM, Far on ics Core Etc. Environment .Net Framework 4.0, MVC 4, C#, JavaScript, Jquery, Ajax,
-Dev Express gridview, Sql Server 2008 Roles and Resp on sibilities • Design and build application as per the mock
+Aug-2018 Inform at ion Far on ics Web console is a product developed and Maintained by Aloha
+technology. It is a web console conta in ing multiple products like Deep freeze
+Cloud, Antivirus, Anti-Executable, Deep Freeze On Demands, Win Select,
+Campus affairs, MDM, Far on ics Core Etc. Environment . Net Framework 4.0, MVC 4, C#, JavaScript, Jquery, Ajax,
+Dev express gridview, Sql Server 2008 Roles and Resp on sibilities • Design and build applic at ion as per the mock
 • Test and Deploy the changes on the server
 PROJECT 5: Aloha Technology Pvt. Ltd.
-Employee Management system h as been a demo project, c on ta ining
-Employee and Department details. The project h as been developed for
-management and Maintenance of Employee and department. Th is is CRUD
-application developed using JAVA technology (Spring MVC) . Environment Spring MVC, Jav as ript, Jquery, Bootstrap, HTML 5, CSS 3
-Apache to mc at 7, MYSQL. Roles and Resp on sibilities • Requirment g at hering
+Employee Management system has been a Demo project, conta in ing
+Employee and Department details. The project has been developed for
+management and Maintenance of Employee and department. This is CRUD
+applic at ion developed using JAVA technology (Spring MVC) . Environment Spring MVC, Jav as ript, Jquery, Bootstrap, HTML 5, CSS 3
+Apache Tomcat 7, MYSQL. Roles and Resp on sibilities • Requirment gathering
 • Design and Development
 Sign at ure:

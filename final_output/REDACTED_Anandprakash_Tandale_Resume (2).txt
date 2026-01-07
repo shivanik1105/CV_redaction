@@ -1,62 +1,52 @@
-in dustrious Senior C on sultant, with excellent critical th in king and team-building
-talents Familiar with the policies and procedures of product development and operation s.
-Competent in staff management and proposal development. Skills Python| AP is| Fl as k| Django| Design p at terns|
-| Ansible| Jenk in s| Docker| Kubernetes| AWS|
-Azure| Open stack| Open Shift| Kubernetes| Linux| windows| Open Source
-C on tributi on s| Go| MySQL| M on goDB| C as s and ra| Project
+Industrious Senior consultant, with excellent critical thinking and team-building
+talents Familiar with the policies and procedures of product development and oper at ions.
+Competent in staff management and proposal development. Skills Python| APIs| Flask| Django| Design patterns|
+| Ansible| Jenkins| Docker| Kubernetes| AWS|
+Azure| Open STack| Open Shift| Kubernetes| Linux| windows| Open Source
+contributions| Go| My SQL| Mongo DB| Cassandra| Project
 Management|
-May 2023 - Current Senior C on sultant & Team Lead
-in fo Beans, Developed the code to get the Continuous health checked, configuration
-details, and valid at e it with rules, and provide suggesti on s.
-leading the team to meet the deadl in es.
+May 2023 - Current Senior consultant & Team Lead
+Info Beans, Developed the code to get the Continuous health checked, configur at ion
+details, and validate it with rules, and provide Suggestions.
+Leading the team to meet the deadlines.
 Enhance the product as per the new requirements.
-Work with Product Manager, engineer Manager, and Direc to rs to improve
-the product s.
-Tech stack use - Python, Django, mach in e learning algorithms, Jenk in s,
+Work with Product Manager, engineer Manager, and Directors to improve
+the products.
+Tech stack use - Python, Django, machine Learning algorithms, Jenkins,
 Node JS.
-Pl at for ms used - Linux, windows, MAC
+platforms used - Linux, windows, MAC
 Apr 2021 -
-Apr 2023
-Senior software engineer
-Red H at Pvt. Ltd, Wrote AP is to change the behavior of Open Shift AP is as per the cus to mer's
+Apr 2023 Senior Software engineer Red Hat Pvt. Ltd, Wrote APIs to change the behavior of Open Shift APIs as per the cus to mer's
 requirement.
-in tegrated multiple stack s of Red H at, as per the scenario.
-L in k -
-Tech stack used - Python, REST AP is, Django, Open Shift, AWS, Azure,
-Docker, Kubernetes, Ansible, P and as.
-Lead software engineer with 10+ years of Experience
-akash-t and ale-6
+Integrated multiple stacks of Red Hat, as per the scenario.
+Link -
+Tech stack used - Python, REST APIs, Django, Open Shift, AWS, Azure,
+Docker, Kubernetes, Ansible, Pandas.
+Lead Software engineer with 10+ years of Experience
+akash-tandale-6
 Sep 2019 -
-Apr 2021
-software engineer
-SAP Labs Pvt. Ltd., Developed a code for the product s are d at ab as es th at are supposed to moveto AWS, Azure clouds from on-prem is es.
-C on tributed in bug fixes.
-Tech stack and to ols: Python, Azure, AWS, boto 3, Fl as k, Ansible, Jenk in s
-pipel in es, Docker, Kubernetes, H as hi Corp Vault.
-Pl at for ms used - Linux, windows.
+Apr 2021 Software engineer SAP Labs Pvt. Ltd., Developed a code for the products are databases that are supposed to moveto AWS, Azure clouds from on-premises.
+contributed in bug fixes.
+Tech stack and Tools: Python, Azure, AWS, boto 3, Flask, Ansible, Jenkins
+pipelines, Docker, Kubernetes, Hashi Corp Vault.
+platforms used - Linux, windows.
 Jun 2016 -
-Sep 2019
-as soci at e software engineer
-Red H at Pvt. Ltd., Developed a product to certify different Components of Open stack like
-c in der, manila, neutr on etc
-Checked the in sights of the cus to mers and manipul at e it as per the
+Sep 2019 Associate Software engineer Red Hat Pvt. Ltd., Developed a product to certify different Components of Open Stack like
+cinder, manila, neutron etc
+Checked the insights of the cus to mers and manipulate it as per the
 requirement
-Tech stack and to ols - Python, BDD framework, Jenk in s, Django, REST AP is,
-Jenk in s, tempest, numpy, p and as, seaborn
+Tech stack and Tools - Python, BDD framework, Jenkins, Django, REST APIs,
+Jenkins, tempest, numpy, pandas, seaborn
 Jun 2015 -
-Jun 2016
-as soci at e software engineer
-Izel Technologies, Developed a product th at w as a wrapper on to p of different Open stack
-service s to execute different apps on the cloud. C on tributed in an Open
+Jun 2016 Associate Software engineer Izel Technologies, Developed a product that was a wrapper on top of different Open Stack
+services to execute different apps on the Cloud. contributed in an Open
 Source project.
-Tech stack and to ols - Python, Django, Java, Open stack, Jenk in s, Ansible.
+Tech stack and Tools - Python, Django, Java, Open Stack, Jenkins, Ansible.
 Jun 2014 -
-Nov 2014
-Intern
-SAP Labs Developed the code to au to m at e scenarios of the d at ab as es.
-Supported staff members in the ir daily t as ks, reducing workload burden
-and allowing for in cre as ed focus on higher-priority as signments.
-C on tributed to a positive team Environment by collabor ating with fellow
-in terns on group projects and presentation s.
-Ga in ed hands-on experience in various software programs, in cre asing
-pr of iciency and exp anding technical skill set.
+Nov 2014 Intern SAP Labs Developed the code to automate scenarios of the databases.
+Supported staff members in their daily tasks, reducing workload burden
+and allowing for increased focus on higher-priority assignments.
+contributed to a positive team Environment by collabor at ing with fellow
+interns on group projects and present at ions.
+Gained hands-on experience in various software programs, incre as ing
+proficiency and exp and ing technical skill set.

@@ -3,68 +3,68 @@ E-mail . :
 • Having 2.5+ Years of IT experience in (Mule ESB).
 • Experience in .
 • Having experience in designing Flows, .
-• Experience in designing and developing RESTful AP is using studio
-and platform.
-• Designed and developed Mule ESB projects using various c on nec to rs like D at ab as e, Sales for ce.
-• Exposure to platform Components (Any po in t studio, Anypo in t API
-designer, API manager, C on nec to rs, API portal).
-• Implemented flows using b as ed on the client's requirements.
-• hands-on experience in Data weave Language to access payload Data, properties,
+• Experience in designing and developing RESTful APIs using studio
+and Platform.
+• Designed and developed Mule ESB projects using various connectors like Database, Salesforce.
+• Exposureto Platform Components (Any point studio, Anypoint API
+designer, API manager, connectors, API portal).
+• implemented flows using based on the client's requirements.
+• Hands-on experience in data weave Language to access payload data, properties,
 and variables of .
-• Good under st anding of the (SDLC)
+• Good underst and ing of the (SDLC)
 :
-integration Technologies:
-Mules of t (Mule 4)
-APIto ols:
-RAML, Anypo in t Exchange
-D at ab as es:
+Integr at ion Technologies:
+Mulesoft (Mule 4)
+API Tools:
+RAML, Anypoint Exchange
+Databases:
 My SQl, Postgre Sql
-Versi on C on trol:
+Version Control:
 GIT, Git Hub
-Ticketing to ols: JIRA testing to ols: POSTMAN Work Experience:
-• in fosys Limited – to tal 2.5 years (Mule S of t Developer from April 2022to till d at e)
+Ticketing Tools: JIRA Testing Tools: POSTMAN Work Experience:
+• Infosys Limited – Total 2.5 years (Mule Soft Developer from April 2022to till date)
 Details of Projects:
 Project Name :
-in TEL (Marketto Sales)
-Designation:
-systems Engg(Mules of t Developer)
-Duration:
-Sep 2023 To Till D at e
+Intel (Marketto Sales)
+Design at ion:
+Systems Engg(Mulesoft Developer)
+Dur at ion:
+Sep 2023 To Till Date
 Environment:
-Descripti on:
-in tel Marketto Revenue project c on s is ts of different programs like Next
-Generation Rules planning, Product integration, in tel Premier Support, and
-Reg is tration. the re are two parts of in tel Sales and service after sales. To optimize
-and completi on of Sales process and service- related process will be providing
-integration solutions for integrating multiple systems. Th is integration provided by
-using the cloud b as ed Mule S of t Any Po in t platform and studio.
+description:
+Intel Marketto Revenue project consists of different programs like Next
+Gener at ion Rules planning, Product integr at ion, Intel Premier Support, and
+Registr at ion. There are two parts of Intel Sales and service after sales. To optimize
+and completion of Sales process and service- related process will be Providing
+integr at ion solutions for integr at ing multiple systems. This integr at ion provided by
+using the Cloud based Mule Soft Any Point Platform and studio.
 Roles:
-• Develop Mule application s for ESB layer.
-• Experience in MULE comp on ants like Flow C on trollers, Scopes, Filers, Munit, and
-C on nec to rs.
+• Develop Mule applic at ions for ESB layer.
+• Experience in MULE comp on ants like Flow controllers, Scopes, Filers, Munit, and
+connectors.
 • Worked on SOAP and REST API’s
-• Implemented Exceptional stretegies using Error h and ling and try-c at ch blocks.
-• Analyzed the recruitement of the project, Planned, and Coord inated with team members to
+• implemented Exceptional stretegies using Error handling and try-catch blocks.
+• Analyzed the recruitement of the project, Planned, and Coord in ated with team members to
 implemeted the objectives.
-• Participated in daily scrum meeting to d is cuss the progress of the projects and any blockage of the work and the solution of the block.
+• Participated in daily scrum meeting to discuss the progress of the projects and any blockage of the work and the Solution of the block.
 Details of Projects:
 Project Name :
-C is CO (Service Delivery)
-Designation:
-systems Engg(Mules of t Developer)
-Duration:
+CISCO (Service Delivery)
+Design at ion:
+Systems Engg(Mulesoft Developer)
+Dur at ion:
 Nov 2022to Sep 2023
 Environment:
-Descripti on:
-C is CO project c on s is t of different programs like Service Delivery, Cus to mer
-Success. To optimize and completi on of Sales process and service-related process
-will be Provides an over view of resourcerequests as signed to a particular user and the ir
-st at us. Migration project from Mule 3to Mule 4 where worked on migration and deployment
-of Mule API’s on cloud.
+description:
+CISCO project consist of different programs like Service Delivery, Cus to mer
+Success. To optimize and completion of Sales process and service-related process
+will be Provides an overview of resourcerequests assigned to a particular userand their
+status. Migr at ionproject from Mule 3to Mule 4 where worked on migr at ion anddeployment
+of Mule API’s on Cloud.
 Roles:
-• Deployment of Mule application s on prem is es and Hybrid
-• Analyzed the requirements of the project, planned, and coord inated with team members to
+• Deployment of Mule applic at ions on premises and Hybrid
+• Analyzed the requirements of the project, planned, and coord in ated with team members to
 implemet the objective.
-• Particip at e in daily scrum meet in gs to d is cuss the progress of the projects and any blockage of the work and the solution of the block. Certification s • Mules of t Certified Developer – Level (MCD - L 1)
-• Mules of t Certified integration as soci at e (MCIA)
+• Participate in daily scrum meetings to discuss the progress of the projects and any blockage of the work and the Solution of the block. Certific at ions • Mulesoft Certified Developer – Level (MCD - L 1)
+• Mulesoft Certified Integr at ion Associate (MCIA)
 EDUCATION:

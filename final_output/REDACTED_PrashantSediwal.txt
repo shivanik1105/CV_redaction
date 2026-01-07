@@ -1,61 +1,60 @@
-multi processing Linux Development Docker PROFILE SUMMARY WORK EXPERIENCE Feb 2022 - Present Nov 2018 - Feb
+multi processing PROFILE SUMMARY WORK EXPERIENCE Feb 2022 - Present Nov 2018 - Feb
 2022
-Lead engineer - Product Development c++ 14 Payments CPP Qml Other PERS on AL DETAILS
-631 Days
-668 Days software Programmer Build Linux / unix application s using C, C++, shell
-script., Unix, Multithreading, Data structure and
-algorithms, socket Programming, TCP & UDP Sockets,
+Lead engineer - Product Development c++ 14 Payments CPP Qml Other PERSONAL DETAILS 631 Days
+668 Days Software Programmer Build linux / unix applic at ions using C, C++, shell
+script., Unix, Multithreading, data structure and
+algorithms, socket programming, TCP & UDP Sockets,
 STL. Design, build, and maintain efficient, reusable,
-and reliable C++ code maintain Debian and Red h at
-packages and Other build Environment. software Developer • >Build Linux / unix application s using C++ and QT
-platform ->Designed, coded, implemented and tested
-new fe at ures and modules for the deriv at ives system
+and reliable C++ code maintain Debian and Red hat
+packages and Other build Environment. Software Developer • >Build linux / unix applic at ions using C++ and QT
+Platform ->Designed, Coded, implemented and tested
+new features and Modules for the deriv at ives system
 • >perform special requests for different projects -
->Analyzed server side in fr as tructure in cluding
-functi on calls for memory management, threads
-synchr on ization, multi threading, ->Create embedded
-application s m at ching clients requirement ->system
-Programming for ubuntu and r as pbian os for
-deployment in r as pberrypi.
-HMI interface for NGPD and Gen 5 D is plays
-??? Working for C on structi on & for estry Div is i on of
-John Deere au to motive. ??? Worked for Au to motive
-D is plays for HMI Development in C++, User interface
+>Analyzed server side infr as tructure Including
+function calls for memory management, threads
+synchroniz at ion, multi threading, ->Create embedded
+applic at ions matching clients requirement ->system
+programming for ubuntu and raspbian os for
+deployment in raspberrypi.
+HMI interface for NGPD and Gen 5 Displays
+??? Working for construction & Forestry Div is ion of
+John Deere automotive. ??? Worked for automotive
+Displays for HMI Development in C++, User Interface
 (UI) Design in Qt/QML.
-PC Simulation (SOD and DMS)
-??? The Se at occupant detecti on (SOD) sub system in
+PC Simul at ion (SOD and DMS)
+??? The Seat occupant detection (SOD) sub system in
 MPIC system is resp on sible to detect the occupancy
-detecti on/cl as sification of the occupants present in the vehicle. The system the n communic at es the
-occupancy related in for mation to the Other
-c on sumers c on nected over network. It also detects
-the presence of a human head near the ro of for the
-rear middle occupant. ??? Driver M on i to ring System
-(DMS) is w at ching for driver face, eye bl in k, and
-mouth to m on i to r driver st at e, the re are sever use
-case for safety re as on s to detect if driver fells sleepy
-the n warnto ECU. ??? PC simulation b as ed on Vec to r
-canoe we can see all in put and output signal
-v is ualization on canoe graph for Analysis of both
-sub system SOD and DMS.
+detection/classific at ion of the occupants present in the vehicle. The system then communicates the
+occupancy related inform at ion to the Other
+consumers connected over network. It also detects
+the presence of a human head near the roof for the
+rear middle occupant. ??? Driver Moni to ring System
+(DMS) is watching for driver face, eye blink, and
+mouth to monitor driver state, there are sever use
+case for safety reasons to detect if driver fells sleepy
+then warnto ECU. ??? PC simul at ion based on Vector
+canoe we can see all input and output signal
+visualiz at ion on canoe graph for Analysis of both
+subsystem SOD and DMS.
 214 Days
 578 Days
 457 Days
 485 Days
 276 Days
 335 Days
-COURSES & CERTIFIC at I on S
+COURSES & CERTIFIC at IONS
 WLP-FO Acquiring Australia
-WLP-FO is Standards framework for authorization &
-switching. Needto Create acquiring in stance for
-Australia and New Zeal and Banking Group Create an
-interface B as e 24 on is O 8583 using WLPFO pro to col
-guidel in es. Th is interface can compose decompose
-valid at e different Data element and send to authorizer
-service, and c on figure authorizer in such a way th at
-after all checks it can able to switch out message to different scheme like M as tercard, V is a, Amex.
-WLP-FO Acquiring Magnus is a 20+ years old legacy SWITCH. It h as
-some limitation s which restricts scalability & flexibility
-to rollout out new product s & solutions at the
+WLP-FO is Standards framework for authoriz at ion &
+switching. Needto Create acquiring instance for
+Australia and New Zealand Banking Group Create an
+Interface Base 24 on ISO 8583 using WLPFO pro to col
+guidelines. This interface can compose decompose
+validate different data element and send to authorizer
+service, and configure authorizer in such a way that
+after all checks it can able to switch out message to different scheme like Mastercard, Visa, Amex.
+WLP-FO Acquiring Magnus is a 20+ years old legacy SWITCH. It has
+some limit at ions which restricts scalability & flexibility
+to rollout out new products & solutions at the
 expected pace in the market. Some of the
 Components in the technology stack are obsolete &
 not in support by the OEMs as well Project is to

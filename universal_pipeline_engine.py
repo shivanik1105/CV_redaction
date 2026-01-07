@@ -858,12 +858,15 @@ class UniversalRedactionEngine:
         # Phase 6: Clean up artifacts
         text = self._cleanup_artifacts(text)
         
-        # Phase 7: Restore protected terms BEFORE final formatting
+        # Phase 7: RESTORE PROTECTED TERMS BEFORE ANY SPACING FIXES
         for placeholder, original_term in protected_map.items():
             text = text.replace(placeholder, original_term)
         
-        # Phase 8: Professional formatting with aggressive word spacing (AFTER term restoration)
-        text = self._professional_formatting(text)
+        # Phase 8: Apply word spacing fixes AFTER restoration
+        text = self._fix_concatenated_words(text)
+        
+        # Phase 9: Professional formatting (without aggressive separation)
+        text = self._professional_formatting_final(text)
         
         return text
     
@@ -1129,6 +1132,45 @@ class UniversalRedactionEngine:
         
         return text
     
+    def _fix_concatenated_words(self, text: str) -> str:
+        """
+        Fix concatenated words intelligently - ONLY AFTER protected terms restored
+        """
+        # Fix specific common concatenations first
+        common_fixes = {
+            r'\bau?to\s*motive\b': 'automotive',
+            r'\bcon\s*figuration\b': 'configuration',
+            r'\bunder\s*st\s*and\s*ing\b': 'understanding',
+            r'\bs\s*and\s*box\b': 'sandbox',
+            r'\bh\s*and\s*ling\b': 'handling',
+            r'\bper\s*for\s*m': 'perform',
+            r'\bplat\s*for\s*m': 'platform',
+            r'\btelem\s*at\s*ics\b': 'telematics',
+            r'\bg\s*at\s*eway\b': 'gateway',
+            r'\bc\s*on\s*trol\b': 'control',
+            r'\bc\s*on\s*': 'con',  # For words like "consultant"
+            r'\bst\s*and\s*ard\b': 'standard',
+        }
+        
+        for pattern, replacement in common_fixes.items():
+            text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+        
+        # Add space between lowercase and uppercase (camelCase)
+        text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
+        
+        # Add space between letter and number
+        text = re.sub(r'([a-zA-Z])(\d)', r'\1 \2', text)
+        text = re.sub(r'(\d)([a-zA-Z])', r'\1 \2', text)
+        
+        # Fix common word boundaries that get stuck together
+        # Pattern: lowercase + common short word + lowercase
+        short_words = ['in', 'to', 'at', 'on', 'of', 'by', 'as', 'is', 'and', 'the', 'for', 'with']
+        for word in short_words:
+            # Fix patterns like "wordin" -> "word in", "into" -> "in to" (context-dependent)
+            text = re.sub(rf'([a-z]{{3,}})({word})([a-z]{{3,}})', rf'\1 {word} \3', text, flags=re.IGNORECASE)
+        
+        return text
+    
     def _aggressive_word_separation(self, text: str) -> str:
         """Super aggressive word separation for concatenated text - applied AFTER protected term restoration"""
         # Common verbs that get concatenated
@@ -1169,31 +1211,18 @@ class UniversalRedactionEngine:
         
         return text
     
-    def _professional_formatting(self, text: str) -> str:
-        """Apply professional formatting with proper spacing and structure"""
-        # Don't apply intelligent separation if protected terms haven't been restored yet
-        if '§PROTECTED' not in text:
-            text = self._aggressive_word_separation(text)
+    def _professional_formatting_final(self, text: str) -> str:
+        """
+        Final professional formatting - NO aggressive word separation
+        This runs AFTER protected terms are restored
+        """
+        # Fix punctuation spacing
+        text = re.sub(r':([A-Za-z])', r': \1', text)
+        text = re.sub(r',([A-Za-z])', r', \1', text)
+        text = re.sub(r'\.([A-Z])', r'. \1', text)
         
-        # Fix basic spacing issues
-        text = re.sub(r'([a-z])([A-Z][a-z])', r'\1 \2', text)  # camelCase
-        text = re.sub(r'([a-zA-Z])(\d)', r'\1 \2', text)  # letter-number
-        text = re.sub(r'(\d)([a-zA-Z])', r'\1 \2', text)  # number-letter
-        text = re.sub(r':([A-Za-z])', r': \1', text)  # colon spacing
-        text = re.sub(r',([A-Za-z])', r', \1', text)  # comma spacing
-        
-        # Fix spaced-out words (e.g., "st and ard" -> "standard")
-        text = re.sub(r'\bst and ard\b', 'standard', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bunderst and ing\b', 'understanding', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bcon guration\b', 'configuration', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bs and box', 'sandbox', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bh and s\b', 'hands', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bh and ling\b', 'handling', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bper for m', 'perform', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bplat for m', 'platform', text, flags=re.IGNORECASE)
-        
-        # Preserve compound terms
-        text = re.sub(r'\bproblem solving\b', 'problem-solving', text, flags=re.IGNORECASE)
+        # Fix double spaces
+        text = re.sub(r' {2,}', ' ', text)
         
         lines = text.split('\n')
         formatted_lines = []

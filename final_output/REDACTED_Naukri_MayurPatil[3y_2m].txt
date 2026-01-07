@@ -1,49 +1,46 @@
-m MULES of T DEVELOPER EXPERIENCE 3 Years 0 M on th PROFILE SUMMARY KEY SKILLS SQL AWS 3+ years experience in cus to mer relation ship
-and supply cha in management. Adept at supply
-cha in au to mation and Robotics au to mation.
-Proven track record of reversing cus to mer pa in
-po in ts, especially during checkout. Team-p layer
+m MULESOFT DEVELOPER EXPERIENCE 3 Years 0 Month PROFILE SUMMARY KEY SKILLS SQL AWS 3+ years experience in cus to mer rel at ionship
+and supply chain management. Adept at supply
+chain autom at ion and Robotics autom at ion.
+Proven track record of reversing cus to mer pain
+points, especially during checkout. Team-player
 and an enthusi as tic go-getter. Outgoing
-in dividual with a ple as ant pers on ality. Java Mules of t Developer Java Spring Boot 07/2021 - Present Programming Spring Boot Mule ESB Certification MuleS of t Certified Developer - Level 1 (Mule 4) Engl is h g H in di comprehensive documentation, in cluding API
-specification s and technical design
+individual with a ple as ant pers on ality. 07/2021 - Present Mule ESB Certific at ion Developer - Level 1 (Mule 4) English g Hindi comprehensive document at ion, Including API
+specific at ions and technical design
 documents. - Familiarity with MUnit testing for
-valid ating integration success and error
-scenarios. - Knowledge of API deployment to on-prem is es envir on ments for seamless
-integration with client in fr as tructure. -
-Familiarity with Postman collecti on s for testing
-HTTP methods. PROJECTS Mid as 790 Days
-?? It is supply cha in doma in project where
-receiving of mobility devices d on e by
-au to mation. ?? In Mid as the re is different
-module in which er as ure where I in tegrated
-IPSW API and worked closely with Data
-integration. ?? implementation: Choice
-Router, HTTP Request C on nec to r, Sc at ter
-G at her, file, Scheduler, Mule Oauth 2.0 Access
-to ken/Validation, Data trans for mation(JS on),
-as ync, Expressi on, Validation ?? Rev is ed,
-modularized and updated old code b as es to
+valid at ing integr at ion success and error
+scenarios. - knowledge of API deployment to on-premises envir on ments for seamless
+integr at ion with client infr as tructure. - Familiarity with Postman collections for testing HTTP methods. PROJECTS Midas 790 Days
+?? It is supply chain domain project where
+receiving of mobility devices done by
+autom at ion. ?? In Midas there is different
+module in which erasure where I integrated
+IPSW API and worked closely with data
+integr at ion. ?? Implement at ion: Choice
+Router, HTTP Request connector, Scatter
+Gather, file, Scheduler, Mule Oauth 2.0 Access
+Token/Valid at ion, Data transform at ion(JSON),
+async, Expression, Valid at ion ?? Revised,
+modularized and updated old code bases to
 modern development Standards and
 improving functi on ality ?? Design UI in react
-JS. ?? Ensured seamless migration s from
-legacy systems to modern pl at for ms through
-meticulous planning, testing, and executi on.
+JS. ?? Ensured seamless migr at ions from
+legacy systems to modern platforms through
+meticulous planning, testing, and execution.
 ?? Men to red junior developers to improve
-the ir technical skills, fostering a culture of
-Continuous learning within the team Odyssey 1063 Days
-It is company in tranet system where is project
+their technical skills, fostering a culture of
+Continuous Learning within the team Odyssey 1063 Days
+It is company intranet system where is project
 management, HR management, employee
-management system build and in tegrated with
-system. ?? In th is role, you'll be integrating
-AP is from various third-party providers,
-in cluding Micros of t, Google,
-M on ster, Greyt Hr, and Jira. Your Strong gr as p
-of API integration will ensure seamless
-in teracti on s between our systems and the se
-external service s. ?? Developed Java code,
-developed web service s for various
-requirements. Involving on Code deployment
+management system build and integrated with
+system. ?? In this role, you'll be integr at ing
+APIs from various third-party providers,
+Including Microsoft, Google,
+Monster, Greyt Hr, and Jira. Your Strong grasp
+of API integr at ion will ensure seamless
+interactions between our systems and these
+external services. ?? Developed Java code,
+developed web services for various
+requirements. involving on Code deployment
 and code Build process. ?? Worked closely
-with o the rs team members to plan design and
-Develop robust solution in timely manner Er as ure 610 Days
-It's a device Data sanitization project
+with others team members to plan design and Develop robust Solution in timely manner Erasure 610 Days
+It's a device data sanitiz at ion project
