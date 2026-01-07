@@ -1,1 +1,35 @@
-Senior System Engineer A highly motivated person with strong technical, team player and problem solving skills who like to enhance a potential and apply technical knowledge while facing new challenges, resulting in growth and development of company. Pune, Maharashtra, India WORK EXPERIENCE SKILLS Asp.Net C# Blazor MVC 5 WebAPI Senior System Engineer IBM Web Services HTML JavaScript jQuery 12/2021 - Present, Pune Client- NBS (Banking Domain-UK) Achievements/Tasks SQL Azure Agile Unit Testing SOAPUI VisualStudio Fiddler Documentation Developed and maintained scalable web applications using ASP.NET MVC, adhering to best practices and design patterns. Designed and implemented RESTful Web APIs using ASP.NET Web API, facilitating seamless communication between client and server. PROJECT ACHIEVEMENTS SAMM Team Integrated WCF services into existing applications, ensuring eﬃcient data exchange and communication across distributed systems. Utilized Ext.js, Sencha and JavaScript to enhance user interface functionalities and improve overall user experience. Recognized for consistently delivering high-quality code and innovative problem-solving, contributing signiﬁcantly to project success and team performance. R&L Carriers Collaborated with cross-functional teams in an Agile environment to deliver features and enhancements within tight deadlines. Successfully navigated through complex code base to identify and resolve elusive bugs, enhancing system stability and user experience. Instrumental in architecting innovative solutions to intricate feature requests, optimizing performance and functionality while adhering to strict deadlines. Conducted code reviews and provided constructive feedback to peers, ensuring code quality and adherence to coding standards. Participated in sprint planning, daily stand-ups, and retrospective meetings to continuously improve team performance and project delivery. EDUCATION Software Engineer Capgemini 04/2019 - 12/2021, Navi Mumbai Bachelor of Engineering Mauli Group of Institutions College of Engineering and Technology, Shegaon. Client- R&L Carriers(Logistic Domain-USA) 08/2014 - 05/2017, Shegaon, India Achievements/Tasks Developed and maintained ASP.NET web applications, following industry best practices and coding standards. LANGUAGES Implemented client-side scripting using jQuery to enhance user interactivity and responsiveness. English Full Professional Proﬁciency German (A1) Elementary Proﬁciency Integrated third-party APIs/In-house services into web applications, expanding functionality and improving user experience. Hindi Professional Working Proﬁciency Marathi Native or Bilingual Proﬁciency Participated in requirement analysis, design discussions, and sprint planning meetings to deﬁne project scope and deliverables. INTERESTS Collaborated with QA team to identify and resolve bugs and issues in a timely manner. Cricket Chess Mobile and Gadgets Assisted in the deployment and conﬁguration of web applications on production, staging servers, ensuring smooth and seamless deployment processes. AutoCars
+Senior System engineer A highly motivated pers on with Strong technical, team p layer and problem solving skills who like to enhance a potential and apply technical knowledge while facing new challenges, resulting in growth and
+development of company. WORK EXPERIENCE SKILLS as p.Net
+C# Blazor MVC 5 WebAPI Senior System engineer IBM HTML JavaScript j Query
+12/2021 - Present,
+Client- NBS (Banking Doma in-UK)
+Achievements/T as ks SQL Azure Agile SOAPUI V is ual Studio Developed and Maintained scalable web application s using
+as P.NET MVC, adhering to best practices and design
+p at terns.
+Designed and implemented RESTful Web AP is using as P.NET
+Web API, facilit ating seamless communication between
+client and server. PROJECT ACHIEVEMENTS SAMM Team in tegrated WCF service s in to ex is ting application s, ensuring
+eﬃcient Data exchange and communication across
+d is tributed systems. Utilized Ext.js, Sencha and JavaScript to enhance user interface functi on alities and improve over all
+user experience.
+Recognized for c on s is tently delivering high-quality code and
+Innovative problem-solving, c on tributing signiﬁcantly to project
+success and team performance.
+R&L Carriers
+collaborated with cross-Functional teams in an Agile
+Environment to deliver fe at ures and enhancements within
+tight deadl in es.
+Successfully navigated through complex code b as e to identify and
+resolve elusive bugs, enhancing system stability and user
+experience. in strumental in architecting Innovative solutions to
+in tric at e Feature requests, optimizing performance and
+functi on ality while adhering to strict deadl in es.
+conducted code reviews and provided c on structive feedback
+to peers, ensuring code quality and adherence to coding
+Standards.
+Participated in spr in t planning, daily st and-ups, and
+retrospective meet in gs to c on t in uously improve team
+performance and project delivery. H in di Pr of essi on al Working Proﬁciency Mar at hi N at ive or Bil in gual Proﬁciency
+Participated in requirement Analysis, design d is cussi on s, and
+spr in t planning meet in gs to deﬁne project scope and
+deliverables.

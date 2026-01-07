@@ -1,1 +1,65 @@
-Senior Software Engineer thinking solutions to tomorrow's productivity problems. Resourceful and adaptable approach to challenges. Pune, Maharashtra, India WORK EXPERIENCE Senior Software Engineer 07/2022 - Present, Banglore, India Remote Worked on multiple projects as a full stack developer. Experience in developing commercial legal and ﬁnance softwares using the Asp.Net CORE framework and Entity framework ORM. Also having experience in backend development using Asp.Net CORE for REST APIs and frontend development using Angular 13 and React JS 18. Software Developer Tudip Technologies 07/2018 - 07/2022, Pune, India Remote Experience in developing commercial healthcare and ﬁnance software using the .NET Framework MVC architecture and Entity framework. Worked on multiple projects as front end and back end developer. Hands of experience in implementing Stripe payment gateway, webhooks and web APIs. Experience in leading a team of 4-6 people. Software Engineer Evolveware Inc Ahmedabad, India Designing and coding for the change requests for the application. EDUCATION Bachelor of Engineering (Computer) Savitribai Phule Pune University, 68.13% 04/2009 - 04/2013, Higher Secondary School Modern College of Science, 64.17% 04/2007 - 04/2009, Pune, Maharashtra, India SKILLS Framework: Asp.Net CORE 7, Asp.Net MVC, Angular 13 Web: HTML, AJAX, CSS, JAVASCRIPT, TYPESCRIPT, React JS 18 Language: C# Database: SQL server 2019 ORM: Dapper, Entity framework Payment Gateway: Stripe, Plaid Web Server: Amazon AWS Version Control: Git Project management tools: JIRA, Slack, Trello, Basecamp PROJECTS Luxoft LLP | Legal Solution Suite (LSS) (01/2023 - Present) LSS ia a software product provides end-to-end litigation management solution that automates the processes. Worked on admin part which is used to manage matter, analyze invoices. Worked on implementing the admin module using Asp.Net Core for APIs and Angular 13 for UI part. Also worked on complex admin sub module UI where using React JS 18. Luxoft LLP | Ultra (07/2023 - 12/2023) Worked on Zurich NA - Ultra application which is used to create and manage various policies where maintaining the current application. In this application policies can be created using diﬀerent products. Policies can be quoted, booked, rebind and issue from this application. Worked on migrating the existing application using Asp.Net core for APIs and Angular 13 for UI. Tudip Technologies | Boom Cloud (07/2018 - 07/2022) Worked on migrating the Asp.Net web form application to MVC. Implemented a Stripe payment gateway, Plaid API and webhooks for payments using Asp.Net web API 2. Worked on frontend using Angular 13. Managed a team of 4 developers to maintain the application and release monthly software updates (client communication). Tudip Technologies | Rupee Boss (06/2021 - 07/2022) Responsible for task identiﬁcation, work eﬀort estimates, and work schedules for development and maintenance activities Estimate, plan and manage development tasks (lead a group of 4 developers). Implemented Web API using Asp.Net web API 2 and UI using Angular 13. Migrated existing application to Asp.NET MVC architecture. Integrated Whats App APIs to implement Whats App chatbot. Worked on designing responsive web forms. Dapper ORM implementation. Achievements/Tasks Achievements/Tasks Achievements/Tasks Evolveware Inc | Med ERP (01/2015 - 12/2015) Senior Software Engineer offering 7 years of experience. Enthusiastic about developing forward- 01/2015 - 12/2015
+Senior software engineer
+th in king solutions to to morrow's product ivity problems. Resourceful and adaptable approach to challenges. WORK EXPERIENCE Senior software engineer Lux of t LLP 07/2022 - Present,
+Banglore, Remote
+Worked on multiple projects as a full stack developer.
+Experience in developing commercial legal and ﬁnance
+software s using the as p.Net CORE framework and Entity
+framework ORM.
+Also having experience in backend development using
+as p.Net CORE for REST AP is and fr on tend development
+using Angular 13 and React JS 18. software Developer 07/2018 - 07/2022, Remote Experience in developing commercial healthc are and ﬁnance
+software using the .NET Framework MVC Architecture and
+Entity framework.
+Worked on multiple projects as fr on t end and back end
+developer.
+hands of experience in implementing Stripe payment
+gateway, webhooks and web AP is.
+Experience in leading a team of 4-6 people.
+software engineer
+designing and coding for the change requests for the
+application. SKILLS Framework: as p.Net CORE 7, as p.Net MVC, Angular 13
+Web: HTML, AJAX, CSS, JavaScript, TYPESCRIPT, React JS 18 Language: C#
+D at ab as e: SQL server 2019
+ORM: Dapper, Entity framework
+Payment gateway: Stripe, Plaid
+Web Server: Amaz on AWS
+Versi on C on trol: Git
+Project management to ols: JIRA, Slack, Trello, B as ecamp PROJECTS Lux of t LLP | Legal solution Suite (LSS)
+(01/2023 - Present)
+LSS ia a software product provides end-to-end litigation
+management solution th at au to m at es the processes.
+Worked on adm in part which is used to manage m at ter, analyze
+in voices.
+Worked on implementing the adm in module using as p.Net Core
+for AP is and Angular 13 for UI part.
+Also worked on complex adm in sub module UI where using React JS 18. Lux of t LLP | Ultra (07/2023 - 12/2023)
+Worked on Zurich NA - Ultra application which is usedto Create and
+manage various policies where ma in ta ining the current application.
+In th is application policies can be created using diﬀerent product s.
+Policies can be quoted, booked, reb in d and is sue from th is
+application.
+Worked on migr ating the ex is ting application using as p.Net core
+for AP is and Angular 13 for UI.
+Tudip Technologies | Boom Cloud (07/2018 - 07/2022)
+Worked on migr ating the as p.Net webform applicationto MVC.
+Implemented a Stripe payment gateway, Plaid API and webhooks
+for payments using as p.Net web API 2.
+Worked on fr on tend using Angular 13.
+Managed a team of 4 developers to maintain the application and
+rele as e m on thly software upd at es (client communication).
+Tudip Technologies | Rupee Boss (06/2021 - 07/2022)
+Resp on sible for t as k identiﬁcation, work eﬀort estim at es, and work
+schedules for development and Maintenance activities Estim at e,
+plan and manage development t as ks (lead a group of 4 developers).
+Implemented Web API using as p.Net web API 2 and UI using
+Angular 13.
+Migrated ex is ting application to as p.NET MVC Architecture.
+in tegrated Wh at s App AP is to implement Wh at s App ch at bot.
+Worked on designing resp on sive web for ms.
+Dapper ORM implementation.
+Achievements/T as ks
+Achievements/T as ks
+Achievements/T as ks
+Evolvew are in c | Med ERP (01/2015 - 12/2015)
+Senior software engineer of fering 7 years of experience. Enthusi as tic about developing for ward-
+01/2015 - 12/2015

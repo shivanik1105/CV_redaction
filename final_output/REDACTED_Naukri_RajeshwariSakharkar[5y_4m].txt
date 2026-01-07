@@ -1,1 +1,79 @@
-RESUME PERSONAL DETAILS NAME : Amanora Park town, Pune, Maharashtra, 411028 DATE OF BIRTH : 23-JAN-1994 Contact No: : MARITAL STATUS : MARRIED NATIONALITY : INDIAN CURRENT OCCUPATION : Senior Associate Consultant EDUCATIONAL BACKGROUND (MONTH AND YEAR OF PASSING) : Bachelor Of Computer Application RTMNU university (2016) Master Of Computer Application from RCOEM Nagpur (2019) PASSPORT NO. (VALID UPTO) : S2871386 (11th December 2028) COMPUTER LANGUAGES : C, C++, Java, Oracle PL/SQL, HTML OPERATING SYSTEMS : Windows 7/8/8.1, Windows Server DATABASES AND SERVICES : Oracle 11g, 12c, SQL Developer TOOLS : B2B Products: IBM Sterling B2B Integrator, IBM Sterling File Gateway, SAP ABAP, ORACLE 11i/12g Others: Sterling Map Editor, Putty, SQL Developer, Citrix Command Center, Liaison EDI Notepad CLIENT SPECIFIC TOOLS Citrix Command Center, Service Now, GitLab, Microsoft SharePoint, Solman 1. Company : Infosys Limited Project Name : Roche Aspire Client : Global pharmaceutical Company Description of the project The project involves delivery of EDI solutions to Global pharmaceutical major Roche. Onboarding new trading partners, developing maps for EDI transactions and creating mapping specs after talking with internal applications to share it with IBM Sterling B2B Integrator, involving Development ,Release Management, Problem Management, Incident Management. Role : Senior Associate Consultant Responsibilities : • Analysis of existing business Process. Page 1 of 4 • Developing/Enhancing Maps for EDI standards X12(850,855,856,810,820,180), XML, EDIFACT. • Resolution of issues related to business process, maps, SAP document processing errors and communication protocols. • Worked on AS2, SFTP and FTP connection setup (End – to – End). • Profile creation for various trading partner using Communication protocol (AS2,FTP,SFTP) • Envelope creation for various trading partners • Uploading and creating Map using IBM sterling Integrator, Envelopes, TP setup in SI(UAT/PROD) • Configured/ Enhanced Business Process. • Well, exposed to Business (B2B) Application Application and Supply Chain Domain and has worked on EDI Development/Support for IBM customers. • Experience in communicating with trading partners, sending documents through VAN, using FTP, AS2, FTPS, SFTP, FTP. • Configured Communication Profiles for Partners for EMEA and NALA. • Developed and deployed Maps & Business process , resulting in a 30% reduction in system errors and improving application performance by 25% • Maintain well customer satisfaction statistic. Duration : Feb 2024 : Present Software/Applocation : IBM Sterling Integrator, SAP ABAP, Service Now, GitLab, SolMN,Map Editor . 2. Project Name ULTA BEAUTY Client : Leading American chain of beauty stores. Role : Associate Consultant Responsibility : • Collaborated with cross-functional teams to analyze Requirements, Collaborate with the Basis team in managing and monitoring ABAP jobs, SAP interfaces, and EDI transactions • Enhance and maintain the applications supported IBM Sterling B2B Integrator tools. • Prioritizing the Production defects/incidents/Service requests and work on the issue to fix as per the urgency. • Developing specifications for mapping and validation of output. • Monitoring SI failures in production and basic knowledge in creating business processes using generic processes in Sterling Integrator. • Co-ordinated with related technical teams to resolve the problems reported by customer or others. Ticket handling activities as part of system support using Jira & CHERWELL. • Participate in KT sessions, help prepare system appreciation documents and support the Transition process. • Deployment and validation of monitoring agents for B2B Applications. • Work closely with business partners & trading partners on EDI setups and testing to ensure error-free data transmission. • Taking Corrective Actions and preventive measures to ensure On-Time Delivery with Highest Quality. Duration : SEPT 2022 – Feb 2024 Page 2 of 4 Software : Sterling B2B Integrator, Map Editor, SAP ABAP, TIBCO, CHERWELL, OpenText, Jira, POSTMAN. 2. Company : Eaton Technologies Private Limited. Duration : 3 years Designation : Associate Analyst Description of the project: Worked on Vehicle and electrical domain for new partners on-boarding with end-to-end EDI transaction flow .Upgrading 11i E-business suite to R12 E-Business Suite Role : EDI Analyst Responsibility : • Analysis of existing business flows • Uploading and creating Map from Gentran file layout, envelopes, TP setup in SI(UAT/PROD • Well, exposed to Business to Business (B2B) Application and Supply Chain Domain and has worked on EDI Development/Support for IBM’s customers. • Developed map as per customer requirement. • Integrating Sterling Integrator with SAP and Oracle • Implemented the Release Management for the customer. Created the processing rules for Order Management level. Communicated the Translators and end customer for SPSI and SSSI transactions. Created Matching rules. Resolved the stagnated demand schedules from transaction work bench. • SAP IDOCS monitoring, issue resolution and reporting • Experience in communicating with trading partners, sending documents through VAN, using FTP, AS2, FTPS, SFTP, POP3, FTP . • Maintain well customer satisfaction statistic. • Perform work-related tasks with minimal supervision and handle ambiguous situation with little supervisory assistance. Duration : June 2019 – Sept 2022 Software : Sterling B2B Integrator 5.2.4, Sterling map editor, ORACLE 11i/12g, VISTA, REMEDY. DETAILS OF INFOSYS TRAINING UNDERGONE # Trained On Period(in Days) 1 1 Overview of API and Microservices 2 7 SEEBURGER 3 AXWAY File Transfer 4 Page 3 of 4 Page 4 of 4
+RESUME Senior as soci at e C on sultant
+Micros of t Sh are Po in t, Solman
+1. Company : in fosys Limited
+Project Name : Roche as pire
+Client : Global pharmaceutical Company Descripti on of the project The project in volves delivery of EDI solutions to Global pharmaceutical major Roche.
+on boarding new trading partners, developing maps for EDI transacti on s and cre ating mapping specs
+after talking within ternal application s to sh are it with IBM Sterling B 2 B in tegra to r, Involving
+Development , Rele as e Management, Problem Management, in cident Management.
+Role : Senior as soci at e C on sultant
+Resp on sibilities :
+• Analysis of ex is ting business Process.
+Page 1 of 4
+• developing/Enhancing Maps for EDI Standards X 12(850,855,856,810,820,180), XML, EDIFACT.
+• Resoluti on of Issues related to business process, maps, SAP document processing errors and
+communication pro to cols.
+• Worked on AS 2, SFTP and FTP c on necti on setup (End – to – End).
+• PROFILE creation for various trading partner using Communication pro to col (AS 2, FTP, SFTP)
+• Envelope creation for various trading partners
+• Uploading and cre ating Map using IBM sterling in tegra to r, Envelopes, TP setup in SI(U at/PROD)
+• C on figured/ Enhanced Bus in ess Process.
+• Well, exposedto Bus in ess (B 2 B) Application Application and Supply Cha in Doma in and h as worked on EDI
+Development/Support for IBM cus to mers.
+• Experience in communic ating with trading partners, sending documents through VAN, using FTP, AS 2, FTPS, SFTP, FTP. • C on figured Communication Pr of iles for Partners for EMEA and NALA.
+• Developed and deployed Maps & Bus in ess process , resulting in a 30% reducti on in system errors and
+improving application performance by 25%
+• Ma in ta in well cus to mer s at is facti on st at is tic.
+Duration : Feb 2024 : Present
+software/Applocation : IBM Sterling in tegra to r, SAP ABAP, Service Now, Git Lab,
+SolMN, Map Edi to r .
+2. Project Name ULTA BEAUTY Client : leading American cha in of beauty s to res.
+Role : as soci at e C on sultant
+Resp on sibility :
+• collaborated with cross-Functional teams to analyze Requirements,
+Collabor at e with the B as is team in managing and m on i to ring ABAP jobs, SAP in terfaces, and EDI
+transacti on s
+• Enhance and maintain the application s supported IBM Sterling B 2 B in tegra to rto ols.
+• Prioritizing the product i on defects/in cidents/Service requests and work on the is sue to fix as per the
+urgency.
+• developing specification s for mapping and validation of output.
+• M on i to ring SI failures in product i on and b as ic knowledge in cre ating business processes using generic
+processes in Sterling in tegra to r.
+• Co-ord inated with related technical teams to resolve the problems reported by cus to mer or o the rs.
+Ticket h and ling activities as part of system support using Jira & CHERWELL. • Particip at e in KT sessi on s, help prep are system appreciation documents and support the Transiti on
+process.
+• Deployment and validation of m on i to ring agents for B 2 B Application s.
+• Work closely with business partners & trading partners on EDI setups and testing to ensure error-free
+Data transm is si on.
+• Taking Corrective Acti on s and preventive me as ures to ensure On-Time Delivery with Highest Quality. Duration : SEPT 2022 – Feb 2024
+Page 2 of 4 software : Sterling B 2 B in tegra to r, Map Edi to r, SAP ABAP, TIBCO, CHERWELL,
+Open Text, Jira, POSTMAN.
+2. Company : Ea to n Technologies Priv at e Limited.
+Duration : 3 years
+Designation : as soci at e Analyst
+Descripti on of the project:
+Worked on Vehicle and electrical doma in for new partners on-boarding with end-to-end EDI
+transacti on flow .Upgrading 11 i E-business suiteto R 12 E-Bus in ess Suite
+Role : EDI Analyst
+Resp on sibility :
+• Analysis of ex is ting business flows
+• Uploading and cre ating Map from Gentran file layout, envelopes, TP setup in SI(U at/PROD
+• Well, exposedto Bus in ess to Bus in ess (B 2 B) Application and Supply Cha in Doma in and h as worked on
+EDI Development/Support for IBM’s cus to mers.
+• Developed map as per cus to mer requirement.
+• integrating Sterling in tegra to r with SAP and Oracle
+• Implemented the Rele as e Management for the cus to mer. Created the processing rules for Order
+Management level. Communicated the Transla to rs and end cus to mer for SPSI and SSSI transacti on s.
+Created M at ching rules. Resolved the stagnated dem and schedules from transacti on work bench. •
+SAP IDOCS m on i to ring, is sue resoluti on and reporting
+• Experience in communic ating with trading partners, sending documents through VAN, using FTP, AS 2, FTPS, SFTP, POP 3, FTP . • Ma in ta in well cus to mer s at is facti on st at is tic.
+• perform work-related t as ks with m in imal superv is i on and h and le ambiguous situation with little
+superv is ory as s is tance.
+Duration : June 2019 – Sept 2022
+software : Sterling B 2 B in tegra to r 5.2.4, Sterling map edi to r, ORACLE
+11 i/12 g, V is TA, REMEDY.
+DETAILS OF in FOSYS TRA in in G under G on E
+#
+Period(in Days)
+over view of API and Micro service s SEEBURGER AXWAY File Transfer Page 3 of 4
+Page 4 of 4
