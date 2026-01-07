@@ -22,41 +22,7 @@ PERSONAL INFORMATION
 
 pipeline. Having experience in Payment Domain & Automotive Domain.
 
-Total work experience
-9 Years 0 Month
-
-2012
-
-B.Tech/B.E.
-
-Social
-Link
-
-ediwa
-
-Rajiv Gandhi Proudyogiki Vishwavidyalaya
-(RGPV),
-
-2008
-
-XIIth
-
-KEY SKILLS
-
-Hindi
-
-2006
-
-Xth
-
-Automotive
-
-Hindi
-
-Unit Testing
-
-C
-
+EDUCATION [REDACTED]
 WORK EXPERIENCE
 
 C++
@@ -67,8 +33,7 @@ Lead Engineer - Product Development
 
 UNIX
 
-Feb 2022 -
-Present
+Feb 2022 - Present
 
 HARMAN
 
@@ -80,7 +45,7 @@ and Design and develop automotive applications for
 
 Embedded C
 
-Mrecedes-Benz and  .
+Mrecedes-Benz and John Deere.
 
 Socket Programming
 
@@ -88,8 +53,7 @@ Senior Software Engineer
 
 STL
 
-Nov 2018 - Feb
-2022
+Nov 2018 - Feb 2022
 
 Worldline India Pvt Ltd
 
@@ -117,8 +81,7 @@ Jenkins
 
 Software Programmer
 
-Feb 2017 - Nov
-2018
+Feb 2017 - Nov 2018
 
 Microworld Software Services
 
@@ -148,8 +111,7 @@ ISO8583
 
 Software Developer
 
-Jun 2015 - Feb
-2017
+Jun 2015 - Feb 2017
 
 Forbes Technosys Ltd
 
@@ -185,13 +147,11 @@ OTHER PERSONAL DETAILS
 
 deployment in raspberrypi.
 
-City
-Pune
+City Pune
 
 Projects
 
-Country
-INDIA
+Country INDIA
 
 631 Days
 
@@ -229,7 +189,7 @@ consumers connected over network. It also detects
 
 the presence of a human head near the roof for the
 
-rear middle occupant. ???
+rear middle occupant. ??? Driver Monitoring System
 
 (DMS) is watching for driver face, eye blink, and
 
@@ -241,19 +201,19 @@ then warn to ECU. ??? PC simulation based on Vector
 
 canoe we can see all input and output signal
 
-visualization on canoe grafor analysis of both
+visualization on canoe graph for analysis of both
 
 subsystem SOD and DMS.
 
 214 Days
 
-WLP-FO Acquiring
+WLP-FO Acquiring Australia
 
 WLP-FO is standards framework for authorization &
 
 switching. Need to create acquiring instance for
 
-  and New Zealand Banking Group Create an
+Australia and New Zealand Banking Group Create an
 
 Interface Base24 on ISO8583 using WLPFO protocol
 
@@ -269,7 +229,7 @@ different scheme like Mastercard, Visa, Amex.
 
 578 Days
 
-WLP-FO Acquiring
+WLP-FO Acquiring India
 
 Magnus is a 20+ years old legacy SWITCH. It has
 
@@ -283,13 +243,13 @@ components in the technology stack are obsolete &
 
 not in support by the OEMs as well Project is to
 
-gradually replace   (SWITCH) by WLP-FO -
+gradually replace MAGNUS (SWITCH) by WLP-FO -
 
-ase 1 : Visa/MasterCard acceptance (including
+Phase 1 : Visa/MasterCard acceptance (including
 
-BQR) and H2H interface (WLP-FO to TTMS) - ase 2
+BQR) and H2H interface (WLP-FO to TTMS) - Phase 2
 
-: RuPay/AmEx acceptance, ON-  interface to Issuer
+: RuPay/AmEx acceptance, ON-US interface to Issuer
 
 banks (onus transaction routing) and other H2H
 
@@ -343,7 +303,7 @@ to coin changer) in require denomination as per bank
 
 requirement. Currently this project lives in many
 
-leading banks like SBI,  , and ICICI.
+leading banks like SBI, Canara, and ICICI.
 
 COURSES & CERTIFICATIONS
 

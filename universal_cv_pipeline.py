@@ -56,7 +56,7 @@ class UnifiedLayoutProfile(ExtractionProfile):
     Uses PyMuPDF's smart block sorting to handle both single and multi-column layouts
     without explicit mode switching. Returns text in reading order.
     """
-    def extract(self, file_path: str) -> str:
+    def extract(self, file_path: str, sort: bool = True) -> str:
         logger.info("Using UnifiedLayoutProfile (PyMuPDF Blocks)")
         all_text = []
         try:
@@ -64,12 +64,18 @@ class UnifiedLayoutProfile(ExtractionProfile):
                 for page in doc:
                     # 'blocks' returns (x0, y0, x1, y1, "text", block_no, block_type)
                     # sort=True attempts to order by columns/reading order
-                    blocks = page.get_text("blocks", sort=True)
+                    blocks = page.get_text("blocks", sort=sort)
                     
                     for b in blocks:
                         # block_type 0 is text, 1 is image
                         if b[6] == 0: 
-                            text = b[4].strip()
+                            # Detect wide gaps (3+ spaces) and replace with newline to separate columns
+                            clean_text = re.sub(r'[ \t]{3,}', '\n', b[4])
+                            
+                            # Normalize whitespace for each line
+                            lines = [ " ".join(l.split()) for l in clean_text.split('\n') ]
+                            text = "\n".join([l for l in lines if l])
+                            
                             if text:
                                 # Remove common footer artifacts like "Page 1 of 2"
                                 if re.match(r'^Page\s+\d+(\s+of\s+\d+)?$', text, re.IGNORECASE):
@@ -194,59 +200,174 @@ class RedactionCore:
         }
         
         if HAS_PRESIDIO:
-            self.analyzer = AnalyzerEngine()
-            self.anonymizer = AnonymizerEngine()
-        else:
-            logger.warning("Presidio not found. Falling back to regex only.")
+            try:
+                self.analyzer = AnalyzerEngine()
+                self.anonymizer = AnonymizerEngine()
+            except Exception as e:
+                logger.warning(f"Failed to initialize Presidio: {e}")
+
+        # Comprehensive Headers Map
+        self.headers_map = {
+            'EXPERIENCE': [
+                r'WORK HISTORY', r'EXPERIENCE', r'EMPLOYMENT', r'PROFESSIONAL BACKGROUND', 
+                r'WORK EXPERIENCE', r'PROFESSIONAL EXPERIENCE', r'CAREER HIGHLIGHTS'
+            ],
+            'SKILLS': [
+                r'SKILLS', r'TECHNICAL SKILLS', r'TECHNOLOGIES', r'TECH STACK', r'TOOLS',
+                r'CORE COMPETENCIES', r'TECHNICAL PROFICIENCY', r'COMPUTER PROFICIENCY', r'IT SKILLS',
+                r'DOMAIN KNOWLEDGE'
+            ],
+            'PROJECTS': [r'PROJECTS', r'KEY PROJECTS', r'ACADEMIC PROJECTS', r'ACHIEVEMENTS'],
+            'SUMMARY': [r'SUMMARY', r'PROFILE', r'OBJECTIVE', r'PROFESSIONAL SUMMARY', r'ABOUT', r'BIO'],
+            'REFERENCES': [r'REFERENCES'],
+            'EDUCATION': [
+            r'EDUCATION', r'ACADEMIC', r'QUALIFICATIONS', r'QUALIFICATION', 
+            r'ACADEMIC BACKGROUND', r'CERTIFICATIONS', r'PROFESSIONAL QUALIFICATION', r'PROFESSIONAL QUALIFICATIONS'
+        ],
+            'PERSONAL': [
+                 r'PERSONAL DETAILS', r'PERSONAL PROFILE', r'PERSONAL INFORMATION', 
+                 r'OTHER PERSONAL DETAILS', r'BIOGRAPHICAL DATA', r'PERSONAL ASSET'
+            ],
+            'DECLARATION': [r'DECLARATION']
+        }
+
+    def is_header(self, line: str) -> bool:
+        """Check if a line matches a known header pattern."""
+        normalized = line.strip().upper()
+        token_count = len(normalized.split())
+        # Heuristic: Short line, match keywords, or starts with Keyword + Colon
+        if token_count < 10 or (':' in normalized[:30] and token_count < 50):
+            for triggers in self.headers_map.values():
+                if any(re.match(rf"^{t}([:\-\s]|$)", normalized) for t in triggers):
+                    return True
+        return False
 
     def _extract_names_from_filename(self, filename: str) -> List[str]:
-        """Heuristically extract distinct Name-like parts from filename"""
+        """Heuristically extract distinct Name-like parts from filename. Handles CamelCase."""
         if not filename: return []
         
-        # Clean extension
         stem = Path(filename).stem
-        # Split by non-alphanumeric
-        parts = re.split(r'[_\-\s\(\)\[\]\.,]+', stem)
+        # Remove garbage chars (keep parens/brackets out)
+        clean_stem = re.sub(r'[^a-zA-Z]', ' ', stem)
         
-        extracted = []
+        # Split CamelCase (e.g. AbhishekKumar -> Abhishek Kumar)
+        spaced_stem = re.sub(r'([a-z])([A-Z])', r'\1 \2', clean_stem)
+        
+        parts = spaced_stem.split()
+        valid_parts = []
         for p in parts:
             p_clean = p.strip()
-            # Filter unlikely names (digits, short words, common resume terms, tech stack)
             if (len(p_clean) > 2 and 
-                not p_clean.isdigit() and
-                p_clean.lower() not in self.ignore_names and
+                not p_clean.isdigit() and 
+                p_clean.lower() not in self.ignore_names and 
                 p_clean.lower() not in self.protected_terms):
-                extracted.append(p_clean)
-        return extracted
+                valid_parts.append(p_clean)
 
-    def redact(self, text: str, filename: str = "") -> str:
-        # Pre-cleaning: Remove Bullet Points and Common Header Artifacts "extra words"
-        text = re.sub(r'^\s*[\u2022\u2023\u25E6\u2043\u2219o]\s+', '', text, flags=re.MULTILINE)
-        text = re.sub(r'(?i)^\s*(resume|curriculum\s+vitae|cv|bio-?data)\s*$', '', text, flags=re.MULTILINE)
-        # Normalize non-breaking spaces
-        text = text.replace('\xa0', ' ')
+        results = []
+        if valid_parts:
+            # Return the full name sequence
+            full_name = " ".join(valid_parts)
+            results.append(full_name)
+            # To be safe, if we have 2+ parts, effectively a name, we might not want to return individual tokens 
+            # to avoid redacting common words (e.g. "Kumar" is safe-ish, but "May" is not).
+            # We stick to the Full Name for high precision.
+            
+        return results
 
-        # 1. Regex Redaction (Deterministics)
+
+
+    def redact_filename_names(self, text: str, filename: str) -> str:
+        """Global redaction of names derived from the filename"""
+        if not filename: return text
+        
+        file_names = self._extract_names_from_filename(filename)
+        for name in file_names:
+            # Allow flexible whitespace (including newlines) between name parts
+            regex_pattern = re.escape(name).replace(r'\ ', r'\s+')
+            # Word boundary match case-insensitive
+            text = re.sub(rf"\b{regex_pattern}\b", " ", text, flags=re.IGNORECASE)
+        return text
+
+    def cleanup_garbage(self, text: str) -> str:
+        """Remove lines with only punctuation or empty key-value artifacts"""
+        cleaned_lines = []
+        for line in text.split('\n'):
+            stripped = line.strip()
+            # 1. Skip empty
+            if not stripped:
+                cleaned_lines.append("")
+                continue
+            
+            # 2. Check for Punctuation Only (e.g. " , | , ")
+            if re.match(r'^[\s,\|\-\.:]+$', stripped):
+                continue
+                
+            # 3. Check for Label Artifacts (e.g. "L: | , india" -> "L: | , " after redact)
+            # Regex: Single letter or small word label followed by separators only
+            if re.match(r'^[A-Z]{1,2}\s*[:\-]\s*[\|\s,]*$', stripped):
+                continue
+                
+            cleaned_lines.append(line)
+            
+        return "\n".join(cleaned_lines)
+
+    def parse_sections(self, text: str) -> List[Tuple[str, str]]:
+        """Segment text into logical sections based on headers"""
+        lines = text.split('\n')
+        sections = []
+        current_type = 'HEADER' # Default start section
+        current_lines = []
+        
+        for line in lines:
+            normalized = line.strip().upper()
+            matched_type = None
+            
+            # Check if line is a header
+            # Heuristic: Short line, match keywords, or starts with Keyword + Colon
+            token_count = len(normalized.split())
+            
+            # Potential Header if short OR contains a colon (Inline Header)
+            if token_count < 10 or (':' in normalized[:30] and token_count < 50):
+                for stype, triggers in self.headers_map.items():
+                    # Strict match at start of line
+                    if any(re.match(rf"^{t}([:\-\s]|$)", normalized) for t in triggers):
+                        matched_type = stype
+                        break
+            
+            if matched_type:
+                # Flush previous section
+                if current_lines:
+                    sections.append((current_type, "\n".join(current_lines)))
+                # Start new section
+                current_type = matched_type
+                current_lines = [line] 
+            else:
+                current_lines.append(line)
+                
+        if current_lines:
+             sections.append((current_type, "\n".join(current_lines)))
+             
+        return sections
+
+    def redact_regex_pii(self, text: str) -> str:
+        """Apply deterministic Regex rules for Emails, Phones, Links"""
         text = self.email_pattern.sub(" ", text)
         text = self.phone_pattern.sub(" ", text)
         text = self.url_pattern.sub(" ", text)
         text = self.linkedin_pattern.sub(" ", text)
         text = self.github_pattern.sub(" ", text)
         text = self.simple_address.sub(" ", text)
-        
-        # 2. Filename-based Redaction (Heuristc Failsafe)
-        if filename:
-            file_names = self._extract_names_from_filename(filename)
-            for name in file_names:
-                regex_name = re.escape(name)
-                # Word boundary match case-insensitive
-                text = re.sub(rf"\b{regex_name}\b", " ", text, flags=re.IGNORECASE)
+        return text
 
-        # 3. Presidio (Probabilistic)
+    def redact_entities(self, text: str, filename: str) -> str:
+        """Apply probabilistic Entity Recognition (Presidio)"""
+        # Note: Filename-based redaction is now done globally in redact_filename_names
+        
+        # Presidio (Probabilistic)
         if HAS_PRESIDIO:
             original_results = self.analyzer.analyze(
                 text=text, 
-                entities=['PERSON', 'LOCATION', 'EMAIL_ADDRESS', 'PHONE_NUMBER'], 
+                entities=['PERSON', 'LOCATION', 'EMAIL_ADDRESS', 'PHONE_NUMBER', 'NRP'], 
                 language='en'
             )
             
@@ -267,17 +388,112 @@ class RedactionCore:
                         "LOCATION": OperatorConfig("replace", {"new_value": " "}),
                         "PHONE_NUMBER": OperatorConfig("replace", {"new_value": " "}),
                         "EMAIL_ADDRESS": OperatorConfig("replace", {"new_value": " "}),
+                        "NRP": OperatorConfig("replace", {"new_value": " "}), # Nationality/Religious/Political
                         "DEFAULT": OperatorConfig("replace", {"new_value": " "})
                     }
                 )
                 text = anonymized_result.text
-
-        # 4. Cleanup Label Keywords
-        keywords = ["Address", "Ph", "Mobile", "Email", "LinkedIn", "Contact", "Location"]
-        for kw in keywords:
-             text = re.sub(rf"{kw}\s*[:\-]?\s*", "", text, flags=re.IGNORECASE)
-
+        
         return text
+
+    def reflow(self, text: str) -> str:
+        """Merge lines that seem to be part of a sentence but were split."""
+        lines = text.split('\n')
+        new_lines = []
+        buffer = ""
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                if buffer:
+                    new_lines.append(buffer)
+                    buffer = ""
+                new_lines.append("") # Preserve empty line
+                continue
+                
+            # Heuristic to merge
+            should_merge = False
+            if buffer:
+                # Merge if buffer doesn't end in punctuation and next line isn't a bullet
+                # AND neither are Headers
+                if buffer[-1] not in ['.', '!', '?', ':', ';']:
+                     is_bullet = bool(re.match(r'^[\u2022\u2023\u25E6\u2043\u2219o\-*]', line))
+                     if not is_bullet and not self.is_header(line) and not self.is_header(buffer):
+                         should_merge = True
+            
+            if should_merge:
+                buffer += " " + line
+            else:
+                if buffer:
+                    new_lines.append(buffer)
+                buffer = line
+                
+        if buffer:
+            new_lines.append(buffer)
+            
+        return "\n".join(new_lines)
+
+    def scrub_personal_fields(self, text: str) -> str:
+        """Remove specific personal data lines like DOB, Gender, etc."""
+        # Case-insensitive, multiline patterns to remove the whole line or segment
+        patterns = [
+            r'(?i)(date of birth|dob)\s*[:\-]?\s*.*$',
+            r'(?i)(father|mother|husband)\'?s?\s*name\s*[:\-]?\s*.*$',
+            r'(?i)(marital|civil)\s*status\s*[:\-]?\s*.*$',
+            r'(?i)gender\s*[:\-]?\s*.*$',
+            r'(?i)nationality\s*[:\-]?\s*.*$',
+            r'(?i)passport\s*no\s*[:\-]?\s*.*$'
+        ]
+        for p in patterns:
+            text = re.sub(p, '', text, flags=re.MULTILINE)
+        return text
+
+    def redact(self, text: str, filename: str = "") -> str:
+        # Pre-cleaning: Remove Bullet Points and Common Header Artifacts "extra words"
+        text = re.sub(r'^\s*[\u2022\u2023\u25E6\u2043\u2219o]\s+', '', text, flags=re.MULTILINE)
+        text = re.sub(r'(?i)^\s*(resume|curriculum\s+vitae|cv|bio-?data)\s*$', '', text, flags=re.MULTILINE)
+        text = text.replace('\xa0', ' ')
+        
+        # Scrub personal fields globally first (to clean up headers/footers/random spots)
+        text = self.scrub_personal_fields(text)
+        
+        # Global Name Redaction
+        text = self.redact_filename_names(text, filename)
+
+        # Parse Sections
+        sections = self.parse_sections(text)
+        
+        final_parts = []
+        for sec_type, content in sections:
+            # 0. Reflow content to fix fragmentation
+            content = self.reflow(content)
+            
+            # 1. Drop Blocklisted Sections
+            if sec_type in ['EDUCATION', 'PERSONAL', 'DECLARATION']:
+                # Silently drop completely
+                continue
+
+            # 2. Always remove strictly formatted PII (Email, Phone) everywhere
+            content = self.redact_regex_pii(content)
+            
+            # 3. Selective Entity Redaction
+            safe_sections = ['SKILLS', 'EXPERIENCE', 'PROJECTS']
+            if sec_type not in safe_sections:
+                content = self.redact_entities(content, filename)
+                
+                # Cleanup Label Keywords only in redacted sections (mostly Header)
+                keywords = ["Address", "Ph", "Mobile", "Email", "LinkedIn", "Contact", "Location", "E", "M", "L", "P"]
+                for kw in keywords:
+                     # For single letters, ensure strict colon matching to avoid removing words starting with E
+                     if len(kw) == 1:
+                         content = re.sub(rf"\b{kw}\s*[:]\s*", " ", content)
+                     else:
+                         content = re.sub(rf"{kw}\s*[:\-]?\s*", "", content, flags=re.IGNORECASE)
+            
+            final_parts.append(content)
+            
+        result = "\n".join(final_parts)
+        return self.cleanup_garbage(result)
 
     def remove_education(self, text: str) -> str:
         """Heuristic to remove Education section"""
@@ -333,6 +549,56 @@ class PipelineOrchestrator:
         self.ocr_profile = OCRProfile()
         self.redactor = RedactionCore()
         
+    def detect_complex_layout(self, text: str) -> bool:
+        """Detect if layout extraction likely failed (e.g. merged columns or interleaved)"""
+        lines = text.split('\n')
+        
+        # 1. Check for merged headers (Same Line)
+        headers = ['WORK EXPERIENCE', 'KEY SKILLS', 'SKILLS', 'EDUCATION', 'PROJECTS', 'SUMMARY', 'WORK HISTORY']
+        for line in lines[:50]:
+             norm = line.upper()
+             found = [h for h in headers if h in norm]
+             if len(found) >= 2:
+                 if len(norm) < 100 and " AND " not in norm:
+                     logger.warning(f"Detected merged headers: {found} in line: '{line.strip()}'")
+                     return True
+
+        # 2. Check for Interleaved Headers (Proximity)
+        # Using parse sections logic to find where headers start
+        sections = self.redactor.parse_sections(text)
+        
+        # DEBUG LOGGING
+        found_sections = [s[0] for s in sections]
+        logger.info(f"DEBUG: Found sections: {found_sections}")
+        
+        # Identify indices of headers
+        header_indices = []
+        current_idx = 0
+        for i, (stype, content) in enumerate(sections):
+            if stype in ['EXPERIENCE', 'SKILLS', 'EDUCATION', 'PROJECTS']:
+                content_lines = len([x for x in content.split('\n') if x.strip()])
+                header_indices.append((stype, i, content_lines))
+        
+        # Heuristic: If we see sequential short major sections
+        # Or if the FIRST of two adjacent major sections is EMPTY (l1 < 3), it implies interleaving
+        for k in range(len(header_indices) - 1):
+            s1, i1, l1 = header_indices[k]
+            s2, i2, l2 = header_indices[k+1]
+            
+            # Distance check (Adjacent headers)
+            if i2 == i1 + 1:
+                logger.info(f"Checking Proximity: {s1}({l1}) -> {s2}({l2})")
+                # If the first section is effectively empty (< 3 lines), it's likely interleaved
+                if l1 < 3:
+                     logger.warning(f"Detected interleaved headers (Empty Section): {s1} ({l1} lines) -> {s2}")
+                     return True
+                # Or both are short
+                if l1 < 5 and l2 < 5:
+                     logger.warning(f"Detected interleaved headers (Short Sections): {s1} ({l1}) -> {s2} ({l2})")
+                     return True
+                 
+        return False
+
     def process(self, file_path: str, output_dir: str):
         filename = os.path.basename(file_path)
         logger.info(f"Processing: {filename}")
@@ -340,20 +606,40 @@ class PipelineOrchestrator:
         # 1. Primary Extraction
         raw_text = self.layout_profile.extract(file_path)
         
-        # 2. Fallback to OCR if text is garbage/empty
+        # 2. Validation & Fallback
+        # A. Empty/Garbage check
         clean_check = re.sub(r'\s+', '', raw_text)
-        if len(clean_check) < 50:
-             logger.warning(f"Text extraction insufficient ({len(clean_check)} chars). Fallback to OCR for {filename}")
-             raw_text = self.ocr_profile.extract(file_path)
+        is_garbage = len(clean_check) < 50
+        
+        # B. Complex Layout check
+        is_complex = self.detect_complex_layout(raw_text)
+        
+        if is_complex:
+             logger.warning(f"Complex layout detected (Merged Headers). Attempting stream-order extraction (sort=False).")
+             # Try determining layout by stream order (often separates columns better)
+             alt_text = self.layout_profile.extract(file_path, sort=False)
+             
+             # Re-evaluate
+             if not self.detect_complex_layout(alt_text):
+                 logger.info("Stream-order extraction succeeded. Using alternate text.")
+                 raw_text = alt_text
+                 is_complex = False # Resolved
+             else:
+                 logger.warning("Stream-order extraction also failed. Fallback to OCR required.")
+
+        if is_garbage or is_complex:
+             reason = "Garbage Text" if is_garbage else "Complex Layout (Merged Columns)"
+             logger.warning(f"Fallback to OCR due to: {reason}")
+             ocr_text = self.ocr_profile.extract(file_path)
+             # Basic sanity check on OCR result (ensure it's not 'OCR Unavailable' or empty)
+             if len(re.sub(r'\s+', '', ocr_text)) > 50 and "OCR" not in ocr_text[:30]:
+                 raw_text = ocr_text
 
         self.layout_profile.save_debug(raw_text, "01_raw", filename)
         
         # 3. Redaction Pipeline
-        # A: Remove Education Structure
-        text_struct = self.redactor.remove_education(raw_text)
-        
-        # B: Redact PII (passing filename for heuristic name removal)
-        redacted_text = self.redactor.redact(text_struct, filename=filename)
+        # Combined Parsing & Selective Redaction (Handles Education Removal internally)
+        redacted_text = self.redactor.redact(raw_text, filename=filename)
         
         self.layout_profile.save_debug(redacted_text, "02_redacted", filename)
         
