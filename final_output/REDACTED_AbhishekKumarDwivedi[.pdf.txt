@@ -1,23 +1,22 @@
-Strategy, problem solving, DSA, AOSP, Yocto, System design, Software & prod. development  |   |  , india
-
-Exp: 17 years into engineering Specialisation: Android OS, Security, Yocto Linux, Embedded devices Product : Automotive digital cockpit | Android TV | IoT gateways Programming : C++, C, Python, Java, JavaScript
+Strategy, problem solving, DSA, AOSP, Yocto, System design, Software & prod. development
+ 17 years into engineering Specialisation: Android OS, Security, Yocto Linux, Embedded devices Product : Automotive digital cockpit | Android TV | IoT gateways Programming : C++, C, Python, Java, JavaScript
 
 Summary
 
 Product development with product cycle in agile and V model ALM; expertise into software architecture and component development across the Android stack, low level embedded interfaces and linux. Proficient into cyber security management and control implementation under ISO 21434. Working into complex softwares involving virtualized multi OS, multi processor, tooling, backend and embedded perierals. Security PO and technical lead to ensure product security implementation. Self motivated, fast learner and ownership driven.
 
-Current Role:
+Current Role
 
 Work Experience
-2022-12 Till date Principal Engineer II Harman, India ● Automotive digital cockpit(Android and Yocto) - systems and security architecture; leading on various automotive features and working with stakeholders; C++, Java, UML implementation such as for ISO derived algorithm and state machine development. Android and Linux low level interfaces; Qualcomm and Samsung chipsets, systems of system concept design, PI and Scrum planning. Security feature implementation based on NIST and ISO guidelines such as driven by TARA to implement controls.
-2020-07 2021-07 Principal Engineer Technicolor, India ● Leading Android TV framework development, working with chip vendors, Netflix leadership as technical SPOC and internal product lead (includes DRM, HDMI, power management, HAL, C++, JavaScript, AWS) looking at three product lines. Took strategic decisions for business line growth smooth rollout, corporate issue identification and providing solutions with strong influence.
+2022-12 Till date Principal Engineer II Harman ● Automotive digital cockpit(Android and Yocto) - systems and security architecture; leading on various automotive features and working with stakeholders; C++, Java, UML implementation such as for ISO derived algorithm and state machine development. Android and Linux low level interfaces; Qualcomm and Samsung chipsets, systems of system concept design, PI and Scrum planning. Security feature implementation based on NIST and ISO guidelines such as driven by TARA to implement controls.
+2020-07 2021-07 Principal Engineer Technicolor ● Leading Android TV framework development, working with chip vendors, Netflix leadership as technical SPOC and internal product lead (includes DRM, HDMI, power management, HAL, C++, JavaScript, AWS) looking at three product lines. Took strategic decisions for business line growth smooth rollout, corporate issue identification and providing solutions with strong influence.
 2020-07
 
 - ARM core and internals
 - Assembly code understanding
 - Schematics, electronics component and debugging
 
-Embedded Linux and OS:
+Embedded Linux and OS
 
 - WiFi, BT, network
 - Audio, Multimedia
@@ -29,7 +28,7 @@ Embedded Linux and OS:
 - Kernel driver and configuration
 - Bootloader(u-boot, GRUB)
 
-Engineering practices:
+Engineering practices
 
 - Product Lifecycle Management
 - Product roadmap
@@ -43,7 +42,7 @@ Engineering practices:
 - Concept, HLD and LLD
 - Security across product life cycle
 
-Others:
+Others
 
 - Hardware debugging and probing
 - AWS cloud infra
@@ -58,19 +57,19 @@ peripheral bring-up in Linux kernel, device tree change, boot loader, hardware i
 ● Yocto Linux - Intel startup shell (India); Yocto linux bring-up in IoT devices [GRUB, Kernel, BSP, WiFi, IoT stack, C, NodeJS].
 ● Embedded Systems - Startups to build software solutions for smart home, smart city and IoT; AI based parking metre, was in various start-up activities. Had been hosting start-up meetups; built software consulting ventures for Embedded, IoT based smart home products while working on firmware development.
 2015-01 2016-06 Engineer Linaro, UK ● Worked with Linaro and Google architects and leads to develop android product from thinker stage to MVP; worked with google cloud team and kernel team to build system design; implemented system component from scratch to a google production standard design(UML) and coding(Java, C++, C), deep dive into hardware interface, kernel module, microcontroller firmware, cloud interface.
-2013-09 2015-01 Principal Engineer Hughes Systique, India ● Android RIL, Telephony, Audio stack [C++, Java], Xen hypervisor, IoT, Audio codec and RFC.
-2011-09 2013-09 Lead Engineer Collabera, India ● Android bring-up, Automotive stack development [GRUB, U-Boot, Kernel, JNI, Java, C, Connectivity - Bluetooth, WiFi, board bring-up] 2008-09 2011-05 Sr. Software Engineer Samsung, India ● Mobile firmware development [ARM9 architecture, C, AOSP, Bootloader, Trace32] 2006-09 2008-09 Software Engineer Kyocera, India ● Mobile firmware development [ARM9 architecture, C, Qualcomm tools, ream dump analysis, Trace32]
+2013-09 2015-01 Principal Engineer Hughes Systique ● Android RIL, Telephony, Audio stack [C++, Java], Xen hypervisor, IoT, Audio codec and RFC.
+2011-09 2013-09 Lead Engineer Collabera ● Android bring-up, Automotive stack development [GRUB, U-Boot, Kernel, JNI, Java, C, Connectivity - Bluetooth, WiFi, board bring-up] 2008-09 2011-05 Sr. Software Engineer Samsung ● Mobile firmware development [ARM9 architecture, C, AOSP, Bootloader, Trace32] 2006-09 2008-09 Software Engineer Kyocera ● Mobile firmware development [ARM9 architecture, C, Qualcomm tools, ream dump analysis, Trace32]
 
 PROFESSIONAL EXPERIENCES
 
 2016 to Till date
 
-Automotive BSP for AMD (Android and Linux) Description:
+Automotive BSP for AMD (Android and Linux) Description
 Worked
 on android and Linux BSP software customization, hypervisor, VirtIO. Working at android IO systems, QEMU and Xen hypervisor configuration. Knowledge of BIOS, inter processor communication, in depth knowledge of AOSP, android emulation, GRUB configuration were needed to troubleshoot issues.
 Also did performance matrix and optimization for hypervisor, linux, Android OS and BIOS. Worked on intel architecture and android runtime analysis for ABI translation.
 
-Automotive systems and security for Harman (Android and Linux) Description:
+Automotive systems and security for Harman (Android and Linux) Description
 Principal engineer for systems & security domains including Android HAL, OS internals, vendor implementation for diagnostics, issues finding in TEE debug, KMS, software update, virtualization environment and kernel security.
 Stakeholders engagement for requirement grooming, high level technical specifications, system design, software design, component development. Work requires expertise in Android and Linux, hardware peripherals, generalist to overall system as well as system of system (such as GPS, bluetooth, WiFi, tuner, HTA, BIOS, kernel, bootloader, android systems internals, KPI, power, applications) and Autosar knowledge. Hands-on coding in C++ and Java. Product and process
 optimization areas findings.
@@ -118,7 +117,7 @@ Description: Code change estimation; modified RIL daemon and library to implemen
 
 Android Audio stack analysis and HAL changes
 
-Android OS stack specification, design and development for Linaro Description:
+Android OS stack specification, design and development for Linaro Description
 Implemented Ara manager framework stack upon Qualcomm hardware system service, JNI, AIDL, HAL interface, binder, daemon and SDK library. Worked closely with Linaro and Google architect. HLD and LLD design, implementation in JAVA, C and C++.
 Worked with domains, kernel, MCU firmware and cloud team for concept and design discussion. Visited Google HQ at MV, California, US; Linaro meetup at Boston, US; San Francisco, US for implemented solution integration to the device and to sync with other teams.
 

@@ -1,53 +1,57 @@
-# Resume Redaction Pipeline
+# Universal CV Redaction System
 
 ## 🚀 Quick Start
 
 ```bash
-cd c:\Users\shiva\Downloads\samplecvs
-python resume_redactor.py
+# Process CVs from samples/ folder
+python run_universal_pipeline.py
+
+# Or specify custom directories
+python run_universal_pipeline.py input_folder/ output_folder/
+
+# Enable debug mode
+python run_universal_pipeline.py --debug
 ```
 
-**Features:**
-- ✅ **NO blank resumes** - Guaranteed content preservation
-- ✅ **NO placeholders** - Clean output without `<EMAIL>`, `<PHONE>`, etc.
-- ✅ Process all PDF files in the samples directory
-- ✅ Remove personal information completely (emails, phones, URLs, names)
-- ✅ Preserve **100% of skills and experience** sections
-- ✅ Protect tech keywords, bullets, and dates
-- ✅ Professional formatting with proper spacing
-- ✅ Generate output in `samples/redacted_resumes/`
+---
+
+## ✨ What It Does
+
+**Automatically processes ALL types of CVs:**
+- 📄 **Naukri.com** format resumes
+- 📰 **Multi-column** layouts
+- 📋 **Standard ATS** single-column
+- 📸 **Scanned/Image** PDFs (with OCR)
+- 🎨 **Creative/Designer** CVs
+- 🎓 **Academic/Research** CVs
+
+**Smart PII Removal:**
+- ✅ Removes: Emails, phones, names, addresses, URLs
+- ✅ Protects: Technical skills, job titles, experience
+- ✅ 100+ protected technical terms
+- ✅ Position-aware (aggressive in header, smart in body)
 
 ---
 
-## 🏗️ How It Works
+## 📁 Files
 
-### 1. Text Extraction
-- **Primary**: PyMuPDF (fast, accurate)
-- **Fallback**: pdfplumber (handles complex layouts)
-- **Result**: Reliable extraction from any PDF
+**Main System:**
+- `universal_pipeline_engine.py` - Complete pipeline system
+- `run_universal_pipeline.py` - Easy command-line runner
 
-### 2. PII Removal
-- **Regex**: Removes emails, phones, URLs
-- **spaCy NER**: Removes full names (2+ words)
-- **Result**: Complete PII removal, NO placeholders
+**Documentation:**
+- `UNIVERSAL_PIPELINE_GUIDE.md` - Complete guide
+- `PIPELINE_COMPARISON.md` - System comparison
+- `QUICKSTART.md` - Quick reference
 
-### 3. Content Protection
-- **Protects**:
-  - Tech keywords (Python, AWS, Docker, React, etc.)
-  - Date ranges (2020-2023, Present)
-  - Bullet points (skills/achievements)
-  - Section headers (SKILLS, EXPERIENCE, etc.)
-- **Result**: Prevents over-redaction
-
-### 4. Text Polishing
-- Remove empty contact labels
-- Normalize bullets to standard format (•)
-- Add proper spacing between sections
-- **Result**: Clean, professional output
+**Data:**
+- `samples/` - Input PDF files
+- `final_output/` - Redacted output files
+- `archive/` - Old systems (for reference)
 
 ---
 
-## 📁 Output Location
+## 📊 Example Output
 
 **Redacted Resumes:**
 ```

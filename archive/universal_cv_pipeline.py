@@ -286,6 +286,14 @@ class RedactionCore:
             regex_pattern = re.escape(name).replace(r'\ ', r'\s+')
             # Word boundary match case-insensitive
             text = re.sub(rf"\b{regex_pattern}\b", " ", text, flags=re.IGNORECASE)
+            
+        # Post-redaction cleanup of redundant separators
+        text = re.sub(r'(\s*[|]\s*){2,}', ' | ', text)
+        text = re.sub(r'(\s*[,]\s*){2,}', ', ', text)
+        
+        # Specific cleanup for header artifacts like " | | , India"
+        text = re.sub(r'[\s|,\-]+india\s*$', '', text, flags=re.IGNORECASE | re.MULTILINE)
+        
         return text
 
     def cleanup_garbage(self, text: str) -> str:
@@ -306,8 +314,17 @@ class RedactionCore:
             # Regex: Single letter or small word label followed by separators only
             if re.match(r'^[A-Z]{1,2}\s*[:\-]\s*[\|\s,]*$', stripped):
                 continue
-                
-            cleaned_lines.append(line)
+
+            # 4. Remove isolated bullet points
+            if re.match(r'^[\u2022\u2023\u25E6\u2043\u2219o]$', stripped):
+                continue
+
+            # 5. Strip trailing separators from valid lines (e.g. "Engineer |" -> "Engineer")
+            # Keep stripping until no trailing separator remains
+            while stripped and stripped[-1] in "|,-:/":
+                stripped = stripped[:-1].strip()
+            
+            cleaned_lines.append(stripped)
             
         return "\n".join(cleaned_lines)
 
@@ -442,7 +459,8 @@ class RedactionCore:
             r'(?i)(marital|civil)\s*status\s*[:\-]?\s*.*$',
             r'(?i)gender\s*[:\-]?\s*.*$',
             r'(?i)nationality\s*[:\-]?\s*.*$',
-            r'(?i)passport\s*no\s*[:\-]?\s*.*$'
+            r'(?i)passport\s*no\s*[:\-]?\s*.*$',
+            r'(?i)permanent\s*(&\s*)?current\s*-\s*.*$' # Catches "Permanent & Current - Flat no..."
         ]
         for p in patterns:
             text = re.sub(p, '', text, flags=re.MULTILINE)
@@ -490,9 +508,26 @@ class RedactionCore:
                      else:
                          content = re.sub(rf"{kw}\s*[:\-]?\s*", "", content, flags=re.IGNORECASE)
             
+            # Specific Scrubbing for HEADER section (Locations)
+            if sec_type == 'HEADER':
+                cities = ['Bangalore', 'Pune', 'Mumbai', 'Delhi', 'Chennai', 'Hyderabad', 'Kolkata', 'Gurgaon', 'Noida', 'India']
+                for city in cities:
+                    content = re.sub(rf"\b{city}\b", "", content, flags=re.IGNORECASE)
+
             final_parts.append(content)
             
         result = "\n".join(final_parts)
+        
+        # Post-redaction cleanup of redundant separators
+        result = re.sub(r'(\s*[|]\s*){2,}', ' | ', result)
+        result = re.sub(r'(\s*[,]\s*){2,}', ', ', result)
+        
+        # Specific cleanup for header artifacts like " | | , India"
+        result = re.sub(r'[\s|,\-]+india\s*$', '', result, flags=re.IGNORECASE | re.MULTILINE)
+        
+        # Force newline for Experience summary if merged
+        result = re.sub(r'\|\s*(Exp:)', '\n\1', result, flags=re.IGNORECASE)
+
         return self.cleanup_garbage(result)
 
     def remove_education(self, text: str) -> str:

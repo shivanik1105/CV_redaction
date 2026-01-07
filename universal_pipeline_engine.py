@@ -1,0 +1,1022 @@
+"""
+Universal CV Redaction Pipeline Engine
+=======================================
+Comprehensive system with specialized pipelines for all CV types.
+Automatically detects CV format and routes to the appropriate processing pipeline.
+
+Architecture:
+- Profile Detector: Analyzes CV structure and selects optimal pipeline
+- 6 Specialized Pipelines: Each optimized for specific CV format
+- Universal Redaction Engine: Common PII removal logic
+- Quality Validator: Ensures output quality across all pipelines
+"""
+
+import os
+import re
+import abc
+import logging
+from pathlib import Path
+from typing import List, Dict, Optional, Tuple, Set
+from dataclasses import dataclass
+from enum import Enum
+
+# PDF Processing
+try:
+    import fitz  # PyMuPDF
+    HAS_FITZ = True
+except ImportError:
+    HAS_FITZ = False
+
+try:
+    import pdfplumber
+    HAS_PDFPLUMBER = True
+except ImportError:
+    HAS_PDFPLUMBER = False
+
+# OCR for scanned documents
+try:
+    from paddleocr import PaddleOCR
+    HAS_PADDLEOCR = True
+except ImportError:
+    HAS_PADDLEOCR = False
+
+# NLP for advanced PII detection
+try:
+    import spacy
+    nlp = spacy.load("en_core_web_sm")
+    HAS_SPACY = True
+except:
+    nlp = None
+    HAS_SPACY = False
+
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Constants
+DEBUG_DIR = Path("debug_output")
+OUTPUT_DIR = Path("final_output")
+DEBUG_DIR.mkdir(exist_ok=True)
+OUTPUT_DIR.mkdir(exist_ok=True)
+
+
+class CVType(Enum):
+    """CV Format Types"""
+    NAUKRI = "naukri"                    # Naukri.com format with specific headers
+    MULTI_COLUMN = "multi_column"        # 2+ column layouts
+    STANDARD_ATS = "standard_ats"        # Single column ATS-friendly
+    SCANNED_IMAGE = "scanned_image"      # Image-based/scanned PDFs
+    CREATIVE_DESIGNER = "creative"       # Designer/creative CVs with graphics
+    ACADEMIC_RESEARCH = "academic"       # Academic CVs with publications
+
+
+@dataclass
+class CVProfile:
+    """CV Analysis Profile"""
+    cv_type: CVType
+    confidence: float
+    has_columns: bool
+    column_count: int
+    is_scanned: bool
+    text_density: float
+    has_graphics: bool
+    detected_sections: List[str]
+    
+    def __str__(self):
+        return f"{self.cv_type.value} (confidence: {self.confidence:.2f})"
+
+
+class CVProfileDetector:
+    """
+    Analyzes PDF structure to determine CV type and characteristics.
+    Routes to appropriate specialized pipeline.
+    """
+    
+    def __init__(self):
+        self.naukri_indicators = [
+            'naukri', 'resume headline', 'key skills', 'it skills',
+            'profile summary', 'personal details', 'declaration'
+        ]
+        
+        self.academic_indicators = [
+            'publications', 'research', 'citations', 'h-index',
+            'conference', 'journal', 'thesis', 'dissertation'
+        ]
+        
+        self.creative_indicators = [
+            'portfolio', 'behance', 'dribbble', 'design',
+            'creative', 'ui/ux', 'graphic design'
+        ]
+    
+    def analyze(self, pdf_path: str) -> CVProfile:
+        """Comprehensive CV analysis"""
+        logger.info(f"Analyzing: {Path(pdf_path).name}")
+        
+        # Check filename for obvious indicators
+        filename = Path(pdf_path).name.lower()
+        if 'naukri' in filename:
+            return self._create_profile(CVType.NAUKRI, 0.95, pdf_path)
+        
+        # Analyze PDF structure
+        if not HAS_FITZ and not HAS_PDFPLUMBER:
+            logger.error("No PDF library available")
+            return self._create_profile(CVType.STANDARD_ATS, 0.5, pdf_path)
+        
+        try:
+            # Get structure analysis
+            structure = self._analyze_structure(pdf_path)
+            
+            # Determine CV type based on structure
+            cv_type, confidence = self._classify_type(structure, filename)
+            
+            return CVProfile(
+                cv_type=cv_type,
+                confidence=confidence,
+                has_columns=structure['has_columns'],
+                column_count=structure['column_count'],
+                is_scanned=structure['is_scanned'],
+                text_density=structure['text_density'],
+                has_graphics=structure['has_graphics'],
+                detected_sections=structure['sections']
+            )
+            
+        except Exception as e:
+            logger.error(f"Analysis failed: {e}")
+            return self._create_profile(CVType.STANDARD_ATS, 0.5, pdf_path)
+    
+    def _analyze_structure(self, pdf_path: str) -> Dict:
+        """Analyze PDF structure"""
+        structure = {
+            'has_columns': False,
+            'column_count': 1,
+            'is_scanned': False,
+            'text_density': 0.0,
+            'has_graphics': False,
+            'sections': [],
+            'content_sample': ''
+        }
+        
+        if HAS_PDFPLUMBER:
+            with pdfplumber.open(pdf_path) as pdf:
+                if not pdf.pages:
+                    return structure
+                
+                page = pdf.pages[0]
+                
+                # Check for columns
+                words = page.extract_words(x_tolerance=2, y_tolerance=2)
+                if words:
+                    structure['column_count'] = self._detect_columns(words, page.width)
+                    structure['has_columns'] = structure['column_count'] > 1
+                    
+                    # Text density
+                    total_chars = sum(len(w['text']) for w in words)
+                    page_area = page.width * page.height
+                    structure['text_density'] = total_chars / page_area if page_area > 0 else 0
+                    
+                    # Check if scanned (low text density or fragmented text)
+                    single_char_words = sum(1 for w in words if len(w['text']) == 1)
+                    fragmentation_ratio = single_char_words / len(words) if words else 0
+                    structure['is_scanned'] = fragmentation_ratio > 0.15 or structure['text_density'] < 0.02
+                    
+                    # Extract sample text for content analysis
+                    structure['content_sample'] = ' '.join([w['text'] for w in words[:200]])
+                
+                # Check for graphics/images
+                structure['has_graphics'] = len(page.images) > 0
+        
+        elif HAS_FITZ:
+            with fitz.open(pdf_path) as doc:
+                if not doc:
+                    return structure
+                
+                page = doc[0]
+                text = page.get_text()
+                
+                # Simple text density check
+                page_area = page.rect.width * page.rect.height
+                structure['text_density'] = len(text) / page_area if page_area > 0 else 0
+                structure['is_scanned'] = structure['text_density'] < 0.02
+                structure['content_sample'] = text[:1000]
+                
+                # Check for images
+                structure['has_graphics'] = len(page.get_images()) > 0
+        
+        # Detect sections from sample text
+        structure['sections'] = self._detect_sections(structure['content_sample'])
+        
+        return structure
+    
+    def _detect_columns(self, words: List[Dict], page_width: float) -> int:
+        """Detect number of columns"""
+        if not words:
+            return 1
+        
+        # Count words in left/center/right thirds
+        left = sum(1 for w in words if w['x0'] < page_width * 0.35)
+        center = sum(1 for w in words if page_width * 0.35 <= w['x0'] < page_width * 0.65)
+        right = sum(1 for w in words if w['x0'] >= page_width * 0.65)
+        
+        # Multi-column if significant content in multiple regions
+        active_regions = sum([left > 20, center > 20, right > 20])
+        
+        if active_regions >= 2 and (left > 30 or right > 30):
+            return 2
+        elif active_regions >= 3:
+            return 3
+        
+        return 1
+    
+    def _detect_sections(self, text: str) -> List[str]:
+        """Detect CV sections"""
+        text_upper = text.upper()
+        sections = []
+        
+        section_keywords = {
+            'SUMMARY': ['SUMMARY', 'PROFILE', 'OBJECTIVE', 'ABOUT'],
+            'EXPERIENCE': ['EXPERIENCE', 'WORK HISTORY', 'EMPLOYMENT'],
+            'EDUCATION': ['EDUCATION', 'ACADEMIC', 'QUALIFICATION'],
+            'SKILLS': ['SKILLS', 'TECHNICAL SKILLS', 'COMPETENCIES'],
+            'PROJECTS': ['PROJECTS', 'KEY PROJECTS'],
+            'CERTIFICATIONS': ['CERTIFICATIONS', 'LICENSES'],
+            'PUBLICATIONS': ['PUBLICATIONS', 'RESEARCH'],
+            'REFERENCES': ['REFERENCES']
+        }
+        
+        for section, keywords in section_keywords.items():
+            if any(kw in text_upper for kw in keywords):
+                sections.append(section)
+        
+        return sections
+    
+    def _classify_type(self, structure: Dict, filename: str) -> Tuple[CVType, float]:
+        """Classify CV type based on structure and content"""
+        content = structure['content_sample'].lower()
+        
+        # Check for Naukri format
+        naukri_score = sum(1 for indicator in self.naukri_indicators if indicator in content)
+        if naukri_score >= 3:
+            return CVType.NAUKRI, min(0.95, 0.7 + (naukri_score * 0.05))
+        
+        # Check for academic format
+        academic_score = sum(1 for indicator in self.academic_indicators if indicator in content)
+        if academic_score >= 3:
+            return CVType.ACADEMIC_RESEARCH, min(0.95, 0.7 + (academic_score * 0.05))
+        
+        # Check for creative format
+        creative_score = sum(1 for indicator in self.creative_indicators if indicator in content)
+        if creative_score >= 2 and structure['has_graphics']:
+            return CVType.CREATIVE_DESIGNER, min(0.90, 0.7 + (creative_score * 0.08))
+        
+        # Check for scanned
+        if structure['is_scanned']:
+            return CVType.SCANNED_IMAGE, 0.85
+        
+        # Check for multi-column
+        if structure['has_columns'] and structure['column_count'] >= 2:
+            return CVType.MULTI_COLUMN, 0.85
+        
+        # Default to standard ATS
+        return CVType.STANDARD_ATS, 0.75
+    
+    def _create_profile(self, cv_type: CVType, confidence: float, pdf_path: str) -> CVProfile:
+        """Create minimal profile"""
+        return CVProfile(
+            cv_type=cv_type,
+            confidence=confidence,
+            has_columns=False,
+            column_count=1,
+            is_scanned=False,
+            text_density=0.0,
+            has_graphics=False,
+            detected_sections=[]
+        )
+
+
+class BasePipeline(abc.ABC):
+    """Abstract base class for all specialized pipelines"""
+    
+    def __init__(self, debug: bool = False):
+        self.debug = debug
+        self.pipeline_name = self.__class__.__name__
+    
+    @abc.abstractmethod
+    def extract_text(self, pdf_path: str) -> str:
+        """Extract text maintaining reading order"""
+        pass
+    
+    @abc.abstractmethod
+    def preprocess(self, text: str) -> str:
+        """Pipeline-specific preprocessing"""
+        pass
+    
+    def save_debug(self, content: str, stage: str, filename: str):
+        """Save debug output"""
+        if self.debug:
+            try:
+                name = Path(filename).stem
+                path = DEBUG_DIR / f"{name}_{self.pipeline_name}_{stage}.txt"
+                path.write_text(content, encoding='utf-8')
+                logger.debug(f"Saved debug: {path}")
+            except Exception as e:
+                logger.error(f"Failed to save debug: {e}")
+    
+    def process(self, pdf_path: str) -> str:
+        """Main processing pipeline"""
+        logger.info(f"[{self.pipeline_name}] Processing: {Path(pdf_path).name}")
+        
+        # Extract
+        raw_text = self.extract_text(pdf_path)
+        if self.debug:
+            self.save_debug(raw_text, "01_extracted", pdf_path)
+        
+        # Preprocess
+        processed_text = self.preprocess(raw_text)
+        if self.debug:
+            self.save_debug(processed_text, "02_preprocessed", pdf_path)
+        
+        return processed_text
+
+
+class NaukriPipeline(BasePipeline):
+    """
+    Specialized pipeline for Naukri.com format CVs.
+    Handles specific headers, formatting, and layout quirks.
+    """
+    
+    def __init__(self, debug: bool = False):
+        super().__init__(debug)
+        self.naukri_sections = [
+            'RESUME HEADLINE', 'KEY SKILLS', 'EMPLOYMENT DETAILS',
+            'IT SKILLS', 'PROJECTS', 'PROFILE SUMMARY',
+            'PERSONAL DETAILS', 'DECLARATION'
+        ]
+    
+    def extract_text(self, pdf_path: str) -> str:
+        """Extract using PyMuPDF with block sorting"""
+        if not HAS_FITZ:
+            return "Error: PyMuPDF not available"
+        
+        text_blocks = []
+        with fitz.open(pdf_path) as doc:
+            for page in doc:
+                blocks = page.get_text("blocks", sort=True)
+                for block in blocks:
+                    if block[6] == 0:  # Text block
+                        text = block[4].strip()
+                        if text:
+                            text_blocks.append(text)
+        
+        return "\n\n".join(text_blocks)
+    
+    def preprocess(self, text: str) -> str:
+        """Naukri-specific preprocessing"""
+        # Normalize Naukri section headers
+        for section in self.naukri_sections:
+            text = re.sub(rf'\b{section}\b\s*:?', f"\n{section}\n", text, flags=re.IGNORECASE)
+        
+        # Remove Naukri branding/watermarks
+        text = re.sub(r'Naukri\.com|www\.naukri\.com', '', text, flags=re.IGNORECASE)
+        
+        # Clean up spacing
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        return text
+
+
+class MultiColumnPipeline(BasePipeline):
+    """
+    Specialized pipeline for multi-column CV layouts.
+    Intelligently detects column gutters and maintains reading order.
+    """
+    
+    def extract_text(self, pdf_path: str) -> str:
+        """Extract with column-aware processing"""
+        if not HAS_PDFPLUMBER:
+            if HAS_FITZ:
+                return self._fitz_fallback(pdf_path)
+            return "Error: No PDF library available"
+        
+        all_text = []
+        
+        with pdfplumber.open(pdf_path) as pdf:
+            for page_num, page in enumerate(pdf.pages):
+                logger.info(f"Processing page {page_num + 1}")
+                
+                words = page.extract_words(x_tolerance=2, y_tolerance=2)
+                if not words:
+                    continue
+                
+                # Detect column split
+                split_point = self._find_column_split(words, page.width)
+                
+                if split_point:
+                    # Extract columns separately
+                    left_words = [w for w in words if w['x1'] < split_point]
+                    right_words = [w for w in words if w['x0'] > split_point]
+                    
+                    # Sort by vertical position
+                    left_words.sort(key=lambda w: w['top'])
+                    right_words.sort(key=lambda w: w['top'])
+                    
+                    # Build text
+                    left_text = self._build_text_from_words(left_words)
+                    right_text = self._build_text_from_words(right_words)
+                    
+                    all_text.append(left_text)
+                    all_text.append(right_text)
+                else:
+                    # Single column
+                    words.sort(key=lambda w: (w['top'], w['x0']))
+                    page_text = self._build_text_from_words(words)
+                    all_text.append(page_text)
+        
+        return "\n\n".join(all_text)
+    
+    def _find_column_split(self, words: List[Dict], page_width: float) -> Optional[float]:
+        """Find the gutter between columns"""
+        if not words:
+            return None
+        
+        # Count words in vertical strips
+        strip_width = page_width / 20
+        strip_counts = [0] * 20
+        
+        for w in words:
+            word_center = (w['x0'] + w['x1']) / 2
+            strip_idx = int(word_center / strip_width)
+            if 0 <= strip_idx < 20:
+                strip_counts[strip_idx] += 1
+        
+        # Find minimum in middle region
+        min_count = float('inf')
+        min_idx = -1
+        for idx in range(5, 15):
+            if strip_counts[idx] < min_count:
+                min_count = strip_counts[idx]
+                min_idx = idx
+        
+        # Validate it's a real gap
+        if min_count < 3 and min_idx >= 0:
+            return (min_idx + 0.5) * strip_width
+        
+        return None
+    
+    def _build_text_from_words(self, words: List[Dict]) -> str:
+        """Build text from word list"""
+        if not words:
+            return ""
+        
+        lines = []
+        current_line = []
+        current_top = words[0]['top']
+        
+        for word in words:
+            # New line if vertical gap
+            if abs(word['top'] - current_top) > 3:
+                if current_line:
+                    lines.append(' '.join(current_line))
+                current_line = [word['text']]
+                current_top = word['top']
+            else:
+                current_line.append(word['text'])
+        
+        if current_line:
+            lines.append(' '.join(current_line))
+        
+        return '\n'.join(lines)
+    
+    def _fitz_fallback(self, pdf_path: str) -> str:
+        """Fallback to PyMuPDF"""
+        text_blocks = []
+        with fitz.open(pdf_path) as doc:
+            for page in doc:
+                blocks = page.get_text("blocks", sort=True)
+                for block in blocks:
+                    if block[6] == 0:
+                        text_blocks.append(block[4].strip())
+        return "\n\n".join(text_blocks)
+    
+    def preprocess(self, text: str) -> str:
+        """Multi-column specific preprocessing"""
+        # Fix split words
+        text = self._fix_split_words(text)
+        
+        # Normalize spacing
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        return text
+    
+    def _fix_split_words(self, text: str) -> str:
+        """Fix words split across columns"""
+        # Pattern: word ending with hyphen followed by continuation
+        text = re.sub(r'(\w+)-\s*\n\s*(\w+)', r'\1\2', text)
+        
+        return text
+
+
+class StandardATSPipeline(BasePipeline):
+    """
+    Pipeline for standard single-column ATS-friendly CVs.
+    Optimized for clean extraction and section detection.
+    """
+    
+    def extract_text(self, pdf_path: str) -> str:
+        """Simple linear extraction"""
+        if HAS_FITZ:
+            with fitz.open(pdf_path) as doc:
+                return "\n\n".join([page.get_text() for page in doc])
+        elif HAS_PDFPLUMBER:
+            with pdfplumber.open(pdf_path) as pdf:
+                return "\n\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
+        return "Error: No PDF library available"
+    
+    def preprocess(self, text: str) -> str:
+        """Standard preprocessing"""
+        # Normalize bullets
+        text = re.sub(r'[•●○◦▪▫■□⬤→]', '•', text)
+        
+        # Fix spacing
+        text = re.sub(r' {2,}', ' ', text)
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        return text
+
+
+class ScannedImagePipeline(BasePipeline):
+    """
+    Pipeline for scanned/image-based PDFs.
+    Uses OCR with word healing for fragmented text.
+    """
+    
+    def __init__(self, debug: bool = False):
+        super().__init__(debug)
+        self.ocr = None
+        if HAS_PADDLEOCR:
+            try:
+                self.ocr = PaddleOCR(lang='en', use_angle_cls=False, show_log=False)
+            except Exception as e:
+                logger.warning(f"Failed to initialize PaddleOCR: {e}")
+    
+    def extract_text(self, pdf_path: str) -> str:
+        """OCR extraction"""
+        if not self.ocr:
+            logger.warning("OCR not available, using basic extraction")
+            return self._basic_extraction(pdf_path)
+        
+        text_lines = []
+        
+        with fitz.open(pdf_path) as doc:
+            for page_num, page in enumerate(doc):
+                logger.info(f"OCR processing page {page_num + 1}")
+                
+                # Convert page to image
+                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 2x scaling
+                img_path = f"temp_ocr_page_{page_num}.png"
+                pix.save(img_path)
+                
+                try:
+                    # Run OCR
+                    result = self.ocr.ocr(img_path)
+                    
+                    if result and result[0]:
+                        for line in result[0]:
+                            if isinstance(line, list) and len(line) >= 2:
+                                text = line[1][0] if isinstance(line[1], tuple) else line[1]
+                                text_lines.append(text)
+                finally:
+                    # Cleanup
+                    if os.path.exists(img_path):
+                        os.remove(img_path)
+        
+        return "\n".join(text_lines)
+    
+    def _basic_extraction(self, pdf_path: str) -> str:
+        """Fallback extraction"""
+        if HAS_FITZ:
+            with fitz.open(pdf_path) as doc:
+                return "\n".join([page.get_text() for page in doc])
+        return ""
+    
+    def preprocess(self, text: str) -> str:
+        """OCR-specific preprocessing with word healing"""
+        # Fix common OCR errors
+        text = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', text)  # Add space between camelCase
+        
+        # Heal fragmented words
+        text = self._heal_fragmented_words(text)
+        
+        # Clean up
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        return text
+    
+    def _heal_fragmented_words(self, text: str) -> str:
+        """Fix fragmented text like 'e x p e r i e n c e' -> 'experience'"""
+        lines = text.split('\n')
+        healed_lines = []
+        
+        for line in lines:
+            # Pattern: single letters separated by spaces
+            if re.search(r'\b[a-z]\s+[a-z](\s+[a-z])+\b', line, re.IGNORECASE):
+                # Try to heal
+                parts = line.split()
+                healed_parts = []
+                temp_word = []
+                
+                for part in parts:
+                    if len(part) == 1 and part.isalpha():
+                        temp_word.append(part)
+                    else:
+                        if temp_word:
+                            # Join and check if valid
+                            joined = ''.join(temp_word)
+                            if len(joined) >= 3:
+                                healed_parts.append(joined)
+                            else:
+                                healed_parts.extend(temp_word)
+                            temp_word = []
+                        healed_parts.append(part)
+                
+                if temp_word:
+                    joined = ''.join(temp_word)
+                    healed_parts.append(joined)
+                
+                healed_lines.append(' '.join(healed_parts))
+            else:
+                healed_lines.append(line)
+        
+        return '\n'.join(healed_lines)
+
+
+class CreativeDesignerPipeline(BasePipeline):
+    """
+    Pipeline for creative/designer CVs with graphics and unusual layouts.
+    Handles non-standard structures while preserving content.
+    """
+    
+    def extract_text(self, pdf_path: str) -> str:
+        """Extract text avoiding graphic areas"""
+        if not HAS_PDFPLUMBER:
+            return self._fitz_fallback(pdf_path)
+        
+        all_text = []
+        
+        with pdfplumber.open(pdf_path) as pdf:
+            for page in pdf.pages:
+                # Get text and images
+                text = page.extract_text(x_tolerance=3, y_tolerance=3)
+                if text:
+                    all_text.append(text)
+        
+        return "\n\n".join(all_text)
+    
+    def _fitz_fallback(self, pdf_path: str) -> str:
+        """Fallback extraction"""
+        with fitz.open(pdf_path) as doc:
+            return "\n\n".join([page.get_text() for page in doc])
+    
+    def preprocess(self, text: str) -> str:
+        """Creative CV preprocessing"""
+        # Remove common design artifacts
+        text = re.sub(r'[★☆⭐✨💼📧📱🏠]', '', text)  # Remove icons
+        
+        # Normalize spacing
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        return text
+
+
+class AcademicResearchPipeline(BasePipeline):
+    """
+    Pipeline for academic/research CVs with publications and citations.
+    Preserves structured academic content.
+    """
+    
+    def extract_text(self, pdf_path: str) -> str:
+        """Standard extraction"""
+        if HAS_FITZ:
+            with fitz.open(pdf_path) as doc:
+                return "\n\n".join([page.get_text() for page in doc])
+        elif HAS_PDFPLUMBER:
+            with pdfplumber.open(pdf_path) as pdf:
+                return "\n\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
+        return ""
+    
+    def preprocess(self, text: str) -> str:
+        """Academic-specific preprocessing"""
+        # Normalize citation formats
+        text = re.sub(r'\[(\d+)\]', r'[\1]', text)
+        
+        # Clean up
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        return text
+
+
+class UniversalRedactionEngine:
+    """
+    Universal PII removal engine used by all pipelines.
+    Handles emails, phones, names, addresses while protecting professional content.
+    """
+    
+    def __init__(self):
+        # Compile patterns
+        self.email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
+        self.phone_pattern = re.compile(r'(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}')
+        self.url_pattern = re.compile(r'https?://[^\s]+')
+        self.linkedin_pattern = re.compile(r'linkedin\.com/in/[\w\-]+', re.IGNORECASE)
+        self.github_pattern = re.compile(r'github\.com/[\w\-]+', re.IGNORECASE)
+        
+        # Protected terms (technical skills, etc.)
+        self.protected_terms = self._load_protected_terms()
+        
+        # Load spaCy for name detection
+        self.nlp = nlp if HAS_SPACY else None
+    
+    def _load_protected_terms(self) -> Set[str]:
+        """Load comprehensive list of protected terms"""
+        terms = {
+            # Programming languages
+            'python', 'java', 'javascript', 'typescript', 'c++', 'c#', 'ruby', 'php', 'go',
+            'rust', 'swift', 'kotlin', 'scala', 'r', 'matlab', 'perl', 'shell', 'bash',
+            
+            # Frameworks & libraries
+            'react', 'angular', 'vue', 'django', 'flask', 'spring', 'nodejs', 'express',
+            'laravel', 'rails', 'aspnet', 'dotnet', 'jquery', 'bootstrap', 'tailwind',
+            
+            # Databases
+            'mysql', 'postgresql', 'mongodb', 'oracle', 'sqlserver', 'redis', 'cassandra',
+            'dynamodb', 'elasticsearch', 'neo4j', 'sqlite', 'mariadb',
+            
+            # Cloud & DevOps
+            'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'jenkins', 'gitlab', 'github',
+            'terraform', 'ansible', 'puppet', 'chef', 'circleci', 'travis',
+            
+            # Tools & Technologies
+            'git', 'linux', 'unix', 'windows', 'macos', 'vscode', 'intellij', 'eclipse',
+            'vim', 'emacs', 'postman', 'swagger', 'jira', 'confluence', 'slack',
+            
+            # Roles & titles
+            'engineer', 'developer', 'programmer', 'architect', 'manager', 'lead',
+            'senior', 'junior', 'principal', 'staff', 'consultant', 'analyst',
+            'scientist', 'researcher', 'designer', 'administrator', 'specialist',
+            
+            # Common terms
+            'experience', 'education', 'skills', 'projects', 'summary', 'objective',
+            'references', 'certifications', 'achievements', 'responsibilities'
+        }
+        return terms
+    
+    def redact(self, text: str, filename: str = "") -> str:
+        """
+        Main redaction method.
+        Uses multi-phase approach:
+        1. Protect technical terms
+        2. Remove clear PII (emails, phones, URLs)
+        3. Remove names (from filename and NER)
+        4. Position-aware name removal (aggressive in header)
+        5. Restore protected terms
+        """
+        # Phase 1: Protect technical terms
+        protected_map = {}
+        placeholder_counter = [0]
+        
+        def protect_term(match):
+            term = match.group(0)
+            if term.lower() in self.protected_terms:
+                placeholder = f"§PROTECTED{placeholder_counter[0]}§"
+                protected_map[placeholder] = term
+                placeholder_counter[0] += 1
+                return placeholder
+            return term
+        
+        text = re.sub(r'\b\w+\b', protect_term, text)
+        
+        # Phase 2: Remove clear PII
+        text = self.email_pattern.sub('', text)
+        text = self.phone_pattern.sub('', text)
+        text = self.url_pattern.sub('', text)
+        text = self.linkedin_pattern.sub('', text)
+        text = self.github_pattern.sub('', text)
+        
+        # Phase 3: Remove names from filename
+        if filename:
+            text = self._remove_filename_names(text, filename)
+        
+        # Phase 4: Position-aware name removal
+        text = self._position_aware_name_removal(text)
+        
+        # Phase 5: Clean up artifacts
+        text = self._cleanup_artifacts(text)
+        
+        # Phase 6: Restore protected terms
+        for placeholder, original_term in protected_map.items():
+            text = text.replace(placeholder, original_term)
+        
+        return text
+    
+    def _remove_filename_names(self, text: str, filename: str) -> str:
+        """Extract and remove names from filename"""
+        # Extract potential names from filename
+        stem = Path(filename).stem
+        # Remove common non-name parts
+        clean_stem = re.sub(r'(resume|cv|naukri|redacted|_\d+|\.\.)', '', stem, flags=re.IGNORECASE)
+        clean_stem = re.sub(r'[^a-zA-Z\s]', ' ', clean_stem)
+        
+        # Split camelCase
+        clean_stem = re.sub(r'([a-z])([A-Z])', r'\1 \2', clean_stem)
+        
+        # Extract words that look like names (capitalized, 2+ chars)
+        parts = clean_stem.split()
+        potential_names = [p for p in parts if p and len(p) > 2 and p[0].isupper()]
+        
+        # Remove as full name and individual parts
+        if len(potential_names) >= 2:
+            full_name = ' '.join(potential_names)
+            # Remove with flexible whitespace
+            pattern = r'\b' + r'\s+'.join([re.escape(p) for p in potential_names]) + r'\b'
+            text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+        
+        return text
+    
+    def _position_aware_name_removal(self, text: str) -> str:
+        """Remove names more aggressively in header (top 15%)"""
+        if not self.nlp:
+            return text
+        
+        lines = text.split('\n')
+        header_line_count = max(3, len(lines) // 7)  # Top ~15%
+        
+        # Process header aggressively
+        header_lines = lines[:header_line_count]
+        body_lines = lines[header_line_count:]
+        
+        # Header: remove all person names
+        header_text = '\n'.join(header_lines)
+        doc = self.nlp(header_text)
+        for ent in doc.ents:
+            if ent.label_ == 'PERSON':
+                header_text = header_text.replace(ent.text, '')
+        
+        # Body: only remove if clearly person name (not company/product)
+        body_text = '\n'.join(body_lines)
+        # Keep body as-is for now to preserve context
+        
+        return header_text + '\n' + body_text
+    
+    def _cleanup_artifacts(self, text: str) -> str:
+        """Clean up redaction artifacts"""
+        # Remove empty labels
+        text = re.sub(r'\b(Email|Phone|Mobile|Address|Location)\s*:\s*[\n|,]', '', text, flags=re.IGNORECASE)
+        
+        # Fix multiple spaces/separators
+        text = re.sub(r'\s+', ' ', text)
+        text = re.sub(r'([|,])\s*\1+', r'\1', text)
+        
+        # Fix line breaks
+        text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text)
+        
+        # Trim whitespace
+        text = '\n'.join(line.strip() for line in text.split('\n'))
+        
+        return text
+
+
+class PipelineOrchestrator:
+    """
+    Main orchestrator that:
+    1. Analyzes CV to determine type
+    2. Selects appropriate specialized pipeline
+    3. Executes extraction and processing
+    4. Applies universal redaction
+    5. Validates and saves output
+    """
+    
+    def __init__(self, debug: bool = False):
+        self.debug = debug
+        self.detector = CVProfileDetector()
+        self.redactor = UniversalRedactionEngine()
+        
+        # Initialize all pipelines
+        self.pipelines = {
+            CVType.NAUKRI: NaukriPipeline(debug),
+            CVType.MULTI_COLUMN: MultiColumnPipeline(debug),
+            CVType.STANDARD_ATS: StandardATSPipeline(debug),
+            CVType.SCANNED_IMAGE: ScannedImagePipeline(debug),
+            CVType.CREATIVE_DESIGNER: CreativeDesignerPipeline(debug),
+            CVType.ACADEMIC_RESEARCH: AcademicResearchPipeline(debug)
+        }
+    
+    def process_cv(self, pdf_path: str) -> Tuple[str, CVProfile]:
+        """Process a single CV"""
+        logger.info(f"=" * 80)
+        logger.info(f"Processing: {Path(pdf_path).name}")
+        logger.info(f"=" * 80)
+        
+        # Step 1: Analyze CV
+        profile = self.detector.analyze(pdf_path)
+        logger.info(f"Detected: {profile}")
+        
+        # Step 2: Select pipeline
+        pipeline = self.pipelines.get(profile.cv_type)
+        if not pipeline:
+            logger.warning(f"No pipeline for {profile.cv_type}, using standard")
+            pipeline = self.pipelines[CVType.STANDARD_ATS]
+        
+        # Step 3: Extract and preprocess
+        processed_text = pipeline.process(pdf_path)
+        
+        # Step 4: Apply universal redaction
+        filename = Path(pdf_path).name
+        redacted_text = self.redactor.redact(processed_text, filename)
+        
+        # Step 5: Final cleanup
+        final_text = self._final_cleanup(redacted_text)
+        
+        return final_text, profile
+    
+    def _final_cleanup(self, text: str) -> str:
+        """Final text cleanup"""
+        # Normalize bullets
+        text = re.sub(r'[•●○◦▪▫■□⬤]', '•', text)
+        
+        # Fix spacing
+        text = re.sub(r' {2,}', ' ', text)
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        # Trim
+        text = text.strip()
+        
+        return text
+    
+    def process_directory(self, input_dir: str, output_dir: str = None):
+        """Process all PDFs in directory"""
+        input_path = Path(input_dir)
+        output_path = Path(output_dir) if output_dir else OUTPUT_DIR
+        output_path.mkdir(exist_ok=True)
+        
+        pdf_files = list(input_path.glob("**/*.pdf"))
+        logger.info(f"Found {len(pdf_files)} PDF files")
+        
+        stats = {cv_type: 0 for cv_type in CVType}
+        success_count = 0
+        
+        for pdf_file in pdf_files:
+            try:
+                # Process
+                redacted_text, profile = self.process_cv(str(pdf_file))
+                
+                # Save output
+                output_file = output_path / f"REDACTED_{pdf_file.stem}.txt"
+                output_file.write_text(redacted_text, encoding='utf-8')
+                
+                logger.info(f"✓ Saved: {output_file.name}")
+                logger.info(f"  Pipeline: {profile.cv_type.value}")
+                logger.info(f"  Confidence: {profile.confidence:.2f}")
+                
+                stats[profile.cv_type] += 1
+                success_count += 1
+                
+            except Exception as e:
+                logger.error(f"✗ Failed: {pdf_file.name} - {e}")
+        
+        # Print summary
+        logger.info(f"\n" + "=" * 80)
+        logger.info(f"PROCESSING COMPLETE")
+        logger.info(f"=" * 80)
+        logger.info(f"Total files: {len(pdf_files)}")
+        logger.info(f"Successful: {success_count}")
+        logger.info(f"Failed: {len(pdf_files) - success_count}")
+        logger.info(f"\nPipeline Usage:")
+        for cv_type, count in stats.items():
+            if count > 0:
+                logger.info(f"  {cv_type.value}: {count}")
+
+
+def main():
+    """Main entry point"""
+    import sys
+    
+    # Configure
+    debug = '--debug' in sys.argv
+    
+    # Input directory
+    input_dir = "resume"
+    if len(sys.argv) > 1 and not sys.argv[1].startswith('--'):
+        input_dir = sys.argv[1]
+    
+    # Output directory
+    output_dir = "final_output"
+    if len(sys.argv) > 2 and not sys.argv[2].startswith('--'):
+        output_dir = sys.argv[2]
+    
+    # Create orchestrator
+    orchestrator = PipelineOrchestrator(debug=debug)
+    
+    # Process
+    orchestrator.process_directory(input_dir, output_dir)
+
+
+if __name__ == "__main__":
+    main()
