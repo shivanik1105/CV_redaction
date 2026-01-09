@@ -1,4 +1,7 @@
 [NAME]
+
+Profile Summary
+
 Contact
 
 R
@@ -20,7 +23,8 @@ Location
 [LOCATION]
 
 [LOCATION][LOCATION]
-with over 9 years of experience
+
+Senior Android Developer with over 9 years of experience
 in software and mobile development in a broad range of industries including B2B, Order management, E Commerce
 and automotive. Solid understanding of full mobile and [NAME] (SDLC) including Waterfall
 and Agile methodologies. Well conversant with version control including CVS, SVN and Git. Familiar with third party
@@ -40,7 +44,12 @@ Android SDK
 • 
 
 MVP, MVVM
-2024
+
+Cerence
+
+Senior Software Engineer
+
+Sep 2024
 ↑
 Apr 2022
 • 
@@ -74,7 +83,20 @@ minimizing driver distraction.
 without modifying the underlying system code.
 • Implement automotive-specific features such as voice
 input, predictive text, and specialized automotive vocabularies.
-2022
+
+English
+
+Fluent
+
+Hindi
+
+Fluent
+
+Infosys
+
+Technology Analyst
+
+Apr 2022
 ↑
 Sept 2021
 • Working as a Technology Analyst to design and build advanced applications for the Android platform in both Java
@@ -82,6 +104,11 @@ and Kotlin.
 • To collaborate with cross-functional teams to define, design, and ship new features.
 • Work with outside data sources and API’s.
 • Work on bug fixing and improving application performance
+
+Altran Technologies
+
+Senior Software Engineer
+
 Aug 2021
 ↑
 Nov 2018

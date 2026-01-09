@@ -75,7 +75,7 @@ Experienced in implementation ERP systems - Maximo(PM & MM module), SAP(PM&
 MM module), Oracle(Prodcution management module). Implemented quantEffect
 (OEE monitoring tool), quantPredict(Condition monitoring tool).
 
-to provide complete project management services for execution of
+Led Project Teams to provide complete project management services for execution of
 assigned projects from inception to completion & handover
 
 Project Engineering: managing technical integrity of all project deliverables (including
@@ -114,7 +114,7 @@ Conveyor System, Compressors and Utilities-Boiler, waste treatment plant, water,
 
 Administering functions including Maintenance Budgeting (OPEX & CAPEX), Analysis of
 Deviations, Annual PM Plan Development, Equipment Scheduling & Optimization,
-& Optimization and Continuous Improvements (quality/
+Spare Parts Maintenance & Optimization and Continuous Improvements (quality/
 cost/ safety)
 
 Maintaining key performance indicators (KPIs) - Availability, MTTR, MTBF &
@@ -126,6 +126,7 @@ repairing equipment, supervising engineering & technical staff, obtaining specia
 components, fixtures or fittings and managing budgets & records
 
 Managing functions including Risk Assessment Documentation, LOTO Procedures &
+
 
 Dealing with Sub-contracting Teams to execute client projects in coordination with
 
@@ -169,7 +170,7 @@ installation
 Implemented - destructive roller project and mist project for optimizing quench
 system to improve productivity of extrusion press
 
-and successfully availed Coc renewals
+Implemented Natural Gas Sustainability Project and successfully availed Coc renewals
 and ADNOC Noc approvals
 Aug’15 – Jul’18: Srinivasa Farms Private Limited, [LOCATION][LOCATION]
 
@@ -238,7 +239,7 @@ Highlights:
 Implemented RGL system for finish mill rolls to improve it’s tonnage
 
 Represented Jindal stainless limited in IOCL steel meet -2014 -”Presented on plant
-- Implementation Roll Gap Lubrication Systems”
+Performance Improvement Project - Implementation Roll Gap Lubrication Systems”
 May’10 – Oct’12: Welspun Corp. Ltd. (Steel Rolling Mill), [LOCATION][LOCATION]
 Engineer (Mechanical Maintenance)
 Role:

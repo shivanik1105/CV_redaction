@@ -19,6 +19,11 @@ MULESOFT DEVELOPER
 EXPERIENCE
 
 3 Years 0 Month
+
+Profile Summary
+
+Key Skills
+
 SQL
 
 AWS
@@ -34,14 +39,39 @@ individual with a pleasant personality.
 Java
 
 [NAME]
-Developer
-Pvt Ltd
+
+Work Experience
+
+Software Design
+
+Mulesoft Developer
+
+Java Spring Boot
+
+Xcaliber Infotech Pvt Ltd
 
 Software Engineering
 
 07/2021 - Present
-Oriented
+
+Database Handling
+
+Application Development
+
+Object Oriented
+
+Programming
+
+Spring Boot
+
+Mulesoft Anypoint
+
 Mule ESB
+
+Mulesoft Integration
+
+Mulesoft Anypoint Platform
+
 Certification
 
 MuleSoft Certified

@@ -65,8 +65,14 @@ RTOS
 Agile Methodology
 
 • 
+
+Version Control Tools
+
 (Git/ClearCase)
-Disk India Device Design Centre Pvt. Ltd | Bengaluru
+
+Staff Engineer
+
+SanDisk India Device Design Centre Pvt. Ltd | Bengaluru
 2022 – Present
 • 
 Lead the design, development, and maintenance of
@@ -110,7 +116,12 @@ Travel / Hiking
 Volunteering
 
 • 
-Pvt. Ltd. | Bengaluru
+
+Meditation
+
+Software Technologist
+
+Philips India Pvt. Ltd. | Bengaluru
 2021 – 2022
 • 
 Designed and executed unit, integration, and system
@@ -146,7 +157,10 @@ developing documentation, flowcharts, layouts,
 diagrams, charts, code comments and clear code.
 • 
 Tech: C++, Python, Multithreading, Boost
-[LOCATION]Pvt. Ltd.| [LOCATION]
+
+Software Engineer
+
+Scientific Games [LOCATION]Pvt. Ltd.| [LOCATION]
 2016 – 2019
 • 
 
@@ -172,6 +186,9 @@ completing related results as needed.
 Tech: C language, C++, C#. Net, Socket Programming,
 
 TCP/IP, UDP
-[LOCATION]Pvt. Ltd. | [LOCATION]
+
+Intern
+
+Alcatel Lucent [LOCATION]Pvt. Ltd. | [LOCATION]
 
 [REMOVED_SECTION_EDUCATION]

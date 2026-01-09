@@ -1,5 +1,6 @@
 [REDACTED_NAME]
-, [NAME] with excellent critical thinking and team-building
+
+Industrious Senior Consultant, [NAME] with excellent critical thinking and team-building
 talents Familiar with the policies and procedures of product development and operations.
 Competent in staff management and proposal development.
 
@@ -10,8 +11,14 @@ Python| [NAME]| APIs| Flask| Django| Design patterns| [NAME]|
 Azure| OpenSTack| OpenShift| Kubernetes| Linux| Windows| OpenSource
 Contributions| Go| MySQL| MongoDB| Cassandra| [NAME]| Project
 Management| [NAME]
-2023 -
-& Team Lead
+
+Work History
+
+May 2023 -
+
+Current
+
+Senior Consultant & Team Lead
 
 InfoBeans, Pune
 Developed the code to get the continuous health checked, configuration
@@ -25,15 +32,17 @@ Node JS.
 Platforms used - Linux, Windows, MAC
 Apr 2021 -
 Apr 2023
-India Pvt. Ltd, Pune
+
+Red Hat India Pvt. Ltd, Pune
 Wrote APIs to change the behavior of OpenShift APIs as per the customer's
 requirement.
 Integrated multiple stacks of Red Hat, as per the scenario.
 Link - https://github.com/piqe-test-libraries/piqe-ocp-lib.
 Tech stack used - Python, REST APIs, Django, OpenShift, AWS, Azure,
 Docker, Kubernetes, Ansible, Pandas.
-with 10+ years of Experience
-9921376482
+Lead Software Engineer with 10+ years of Experience
+
+Phone 9921376482
 E-mail anandprakash44@gmail.com
 
 LinkedIn
@@ -54,7 +63,8 @@ pipelines, Docker, Kubernetes, HashiCorp Vault.
 Platforms used - Linux, Windows.
 Jun 2016 -
 Sep 2019
-India Pvt. Ltd., Pune
+
+Red Hat India Pvt. Ltd., Pune
 Developed a product to certify different components of OpenStack like
 cinder, manila, neutron etc
 Checked the insights of the customers and manipulate it as per the
@@ -63,7 +73,8 @@ Tech stack and tools - Python, BDD framework, Jenkins, Django, REST APIs,
 Jenkins, tempest, numpy, pandas, seaborn
 Jun 2015 -
 Jun 2016
-, Pune
+
+Izel Technologies, Pune
 Developed a product that was a wrapper on top of different OpenStack
 services to execute different apps on the cloud. Contributed in an Open
 Source project.
@@ -83,5 +94,8 @@ Gained hands-on experience in various software programs, increasing
 proficiency and expanding technical skill set.
 
 [REMOVED_SECTION_EDUCATION]
-in Containerized Applications| Red Hat Certified
+
+Certifications
+
+Red Hat Certified Developer in Containerized Applications| Red Hat Certified
 System administrator| Crucial conversations| GO basics

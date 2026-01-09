@@ -1,4 +1,5 @@
 [NAME]
+
 A highly motivated person with strong technical, team player and problem solving skills who like to
 enhance a potential and apply technical knowledge while facing new challenges, resulting in growth and
 development of company.
@@ -23,6 +24,7 @@ Blazor
 MVC 5
 
 WebAPI
+
 IBM
 
 [NAME]
@@ -50,7 +52,12 @@ Agile
 SOAPUI
 
 VisualStudio
-and maintained scalable web applications using
+
+Fiddler
+
+Documentation
+
+Developed and maintained scalable web applications using
 ASP. NET MVC, adhering to best practices and design
 patterns.
 Designed and implemented RESTful Web APIs using ASP. NET
@@ -97,13 +104,19 @@ LANGUAGES
 
 Implemented client-side scripting using jQuery to enhance
 user interactivity and responsiveness.
-ﬁciency
+
+English
+
+Full Professional Proﬁciency
 German (A1)
 Elementary Proﬁciency
 Integrated third-party APIs/In-house services into web
 applications, expanding functionality and improving user
 experience.
-ﬁciency
+
+Hindi
+
+Professional Working Proﬁciency
 
 Marathi
 

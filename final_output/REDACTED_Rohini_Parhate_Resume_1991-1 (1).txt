@@ -1,4 +1,5 @@
 [REDACTED_NAME]
+
 thinking solutions to tomorrow's productivity problems. Resourceful and adaptable approach to
 challenges.
 
@@ -11,7 +12,10 @@ challenges.
 [REDACTED_SOCIAL]
 
 WORK EXPERIENCE
-LLP
+
+Senior Software Engineer
+
+Luxoft LLP
 
 07/2022 - Present,
 Banglore, India
@@ -114,4 +118,4 @@ Achievements/Tasks
 Achievements/Tasks
 Achievements/Tasks
 Evolveware Inc | MedERP (01/2015 - 12/2015)
-offering 7 years of experience. Enthusiastic about developing forward01/2015 - 12/2015
+Senior Software Engineer offering 7 years of experience. Enthusiastic about developing forward01/2015 - 12/2015

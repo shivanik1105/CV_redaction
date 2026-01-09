@@ -1152,21 +1152,41 @@ class PipelineOrchestrator:
     
     def _final_cleanup(self, text: str) -> str:
         """Final cleanup"""
-        # Don't remove potential year digits that might be part of dates
-        text = re.sub(r'(?m)^\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+){2,4}\s*', '', text)
-        # Remove single digit page numbers, but NOT "2" that might be part of a year
+        # Remove name-like patterns, but preserve job titles in experience section
         lines = text.split('\n')
         cleaned = []
+        in_experience = False
+        
         for i, line in enumerate(lines):
+            line_lower = line.strip().lower()
+            
+            # Track if we're in experience section
+            if 'work experience' in line_lower or 'professional experience' in line_lower:
+                in_experience = True
+            elif any(section in line_lower for section in ['education', 'skills', 'certification', 'projects', 'achievements']):
+                in_experience = False
+            
+            # Skip name removal if in experience section
+            if in_experience:
+                cleaned.append(line)
+                continue
+            
+            # Remove name-like patterns outside experience section
+            if re.match(r'^\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+){2,4}\s*$', line):
+                continue
+            
             # Skip removing if line is just "2" and next line looks like partial date
             if re.match(r'^\s*2\s*$', line) and i + 1 < len(lines):
                 if re.match(r'^\s*0\d{2}-\d{2}\s*$', lines[i + 1]):
                     cleaned.append(line)
                     continue
+            
             # Remove other single digit lines (page numbers)
             if re.match(r'^\s*\d\s*$', line):
                 continue
+            
             cleaned.append(line)
+        
         text = '\n'.join(cleaned)
         
         text = re.sub(r'[•●○◦▪▫■□⬤]', '•', text)

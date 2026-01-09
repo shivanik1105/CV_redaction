@@ -10,7 +10,8 @@ Developer, Citrix Command Center, Liaison EDI
 Notepad
 
 CLIENT SPECIFIC TOOLS
-, Service Now, GitLab,
+
+Citrix Command Center, Service Now, GitLab,
 Microsoft SharePoint, Solman
 1. Company : Infosys Limited
 Project Name : Roche Aspire
@@ -55,7 +56,7 @@ Experience in communicating with trading partners, sending documents through VAN
 SFTP, FTP.
 
 • 
-for Partners for EMEA and NALA.
+Configured Communication Profiles for Partners for EMEA and NALA.
 • 
 Developed and deployed Maps & Business process , resulting in a 30% reduction in system errors and
 improving application performance by 25%
@@ -100,7 +101,7 @@ Deployment and validation of monitoring agents for B2B Applications.
 Work closely with business partners & trading partners on EDI setups and testing to ensure error-free
 data transmission.
 • 
-and preventive measures to ensure On-Time Delivery with Highest Quality.
+Taking Corrective Actions and preventive measures to ensure On-Time Delivery with Highest Quality.
 
 Duration
 
@@ -132,7 +133,7 @@ EDI Development/Support for IBM’s customers.
 • 
 Developed map as per customer requirement.
 • 
-with SAP and Oracle
+Integrating Sterling Integrator with SAP and Oracle
 • 
 Implemented the Release Management for the customer. Created the processing rules for Order
 Management level. Communicated the Translators and end customer for SPSI and SSSI transactions.

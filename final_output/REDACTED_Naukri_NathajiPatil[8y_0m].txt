@@ -53,7 +53,20 @@ Visual studio 10/12/13/15 to 22
 Selenium, RPA
 
 PROFESSIONAL EXPERIENCE:
--2022
+
+Name Of The
+
+Designation
+
+Technologies
+
+From
+
+To
+
+Company
+
+Feb-2022
 
 Present
 
@@ -65,6 +78,11 @@ C#, . Net Framework, . Net Core,
 Web API, Sql Database, Angular
 Web Services, Visual Studio
 C#, . Net Framework, . Net Core, Web API, Sql
+
+Infosys Limited
+
+Technology
+
 MAR-2019
 
 Feb-2022
@@ -149,7 +167,10 @@ C#, . Net Framework, . Net Core, Web Api, Sql Database, Web Services, Visual
 Studio, RPA
 
 [NAME]
-and Responsibilities
+
+Technology Analyst
+
+Roles and Responsibilities
 
 • Requirement Gathering and Estimation preparation.
 • Managing application development, testing and deployment
@@ -175,7 +196,10 @@ Environment
 Angular, C#, . Net Framework, Sql Database, Web Services, Visual Studio
 
 [NAME]
-and Responsibilities
+
+Technology Analyst
+
+Roles and Responsibilities
 
 • Requirement Gathering.
 • Build end to end Web application and deployed on server.
@@ -189,7 +213,10 @@ Title
 
 April-2015
 Aug-2018
-is a product developed and maintained by Aloha
+
+Information
+
+Faronics Web Console is a product developed and maintained by Aloha
 technology. It is a web console containing multiple products like Deep freeze
 cloud, Antivirus, Anti-Executable, DeepFreeze On Demands, WinSelect,
 Campus affairs, MDM, Faronics Core Etc.
@@ -208,7 +235,10 @@ PROJECT 5: Aloha Technology Pvt. Ltd.
 Title
 
 [NAME]
-system has been a demo project, containing
+
+Information
+
+Employee Management system has been a demo project, containing
 Employee and Department details. The project has been developed for
 management and maintenance of Employee and department. This is CRUD
 application developed using JAVA technology (Spring MVC) .

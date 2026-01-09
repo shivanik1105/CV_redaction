@@ -15,7 +15,10 @@ exceptional Analytical and critical thinking skills. Delivering a proactive appr
 and the ability to function will in fast-paced/deadline-driven team environments.
 
 SKILLS
-platforms like [NAME],
+
+Python Programming
+
+Cloud platforms like [NAME],
 Microsoft Azure, Terraform, GCP ,
 Microservices, REST API's, HTTP REQUEST
 FastApi, Flask, Django, FastAPI, Pyspark, Streamlit, Plotly-dash
@@ -24,14 +27,17 @@ AWS services like – AWS [NAME], Lambda,
 Jmeter, Rally, Azure DevOps, Elasticsearch
 S3, Ec2, ECS, SNS
 SQLite, PostgreSQL, SQL, MongoDB
-, Excel and PowerPoint
+Advance Microsoft Office, Excel and PowerPoint
 
 Fluent with English speaking and writing
 
 Html, css, Javascript, React.js
 
 PROFESSIONAL EXPERIENCE
-Developer, October 2023 – Present
+
+Springer Nature Publishing Technologies
+
+Python Developer, October 2023 – Present
 This project aims to build an automated system for journal abstraction and indexing, emphasizing efficiency, user-friendliness, and
 advanced analytics. It combines Python Django for the backend, HTML, JavaScript, AJAX, and CSS for the frontend, and MySQL for data
 management. Using Google Cloud Platform (GCP) for scalable storage of journal PDFs and Plotly Dash for dynamic dashboards, it offers

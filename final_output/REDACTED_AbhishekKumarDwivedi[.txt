@@ -85,6 +85,7 @@ Kernel driver and configuration
 Bootloader(u-boot, GRUB)
 Engineering practices:
 • 
+
 • 
 
 Product roadmap
@@ -163,7 +164,10 @@ and Samsung chipsets, systems of system concept design, PI and Scrum planning. S
 implementation based on NIST and ISO guidelines such as driven by TARA to implement controls.
 2020-07
 2021-07
-, India
+
+Principal Engineer
+
+Technicolor, India
 • 
 Leading Android TV framework development, working with chip vendors, Netflix leadership as technical
 SPOC and internal product lead (includes DRM, HDMI, power management, HAL, C++, JavaScript,
@@ -210,12 +214,18 @@ component from scratch to a google production standard design(UML) and coding(Ja
 dive into hardware interface, kernel module, microcontroller firmware, cloud interface.
 2013-09
 2015-01
-, India
+
+Principal Engineer
+
+Hughes Systique, India
 • 
 Android RIL, Telephony, Audio stack [C++, Java], Xen hypervisor, IoT, Audio codec and RFC.
 2011-09
 2013-09
-, India
+
+Lead Engineer
+
+Collabera, India
 • 
 Android bring-up, Automotive stack development
 [GRUB, U-Boot, Kernel, JNI, Java, C, Connectivity - Bluetooth, WiFi, board bring-up]
@@ -501,7 +511,8 @@ US market; Used Trace32 debugging tools with good understanding of
 ARM9 architecture, QXDM; was involved in extending interface layer,
 worked with L4 microkernel, RAM dump analysis for fixing low level
 crash issues.
-and RIL Changes
+
+Android Telephony Framework and RIL Changes
 
 Description: Code change estimation; modified RIL daemon and library
 to implement support call routing, within phone, between cellular

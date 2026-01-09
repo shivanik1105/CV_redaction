@@ -27,6 +27,11 @@ OOPS
 Multithreading
 
 multi processing
+
+Linux Development
+
+Docker
+
 PROFILE SUMMARY
 
 M. Tech. (honours) with 9+ years of C++ developments experience. I
@@ -56,19 +61,35 @@ Lead Engineer - Product
 Development
 
 M. Tech
+
+Rajiv Gandhi Proudyogiki Vishwavidyalaya
+
 (RGPV), Bhopal
 B. Tech/B. E.
+
+Rajiv Gandhi Proudyogiki Vishwavidyalaya
+
 (RGPV), Bhopal
 
 XIIth
-- Product Development
+
+Hindi
+
+Xth
+
+Hindi
+
+Lead Engineer - Product Development
 
 HARMAN
 
 C++ Linux development. cmake configuration, gtest
 and Design and develop automotive applications for
 Mrecedes-Benz and John Deere.
-Pvt Ltd
+
+Senior Software Engineer
+
+Worldline India Pvt Ltd
 
 C , C++, Oops, Socket Programming, IPC,
 Multithreading, File Handling, Shell Scripting, Shared
