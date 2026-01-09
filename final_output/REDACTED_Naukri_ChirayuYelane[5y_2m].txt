@@ -31,9 +31,9 @@ PROFESSIONAL EXPERIENCE
 Springer Nature Publishing Technologies
 
 Python Developer, October 2023 – Present
-This project aims to build an automated system for journal abstraction and indexing
-advanced analytics. It combines Python Django for the backend,
-management. Using Google Cloud Platform (GCP) for scalable storage of journal PDFs and
+This project aims to build an automated system for
+advanced analytics. It combines Python Django
+management. Using Google Cloud Platform (GCP)
 robust analytics. Tableau further enhances decision-making with advanced data visualization.
 Key Contribution:
 1. Journal Abstraction and Indexing
@@ -52,10 +52,6 @@ o Responsive UI with AJAX for smooth interactions.
 o Personalized dashboards and embedded PDF viewers.
 5. Analytics
 o Use Plotly Dash for sales, subscriptions, and user engagement insights
-Paytm(Paytm m’loyal)
-Software Engineer, June 2022 – August 2023
-m’loyal™ is an advanced mobile loyalty, data analytics, and precision marketing platform seamlessly integrating mobile
-technology, web-based CRM, and visual analytics. Designed to drive exceptional results for retail brands, it combines cuttingedge tools like PySpark for large-scale data processing, AWS cloud services for secure, scalable infrastructure, and
 advanced data management.
 The platform leverages machine learning algorithms and real-time analytics to empower marketers with personalized
 campaigns, improving customer engagement and maximizing ROI. Its hassle-free SaaS model ensures effortless deployment and

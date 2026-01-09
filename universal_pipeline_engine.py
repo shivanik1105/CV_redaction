@@ -1087,16 +1087,20 @@ class NaukriPipeline(BasePipeline):
                 # Analyze x-positions to find the gap between columns
                 x_positions = [elem['x0'] for elem in text_elements]
                 if x_positions:
-                    # Find natural split - look for gap in x-coordinates
+                    # Find natural split - look for the largest gap in x-coordinates
+                    # This gap represents the space between main content and sidebar
                     x_positions_sorted = sorted(set(x_positions))
                     max_gap = 0
-                    split_point = page_width * 0.60  # default
+                    split_point = page_width * 0.65  # default 65%
                     
                     for i in range(len(x_positions_sorted) - 1):
                         gap = x_positions_sorted[i + 1] - x_positions_sorted[i]
-                        if gap > max_gap and x_positions_sorted[i] > page_width * 0.4:
-                            max_gap = gap
-                            split_point = (x_positions_sorted[i] + x_positions_sorted[i + 1]) / 2
+                        # Look for gaps after at least 15% of page width (to avoid left margin)
+                        # and before 80% (to avoid right margin)
+                        if page_width * 0.15 < x_positions_sorted[i] < page_width * 0.80:
+                            if gap > max_gap and gap > 30:  # Minimum 30 pixel gap
+                                max_gap = gap
+                                split_point = (x_positions_sorted[i] + x_positions_sorted[i + 1]) / 2
                 
                 # Separate into left (main) and right (sidebar) columns
                 main_column = []
@@ -1165,6 +1169,7 @@ class NaukriPipeline(BasePipeline):
         skills_idx = -1
         sidebar_indices = []
         prof_exp_idx = -1
+        work_exp_idx = -1
         
         for i, line in enumerate(lines):
             line_stripped = line.strip()
@@ -1174,15 +1179,20 @@ class NaukriPipeline(BasePipeline):
                 sidebar_indices.append(i)
             if 'PROFESSIONAL EXPERIENCE' in line_stripped.upper() and prof_exp_idx == -1:
                 prof_exp_idx = i
+            if 'WORK EXPERIENCE' in line_stripped.upper() and work_exp_idx == -1:
+                work_exp_idx = i
         
-        # If we have main skills section and at least one sidebar, merge them
-        if skills_idx != -1 and sidebar_indices and prof_exp_idx != -1:
+        # Use either PROFESSIONAL EXPERIENCE or WORK EXPERIENCE as the insertion point
+        experience_idx = prof_exp_idx if prof_exp_idx != -1 else work_exp_idx
+        
+        # If we have sidebar(s) and an experience section, merge sidebar skills
+        if sidebar_indices and experience_idx != -1:
             # Collect all sidebar skills from all sidebar sections
             all_sidebar_skills = []
             
             for sidebar_idx in sidebar_indices:
-                # Find the end of this sidebar section (actual sidebar is ~10-12 lines max)
-                end_idx = min(sidebar_idx + 12, len(lines))  # Limit to 12 lines max
+                # Find the end of this sidebar section (need more lines for some CVs)
+                end_idx = min(sidebar_idx + 50, len(lines))  # Increased to capture full sidebar
                 for next_sidebar in sidebar_indices:
                     if next_sidebar > sidebar_idx:
                         end_idx = min(end_idx, next_sidebar)
@@ -1192,6 +1202,8 @@ class NaukriPipeline(BasePipeline):
                 
                 # Extract only skills, skip contact info and stop at job content
                 skills_section_active = False
+                in_sidebar_skills = False
+                
                 for line in sidebar_content:
                     line_lower = line.strip().lower()
                     line_stripped = line.strip()
@@ -1200,8 +1212,27 @@ class NaukriPipeline(BasePipeline):
                     if len(line_stripped) < 3:
                         continue
                     
-                    # Skip contact info patterns (first few lines)
-                    if any(x in line for x in ['@', '•']) or re.search(r'\d{5,}|linkedin|github', line, re.IGNORECASE):
+                    # Check if we've reached the Skills section in sidebar
+                    if line_stripped == 'Skills' or line_stripped == 'SKILLS':
+                        in_sidebar_skills = True
+                        continue
+                    
+                    # If we're in sidebar skills section, stop at Languages or other sections
+                    if in_sidebar_skills and (line_stripped in ['Languages', 'LANGUAGES', 'Education', 'EDUCATION', 'Certifications', 'CERTIFICATIONS']):
+                        break
+                    
+                    # If we're in sidebar skills section, extract skill lines
+                    if in_sidebar_skills:
+                        # Skip bullet markers and decorations
+                        if line_stripped in ['○', '•', '-', '>', '*']:
+                            continue
+                        # Extract the skill line (skip very short lines)
+                        if len(line_stripped) > 2 and line not in all_sidebar_skills:
+                            all_sidebar_skills.append(line)
+                            continue
+                    
+                    # Skip contact info patterns (before Skills section)
+                    if any(x in line for x in ['@', '•']) or re.search(r'\d{5,}|linkedin|github|phone|email|contact|location', line, re.IGNORECASE):
                         continue
                     
                     # Stop if we hit job-related content (company names, job titles, dates)
@@ -1237,9 +1268,9 @@ class NaukriPipeline(BasePipeline):
                                 all_sidebar_skills.append(line)
             
             # Now reconstruct document in correct order:
-            # 1. Everything before SKILLS section
-            # 2. SKILLS section with sidebar skills merged
-            # 3. PROFESSIONAL EXPERIENCE section and everything after (excluding sidebars)
+            # 1. Everything before experience section
+            # 2. SKILLS section (create if doesn't exist) with sidebar skills
+            # 3. EXPERIENCE section and everything after (excluding sidebars)
             
             result = []
             sidebar_ranges = []
@@ -1248,22 +1279,35 @@ class NaukriPipeline(BasePipeline):
             for sidebar_idx in sidebar_indices:
                 start = sidebar_idx
                 end = sidebar_idx + 1
-                # Skip contact and skill lines
-                for j in range(sidebar_idx + 1, min(sidebar_idx + 30, len(lines))):
+                # Skip ALL sidebar content until we hit main content or next sidebar
+                for j in range(sidebar_idx + 1, min(sidebar_idx + 100, len(lines))):
                     if j in sidebar_indices:
                         break  # Hit next sidebar
                     line_lower = lines[j].strip().lower()
-                    # Check if this is sidebar content (contact or skills)
+                    line_stripped = lines[j].strip()
+                    
+                    # Stop if we hit main section headers (Work experience, Professional Experience, Projects, etc.)
+                    if any(header in line_lower for header in ['work experience', 'professional experience', 'employment', 'projects', 'certifications']):
+                        break
+                    
+                    # Continue if this looks like sidebar content
                     is_sidebar_content = (
-                        any(x in lines[j] for x in ['@', '•']) or
-                        re.search(r'\d{5,}|linkedin|github', lines[j], re.IGNORECASE) or
-                        any(keyword in line_lower for keyword in ['cloud', 'aws', 'api', 'flask', 'django', 'framework', 'office', 'html', 'css', 'javascript', 'python', 'java', 'react', 'sql', 'mongodb', 'docker', 'kubernetes', 'azure', 'gcp']) or
-                        (len(lines[j].strip()) > 10 and (',' in lines[j] or 'and' in line_lower))
+                        len(line_stripped) < 3 or  # Empty or very short
+                        any(x in lines[j] for x in ['@', '•', '○']) or  # Contact markers or bullets
+                        re.search(r'\d{5,}|linkedin|github|phone|email|contact|location', lines[j], re.IGNORECASE) or  # Contact patterns
+                        line_stripped in ['Skills', 'SKILLS', 'Languages', 'LANGUAGES', 'Contact', 'CONTACT', 'R', 'Ó'] or  # Section headers or symbols
+                        any(keyword in line_lower for keyword in ['java', 'kotlin', 'python', 'javascript', 'react', 'angular', 'vue', 'node', 'express', 'django', 'flask', 'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'git', 'sql', 'mongodb', 'postgresql', 'mysql', 'html', 'css', 'api', 'rest', 'graphql', 'agile', 'scrum', 'mvvm', 'mvc', 'retrofit', 'volley', 'firebase', 'android', 'ios', 'swift', 'jetpack']) or  # Tech keywords
+                        (len(line_stripped) > 10 and ',' in lines[j]) or  # Comma-separated lists
+                        re.match(r'^[A-Z][a-z]+,\s*[A-Z][a-z]+', line_stripped)  # State, Country format
                     )
-                    if is_sidebar_content or len(lines[j].strip()) < 3:
+                    if is_sidebar_content:
                         end = j + 1
                     else:
-                        break  # Hit actual content
+                        # Check if this might be actual document content (paragraph text)
+                        if len(line_stripped) > 50 or (len(line_stripped) > 20 and not line_stripped[0].isupper()):
+                            break  # Likely document content
+                        # Otherwise, include it as sidebar content (might be skill continuation)
+                        end = j + 1
                 sidebar_ranges.append((start, end))
             
             # Add lines, skipping sidebar ranges
@@ -1272,11 +1316,20 @@ class NaukriPipeline(BasePipeline):
                 if any(start <= i < end for start, end in sidebar_ranges):
                     continue
                 
-                # Insert sidebar skills after SKILLS section (before PROF EXP)
-                if i == prof_exp_idx and all_sidebar_skills:
-                    result.append("")
-                    result.extend(all_sidebar_skills)
-                    result.append("")
+                # If we're at the experience section and have sidebar skills
+                if i == experience_idx and all_sidebar_skills:
+                    # If there's no main SKILLS section, create one
+                    if skills_idx == -1:
+                        result.append("")
+                        result.append("SKILLS")
+                        result.append("")
+                        result.extend(all_sidebar_skills)
+                        result.append("")
+                    else:
+                        # Insert skills before experience section (they're already in the main SKILLS section)
+                        result.append("")
+                        result.extend(all_sidebar_skills)
+                        result.append("")
                 
                 result.append(lines[i])
             

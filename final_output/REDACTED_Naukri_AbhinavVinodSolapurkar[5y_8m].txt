@@ -6,13 +6,36 @@ development of company.
 
 [LOCATION][LOCATION][LOCATION]
 
+Asp. Net C# Blazor MVC 5 WebAPI
+[LOCATION][NAME] HTML JavaScript jQuery
+
+SQL Azure Agile Unit Testing SOAPUI
+
+VisualStudio Fiddler Documentation
+
+PROJECT ACHIEVEMENTS
+
+SAMM Team
+
+Recognized for consistently delivering high-quality code and
+innovative problem-solving, contributing signiﬁcantly to project
+success and team performance.
+
+R&L Carriers
+
+Successfully navigated through complex code base to identify and
+resolve elusive bugs, enhancing system stability and user
+experience. Instrumental in architecting innovative solutions to
+intricate feature requests, optimizing performance and
+functionality while adhering to strict deadlines.
+
 WORK EXPERIENCE
 
 Senior System Engineer
 
 IBM
 
-12/2021 - Present , Pune
+12/2021 - Present ,
 Client- NBS (Banking Domain-UK)
 Achievements/Tasks
 Developed and maintained scalable web applications using
@@ -40,7 +63,7 @@ Software Engineer
 
 Capgemini
 
-04/2019 - 12/2021 , Navi [LOCATION]
+04/2019 - 12/2021 ,
 Client- R&L Carriers(Logistic Domain-[LOCATION])
 Achievements/Tasks
 Developed and maintained ASP. NET web applications,
@@ -58,23 +81,6 @@ issues in a timely manner.
 Assisted in the deployment and conﬁguration of web
 applications on production, staging servers, ensuring
 smooth and seamless deployment processes.
-
-[REDACTED_SOCIAL]
-
-SKILLS
-
-Asp. Net C# Blazor MVC 5 WebAPI
-
-Web Services HTML JavaScript jQuery
-
-SQL Azure Agile Unit Testing SOAPUI
-
-VisualStudio Fiddler Documentation
-
-PROJECT ACHIEVEMENTS
-
-SAMM Team
-
 Recognized for consistently delivering high-quality code and
 innovative problem-solving, contributing signiﬁcantly to project
 success and team performance.

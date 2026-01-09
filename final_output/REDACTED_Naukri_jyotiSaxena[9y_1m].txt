@@ -1,54 +1,53 @@
 [NAME]
 
-Senior Android Developer with over 9 years of experience R Email
+Profile Summary
 
-dustries including B2B, Order management, E Commerce
-
-ware [NAME] (SDLC) including Waterfall [REDACTED_PHONE]
-and Agile methodologies. Well conversant with version con- Location
-trol including CVS, SVN and Git. Familiar with third party  [LOCATION]
-libraries and tools like firebase, volley, proguard, eventbus, [LOCATION][LOCATION]
+Senior Android Developer with over 9 years of experience
+in software and mobile development in a broad range of industries including B2B, Order management, E Commerce
+and automotive. Solid understanding of full mobile and [NAME] (SDLC) including Waterfall
+and Agile methodologies. Well conversant with version control including CVS, SVN and Git. Familiar with third party
+libraries and tools like firebase, volley, proguard, eventbus,
 google analytics, Retrofit, glide, picasso.
 
-Skills
+SKILLS
+
+• Java, Kotlin
+• Android SDK
+
+• MVP, MVVM
+
+• Retrofit, Volley, Firebase
+• Version Control : GIT, SVN
+Android UI: Custom views, Android
+• activity, fragments, layouts
+• Agile methodologies: SCRUM
+• Android JetPack
+• Picasso, Glide
+• Design patterns
 
 Work experience
 
-• Java, Kotlin
-Sep 2024 Cerence • Android SDK
-↑ Senior Software Engineer • MVP, MVVM
-Apr 2022 • Retrofit, Volley, Firebase
+Sep 2024 Cerence
+↑ Senior Software Engineer
+Apr 2022
 • Working as a Senior Android Developer on a custom Input
-Method Editor (IME) for automotive applications. • Version Control : GIT, SVN
-• Involved in the design and development of a custom IME Android UI: Custom views, Android
-• activity, fragments, layouts
+Method Editor (IME) for automotive applications.
+• Involved in the design and development of a custom IME
 tailored for different clients including Audi, Porsche, VW
-etc, ensuring it meets the unique requirements of automo- • Agile methodologies: SCRUM
-tive environments, such as ease of use while driving and • Android JetPack
-minimizing driver distraction. • Picasso, Glide
-• Architect the IME to leverage RRO for customizing sys-
-• Design patterns
-tem resources such as layouts, themes, and string resources
+etc, ensuring it meets the unique requirements of automotive environments, such as ease of use while driving and
+minimizing driver distraction.
+• Architect the IME to leverage RRO for customizing system resources such as layouts, themes, and string resources
 without modifying the underlying system code.
-• Implement automotive-specific features such as voice Languages
-input, predictive text, and specialized automotive vocabularies. English
+• Implement automotive-specific features such as voice
+input, predictive text, and specialized automotive vocabularies.
 Apr 2022 Infosys
-↑ Hindi
-
-Technology Analyst
-
+↑ Technology Analyst
 Sept 2021
 • Working as a Technology Analyst to design and build advanced applications for the Android platform in both Java
 and Kotlin.
 • To collaborate with cross-functional teams to define, design, and ship new features.
 • Work with outside data sources and API’s.
 • Work on bug fixing and improving application performance
-
-Fluent
-
-Fluent
-
-Aug 2021 Altran Technologies
 ↑ Senior Software Engineer
 Nov 2018
 • Worked as a Senior Software Engineer in PremierOne

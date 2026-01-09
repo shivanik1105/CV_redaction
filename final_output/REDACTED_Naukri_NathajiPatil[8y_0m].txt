@@ -62,79 +62,40 @@ ADO. NET, WCF, FEB-2015
 Pvt Ltd. Developer
 JavaScript, JQuery, HTML,
 CSS, Bootstrap
-To
-
-Present
-
-Feb-2022
-
-AUG-2018
-
-[REMOVED_SECTION_EDUCATION]
-
-PROJECT DETAILS:
-
-PROJECT 1 : Atos
-Client Moody’s Analytics
-
-Project BVD Orbis
-
-Duration Of Project Feb-2022
-C#, . Net Framework, . Net MVC , Visual Studio
-
-Environment
-
 • Leaded some modules of the project
-Roles and Responsibilities -Involved in designing the framework
+• Involved in designing the framework
 • Writing code definitions.
 • Added Quality control attributes in the cshtml files for QA Understanding.
-PROJECT 2 : Infosys Limited.
 
-[NAME]
+Boeing Aerospace
 
-[NAME]
+Sales Order Creation
 
-Duration Of Project Dec-2019
+Dec-2019 Feb-2022
 C#, . Net Framework, . Net Core, Web Api, Sql Database, Web Services, Visual
-
-Environment
-
 Studio, RPA
+
+Technology Analyst
 
 • Requirement Gathering and Estimation preparation.
 • Managing application development, testing and deployment
-
-Roles and Responsibilities
-
 • Knowledge Sharing – Helped team members understand application
 architecture.
-PROJECT 3: Infosys Limited.
 
-Client Assistegde RPA
+Assistegde RPA
 
-Project KM Portal
+KM Portal
 
-Duration of Project March-2019
-Environment Angular, C#, . Net Framework, Sql Database, Web Services, Visual Studio
+March-2019 Dec-2019
+Angular, C#, . Net Framework, Sql Database, Web Services, Visual Studio
+
+Technology Analyst
 
 • Requirement Gathering.
-
-Roles and Responsibilities
-
 • Build end to end Web application and deployed on server.
-Marks %
-66.20 %
-62.28 %
-53.83 %
-65.20 %
-
-Ongoing
-
-Feb-2022
-Dec-2019
 PROJECT 4: Aloha Technology Pvt. Ltd.
 
-[NAME]
+Title Faronics Web Console
 
 Duration Of Project April-2015
 Information Faronics Web Console is a product developed and maintained by Aloha
@@ -153,7 +114,7 @@ Roles and Responsibilities
 • Test and Deploy the changes on the server
 PROJECT 5: Aloha Technology Pvt. Ltd.
 
-[NAME]
+Title Employee Management System
 
 Information Employee Management system has been a demo project, containing
 Employee and Department details. The project has been developed for

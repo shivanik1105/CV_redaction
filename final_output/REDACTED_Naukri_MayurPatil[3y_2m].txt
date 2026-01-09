@@ -52,47 +52,22 @@ integration solutions. - Ability to prepare
 
 English
 
-m
-
-[LOCATION][LOCATION]
-
-3 Years 0 Month
-g
-
-Hindi
-
-Social links
-
-n/mayur-patil96/
-
-[REMOVED_SECTION_EDUCATION]
-
-Projects
-
-comprehensive documentation, including API
 specifications and technical design
 documents. - Familiarity with MUnit testing for
-validating integration success and error
+Social links validating integration success and error
 scenarios. - Knowledge of API deployment to
+
 on-premises environments for seamless
+n/mayur-patil96/
 integration with client infrastructure. -
 
 Familiarity with Postman collections for testing
 
 HTTP methods.
-MBA/PGDM - Information Technology
-2021
 
-Centre for Development of Advanced
+[REMOVED_SECTION_EDUCATION]
 
-Computing (CDAC)
-B. Ed - Education
-2018
-[LOCATION]University
-10th
-2012
-[LOCATION], Marathi
-Grade - 80-84.9%
+Projects
 
 Midas
 
@@ -114,13 +89,11 @@ JS. ?? Ensured seamless migrations from
 legacy systems to modern platforms through
 meticulous planning, testing, and execution.
 ?? Mentored junior developers to improve
+their technical skills, fostering a culture of
+continuous learning within the team
 
 Odyssey
 
-Erasure
-
-their technical skills, fostering a culture of
-continuous learning within the team
 1063 Days
 It is company intranet system where is project
 management, HR management, employee
@@ -138,6 +111,8 @@ and code Build process. ?? Worked closely
 with others team members to plan design and
 
 Develop robust solution in timely manner
+
+Erasure
 
 610 Days
 It's a device data sanitization project
