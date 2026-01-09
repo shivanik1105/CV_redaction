@@ -20,8 +20,6 @@ continuous learning and improvement
 
 KEY SKILLS
 
-WORK EXPERIENCE
-
 • 
 C++ (11/14/17) and STL
 • 
@@ -66,10 +64,9 @@ Agile Methodology
 
 • 
 
-Version Control Tools
-
 (Git/ClearCase)
 
+WORK EXPERIENCE
 Staff Engineer
 
 SanDisk India Device Design Centre Pvt. Ltd | Bengaluru
@@ -107,47 +104,6 @@ components and processes.
 Tech: C++, Python, Multithreading, NVMe, PCIe,
 Windows Internals, HLD/LLD
 
-ACTIVITIES AND INTEREST
-
-• 
-Travel / Hiking
-• 
-
-Volunteering
-
-• 
-
-Meditation
-
-Software Technologist
-
-Philips India Pvt. Ltd. | Bengaluru
-2021 – 2022
-• 
-Designed and executed unit, integration, and system
-tests to ensure software quality and functionality.
-• 
-Implemented the use of design patterns and best
-practices in software development.
-• 
-Worked closely with product managers, designers, and
-other stakeholders to align software development with
-business goals.
-• 
-Tech: C++, Multithreading, Ultrasound Concepts
-
-Senior Engineer
-
-L&T Technology Services | Bengaluru
-2019 – 2021
-• 
-Developed, and maintain complex, efficient, reusable,
-and reliable code.
-• 
-Designed and executed unit, integration, and system
-tests to ensure software quality and functionality.
-• 
-Lead a team of developers, providing guidance and
 direction on projects.
 • 
 

@@ -2,51 +2,6 @@
 
 KEY SKILLS
 
-Automotive
-
-[NAME]
-
-C
-
-C++
-
-Linux
-
-UNIX
-
-c++ Programming
-
-Embedded C
-
-[NAME]
-
-STL
-
-OOPS
-
-Multithreading
-
-multi processing
-
-Linux Development
-
-Docker
-
-PROFILE SUMMARY
-
-M. Tech. (honours) with 9+ years of C++ developments experience. I
-have worked on Linux/Unix Rhel Debian applications. I have strong
-knowledge about C, C++, QMl, shell scripts and objective oriented
-programming ( Oops ). During my career I have worked on many
-complex projects in C & CPP and Multithreading, multi processing, IPC
-and socket programming in C++, having experience in working on
-scaled agile framework, gtest, Jenkins, GitLab, iso8582, ant, ci
-pipeline. Having experience in Payment Domain & Automotive Domain.
-
-[REMOVED_SECTION_EDUCATION]
-
-WORK EXPERIENCE
-
 Feb 2022 -
 
 Present
@@ -56,6 +11,7 @@ Nov 2018 - Feb
 
 [REDACTED_NAME]
 
+WORK EXPERIENCE
 Lead Engineer - Product
 
 Development

@@ -24,32 +24,11 @@ Profile Summary
 
 Key Skills
 
-SQL
-
-AWS
-
-3+ years experience in customer relationship
-and supply chain management. Adept at supply
-chain automation and Robotics automation.
-Proven track record of reversing customer pain
-points, especially during checkout. Team-player
-and an enthusiastic go-getter. Outgoing
-individual with a pleasant personality.
-
-Java
-
-[NAME]
-
-Work Experience
-
 Software Design
 
 Mulesoft Developer
 
-Java Spring Boot
-
-Xcaliber Infotech Pvt Ltd
-
+Work Experience
 Software Engineering
 
 07/2021 - Present

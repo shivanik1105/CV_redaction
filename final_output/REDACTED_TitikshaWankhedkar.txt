@@ -19,24 +19,6 @@ designer, [NAME] API manager, Connectors, AnyPoint API portal).
 and variables ofMule [NAME].
 • Good understanding of the [NAME] (SDLC)
 Technical Skills:
-Integration Technologies:
-Mulesoft (Mule4)
-API Tools:
-
-RAML, [NAME]
-
-Databases:
-MySQl, PostgreSql
-Version Control:
-GIT, GitHub
-Ticketing Tools:
-
-JIRA
-
-Testing Tools:
-
-POSTMAN
-
 Work Experience:
 • Infosys Limited – Total 2.5 years (MuleSoft Developer from April 2022 to till date)
 Details of Projects:

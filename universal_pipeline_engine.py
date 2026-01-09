@@ -1150,15 +1150,74 @@ class PipelineOrchestrator:
         
         return final_text, profile
     
+    def _reorganize_sections(self, text: str) -> str:
+        """Fix misplaced section content (e.g., skills appearing after WORK EXPERIENCE heading)"""
+        lines = text.split('\n')
+        
+        # Find KEY SKILLS and WORK EXPERIENCE positions
+        key_skills_idx = -1
+        work_exp_idx = -1
+        
+        for i, line in enumerate(lines):
+            line_lower = line.strip().lower()
+            if 'key skills' in line_lower or 'technical skills' in line_lower:
+                key_skills_idx = i
+            elif 'work experience' in line_lower or 'professional experience' in line_lower:
+                work_exp_idx = i
+                break
+        
+        # If WORK EXPERIENCE comes before we collect enough skills content, reorganize
+        if key_skills_idx != -1 and work_exp_idx != -1 and work_exp_idx < key_skills_idx + 50:
+            # Find where actual job title/company starts (Staff Engineer, Senior Engineer, etc.)
+            job_start_idx = work_exp_idx + 1
+            for i in range(work_exp_idx + 1, min(work_exp_idx + 100, len(lines))):
+                line = lines[i].strip()
+                # Job titles typically: "Staff Engineer", "Senior Engineer", etc.
+                if line and (re.match(r'^(Staff|Senior|Lead|Principal|Software|Junior|Mid-level)\s+(Engineer|Developer|Analyst|Manager|Architect)', line, re.IGNORECASE) or
+                           re.search(r'\d{4}\s*[–-]\s*(Present|\d{4})', line)):
+                    job_start_idx = i
+                    break
+            
+            # Extract skills bullets between WORK EXPERIENCE and actual job start
+            skills_content = lines[work_exp_idx + 1:job_start_idx]
+            
+            # Reorganize: KEY SKILLS + skills_content + WORK EXPERIENCE + rest
+            reorganized = (
+                lines[:key_skills_idx + 1] +  # Up to and including KEY SKILLS header
+                skills_content +                # Skills bullets
+                [lines[work_exp_idx]] +        # WORK EXPERIENCE header
+                lines[job_start_idx:]          # Actual job entries
+            )
+            return '\n'.join(reorganized)
+        
+        return text
+    
     def _final_cleanup(self, text: str) -> str:
         """Final cleanup"""
+        # First, reorganize any misplaced sections
+        text = self._reorganize_sections(text)
+        
         # Remove name-like patterns, but preserve job titles in experience section
         lines = text.split('\n')
         cleaned = []
         in_experience = False
+        skip_section = False
         
         for i, line in enumerate(lines):
             line_lower = line.strip().lower()
+            
+            # Skip entire ACTIVITIES, INTEREST, HOBBIES sections
+            if any(keyword in line_lower for keyword in ['activities and interest', 'hobbies', 'activities & interest', 'personal interest']):
+                skip_section = True
+                continue
+            
+            # End skip section when we hit a major section header
+            if skip_section and any(section in line_lower for section in ['work experience', 'professional experience', 'education', 'skills', 'certification', 'projects', 'achievements', 'technical skills', 'summary', 'objective']):
+                skip_section = False
+            
+            # Skip lines in skipped sections
+            if skip_section:
+                continue
             
             # Track if we're in experience section
             if 'work experience' in line_lower or 'professional experience' in line_lower:
