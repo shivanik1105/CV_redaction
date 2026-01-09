@@ -1,40 +1,174 @@
-multi processing PROFILE SUMMARY WORK EXPERIENCE Feb 2022 - Present Nov 2018 - Feb
+[REMOVED_SECTION_PERSONAL]
+
+KEY SKILLS
+
+Automotive
+
+[NAME]
+
+C
+
+C++
+
+Linux
+
+UNIX
+
+c++ Programming
+
+Embedded C
+
+[NAME]
+
+STL
+
+OOPS
+
+Multithreading
+
+multi processing
+PROFILE SUMMARY
+
+M. Tech. (honours) with 9+ years of C++ developments experience. I
+have worked on Linux/Unix Rhel Debian applications. I have strong
+knowledge about C, C++, QMl, shell scripts and objective oriented
+programming ( Oops ). During my career I have worked on many
+complex projects in C & CPP and Multithreading, multi processing, IPC
+and socket programming in C++, having experience in working on
+scaled agile framework, gtest, Jenkins, GitLab, iso8582, ant, ci
+pipeline. Having experience in Payment Domain & Automotive Domain.
+
+[REMOVED_SECTION_EDUCATION]
+
+WORK EXPERIENCE
+
+Feb 2022 -
+
+Present
+
+Nov 2018 - Feb
 2022
-Lead engineer - Product Development c++ 14 Payments CPP Qml Other PERSONAL DETAILS 631 Days
-668 Days Software Programmer Build linux / unix applic at ions using C, C++, shell
+
+[REDACTED_NAME]
+
+Lead Engineer - Product
+
+Development
+
+M. Tech
+(RGPV), Bhopal
+B. Tech/B. E.
+(RGPV), Bhopal
+
+XIIth
+- Product Development
+
+HARMAN
+
+C++ Linux development. cmake configuration, gtest
+and Design and develop automotive applications for
+Mrecedes-Benz and John Deere.
+Pvt Ltd
+
+C , C++, Oops, Socket Programming, IPC,
+Multithreading, File Handling, Shell Scripting, Shared
+Memory, STL, ant, Debian and rpm packages, gtest,
+authorization and switching, acquiring, ISO8583,
+payment domain, gtest.
+
+Jenkins
+
+Gitlab
+
+gtest
+c++
+
+Agile
+
+Scrum
+
+ISO8583
+
+c++ 11
+c++ 14
+
+Payments
+
+CPP
+
+Qml
+
+OTHER PERSONAL DETAILS
+
+City
+
+[LOCATION]
+
+Country
+
+[LOCATION]
+
+LANGUAGES
+
+english
+
+Hindi
+
+Feb 2017 - Nov
+2018
+Jun 2015 - Feb
+2017
+
+Projects
+
+631 Days
+668 Days
+
+[NAME]
+
+[NAME]
+
+Build linux / unix applications using C, C++, shell
 script., Unix, Multithreading, data structure and
 algorithms, socket programming, TCP & UDP Sockets,
 STL. Design, build, and maintain efficient, reusable,
 and reliable C++ code maintain Debian and Red hat
-packages and Other build Environment. Software Developer • >Build linux / unix applic at ions using C++ and QT
-Platform ->Designed, Coded, implemented and tested
-new features and Modules for the deriv at ives system
-• >perform special requests for different projects -
->Analyzed server side infr as tructure Including
+packages and other build environment.
+
+Software Developer
+
+[NAME]
+
+• >Build linux / unix applications using C++ and QT
+platform ->Designed, coded, implemented and tested
+new features and modules for the derivatives system
+• >Perform special requests for different projects -
+>Analyzed server side infrastructure including
 function calls for memory management, threads
-synchroniz at ion, multi threading, ->Create embedded
-applic at ions matching clients requirement ->system
+synchronization, multi threading, ->Create embedded
+applications matching clients requirement ->system
 programming for ubuntu and raspbian os for
 deployment in raspberrypi.
 HMI interface for NGPD and Gen 5 Displays
-??? Working for construction & Forestry Div is ion of
-John Deere automotive. ??? Worked for automotive
+??? Working for Construction & Forestry Division of
+John Deere automotive. ??? Worked for Automotive
 Displays for HMI Development in C++, User Interface
 (UI) Design in Qt/QML.
-PC Simul at ion (SOD and DMS)
+PC Simulation (SOD and DMS)
 ??? The Seat occupant detection (SOD) sub system in
-MPIC system is resp on sible to detect the occupancy
-detection/classific at ion of the occupants present in the vehicle. The system then communicates the
-occupancy related inform at ion to the Other
+MPIC system is responsible to detect the occupancy
+detection/classification of the occupants present in
+the vehicle. The system then communicates the
+occupancy related information to the other
 consumers connected over network. It also detects
 the presence of a human head near the roof for the
-rear middle occupant. ??? Driver Moni to ring System
+rear middle occupant. ??? Driver Monitoring System
 (DMS) is watching for driver face, eye blink, and
 mouth to monitor driver state, there are sever use
 case for safety reasons to detect if driver fells sleepy
-then warnto ECU. ??? PC simul at ion based on Vector
+then warn to ECU. ??? PC simulation based on Vector
 canoe we can see all input and output signal
-visualiz at ion on canoe graph for Analysis of both
+visualization on canoe graph for analysis of both
 subsystem SOD and DMS.
 214 Days
 578 Days
@@ -42,20 +176,56 @@ subsystem SOD and DMS.
 485 Days
 276 Days
 335 Days
-COURSES & CERTIFIC at IONS
+
+COURSES & CERTIFICATIONS
+
 WLP-FO Acquiring Australia
-WLP-FO is Standards framework for authoriz at ion &
-switching. Needto Create acquiring instance for
+WLP-FO is standards framework for authorization &
+switching. Need to create acquiring instance for
 Australia and New Zealand Banking Group Create an
-Interface Base 24 on ISO 8583 using WLPFO pro to col
+Interface Base24 on ISO8583 using WLPFO protocol
 guidelines. This interface can compose decompose
 validate different data element and send to authorizer
 service, and configure authorizer in such a way that
-after all checks it can able to switch out message to different scheme like Mastercard, Visa, Amex.
-WLP-FO Acquiring Magnus is a 20+ years old legacy SWITCH. It has
-some limit at ions which restricts scalability & flexibility
+after all checks it can able to switch out message to
+different scheme like Mastercard, Visa, Amex.
+WLP-FO Acquiring [LOCATION]
+Magnus is a 20+ years old legacy SWITCH. It has
+some limitations which restricts scalability & flexibility
 to rollout out new products & solutions at the
 expected pace in the market. Some of the
-Components in the technology stack are obsolete &
+components in the technology stack are obsolete &
 not in support by the OEMs as well Project is to
 gradually replace MAGNUS (SWITCH) by WLP-FO -
+Phase 1 : Visa/MasterCard acceptance (including
+BQR) and H2H interface (WLP-FO to TTMS) - Phase 2
+: RuPay/AmEx acceptance, ON-US interface to Issuer
+banks (onus transaction routing) and other H2H
+interface with partners
+eScan client & antivirus for corporate
+eScan client & antivirus for corporate contains all
+security solutions along with that it is developed for
+communicate with escan management server. eScan
+client gets the commands from management server
+and perform the action on client machine.
+eScan Antivirus For Linux
+eScan Antivirus for Linux Desktops is a
+comprehensive security solution designed and
+developed to protect your Linux machines from virus
+and other such cyber threats.
+
+[NAME]
+
+This application is used currently in many bank for
+check deposit pupose but we use raspberry-pi for
+executing this application for low cost and minimum
+space uses.
+
+[NAME]
+
+This machine provides change of coin from note (note
+to coin changer) in require denomination as per bank
+requirement. Currently this project lives in many
+leading banks like SBI, Canara, and ICICI.
+
+[NAME]

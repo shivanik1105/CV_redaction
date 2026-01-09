@@ -1,0 +1,53 @@
+{
+  "remove": {
+    "education": [
+      "education",
+      "academic",
+      "academics",
+      "qualification",
+      "qualifications",
+      "educational background",
+      "educ"
+    ],
+    "personal": [
+      "personal details",
+      "personal information",
+      "personal",
+      "hobbies",
+      "interests",
+      "languages known",
+      "language proficiency",
+      "extracurricular",
+      "pers on al"
+    ],
+    "declaration": [
+      "declaration"
+    ]
+  },
+  "preserve": [
+    "experience",
+    "work experience",
+    "professional experience",
+    "professional experiences",
+    "skills",
+    "technical skills",
+    "key skills",
+    "current role",
+    "roles",
+    "responsibilities",
+    "projects",
+    "project details",
+    "summary",
+    "profile",
+    "objective",
+    "career objective",
+    "certifications",
+    "achievements",
+    "programming",
+    "embedded firmware",
+    "embedded linux and os",
+    "engineering practices",
+    "others",
+    "product lifecycle management"
+  ]
+}

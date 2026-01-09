@@ -1,92 +1,145 @@
-PROFILE SUMMARY R
-Senior Android Developer with over 9 years of experience
-in software and mobile development in a broad range of in-
-dustries Including B 2 B, Order management, E Commerce
-and automotive. Solid underst and ing of full mobile and Soft-
-ware (SDLC) Including Waterfall
-and Agile methodologies. Well conversant with version con-
-trol Including CVS, SVN and Git. Familiar with third party
-libraries and Tools like firebase, volley, proguard, eventbus,
-google analytics, Retrofit, glide, picasso. Skills Work experience • Java, Kotlin
-• Android SDK • MVP, MVVM Cerence Senior Software engineer Sep 2024
+[NAME]
+Contact
+
+R
+
+Email
+
+[REDACTED_EMAIL]
+
+Ó
+
+Phone
+
+[REDACTED_PHONE]
+
+
+
+Location
+
+[LOCATION]
+
+[LOCATION][LOCATION]
+with over 9 years of experience
+in software and mobile development in a broad range of industries including B2B, Order management, E Commerce
+and automotive. Solid understanding of full mobile and [NAME] (SDLC) including Waterfall
+and Agile methodologies. Well conversant with version control including CVS, SVN and Git. Familiar with third party
+libraries and tools like firebase, volley, proguard, eventbus,
+google analytics, Retrofit, glide, picasso.
+
+Skills
+
+Work experience
+
+• 
+Java, Kotlin
+• 
+
+Android SDK
+
+• 
+
+MVP, MVVM
+2024
 ↑
 Apr 2022
-• Retrofit, Volley, Firebase
-• Version Control : GIT, SVN
-• Android UI: Custom views, Android
-activity, Fragments, layouts
-• Agile methodologies: SCRUM
-• • Picasso, Glide
-• Design patterns Apr 2022
+• 
+Retrofit, Volley, Firebase
+• 
+Version Control : GIT, SVN
+• 
+Android UI: Custom views, Android
+activity, fragments, layouts
+• 
+Agile methodologies: SCRUM
+• 
+
+Android JetPack
+
+• 
+Picasso, Glide
+• 
+
+Design patterns
+
+Languages
+
+• Working as a Senior Android Developer on a custom Input
+Method Editor (IME) for automotive applications.
+• Involved in the design and development of a custom IME
+tailored for different clients including Audi, Porsche, VW
+etc, ensuring it meets the unique requirements of automotive environments, such as ease of use while driving and
+minimizing driver distraction.
+• Architect the IME to leverage RRO for customizing system resources such as layouts, themes, and string resources
+without modifying the underlying system code.
+• Implement automotive-specific features such as voice
+input, predictive text, and specialized automotive vocabularies.
+2022
 ↑
 Sept 2021
-• Working as a Technology Analyst to design and build ad-
-vanced applic at ions for the Android Platform in both Java
+• Working as a Technology Analyst to design and build advanced applications for the Android platform in both Java
 and Kotlin.
-• To collaborate with cross-Functional teams to define, de-
-sign, and ship new features.
+• To collaborate with cross-functional teams to define, design, and ship new features.
 • Work with outside data sources and API’s.
-• Work on bug fixing and improving applic at ion perfor-
-mance Senior Software engineer Aug 2021
+• Work on bug fixing and improving application performance
+Aug 2021
 ↑
 Nov 2018
-• Worked as a Senior Software engineer in Premier One
+• Worked as a Senior Software Engineer in PremierOne
 Handheld team.
-• The applic at ion provides mapping, status updates, and
-Other dispatch/CAD features on the officer’s handheld de-
-vice.
+• The application provides mapping, status updates, and
+other dispatch/CAD features on the officer’s handheld device.
 • Resolution of defects, fixing crashes, improvement of UI.
-• Developed and executed test cases for new features devel-
-oped.
-• collaborated with Other teams for bug debugging and res-
-olution.
-• involving in the migr at ion of the existing legacy codebase
-to Kotlin, enhancing code quality, improving maintain-
-ability, and Leveraging Kotlin’s modern language features
-for better perform and safety.
-• Worked on view system, keyboard view, engine module of the Samsung keyboard for Android OS upgrade PROJECTS where we optimised the Modules and implement new fea-
-tures for better user experience.
-• implemented fuzzy search functi on ality for transliter at ion.
+• Developed and executed test cases for new features developed.
+• Collaborated with other teams for bug debugging and resolution.
+• Involved in the migration of the existing legacy codebase
+to Kotlin, enhancing code quality, improving maintainability, and leveraging Kotlin’s modern language features
+for better performance and safety.
+• Worked on view system, keyboard view, engine module of
+the Samsung keyboard for Android OS upgrade projects
+where we optimised the modules and implement new features for better user experience.
+• Implemented fuzzy search functionality for transliteration.
 DB improvement for different regional languages.
 • Checked and cross verified respective flag values for
 different version of mobile before release
-Pooraa (Sister Company of India MART)
-consultant
+Pooraa (Sister Company of IndiaMART)
+
+Consultant
+
 Nov 2018
 ↑
 Aug 2018
-• Developed an applic at ion from scratch that enables user
+• Developed an application from scratch that enables user
 to see stock availability, place orders, get updates on its
 status, download invoices and LR - on the go.
 • Identified user needs for the development of new features.
-• involving in Continuous improvement of features and func-
-tionalities to make the app user friendly.
-• Changed the UIto decrease the bounce rate.
-• Dynamic change in app’s UIto meet the market require-
-ment
-• Optimize the Interfacing of the apps with a variety of sys-
-tems to ensure flexible and agile use.
-• involving in unit testing and bug fixes to reduce any
-runtime crashes and bug free release on playstore. India MART Inter MESH Ltd Software Programmer Aug 2018
+• Involved in continuous improvement of features and functionalities to make the app user friendly.
+• Changed the UI to decrease the bounce rate.
+• Dynamic change in app’s UI to meet the market requirement
+• Optimize the interfacing of the apps with a variety of systems to ensure flexible and agile use.
+• Involved in unit testing and bug fixes to reduce any
+runtime crashes and bug free release on playstore.
+
+IndiaMART InterMESH Ltd
+
+[NAME]
+
+Aug 2018
 ↑
 Aug 2015
-• Was a part of the team that was involving in the develop-
-ment of new features and it’s existing Feature improvement
-to develop a user friendly applic at ion that enables millions
-of buyers sellers to connect with each Other to fulfil their
-business requirements and browse through 63 Mn prod-
-ucts services
-• Designed and build advanced features for the Android ap-
-plic at ion.
-• collaborated with cross-Functional teams to define, design,
+• Was a part of the team that was involved in the development of new features and it’s existing feature improvement
+to develop a user friendly application that enables millions
+of buyers sellers to connect with each other to fulfil their
+business requirements and browse through 63 Mn products services
+• Designed and build advanced features for the android application.
+• Collaborated with cross-functional teams to define, design,
 and ship new features
 • Worked with outside data sources and APIs
-• Worked on bug fixing and improving applic at ion perfor-
-mance
-• cont in uously worked towards achieving maximum devel-
-opment efficiency
+• Worked on bug fixing and improving application performance
+• Continuously worked towards achieving maximum development efficiency
 • Help maintain code quality
-• Coord in ate with team members to Create app in a coordi-
-nated and timely manner.
-• Ensure that apps are tested to meet total perform
+• Coordinate with team members to create app in a coordinated and timely manner.
+• Ensure that apps are tested to meet total performance
 requirements
+
+[REMOVED_SECTION_EDUCATION]

@@ -1,62 +1,117 @@
-Senior Software engineer thinking solutions to tomorrow's productivity problems. Resourceful and adaptable approach to challenges. WORK EXPERIENCE Senior Software engineer Luxoft LLP 07/2022 - Present,
-Banglore, Remote
+[REDACTED_NAME]
+thinking solutions to tomorrow's productivity problems. Resourceful and adaptable approach to
+challenges.
+
+[REDACTED_EMAIL]
+
+[REDACTED_PHONE]
+
+[LOCATION][LOCATION][LOCATION]
+
+[REDACTED_SOCIAL]
+
+WORK EXPERIENCE
+LLP
+
+07/2022 - Present,
+Banglore, India
+
+Remote
+
 Worked on multiple projects as a full stack developer.
 Experience in developing commercial legal and ﬁnance
 softwares using the Asp. Net CORE framework and Entity
 framework ORM.
 Also having experience in backend development using
 Asp. Net CORE for REST APIs and frontend development
-using Angular 13 and React JS 18. Software Developer 07/2018 - 07/2022, Remote Experience in developing commercial healthcare and ﬁnance
-software using the . NET Framework MVC Architecture and
+using Angular 13 and React JS 18.
+
+Software Developer
+
+[NAME]
+
+07/2018 - 07/2022,
+
+[LOCATION][LOCATION]
+
+[LOCATION]
+
+Experience in developing commercial healthcare and ﬁnance
+software using the . NET Framework MVC architecture and
 Entity framework.
 Worked on multiple projects as front end and back end
 developer.
-Hands of experience in Implementing Stripe payment
-Gateway, webhooks and web APIs.
-Experience in leading a team of 4-6 people. Software engineer Designing and Coding for the change requests for the
-applic at ion. SKILLS Framework: Asp. Net CORE 7, Asp. Net MVC, Angular 13
-Web: HTML, AJAX, CSS, JavaScript, TYPESCRIPT, React JS 18 Language: C#
+Hands of experience in implementing Stripe payment
+gateway, webhooks and web APIs.
+Experience in leading a team of 4-6 people.
+
+Software Engineer
+
+[NAME]
+
+[LOCATION][LOCATION]
+
+Designing and coding for the change requests for the
+application.
+
+[REMOVED_SECTION_EDUCATION]
+
+SKILLS
+
+Framework: Asp. Net CORE 7, Asp. Net MVC, Angular 13
+Web: HTML, AJAX, CSS, JAVASCRIPT, TYPESCRIPT, React
+
+JS 18
+
+Language: C#
 Database: SQL server 2019
 ORM: Dapper, Entity framework
 Payment Gateway: Stripe, Plaid
 Web Server: Amazon AWS
 Version Control: Git
-Project management Tools: JIRA, Slack, Trello, Basecamp PROJECTS Luxoft LLP | Legal Solution Suite (LSS)
+Project management tools: JIRA, Slack, Trello, Basecamp
+
+PROJECTS
+
+Luxoft LLP | Legal Solution Suite (LSS)
 (01/2023 - Present)
-LSS ia a software product provides end-to-end litig at ion
-management Solution that automates the processes.
+LSS ia a software product provides end-to-end litigation
+management solution that automates the processes.
 Worked on admin part which is used to manage matter, analyze
 invoices.
-Worked on Implementing the admin module using Asp. Net Core
+Worked on implementing the admin module using Asp. Net Core
 for APIs and Angular 13 for UI part.
-Also worked on complex admin sub module UI where using React JS 18. Luxoft LLP | Ultra (07/2023 - 12/2023)
-Worked on Zurich NA - Ultra applic at ion which is usedto Create and
-manage various policies where mainta in ing the current applic at ion.
-In this applic at ion policies can be created using diﬀerent products.
+Also worked on complex admin sub module UI where using React
+
+JS 18.
+
+Luxoft LLP | Ultra (07/2023 - 12/2023)
+Worked on Zurich NA - Ultra application which is used to create and
+manage various policies where maintaining the current application.
+In this application policies can be created using diﬀerent products.
 Policies can be quoted, booked, rebind and issue from this
-applic at ion.
-Worked on migr at ing the existing applic at ion using Asp. Net core
+application.
+Worked on migrating the existing application using Asp. Net core
 for APIs and Angular 13 for UI.
-Tudip Technologies | Boom Cloud (07/2018 - 07/2022)
-Worked on migr at ing the Asp. Net web form applic at ionto MVC.
-implemented a Stripe payment Gateway, Plaid API and webhooks
+Tudip Technologies | BoomCloud (07/2018 - 07/2022)
+Worked on migrating the Asp. Net web form application to MVC.
+Implemented a Stripe payment gateway, Plaid API and webhooks
 for payments using Asp. Net web API 2.
 Worked on frontend using Angular 13.
-Managed a team of 4 developers to maintain the applic at ion and
-release monthly software updates (client communic at ion).
-Tudip Technologies | Rupee Boss (06/2021 - 07/2022)
-Resp on sible for task identiﬁcation, work eﬀort estimates, and work
-schedules for development and Maintenance activities Estimate,
+Managed a team of 4 developers to maintain the application and
+release monthly software updates (client communication).
+Tudip Technologies | RupeeBoss (06/2021 - 07/2022)
+Responsible for task identiﬁcation, work eﬀort estimates, and work
+schedules for development and maintenance activities Estimate,
 plan and manage development tasks (lead a group of 4 developers).
-implemented Web API using Asp. Net web API 2 and UI using
+Implemented Web API using Asp. Net web API 2 and UI using
 Angular 13.
-Migrated existing applic at ionto Asp. NET MVC Architecture.
-Integrated Whats App APIs to implement Whats App chatbot.
-Worked on designing resp on sive web forms.
-Dapper ORM implement at ion.
+Migrated existing application to Asp. NET MVC architecture.
+Integrated WhatsApp APIs to implement WhatsApp chatbot.
+Worked on designing responsive web forms.
+Dapper ORM implementation.
 Achievements/Tasks
 Achievements/Tasks
 Achievements/Tasks
-Evolveware Inc | Med ERP (01/2015 - 12/2015)
-Senior Software engineer offering 7 years of experience. Enthusi as tic about developing forward-
-01/2015 - 12/2015
+Evolveware Inc | MedERP (01/2015 - 12/2015)
+offering 7 years of experience. Enthusiastic about developing forward01/2015 - 12/2015

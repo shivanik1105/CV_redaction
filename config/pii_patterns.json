@@ -1,0 +1,27 @@
+{
+  "email": {
+    "pattern": "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b"
+  },
+  "phone": {
+    "patterns": [
+      "\\(?\\+?\\d{1,3}\\)?[-\\.\\s]?\\(?\\d{2,4}\\)?[-\\.\\s]?\\d{3,4}[-\\.\\s]?\\d{3,4}",
+      "\\b\\d{10}\\b"
+    ]
+  },
+  "url": {
+    "pattern": "https?://[^\\s]+"
+  },
+  "social": {
+    "patterns": [
+      "linkedin\\.com/in/[\\w\\-]+",
+      "github\\.com/[\\w\\-]+"
+    ]
+  },
+  "demographics": {
+    "dob": "\\b(date of birth|dob|born on)\\s*:?\\s*[^\\n]+",
+    "gender": "\\b(gender|sex)\\s*:?\\s*(male|female|m|f)[^\\n]*",
+    "marital": "\\b(marital status)\\s*:?\\s*(single|married)[^\\n]*",
+    "age": "\\bage\\s*:?\\s*\\d{1,3}\\s*(years?|yrs?)?[^\\n]*",
+    "nationality": "\\bnationality\\s*:?\\s*(indian|american)[^\\n]*"
+  }
+}

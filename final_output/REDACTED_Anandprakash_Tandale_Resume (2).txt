@@ -1,52 +1,87 @@
-Industrious Senior consultant, with excellent critical thinking and team-building
-talents Familiar with the policies and procedures of product development and oper at ions.
-Competent in staff management and proposal development. Skills Python| APIs| Flask| Django| Design patterns|
-| Ansible| Jenkins| Docker| Kubernetes| AWS|
-Azure| Open STack| Open Shift| Kubernetes| Linux| windows| Open Source
-contributions| Go| My SQL| Mongo DB| Cassandra| Project
-Management|
-May 2023 - Current Senior consultant & Team Lead
-Info Beans, Developed the code to get the Continuous health checked, configur at ion
-details, and validate it with rules, and provide Suggestions.
+[REDACTED_NAME]
+, [NAME] with excellent critical thinking and team-building
+talents Familiar with the policies and procedures of product development and operations.
+Competent in staff management and proposal development.
+
+Skills
+
+Python| [NAME]| APIs| Flask| Django| Design patterns| [NAME]|
+[NAME]| [NAME]| Ansible| Jenkins| Docker| Kubernetes| AWS|
+Azure| OpenSTack| OpenShift| Kubernetes| Linux| Windows| OpenSource
+Contributions| Go| MySQL| MongoDB| Cassandra| [NAME]| Project
+Management| [NAME]
+2023 -
+& Team Lead
+
+InfoBeans, Pune
+Developed the code to get the continuous health checked, configuration
+details, and validate it with rules, and provide suggestions.
 Leading the team to meet the deadlines.
 Enhance the product as per the new requirements.
-Work with Product Manager, engineer Manager, and Directors to improve
+Work with Product Manager, Engineer Manager, and Directors to improve
 the products.
-Tech stack use - Python, Django, machine Learning algorithms, Jenkins,
+Tech stack use - Python, Django, machine learning algorithms, Jenkins,
 Node JS.
-platforms used - Linux, windows, MAC
+Platforms used - Linux, Windows, MAC
 Apr 2021 -
-Apr 2023 Senior Software engineer Red Hat Pvt. Ltd, Wrote APIs to change the behavior of Open Shift APIs as per the cus to mer's
+Apr 2023
+India Pvt. Ltd, Pune
+Wrote APIs to change the behavior of OpenShift APIs as per the customer's
 requirement.
 Integrated multiple stacks of Red Hat, as per the scenario.
-Link -
-Tech stack used - Python, REST APIs, Django, Open Shift, AWS, Azure,
+Link - https://github.com/piqe-test-libraries/piqe-ocp-lib.
+Tech stack used - Python, REST APIs, Django, OpenShift, AWS, Azure,
 Docker, Kubernetes, Ansible, Pandas.
-Lead Software engineer with 10+ years of Experience
+with 10+ years of Experience
+9921376482
+E-mail anandprakash44@gmail.com
+
+LinkedIn
+
+https://www.linkedin.com/in/anandpr
 akash-tandale-6
 Sep 2019 -
-Apr 2021 Software engineer SAP Labs Pvt. Ltd., Developed a code for the products are databases that are supposed to moveto AWS, Azure clouds from on-premises.
-contributed in bug fixes.
-Tech stack and Tools: Python, Azure, AWS, boto 3, Flask, Ansible, Jenkins
-pipelines, Docker, Kubernetes, Hashi Corp Vault.
-platforms used - Linux, windows.
+Apr 2021
+
+Software Engineer
+
+SAP Labs India Pvt. Ltd., Pune
+Developed a code for the products are databases that are supposed to
+move to AWS, Azure clouds from on-premises.
+Contributed in bug fixes.
+Tech stack and tools: Python, Azure, AWS, boto3, Flask, Ansible, Jenkins
+pipelines, Docker, Kubernetes, HashiCorp Vault.
+Platforms used - Linux, Windows.
 Jun 2016 -
-Sep 2019 Associate Software engineer Red Hat Pvt. Ltd., Developed a product to certify different Components of Open Stack like
+Sep 2019
+India Pvt. Ltd., Pune
+Developed a product to certify different components of OpenStack like
 cinder, manila, neutron etc
-Checked the insights of the cus to mers and manipulate it as per the
+Checked the insights of the customers and manipulate it as per the
 requirement
-Tech stack and Tools - Python, BDD framework, Jenkins, Django, REST APIs,
+Tech stack and tools - Python, BDD framework, Jenkins, Django, REST APIs,
 Jenkins, tempest, numpy, pandas, seaborn
 Jun 2015 -
-Jun 2016 Associate Software engineer Izel Technologies, Developed a product that was a wrapper on top of different Open Stack
-services to execute different apps on the Cloud. contributed in an Open
+Jun 2016
+, Pune
+Developed a product that was a wrapper on top of different OpenStack
+services to execute different apps on the cloud. Contributed in an Open
 Source project.
-Tech stack and Tools - Python, Django, Java, Open Stack, Jenkins, Ansible.
+Tech stack and tools - Python, Django, Java, OpenStack, Jenkins, Ansible.
 Jun 2014 -
-Nov 2014 Intern SAP Labs Developed the code to automate scenarios of the databases.
+Nov 2014
+
+Intern
+
+SAP Labs India, Pune
+Developed the code to automate scenarios of the databases.
 Supported staff members in their daily tasks, reducing workload burden
 and allowing for increased focus on higher-priority assignments.
-contributed to a positive team Environment by collabor at ing with fellow
-interns on group projects and present at ions.
-Gained hands-on experience in various software programs, incre as ing
-proficiency and exp and ing technical skill set.
+Contributed to a positive team environment by collaborating with fellow
+interns on group projects and presentations.
+Gained hands-on experience in various software programs, increasing
+proficiency and expanding technical skill set.
+
+[REMOVED_SECTION_EDUCATION]
+in Containerized Applications| Red Hat Certified
+System administrator| Crucial conversations| GO basics

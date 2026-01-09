@@ -1,17 +1,62 @@
-# Professional CV Anonymization System
+# Professional CV Anonymization System - Configuration-Driven ✨
+
+## 🎯 Zero Hardcoded Data
+
+**All rules now live in JSON config files!** Add cities, technical terms, and fix patterns **without touching code**.
+
+```
+config/
+├── locations.json          # Cities, states, countries  
+├── protected_terms.json    # Technical terms by category
+├── sections.json           # Sections to remove/preserve
+├── pii_patterns.json       # PII regex patterns
+└── text_healing.json       # Spacing fix rules
+```
+
+---
 
 ## 🚀 Quick Start
 
+### Process CVs (Configs auto-created on first run)
 ```bash
-# Process CVs from samples/ folder
+# Using the new CLI
+python cv_redaction_pipeline.py resume/ final_output/
+
+# With debug output
+python cv_redaction_pipeline.py resume/ final_output/ --debug
+
+# Or use the original runner
 python run_universal_pipeline.py
-
-# Or specify custom directories
-python run_universal_pipeline.py input_folder/ output_folder/
-
-# Enable debug mode
-python run_universal_pipeline.py --debug
 ```
+
+### Add New Data Without Coding
+```bash
+# Add locations
+python cv_redaction_pipeline.py add-city "San Francisco"
+python cv_redaction_pipeline.py add-state "California"
+
+# Add technical terms
+python cv_redaction_pipeline.py add-term "tensorflow"
+python cv_redaction_pipeline.py add-term "kubernetes" --category cloud
+
+# Fix spacing issues
+python cv_redaction_pipeline.py add-healing "administr at ion" "administration"
+
+# View current config
+python cv_redaction_pipeline.py list-config
+```
+
+### Or Edit JSON Directly
+```json
+// config/locations.json
+{
+  "cities": ["Pune", "Mumbai", "Boston"],  // Just add here!
+  "states": ["Maharashtra", "Karnataka"],
+  "countries": ["India", "USA"]
+}
+```
+
+📖 **See [CONFIG_USAGE.md](CONFIG_USAGE.md) for complete documentation**
 
 ---
 

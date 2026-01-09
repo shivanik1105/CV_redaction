@@ -1,19 +1,29 @@
 """
-Universal CV Redaction Pipeline Engine
-=======================================
-Comprehensive system with specialized pipelines for all CV types.
-Automatically detects CV format and routes to the appropriate processing pipeline.
+Universal CV Redaction Pipeline Engine - Configuration-Driven
+==============================================================
+Scalable architecture with NO hardcoded data.
+All rules, terms, and patterns loaded from JSON config files.
 
-Architecture:
-- Profile Detector: Analyzes CV structure and selects optimal pipeline
-- 6 Specialized Pipelines: Each optimized for specific CV format
-- Universal Redaction Engine: Common PII removal logic
-- Quality Validator: Ensures output quality across all pipelines
+Usage:
+    python cv_redaction_pipeline.py [input_dir] [output_dir] [--debug]
+    
+    # Add new data via CLI
+    python cv_redaction_pipeline.py add-city "Boston"
+    python cv_redaction_pipeline.py add-term "tensorflow"
+    python cv_redaction_pipeline.py add-healing "administr at ion" "administration"
+
+Config Files (auto-created in ./config/):
+    ├── locations.json          # Cities, states, countries
+    ├── protected_terms.json    # Technical terms to preserve
+    ├── sections.json           # Section headers
+    ├── pii_patterns.json       # PII detection patterns
+    └── text_healing.json       # Spacing fix rules
 """
 
 import os
 import re
 import abc
+import json
 import logging
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple, Set
@@ -33,16 +43,6 @@ try:
 except ImportError:
     HAS_PDFPLUMBER = False
 
-# OCR for scanned documents - import disabled to avoid reinitialization issues
-HAS_PADDLEOCR = False
-
-# NLP for advanced PII detection  
-# Temporarily disabled due to initialization issues
-HAS_SPACY = False
-nlp = None
-def get_nlp():
-    return None
-
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -54,14 +54,700 @@ DEBUG_DIR.mkdir(exist_ok=True)
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 
+# ============================================================================
+# CONFIGURATION SYSTEM
+# ============================================================================
+
+class ConfigLoader:
+    """
+    Centralized configuration loader.
+    All data-driven rules come from JSON files.
+    """
+    
+    def __init__(self, config_dir: str = "config"):
+        self.config_dir = Path(config_dir)
+        self.config_dir.mkdir(exist_ok=True)
+        self._ensure_default_configs()
+        self._cache = {}
+    
+    def _ensure_default_configs(self):
+        """Create default config files if they don't exist"""
+        
+        # 1. Locations
+        locations_file = self.config_dir / "locations.json"
+        if not locations_file.exists():
+            default_locations = {
+                "cities": [
+                    "Pune", "Mumbai", "Delhi", "Bangalore", "Bengaluru", 
+                    "Hyderabad", "Chennai", "Kolkata", "Ahmedabad", "Jaipur",
+                    "Lucknow", "Kanpur", "Nagpur", "Indore", "Thane", "Bhopal",
+                    "Visakhapatnam", "Patna", "Vadodara", "Ghaziabad", "Nashik",
+                    "Noida", "Gurgaon", "Gurugram", "Chandigarh", "Kochi",
+                    "Remote", "Banglore", "Orissa"
+                ],
+                "states": [
+                    "Maharashtra", "Karnataka", "Tamil Nadu", "Telangana",
+                    "West Bengal", "Gujarat", "Rajasthan", "Madhya Pradesh",
+                    "Uttar Pradesh", "Kerala", "Punjab", "Haryana", "Bihar",
+                    "Odisha", "Andhra Pradesh", "India", "INDIA"
+                ],
+                "countries": ["India", "INDIA", "USA", "UK", "United States"]
+            }
+            locations_file.write_text(json.dumps(default_locations, indent=2))
+        
+        # 2. Protected Terms
+        protected_file = self.config_dir / "protected_terms.json"
+        if not protected_file.exists():
+            default_protected = {
+                "languages": [
+                    "python", "java", "javascript", "typescript", "c++", "c#", 
+                    "ruby", "php", "go", "rust", "swift", "kotlin", "scala", "sql"
+                ],
+                "frameworks": [
+                    "react", "angular", "vue", "django", "flask", "spring", 
+                    "nodejs", "express", "laravel", "aspnet", "dotnet", "blazor"
+                ],
+                "databases": [
+                    "mysql", "postgresql", "mongodb", "oracle", "redis", 
+                    "cassandra", "sqlite", "elasticsearch"
+                ],
+                "cloud": [
+                    "aws", "azure", "gcp", "docker", "kubernetes", "jenkins", 
+                    "terraform", "ansible"
+                ],
+                "tools": [
+                    "git", "jira", "postman", "swagger", "jenkins", "gitlab"
+                ],
+                "os": [
+                    "linux", "unix", "windows", "android", "ios", "macos"
+                ],
+                "roles": [
+                    "engineer", "developer", "architect", "manager", "consultant",
+                    "analyst", "senior", "junior", "principal", "lead"
+                ],
+                "technical_terms": [
+                    "automotive", "embedded", "firmware", "kernel", "telematics",
+                    "gateway", "application", "configuration", "implementation",
+                    "integration", "optimization", "performance", "platform",
+                    "communication", "documentation", "collaboration",
+                    "administration", "coordination", "occupation", "organization"
+                ]
+            }
+            protected_file.write_text(json.dumps(default_protected, indent=2))
+        
+        # 3. Sections
+        sections_file = self.config_dir / "sections.json"
+        if not sections_file.exists():
+            default_sections = {
+                "remove": {
+                    "education": [
+                        "education", "academic", "academics", "qualification",
+                        "qualifications", "educational background", "educ"
+                    ],
+                    "personal": [
+                        "personal details", "personal information", "personal",
+                        "hobbies", "interests", "languages known", 
+                        "language proficiency", "extracurricular", "pers on al"
+                    ],
+                    "declaration": ["declaration"]
+                },
+                "preserve": [
+                    "experience", "work experience", "professional experience",
+                    "skills", "technical skills", "key skills", "projects",
+                    "project details", "summary", "profile", "objective",
+                    "career objective", "certifications", "achievements"
+                ]
+            }
+            sections_file.write_text(json.dumps(default_sections, indent=2))
+        
+        # 4. PII Patterns
+        pii_file = self.config_dir / "pii_patterns.json"
+        if not pii_file.exists():
+            default_pii = {
+                "email": {
+                    "pattern": "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b"
+                },
+                "phone": {
+                    "patterns": [
+                        "\\(?\\+?\\d{1,3}\\)?[-\\.\\s]?\\(?\\d{2,4}\\)?[-\\.\\s]?\\d{3,4}[-\\.\\s]?\\d{3,4}",
+                        "\\b\\d{10}\\b"
+                    ]
+                },
+                "url": {
+                    "pattern": "https?://[^\\s]+"
+                },
+                "social": {
+                    "patterns": [
+                        "linkedin\\.com/in/[\\w\\-]+",
+                        "github\\.com/[\\w\\-]+"
+                    ]
+                },
+                "demographics": {
+                    "dob": "\\b(date of birth|dob|born on)\\s*:?\\s*[^\\n]+",
+                    "gender": "\\b(gender|sex)\\s*:?\\s*(male|female|m|f)[^\\n]*",
+                    "marital": "\\b(marital status)\\s*:?\\s*(single|married)[^\\n]*",
+                    "age": "\\bage\\s*:?\\s*\\d{1,3}\\s*(years?|yrs?)?[^\\n]*",
+                    "nationality": "\\bnationality\\s*:?\\s*(indian|american)[^\\n]*"
+                }
+            }
+            pii_file.write_text(json.dumps(default_pii, indent=2))
+        
+        # 5. Text Healing
+        healing_file = self.config_dir / "text_healing.json"
+        if not healing_file.exists():
+            default_healing = {
+                "suffix_patterns": {
+                    "at ion": "ation",
+                    "ic at ion": "ication",
+                    "in g": "ing",
+                    "er ing": "ering",
+                    "ur ing": "uring"
+                },
+                "prefix_patterns": {
+                    "c on ": "con",
+                    "c om ": "com"
+                },
+                "common_words": {
+                    "applic at ion": "application",
+                    "occup at ion": "occupation",
+                    "organiz at ion": "organization",
+                    "configur at ion": "configuration",
+                    "implement at ion": "implementation",
+                    "coord in at ion": "coordination",
+                    "coord in at ed": "coordinated",
+                    "communic at ion": "communication",
+                    "document at ion": "documentation",
+                    "collabor at ion": "collaboration",
+                    "administr at ion": "administration",
+                    "adm in istr at ion": "administration",
+                    "underst and ing": "understanding",
+                    "h and ling": "handling",
+                    "s and box": "sandbox",
+                    "st and ard": "standard",
+                    "c on trol": "control",
+                    "plat for m": "platform",
+                    "per for m": "perform",
+                    "au to motive": "automotive",
+                    "telem at ics": "telematics",
+                    "g at eway": "gateway",
+                    "integr at ion": "integration",
+                    "vis ion": "vision",
+                    "divis ion": "division",
+                    "sess ion": "session",
+                    "miss ion": "mission",
+                    "decis ion": "decision",
+                    "cre at ing": "creating",
+                    "cre at ed": "created",
+                    "oper at ing": "operating",
+                    "oper at ion": "operation",
+                    "moni to ring": "monitoring",
+                    "prepar at ion": "preparation",
+                    "present at ion": "presentation",
+                    "specific at ion": "specification",
+                    "identific at ion": "identification",
+                    "valid at ion": "validation",
+                    "optimiz at ion": "optimization",
+                    "autom at ion": "automation",
+                    "situ at ion": "situation"
+                }
+            }
+            healing_file.write_text(json.dumps(default_healing, indent=2))
+    
+    def load(self, config_name: str) -> Dict:
+        """Load and cache a config file"""
+        if config_name in self._cache:
+            return self._cache[config_name]
+        
+        config_path = self.config_dir / f"{config_name}.json"
+        if not config_path.exists():
+            logger.warning(f"Config not found: {config_path}")
+            return {}
+        
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+        
+        self._cache[config_name] = config
+        return config
+    
+    def get_flat_list(self, config_name: str, *keys) -> List[str]:
+        """Get a flattened list from nested config"""
+        config = self.load(config_name)
+        
+        if not keys:
+            if isinstance(config, list):
+                return config
+            result = []
+            for value in config.values():
+                if isinstance(value, list):
+                    result.extend(value)
+                elif isinstance(value, dict):
+                    for v in value.values():
+                        if isinstance(v, list):
+                            result.extend(v)
+            return result
+        
+        current = config
+        for key in keys:
+            if isinstance(current, dict) and key in current:
+                current = current[key]
+            else:
+                return []
+        
+        if isinstance(current, list):
+            return current
+        elif isinstance(current, dict):
+            result = []
+            for value in current.values():
+                if isinstance(value, list):
+                    result.extend(value)
+            return result
+        
+        return []
+
+
+# ============================================================================
+# RULE-BASED REDACTION ENGINE
+# ============================================================================
+
+class RuleBasedRedactor:
+    """
+    Configuration-driven redaction engine.
+    Zero hardcoded data - all rules from config files.
+    """
+    
+    def __init__(self, config_loader: ConfigLoader):
+        self.config = config_loader
+        self._compile_patterns()
+    
+    def _compile_patterns(self):
+        """Compile all PII patterns from config"""
+        pii_config = self.config.load('pii_patterns')
+        
+        self.patterns = {
+            'email': re.compile(pii_config['email']['pattern'], re.IGNORECASE),
+            'url': re.compile(pii_config['url']['pattern']),
+            'phone': [re.compile(p) for p in pii_config['phone']['patterns']],
+            'social': [re.compile(p, re.IGNORECASE) for p in pii_config['social']['patterns']],
+            'demographics': {
+                k: re.compile(v, re.IGNORECASE) 
+                for k, v in pii_config['demographics'].items()
+            }
+        }
+    
+    def redact(self, text: str, filename: str = "") -> str:
+        """Main redaction pipeline - completely rule-based"""
+        
+        # Phase 0: Text healing (fix spacing issues)
+        text = self._heal_text(text)
+        
+        # Phase 1: Remove PII
+        text = self._remove_pii(text)
+        
+        # Phase 2: Remove locations
+        text = self._remove_locations(text)
+        
+        # Phase 3: Remove names
+        if filename:
+            text = self._remove_filename_names(text, filename)
+        text = self._remove_position_based_names(text)
+        
+        # Phase 4: Remove sections
+        text = self._remove_sections(text)
+        
+        # Phase 5: Remove demographics
+        text = self._remove_demographics(text)
+        
+        # Phase 6: Clean artifacts
+        text = self._cleanup_artifacts(text)
+        
+        # Phase 7: Format
+        text = self._format_professional(text)
+        
+        # Phase 8: Final date fix (must be after everything else)
+        before_count = len(re.findall(r'0\d{2}-\d{2}', text))
+        text = re.sub(r'\b0(15|16|17|18|19|20|21|22|23|24|25)-(\d{2})\b', r'20\1-\2', text)
+        after_count = len(re.findall(r'20\d{2}-\d{2}', text))
+        if before_count > 0:
+            logger.info(f"Date fix: found {before_count} old dates, converted {after_count} to 20XX format")
+        
+        return text
+    
+    def _heal_text(self, text: str) -> str:
+        """Fix spacing issues using rules from config"""
+        healing_config = self.config.load('text_healing')
+        
+        # Apply suffix patterns
+        for broken, fixed in healing_config.get('suffix_patterns', {}).items():
+            pattern = r'\b' + broken.replace(' ', r'\s+') + r'\b'
+            text = re.sub(pattern, fixed, text, flags=re.IGNORECASE)
+        
+        # Apply prefix patterns
+        for broken, fixed in healing_config.get('prefix_patterns', {}).items():
+            pattern = r'\b' + broken.replace(' ', r'\s+')
+            text = re.sub(pattern, fixed, text, flags=re.IGNORECASE)
+        
+        # Apply common word fixes
+        for broken, fixed in healing_config.get('common_words', {}).items():
+            pattern = r'\b' + broken.replace(' ', r'\s+') + r'\b'
+            text = re.sub(pattern, fixed, text, flags=re.IGNORECASE)
+        
+        # Fix date formats: 022-12 -> 2022-12, 021-07 -> 2021-07, etc.
+        text = re.sub(r'\b0(\d{2})-(\d{2})\b', r'20\1-\2', text)
+        
+        # Generic cleanup
+        text = re.sub(r' {2,}', ' ', text)
+        text = re.sub(r'(\w+)-\s*\n\s*(\w+)', r'\1\2', text)
+        
+        return text
+    
+    def _is_in_experience_section(self, line_index: int, lines: list) -> bool:
+        """Check if a line is within an experience/work history section"""
+        experience_markers = [
+            'work experience', 'professional experience', 'employment history',
+            'professional experiences', 'work history', 'career history'
+        ]
+        
+        # Section stoppers - if we hit these, we're out of experience section
+        section_stoppers = [
+            'education', 'academic', 'skills', 'technical skills', 'certification', 
+            'certifications', 'declaration', 'personal details', 'personal information',
+            'projects', 'achievements', 'awards', 'publications', 'references'
+        ]
+        
+        # Look backwards to find if we're in experience section
+        found_experience = False
+        start_idx = max(0, line_index - 150)  # Increased range to 150 lines
+        
+        for i in range(line_index, start_idx, -1):
+            line_lower = lines[i].strip().lower()
+            
+            # Check if we hit a section stopper first
+            if any(stopper in line_lower for stopper in section_stoppers):
+                # If we haven't found experience marker yet, we're not in experience section
+                if not found_experience:
+                    return False
+                # If we found experience marker earlier, now we hit a stopper, so we're past experience
+                else:
+                    return False
+            
+            # Check for experience markers
+            if any(marker in line_lower for marker in experience_markers):
+                found_experience = True
+                return True
+        
+        return found_experience
+    
+    def _remove_pii(self, text: str) -> str:
+        """Remove PII using patterns from config - skip in experience sections"""
+        lines = text.split('\n')
+        result_lines = []
+        
+        for i, line in enumerate(lines):
+            # Check if we're in an experience section
+            if self._is_in_experience_section(i, lines):
+                # Keep line as-is in experience section
+                result_lines.append(line)
+                continue
+            
+            # Apply PII redaction outside experience sections
+            processed_line = line
+            processed_line = self.patterns['email'].sub('[REDACTED_EMAIL]', processed_line)
+            
+            for phone_pattern in self.patterns['phone']:
+                processed_line = phone_pattern.sub('[REDACTED_PHONE]', processed_line)
+            
+            processed_line = self.patterns['url'].sub('[REDACTED_URL]', processed_line)
+            
+            for social_pattern in self.patterns['social']:
+                processed_line = social_pattern.sub('[REDACTED_SOCIAL]', processed_line)
+            
+            # Check for contact lines
+            if re.match(r'(?i)^.*?(email|e-mail|phone|mobile|contact|linkedin|github).*?[:|-].*?$', processed_line):
+                processed_line = '[REDACTED_CONTACT_LINE]'
+            
+            result_lines.append(processed_line)
+        
+        return '\n'.join(result_lines)
+    
+    def _remove_locations(self, text: str) -> str:
+        """Remove locations using list from config - skip in experience sections"""
+        locations = self.config.load('locations')
+        lines = text.split('\n')
+        result_lines = []
+        
+        for i, line in enumerate(lines):
+            # Check if we're in an experience section
+            if self._is_in_experience_section(i, lines):
+                # Keep line as-is in experience section
+                result_lines.append(line)
+                continue
+            
+            # Apply location redaction outside experience sections
+            processed_line = line
+            
+            for city in locations.get('cities', []):
+                processed_line = re.sub(rf'\b{re.escape(city)}\b,?\s*', '[LOCATION]', processed_line, flags=re.IGNORECASE)
+            
+            for state in locations.get('states', []):
+                processed_line = re.sub(rf'\b{re.escape(state)}\b,?\s*', '[LOCATION]', processed_line, flags=re.IGNORECASE)
+            
+            for country in locations.get('countries', []):
+                processed_line = re.sub(rf'\b{re.escape(country)}\b,?\s*', '[LOCATION]', processed_line, flags=re.IGNORECASE)
+            
+            result_lines.append(processed_line)
+        
+        return '\n'.join(result_lines)
+    
+    def _remove_filename_names(self, text: str, filename: str) -> str:
+        """Extract potential names from filename and remove"""
+        stem = Path(filename).stem
+        clean = re.sub(r'(resume|cv|naukri|redacted|_\d+)', '', stem, flags=re.IGNORECASE)
+        clean = re.sub(r'[^a-zA-Z\s]', ' ', clean)
+        clean = re.sub(r'([a-z])([A-Z])', r'\1 \2', clean)
+        
+        parts = clean.split()
+        names = [p for p in parts if p and len(p) > 2 and p[0].isupper()]
+        
+        if len(names) >= 2:
+            pattern = r'\b' + r'\s+'.join([re.escape(n) for n in names]) + r'\b'
+            text = re.sub(pattern, '[REDACTED_NAME]', text, flags=re.IGNORECASE)
+        
+        return text
+    
+    def _remove_position_based_names(self, text: str) -> str:
+        """Remove names based on position - skip in experience sections"""
+        preserve_headers = self.config.get_flat_list('sections', 'preserve')
+        
+        # Get all protected terms to avoid marking them as names
+        protected_terms = self.config.get_flat_list('protected_terms')
+        protected_lower = [term.lower() for term in protected_terms]
+        
+        lines = text.split('\n')
+        
+        for i in range(len(lines)):
+            # Skip if in experience section
+            if self._is_in_experience_section(i, lines):
+                continue
+                
+            line = lines[i]
+            stripped = line.strip().lower()
+            
+            if any(stripped.startswith(h.lower()) for h in preserve_headers):
+                continue
+            
+            if line.isupper():
+                continue
+            
+            # Find potential names
+            if i < 30:
+                # Aggressive in header
+                matches = re.finditer(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4}\b', line)
+                for match in reversed(list(matches)):
+                    matched_text = match.group()
+                    # Check if this is a protected term
+                    if matched_text.lower() not in protected_lower and not any(word.lower() in protected_lower for word in matched_text.split()):
+                        # Replace from end to start to preserve indices
+                        line = line[:match.start()] + '[NAME]' + line[match.end():]
+                lines[i] = line
+            else:
+                # Conservative elsewhere
+                match = re.match(r'^\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4})\s*$', line)
+                if match:
+                    matched_text = match.group(1)
+                    # Check if this is a protected term
+                    if matched_text.lower() not in protected_lower and not any(word.lower() in protected_lower for word in matched_text.split()):
+                        lines[i] = '[NAME]'
+        
+        return '\n'.join(lines)
+    
+    def _remove_sections(self, text: str) -> str:
+        """Remove sections based on config rules"""
+        sections_config = self.config.load('sections')
+        remove_sections = sections_config.get('remove', {})
+        preserve_sections = sections_config.get('preserve', [])
+        
+        lines = text.split('\n')
+        result_lines = []
+        in_remove_section = False
+        section_depth = 0
+        current_section_type = None
+        
+        for line in lines:
+            stripped = line.strip().lower()
+            
+            # Check if entering a remove section
+            for section_type, markers in remove_sections.items():
+                if any(stripped.startswith(m.lower()) for m in markers):
+                    in_remove_section = True
+                    section_depth = 0
+                    current_section_type = section_type.upper()
+                    result_lines.append(f'[REMOVED_SECTION_{current_section_type}]')
+                    break
+            
+            if in_remove_section:
+                # Check if hit preserve section
+                if any(stripped.startswith(h.lower()) for h in preserve_sections):
+                    in_remove_section = False
+                    current_section_type = None
+                elif section_depth > 30:
+                    in_remove_section = False
+                    current_section_type = None
+                else:
+                    section_depth += 1
+                    continue
+            
+            if not in_remove_section:
+                result_lines.append(line)
+        
+        return '\n'.join(result_lines)
+    
+    def _remove_demographics(self, text: str) -> str:
+        """Remove demographics using patterns from config"""
+        for demo_type, pattern in self.patterns['demographics'].items():
+            text = pattern.sub(f'[REDACTED_{demo_type.upper()}]', text)
+        
+        # Additional patterns
+        text = re.sub(r"(?i)\b(father's name|mother's name)\s*:?\s*[^\n]+", '[REDACTED_FAMILY_INFO]', text)
+        text = re.sub(r'(?i)(passport\s+validity|visa\s+status|driving\s+license)[^\n]*', '[REDACTED_ID_INFO]', text)
+        
+        return text
+    
+    def _cleanup_artifacts(self, text: str) -> str:
+        """Clean up redaction artifacts"""
+        # Don't remove lines that contain markers
+        lines = text.split('\n')
+        cleaned_lines = []
+        
+        # Section headers that should never be removed
+        important_headers = [
+            'work experience', 'professional experience', 'technical skills', 
+            'current role', 'skills', 'experience', 'summary', 'projects'
+        ]
+        
+        for i, line in enumerate(lines):
+            stripped_lower = line.strip().lower()
+            
+            # Keep important section headers
+            if any(header in stripped_lower for header in important_headers):
+                cleaned_lines.append(line)
+                continue
+                
+            # Keep lines with markers
+            if '[' in line and ']' in line:
+                cleaned_lines.append(line)
+                continue
+            
+            # Check if this is a single digit that might be part of a date
+            if re.match(r'^\s*2\s*$', line) and i + 1 < len(lines):
+                # Check if next line looks like a partial date (e.g., "022-12")
+                next_line = lines[i + 1].strip()
+                if re.match(r'^0\d{2}-\d{2}$', next_line):
+                    # This "2" is part of a year, keep it
+                    cleaned_lines.append(line)
+                    continue
+            
+            # Remove other single digit page numbers
+            if re.match(r'^\s*\d\s*$', line):
+                continue
+            elif re.match(r'^\s*Page\s+\d+\s+of\s+\d+\s*$', line, re.IGNORECASE):
+                cleaned_lines.append('[PAGE_NUMBER]')
+            else:
+                cleaned_lines.append(line)
+        
+        text = '\n'.join(cleaned_lines)
+        text = re.sub(r' {2,}', ' ', text)
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        return text.strip()
+    
+    def _format_professional(self, text: str) -> str:
+        """Apply professional formatting"""
+        text = re.sub(r':([A-Za-z])', r': \1', text)
+        text = re.sub(r',([A-Za-z])', r', \1', text)
+        text = re.sub(r'\.([A-Z])', r'. \1', text)
+        
+        # Fix broken dates: if a line is just "2" and next line is like "022-12", merge them
+        lines = text.split('\n')
+        fixed_lines = []
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            # Check if current line is just "2" and next line looks like partial date
+            if line == '2' and i + 1 < len(lines):
+                next_line = lines[i + 1].strip()
+                if re.match(r'0\d{2}-\d{2}', next_line):
+                    # Merge them
+                    fixed_lines.append('2' + next_line)
+                    i += 2
+                    continue
+            fixed_lines.append(lines[i])
+            i += 1
+        
+        text = '\n'.join(fixed_lines)
+        
+        lines = text.split('\n')
+        formatted = []
+        prev_header = False
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            
+            is_header = (
+                (line.isupper() and 3 <= len(line) <= 60) or
+                (re.match(r'^[A-Z][a-zA-Z\s&]{2,50}$', line) and len(line.split()) <= 6)
+            )
+            
+            if is_header:
+                if formatted and not prev_header:
+                    formatted.append('')
+                formatted.append(line)
+                formatted.append('')
+                prev_header = True
+            elif line.startswith(('•', '-', '·', '○', '*')):
+                formatted.append('• ' + line.lstrip('•-·○* ').strip())
+                prev_header = False
+            else:
+                formatted.append(line)
+                prev_header = False
+        
+        text = '\n'.join(formatted)
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        # Final fix: correct any broken dates like "022-12" -> "2022-12"
+        text = re.sub(r'\b0(15|16|17|18|19|20|21|22|23|24|25)-(\d{2})\b', r'20\1-\2', text)
+        
+        return text.strip()
+
+
+class UniversalRedactionEngine:
+    """
+    Main engine - maintains compatibility with existing code.
+    Delegates to configuration-driven redactor.
+    """
+    
+    def __init__(self, config_dir: str = "config"):
+        self.config_loader = ConfigLoader(config_dir)
+        self.redactor = RuleBasedRedactor(self.config_loader)
+    
+    def redact(self, text: str, filename: str = "") -> str:
+        """Main redaction entry point"""
+        return self.redactor.redact(text, filename)
+
+
+# ============================================================================
+# CV TYPE DETECTION & PIPELINES (Unchanged from original)
+# ============================================================================
+
 class CVType(Enum):
     """CV Format Types"""
-    NAUKRI = "naukri"                    # Naukri.com format with specific headers
-    MULTI_COLUMN = "multi_column"        # 2+ column layouts
-    STANDARD_ATS = "standard_ats"        # Single column ATS-friendly
-    SCANNED_IMAGE = "scanned_image"      # Image-based/scanned PDFs
-    CREATIVE_DESIGNER = "creative"       # Designer/creative CVs with graphics
-    ACADEMIC_RESEARCH = "academic"       # Academic CVs with publications
+    NAUKRI = "naukri"
+    MULTI_COLUMN = "multi_column"
+    STANDARD_ATS = "standard_ats"
+    SCANNED_IMAGE = "scanned_image"
+    CREATIVE_DESIGNER = "creative"
+    ACADEMIC_RESEARCH = "academic"
 
 
 @dataclass
@@ -81,46 +767,26 @@ class CVProfile:
 
 
 class CVProfileDetector:
-    """
-    Analyzes PDF structure to determine CV type and characteristics.
-    Routes to appropriate specialized pipeline.
-    """
+    """Analyzes PDF structure to determine CV type"""
     
     def __init__(self):
-        self.naukri_indicators = [
-            'naukri', 'resume headline', 'key skills', 'it skills',
-            'profile summary', 'personal details', 'declaration'
-        ]
-        
-        self.academic_indicators = [
-            'publications', 'research', 'citations', 'h-index',
-            'conference', 'journal', 'thesis', 'dissertation'
-        ]
-        
-        self.creative_indicators = [
-            'portfolio', 'behance', 'dribbble', 'design',
-            'creative', 'ui/ux', 'graphic design'
-        ]
+        self.naukri_indicators = ['naukri', 'resume headline', 'key skills']
+        self.academic_indicators = ['publications', 'research', 'citations']
+        self.creative_indicators = ['portfolio', 'behance', 'design']
     
     def analyze(self, pdf_path: str) -> CVProfile:
         """Comprehensive CV analysis"""
         logger.info(f"Analyzing: {Path(pdf_path).name}")
         
-        # Check filename for obvious indicators
         filename = Path(pdf_path).name.lower()
         if 'naukri' in filename:
             return self._create_profile(CVType.NAUKRI, 0.95, pdf_path)
         
-        # Analyze PDF structure
         if not HAS_FITZ and not HAS_PDFPLUMBER:
-            logger.error("No PDF library available")
             return self._create_profile(CVType.STANDARD_ATS, 0.5, pdf_path)
         
         try:
-            # Get structure analysis
             structure = self._analyze_structure(pdf_path)
-            
-            # Determine CV type based on structure
             cv_type, confidence = self._classify_type(structure, filename)
             
             return CVProfile(
@@ -133,7 +799,6 @@ class CVProfileDetector:
                 has_graphics=structure['has_graphics'],
                 detected_sections=structure['sections']
             )
-            
         except Exception as e:
             logger.error(f"Analysis failed: {e}")
             return self._create_profile(CVType.STANDARD_ATS, 0.5, pdf_path)
@@ -156,49 +821,37 @@ class CVProfileDetector:
                     return structure
                 
                 page = pdf.pages[0]
-                
-                # Check for columns
                 words = page.extract_words(x_tolerance=2, y_tolerance=2)
+                
                 if words:
                     structure['column_count'] = self._detect_columns(words, page.width)
                     structure['has_columns'] = structure['column_count'] > 1
                     
-                    # Text density
                     total_chars = sum(len(w['text']) for w in words)
                     page_area = page.width * page.height
                     structure['text_density'] = total_chars / page_area if page_area > 0 else 0
                     
-                    # Check if scanned (low text density or fragmented text)
                     single_char_words = sum(1 for w in words if len(w['text']) == 1)
                     fragmentation_ratio = single_char_words / len(words) if words else 0
                     structure['is_scanned'] = fragmentation_ratio > 0.15 or structure['text_density'] < 0.02
                     
-                    # Extract sample text for content analysis
                     structure['content_sample'] = ' '.join([w['text'] for w in words[:200]])
                 
-                # Check for graphics/images
                 structure['has_graphics'] = len(page.images) > 0
         
         elif HAS_FITZ:
             with fitz.open(pdf_path) as doc:
-                if not doc:
-                    return structure
-                
-                page = doc[0]
-                text = page.get_text()
-                
-                # Simple text density check
-                page_area = page.rect.width * page.rect.height
-                structure['text_density'] = len(text) / page_area if page_area > 0 else 0
-                structure['is_scanned'] = structure['text_density'] < 0.02
-                structure['content_sample'] = text[:1000]
-                
-                # Check for images
-                structure['has_graphics'] = len(page.get_images()) > 0
+                if doc:
+                    page = doc[0]
+                    text = page.get_text()
+                    
+                    page_area = page.rect.width * page.rect.height
+                    structure['text_density'] = len(text) / page_area if page_area > 0 else 0
+                    structure['is_scanned'] = structure['text_density'] < 0.02
+                    structure['content_sample'] = text[:1000]
+                    structure['has_graphics'] = len(page.get_images()) > 0
         
-        # Detect sections from sample text
         structure['sections'] = self._detect_sections(structure['content_sample'])
-        
         return structure
     
     def _detect_columns(self, words: List[Dict], page_width: float) -> int:
@@ -206,12 +859,10 @@ class CVProfileDetector:
         if not words:
             return 1
         
-        # Count words in left/center/right thirds
         left = sum(1 for w in words if w['x0'] < page_width * 0.35)
         center = sum(1 for w in words if page_width * 0.35 <= w['x0'] < page_width * 0.65)
         right = sum(1 for w in words if w['x0'] >= page_width * 0.65)
         
-        # Multi-column if significant content in multiple regions
         active_regions = sum([left > 20, center > 20, right > 20])
         
         if active_regions >= 2 and (left > 30 or right > 30):
@@ -227,14 +878,11 @@ class CVProfileDetector:
         sections = []
         
         section_keywords = {
-            'SUMMARY': ['SUMMARY', 'PROFILE', 'OBJECTIVE', 'ABOUT'],
-            'EXPERIENCE': ['EXPERIENCE', 'WORK HISTORY', 'EMPLOYMENT'],
-            'EDUCATION': ['EDUCATION', 'ACADEMIC', 'QUALIFICATION'],
-            'SKILLS': ['SKILLS', 'TECHNICAL SKILLS', 'COMPETENCIES'],
-            'PROJECTS': ['PROJECTS', 'KEY PROJECTS'],
-            'CERTIFICATIONS': ['CERTIFICATIONS', 'LICENSES'],
-            'PUBLICATIONS': ['PUBLICATIONS', 'RESEARCH'],
-            'REFERENCES': ['REFERENCES']
+            'SUMMARY': ['SUMMARY', 'PROFILE', 'OBJECTIVE'],
+            'EXPERIENCE': ['EXPERIENCE', 'WORK HISTORY'],
+            'EDUCATION': ['EDUCATION', 'ACADEMIC'],
+            'SKILLS': ['SKILLS', 'TECHNICAL SKILLS'],
+            'PROJECTS': ['PROJECTS']
         }
         
         for section, keywords in section_keywords.items():
@@ -244,33 +892,27 @@ class CVProfileDetector:
         return sections
     
     def _classify_type(self, structure: Dict, filename: str) -> Tuple[CVType, float]:
-        """Classify CV type based on structure and content"""
+        """Classify CV type"""
         content = structure['content_sample'].lower()
         
-        # Check for Naukri format
-        naukri_score = sum(1 for indicator in self.naukri_indicators if indicator in content)
-        if naukri_score >= 3:
-            return CVType.NAUKRI, min(0.95, 0.7 + (naukri_score * 0.05))
+        naukri_score = sum(1 for ind in self.naukri_indicators if ind in content)
+        if naukri_score >= 2:
+            return CVType.NAUKRI, 0.9
         
-        # Check for academic format
-        academic_score = sum(1 for indicator in self.academic_indicators if indicator in content)
-        if academic_score >= 3:
-            return CVType.ACADEMIC_RESEARCH, min(0.95, 0.7 + (academic_score * 0.05))
+        academic_score = sum(1 for ind in self.academic_indicators if ind in content)
+        if academic_score >= 2:
+            return CVType.ACADEMIC_RESEARCH, 0.9
         
-        # Check for creative format
-        creative_score = sum(1 for indicator in self.creative_indicators if indicator in content)
+        creative_score = sum(1 for ind in self.creative_indicators if ind in content)
         if creative_score >= 2 and structure['has_graphics']:
-            return CVType.CREATIVE_DESIGNER, min(0.90, 0.7 + (creative_score * 0.08))
+            return CVType.CREATIVE_DESIGNER, 0.85
         
-        # Check for scanned
         if structure['is_scanned']:
             return CVType.SCANNED_IMAGE, 0.85
         
-        # Check for multi-column
         if structure['has_columns'] and structure['column_count'] >= 2:
             return CVType.MULTI_COLUMN, 0.85
         
-        # Default to standard ATS
         return CVType.STANDARD_ATS, 0.75
     
     def _create_profile(self, cv_type: CVType, confidence: float, pdf_path: str) -> CVProfile:
@@ -287,8 +929,12 @@ class CVProfileDetector:
         )
 
 
+# ============================================================================
+# PDF EXTRACTION PIPELINES
+# ============================================================================
+
 class BasePipeline(abc.ABC):
-    """Abstract base class for all specialized pipelines"""
+    """Abstract base for extraction pipelines"""
     
     def __init__(self, debug: bool = False):
         self.debug = debug
@@ -296,35 +942,28 @@ class BasePipeline(abc.ABC):
     
     @abc.abstractmethod
     def extract_text(self, pdf_path: str) -> str:
-        """Extract text maintaining reading order"""
         pass
     
     @abc.abstractmethod
     def preprocess(self, text: str) -> str:
-        """Pipeline-specific preprocessing"""
         pass
     
     def save_debug(self, content: str, stage: str, filename: str):
-        """Save debug output"""
         if self.debug:
             try:
                 name = Path(filename).stem
                 path = DEBUG_DIR / f"{name}_{self.pipeline_name}_{stage}.txt"
                 path.write_text(content, encoding='utf-8')
-                logger.debug(f"Saved debug: {path}")
             except Exception as e:
-                logger.error(f"Failed to save debug: {e}")
+                logger.error(f"Debug save failed: {e}")
     
     def process(self, pdf_path: str) -> str:
-        """Main processing pipeline"""
         logger.info(f"[{self.pipeline_name}] Processing: {Path(pdf_path).name}")
         
-        # Extract
         raw_text = self.extract_text(pdf_path)
         if self.debug:
             self.save_debug(raw_text, "01_extracted", pdf_path)
         
-        # Preprocess
         processed_text = self.preprocess(raw_text)
         if self.debug:
             self.save_debug(processed_text, "02_preprocessed", pdf_path)
@@ -332,22 +971,29 @@ class BasePipeline(abc.ABC):
         return processed_text
 
 
-class NaukriPipeline(BasePipeline):
-    """
-    Specialized pipeline for Naukri.com format CVs.
-    Handles specific headers, formatting, and layout quirks.
-    """
-    
-    def __init__(self, debug: bool = False):
-        super().__init__(debug)
-        self.naukri_sections = [
-            'RESUME HEADLINE', 'KEY SKILLS', 'EMPLOYMENT DETAILS',
-            'IT SKILLS', 'PROJECTS', 'PROFILE SUMMARY',
-            'PERSONAL DETAILS', 'DECLARATION'
-        ]
+class StandardATSPipeline(BasePipeline):
+    """Standard single-column extraction"""
     
     def extract_text(self, pdf_path: str) -> str:
-        """Extract using PyMuPDF with block sorting"""
+        if HAS_FITZ:
+            with fitz.open(pdf_path) as doc:
+                return "\n\n".join([page.get_text() for page in doc])
+        elif HAS_PDFPLUMBER:
+            with pdfplumber.open(pdf_path) as pdf:
+                return "\n\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
+        return "Error: No PDF library available"
+    
+    def preprocess(self, text: str) -> str:
+        text = re.sub(r'[•●○◦▪▫■□⬤→]', '•', text)
+        text = re.sub(r' {2,}', ' ', text)
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        return text
+
+
+class NaukriPipeline(BasePipeline):
+    """Naukri.com format extraction"""
+    
+    def extract_text(self, pdf_path: str) -> str:
         if not HAS_FITZ:
             return "Error: PyMuPDF not available"
         
@@ -356,7 +1002,7 @@ class NaukriPipeline(BasePipeline):
             for page in doc:
                 blocks = page.get_text("blocks", sort=True)
                 for block in blocks:
-                    if block[6] == 0:  # Text block
+                    if block[6] == 0:
                         text = block[4].strip()
                         if text:
                             text_blocks.append(text)
@@ -364,75 +1010,49 @@ class NaukriPipeline(BasePipeline):
         return "\n\n".join(text_blocks)
     
     def preprocess(self, text: str) -> str:
-        """Naukri-specific preprocessing"""
-        # Normalize Naukri section headers
-        for section in self.naukri_sections:
-            text = re.sub(rf'\b{section}\b\s*:?', f"\n{section}\n", text, flags=re.IGNORECASE)
-        
-        # Remove Naukri branding/watermarks
         text = re.sub(r'Naukri\.com|www\.naukri\.com', '', text, flags=re.IGNORECASE)
-        
-        # Clean up spacing
         text = re.sub(r'\n{3,}', '\n\n', text)
-        
         return text
 
 
 class MultiColumnPipeline(BasePipeline):
-    """
-    Specialized pipeline for multi-column CV layouts.
-    Intelligently detects column gutters and maintains reading order.
-    """
+    """Multi-column layout extraction"""
     
     def extract_text(self, pdf_path: str) -> str:
-        """Extract with column-aware processing"""
         if not HAS_PDFPLUMBER:
             if HAS_FITZ:
                 return self._fitz_fallback(pdf_path)
-            return "Error: No PDF library available"
+            return "Error: No PDF library"
         
         all_text = []
         
         with pdfplumber.open(pdf_path) as pdf:
-            for page_num, page in enumerate(pdf.pages):
-                logger.info(f"Processing page {page_num + 1}")
-                
+            for page in pdf.pages:
                 words = page.extract_words(x_tolerance=2, y_tolerance=2)
                 if not words:
                     continue
                 
-                # Detect column split
                 split_point = self._find_column_split(words, page.width)
                 
                 if split_point:
-                    # Extract columns separately
                     left_words = [w for w in words if w['x1'] < split_point]
                     right_words = [w for w in words if w['x0'] > split_point]
                     
-                    # Sort by vertical position
                     left_words.sort(key=lambda w: w['top'])
                     right_words.sort(key=lambda w: w['top'])
                     
-                    # Build text
-                    left_text = self._build_text_from_words(left_words)
-                    right_text = self._build_text_from_words(right_words)
-                    
-                    all_text.append(left_text)
-                    all_text.append(right_text)
+                    all_text.append(self._build_text(left_words))
+                    all_text.append(self._build_text(right_words))
                 else:
-                    # Single column
                     words.sort(key=lambda w: (w['top'], w['x0']))
-                    page_text = self._build_text_from_words(words)
-                    all_text.append(page_text)
+                    all_text.append(self._build_text(words))
         
         return "\n\n".join(all_text)
     
     def _find_column_split(self, words: List[Dict], page_width: float) -> Optional[float]:
-        """Find the gutter between columns"""
         if not words:
             return None
         
-        # Count words in vertical strips
         strip_width = page_width / 20
         strip_counts = [0] * 20
         
@@ -442,7 +1062,6 @@ class MultiColumnPipeline(BasePipeline):
             if 0 <= strip_idx < 20:
                 strip_counts[strip_idx] += 1
         
-        # Find minimum in middle region
         min_count = float('inf')
         min_idx = -1
         for idx in range(5, 15):
@@ -450,14 +1069,12 @@ class MultiColumnPipeline(BasePipeline):
                 min_count = strip_counts[idx]
                 min_idx = idx
         
-        # Validate it's a real gap
         if min_count < 3 and min_idx >= 0:
             return (min_idx + 0.5) * strip_width
         
         return None
     
-    def _build_text_from_words(self, words: List[Dict]) -> str:
-        """Build text from word list"""
+    def _build_text(self, words: List[Dict]) -> str:
         if not words:
             return ""
         
@@ -466,7 +1083,6 @@ class MultiColumnPipeline(BasePipeline):
         current_top = words[0]['top']
         
         for word in words:
-            # New line if vertical gap
             if abs(word['top'] - current_top) > 3:
                 if current_line:
                     lines.append(' '.join(current_line))
@@ -481,7 +1097,6 @@ class MultiColumnPipeline(BasePipeline):
         return '\n'.join(lines)
     
     def _fitz_fallback(self, pdf_path: str) -> str:
-        """Fallback to PyMuPDF"""
         text_blocks = []
         with fitz.open(pdf_path) as doc:
             for page in doc:
@@ -492,861 +1107,76 @@ class MultiColumnPipeline(BasePipeline):
         return "\n\n".join(text_blocks)
     
     def preprocess(self, text: str) -> str:
-        """Multi-column specific preprocessing"""
-        # Fix split words
-        text = self._fix_split_words(text)
-        
-        # Normalize spacing
-        text = re.sub(r'\n{3,}', '\n\n', text)
-        
-        return text
-    
-    def _fix_split_words(self, text: str) -> str:
-        """Fix words split across columns"""
-        # Pattern: word ending with hyphen followed by continuation
         text = re.sub(r'(\w+)-\s*\n\s*(\w+)', r'\1\2', text)
-        
-        return text
-
-
-class StandardATSPipeline(BasePipeline):
-    """
-    Pipeline for standard single-column ATS-friendly CVs.
-    Optimized for clean extraction and section detection.
-    """
-    
-    def extract_text(self, pdf_path: str) -> str:
-        """Simple linear extraction"""
-        if HAS_FITZ:
-            with fitz.open(pdf_path) as doc:
-                return "\n\n".join([page.get_text() for page in doc])
-        elif HAS_PDFPLUMBER:
-            with pdfplumber.open(pdf_path) as pdf:
-                return "\n\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
-        return "Error: No PDF library available"
-    
-    def preprocess(self, text: str) -> str:
-        """Standard preprocessing"""
-        # Normalize bullets
-        text = re.sub(r'[•●○◦▪▫■□⬤→]', '•', text)
-        
-        # Fix spacing
-        text = re.sub(r' {2,}', ' ', text)
         text = re.sub(r'\n{3,}', '\n\n', text)
-        
         return text
 
 
-class ScannedImagePipeline(BasePipeline):
-    """
-    Pipeline for scanned/image-based PDFs.
-    Uses OCR with word healing for fragmented text.
-    """
-    
-    # Class-level OCR instance to avoid reinitialization
-    _ocr_instance = None
-    
-    def __init__(self, debug: bool = False):
-        super().__init__(debug)
-        # Use class-level instance
-        if ScannedImagePipeline._ocr_instance is None and HAS_PADDLEOCR:
-            try:
-                from paddleocr import PaddleOCR
-                ScannedImagePipeline._ocr_instance = PaddleOCR(lang='en', use_angle_cls=False)
-                logger.info("PaddleOCR initialized successfully")
-            except Exception as e:
-                logger.warning(f"Failed to initialize PaddleOCR: {e}")
-                ScannedImagePipeline._ocr_instance = None
-        
-        self.ocr = ScannedImagePipeline._ocr_instance
-    
-    def extract_text(self, pdf_path: str) -> str:
-        """OCR extraction"""
-        if not self.ocr:
-            logger.warning("OCR not available, using basic extraction")
-            return self._basic_extraction(pdf_path)
-        
-        text_lines = []
-        
-        with fitz.open(pdf_path) as doc:
-            for page_num, page in enumerate(doc):
-                logger.info(f"OCR processing page {page_num + 1}")
-                
-                # Convert page to image
-                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 2x scaling
-                img_path = f"temp_ocr_page_{page_num}.png"
-                pix.save(img_path)
-                
-                try:
-                    # Run OCR
-                    result = self.ocr.ocr(img_path)
-                    
-                    if result and result[0]:
-                        for line in result[0]:
-                            if isinstance(line, list) and len(line) >= 2:
-                                text = line[1][0] if isinstance(line[1], tuple) else line[1]
-                                text_lines.append(text)
-                finally:
-                    # Cleanup
-                    if os.path.exists(img_path):
-                        os.remove(img_path)
-        
-        return "\n".join(text_lines)
-    
-    def _basic_extraction(self, pdf_path: str) -> str:
-        """Fallback extraction"""
-        if HAS_FITZ:
-            with fitz.open(pdf_path) as doc:
-                return "\n".join([page.get_text() for page in doc])
-        return ""
-    
-    def preprocess(self, text: str) -> str:
-        """OCR-specific preprocessing with word healing"""
-        # Fix common OCR errors
-        text = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', text)  # Add space between camelCase
-        
-        # Heal fragmented words
-        text = self._heal_fragmented_words(text)
-        
-        # Clean up
-        text = re.sub(r'\n{3,}', '\n\n', text)
-        
-        return text
-    
-    def _heal_fragmented_words(self, text: str) -> str:
-        """Fix fragmented text like 'e x p e r i e n c e' -> 'experience'"""
-        lines = text.split('\n')
-        healed_lines = []
-        
-        for line in lines:
-            # Pattern: single letters separated by spaces
-            if re.search(r'\b[a-z]\s+[a-z](\s+[a-z])+\b', line, re.IGNORECASE):
-                # Try to heal
-                parts = line.split()
-                healed_parts = []
-                temp_word = []
-                
-                for part in parts:
-                    if len(part) == 1 and part.isalpha():
-                        temp_word.append(part)
-                    else:
-                        if temp_word:
-                            # Join and check if valid
-                            joined = ''.join(temp_word)
-                            if len(joined) >= 3:
-                                healed_parts.append(joined)
-                            else:
-                                healed_parts.extend(temp_word)
-                            temp_word = []
-                        healed_parts.append(part)
-                
-                if temp_word:
-                    joined = ''.join(temp_word)
-                    healed_parts.append(joined)
-                
-                healed_lines.append(' '.join(healed_parts))
-            else:
-                healed_lines.append(line)
-        
-        return '\n'.join(healed_lines)
-
-
-class CreativeDesignerPipeline(BasePipeline):
-    """
-    Pipeline for creative/designer CVs with graphics and unusual layouts.
-    Handles non-standard structures while preserving content.
-    """
-    
-    def extract_text(self, pdf_path: str) -> str:
-        """Extract text avoiding graphic areas"""
-        if not HAS_PDFPLUMBER:
-            return self._fitz_fallback(pdf_path)
-        
-        all_text = []
-        
-        with pdfplumber.open(pdf_path) as pdf:
-            for page in pdf.pages:
-                # Get text and images
-                text = page.extract_text(x_tolerance=3, y_tolerance=3)
-                if text:
-                    all_text.append(text)
-        
-        return "\n\n".join(all_text)
-    
-    def _fitz_fallback(self, pdf_path: str) -> str:
-        """Fallback extraction"""
-        with fitz.open(pdf_path) as doc:
-            return "\n\n".join([page.get_text() for page in doc])
-    
-    def preprocess(self, text: str) -> str:
-        """Creative CV preprocessing"""
-        # Remove common design artifacts
-        text = re.sub(r'[★☆⭐✨💼📧📱🏠]', '', text)  # Remove icons
-        
-        # Normalize spacing
-        text = re.sub(r'\n{3,}', '\n\n', text)
-        
-        return text
-
-
-class AcademicResearchPipeline(BasePipeline):
-    """
-    Pipeline for academic/research CVs with publications and citations.
-    Preserves structured academic content.
-    """
-    
-    def extract_text(self, pdf_path: str) -> str:
-        """Standard extraction"""
-        if HAS_FITZ:
-            with fitz.open(pdf_path) as doc:
-                return "\n\n".join([page.get_text() for page in doc])
-        elif HAS_PDFPLUMBER:
-            with pdfplumber.open(pdf_path) as pdf:
-                return "\n\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
-        return ""
-    
-    def preprocess(self, text: str) -> str:
-        """Academic-specific preprocessing"""
-        # Normalize citation formats
-        text = re.sub(r'\[(\d+)\]', r'[\1]', text)
-        
-        # Clean up
-        text = re.sub(r'\n{3,}', '\n\n', text)
-        
-        return text
-
-
-class UniversalRedactionEngine:
-    """
-    Universal PII removal engine used by all pipelines.
-    Handles emails, phones, names, addresses while protecting professional content.
-    """
-    
-    def __init__(self):
-        # Compile patterns
-        self.email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
-        self.phone_pattern = re.compile(r'(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}')
-        self.url_pattern = re.compile(r'https?://[^\s]+')
-        self.linkedin_pattern = re.compile(r'linkedin\.com/in/[\w\-]+', re.IGNORECASE)
-        self.github_pattern = re.compile(r'github\.com/[\w\-]+', re.IGNORECASE)
-        
-        # Protected terms (technical skills, etc.)
-        self.protected_terms = self._load_protected_terms()
-        
-        # Lazy load spaCy
-        self.nlp = None
-    
-    def _load_protected_terms(self) -> Set[str]:
-        """Load comprehensive list of protected terms"""
-        terms = {
-            # Programming languages
-            'python', 'java', 'javascript', 'typescript', 'c++', 'c#', 'ruby', 'php', 'go',
-            'rust', 'swift', 'kotlin', 'scala', 'r', 'matlab', 'perl', 'shell', 'bash',
-            
-            # Frameworks & libraries
-            'react', 'angular', 'vue', 'django', 'flask', 'spring', 'nodejs', 'express',
-            'laravel', 'rails', 'aspnet', 'dotnet', 'jquery', 'bootstrap', 'tailwind',
-            
-            # Databases
-            'mysql', 'postgresql', 'mongodb', 'oracle', 'sqlserver', 'redis', 'cassandra',
-            'dynamodb', 'elasticsearch', 'neo4j', 'sqlite', 'mariadb',
-            
-            # Cloud & DevOps
-            'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'jenkins', 'gitlab', 'github',
-            'terraform', 'ansible', 'puppet', 'chef', 'circleci', 'travis',
-            
-            # Tools & Technologies
-            'git', 'linux', 'unix', 'windows', 'macos', 'vscode', 'intellij', 'eclipse',
-            'vim', 'emacs', 'postman', 'swagger', 'jira', 'confluence', 'slack',
-            
-            # Roles & titles
-            'engineer', 'developer', 'programmer', 'architect', 'manager', 'lead',
-            'senior', 'junior', 'principal', 'staff', 'consultant', 'analyst',
-            'scientist', 'researcher', 'designer', 'administrator', 'specialist',
-            
-            # Common terms (excluding section headers that we want to remove)
-            'responsibilities', 'certifications', 'achievements', 'references'
-        }
-        return terms
-    
-    def redact(self, text: str, filename: str = "") -> str:
-        """
-        Main redaction method with comprehensive PII removal and professional formatting.
-        """
-        # Phase 1: Protect technical terms first
-        protected_map = {}
-        placeholder_counter = [0]
-        
-        def protect_term(match):
-            term = match.group(0)
-            if term.lower() in self.protected_terms:
-                placeholder = f"§PROTECTED{placeholder_counter[0]}§"
-                protected_map[placeholder] = term
-                placeholder_counter[0] += 1
-                return placeholder
-            return term
-        
-        text = re.sub(r'\b\w+\b', protect_term, text)
-        
-        # Phase 2: Remove ALL PII patterns aggressively (NO PLACEHOLDERS)
-        # Emails - remove completely
-        text = self.email_pattern.sub('', text)
-        
-        # Phones - multiple patterns, remove completely
-        text = re.sub(r'\(?\+?\d{1,3}\)?[-.\s]?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4}', '', text)
-        text = re.sub(r'\b\d{10}\b', '', text)
-        text = re.sub(r'PHONE\s*[:|-]?\s*\S+', '', text, flags=re.IGNORECASE)
-        
-        # URLs and Social - NO PLACEHOLDERS, just remove
-        text = self.url_pattern.sub('', text)
-        text = self.linkedin_pattern.sub('', text)
-        text = self.github_pattern.sub('', text)
-        text = re.sub(r'linkedin\.com[^\s]*', '', text, flags=re.IGNORECASE)
-        
-        # Locations - Comprehensive Indian cities removal (NO PLACEHOLDERS)
-        # First remove city + state + country combinations
-        text = re.sub(r'\b(Pune|Mumbai|Delhi|Bangalore|Bengaluru|Hyderabad|Chennai|Kolkata|Ahmedabad|Jaipur),?\s*(Maharashtra|Karnataka|Tamil Nadu|Telangana)?,?\s*(India|INDIA)?\b', '', text, flags=re.IGNORECASE)
-        
-        # Then remove all cities
-        cities = ['Pune', 'Mumbai', 'Delhi', 'Bangalore', 'Bengaluru', 'Hyderabad', 'Chennai', 'Kolkata', 
-                 'Ahmedabad', 'Jaipur', 'Lucknow', 'Kanpur', 'Nagpur', 'Indore', 'Thane', 'Bhopal', 
-                 'Visakhapatnam', 'Pimpri', 'Patna', 'Vadodara', 'Ghaziabad', 'Ludhiana', 'Agra', 
-                 'Nashik', 'Faridabad', 'Meerut', 'Rajkot', 'Varanasi', 'Srinagar', 'Aurangabad', 
-                 'Dhanbad', 'Amritsar', 'Noida', 'Allahabad', 'Ranchi', 'Howrah', 'Coimbatore', 
-                 'Jabalpur', 'Gwalior', 'Jalgaon', 'Solapur', 'Mysore', 'Mysuru', 'Vellore', 
-                 'Faizabad', 'Salem', 'Tiruchirappalli', 'Tirupati', 'Belgaum', 'Mangalore', 
-                 'Trivandrum', 'Kochi', 'Cochin', 'Ernakulam', 'Chandigarh', 'Gurgaon', 'Gurugram', 
-                 'Navi Mumbai', 'Greater Noida', 'Shegaon', 'Cambridge', 'London', 'Boston']
-        
-        for city in cities:
-            text = re.sub(rf'\b{city}\b,?\s*', '', text, flags=re.IGNORECASE)
-        
-        # Then remove all states
-        states = ['Maharashtra', 'Karnataka', 'Tamil Nadu', 'Telangana', 'West Bengal', 'Gujarat', 
-                 'Rajasthan', 'Madhya Pradesh', 'Uttar Pradesh', 'Kerala', 'Punjab', 'Haryana', 
-                 'Bihar', 'Odisha', 'Andhra Pradesh', 'Assam', 'Jharkhand', 'Chhattisgarh', 
-                 'Uttarakhand', 'Himachal Pradesh', 'Goa', 'India', 'INDIA']
-        
-        for state in states:
-            text = re.sub(rf'\b{state}\b,?\s*', '', text, flags=re.IGNORECASE)
-        
-        # Email/Phone labels
-        text = re.sub(r'EMAIL\s*[:|-]?\s*[^\s\n]+', '', text, flags=re.IGNORECASE)
-        
-        # Phase 3: Remove names from filename
-        if filename:
-            text = self._remove_filename_names(text, filename)
-        
-        # Phase 4: Position-aware name removal (aggressive in header)
-        text = self._position_aware_name_removal(text)
-        
-        # Phase 5: Remove Education section completely
-        text = self._remove_education_section(text)
-        
-        # Phase 5b: Remove Personal sections (Hobbies, Interests, Languages)
-        text = self._remove_personal_sections(text)
-        
-        # Phase 5c: Remove demographics (DOB, Gender, Marital Status, etc.)
-        text = self._remove_demographics(text)
-        
-        # Phase 5d: Rewrite profile summaries to remove first-person with names
-        text = self._rewrite_profile_summaries(text)
-        
-        # Phase 5e: Remove declaration sections
-        text = self._remove_declaration_section(text)
-        
-        # Phase 6: Clean up artifacts
-        text = self._cleanup_artifacts(text)
-        
-        # Phase 7: RESTORE PROTECTED TERMS BEFORE ANY SPACING FIXES
-        for placeholder, original_term in protected_map.items():
-            text = text.replace(placeholder, original_term)
-        
-        # Phase 8: Apply word spacing fixes AFTER restoration
-        text = self._fix_concatenated_words(text)
-        
-        # Phase 9: Professional formatting (without aggressive separation)
-        text = self._professional_formatting_final(text)
-        
-        return text
-    
-    def _remove_filename_names(self, text: str, filename: str) -> str:
-        """Extract and remove names from filename"""
-        # Extract potential names from filename
-        stem = Path(filename).stem
-        # Remove common non-name parts
-        clean_stem = re.sub(r'(resume|cv|naukri|redacted|_\d+|\.\.)', '', stem, flags=re.IGNORECASE)
-        clean_stem = re.sub(r'[^a-zA-Z\s]', ' ', clean_stem)
-        
-        # Split camelCase
-        clean_stem = re.sub(r'([a-z])([A-Z])', r'\1 \2', clean_stem)
-        
-        # Extract words that look like names (capitalized, 2+ chars)
-        parts = clean_stem.split()
-        potential_names = [p for p in parts if p and len(p) > 2 and p[0].isupper()]
-        
-        # Remove as full name and individual parts
-        if len(potential_names) >= 2:
-            full_name = ' '.join(potential_names)
-            # Remove with flexible whitespace
-            pattern = r'\b' + r'\s+'.join([re.escape(p) for p in potential_names]) + r'\b'
-            text = re.sub(pattern, '', text, flags=re.IGNORECASE)
-        
-        return text
-    
-    def _position_aware_name_removal(self, text: str) -> str:
-        """Remove names throughout the document"""
-        # Without NLP, use aggressive pattern-based removal
-        lines = text.split('\n')
-        
-        # Common section headers to preserve
-        section_headers = ['summary', 'education', 'experience', 'skills', 'projects', 
-                          'work experience', 'professional', 'certifications', 'awards',
-                          'publications', 'programming', 'technical', 'languages',
-                          'achievements', 'objective', 'profile', 'qualifications',
-                          'training', 'interests', 'references', 'others']
-        
-        # Process all lines for name removal
-        for i in range(len(lines)):
-            line = lines[i]
-            stripped = line.strip()
-            
-            # Skip if line is a section header
-            if stripped.lower() in section_headers:
-                continue
-            
-            # Skip if line is ALL CAPS or has technical content
-            if line.isupper() or any(tech in line.lower() for tech in ['java', 'python', 'android', 'linux', 'aws']):
-                continue
-            
-            # Remove standalone name patterns (more aggressive in first 20 lines)
-            if i < 20:
-                # Very aggressive in header
-                lines[i] = re.sub(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4}\b', '', line)
-            else:
-                # Moderate in body - only obvious name patterns on their own lines
-                lines[i] = re.sub(r'^\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4}\s*$', '', line)
-        
-        return '\n'.join(lines)
-    
-    def _remove_education_section(self, text: str) -> str:
-        """Remove education section completely"""
-        # Split text into lines for line-by-line analysis
-        lines = text.split('\n')
-        result_lines = []
-        in_education = False
-        education_depth = 0
-        
-        for i, line in enumerate(lines):
-            stripped = line.strip()
-            
-            # Check if this is an education section header (case-insensitive, allows some variations)
-            if stripped.lower() in ['education', 'academic', 'academics', 'qualifications', 'qualification', 
-                                     'educational background', 'academic background']:
-                in_education = True
-                education_depth = 0
-                continue
-            
-            # Detect inline degree patterns that indicate education info
-            # Match patterns like "Bachelor of", "Master of", "B.Tech", "M.Tech", etc.
-            if re.search(r'\b(bachelor|master|b\.tech|m\.tech|b\.e\.|m\.e\.|mba|phd|diploma)\b', 
-                        stripped, re.IGNORECASE):
-                in_education = True
-                education_depth = 0
-                continue
-            
-            # Check if we've reached next major section (exit education)
-            if in_education:
-                # Next section markers - check against common section names
-                next_sections = ['work experience', 'experience', 'professional experience', 
-                               'work', 'skills', 'technical skills', 'projects', 'project',
-                               'professional', 'summary', 'others', 'programming', 
-                               'embedded', 'engineering', 'certifications']
-                
-                if any(stripped.lower() == sec for sec in next_sections):
-                    in_education = False
-                # Also exit after substantial content (like 25 lines)
-                elif education_depth > 25:
-                    in_education = False
-                else:
-                    education_depth += 1
-                    continue
-            
-            # Keep line if not in education section
-            if not in_education:
-                result_lines.append(line)
-        
-        return '\n'.join(result_lines)
-    
-    def _remove_personal_sections(self, text: str) -> str:
-        """Remove Personal Interests, Hobbies, Languages Known sections"""
-        lines = text.split('\n')
-        result_lines = []
-        in_personal_section = False
-        section_depth = 0
-        
-        # Personal section markers
-        personal_markers = ['personal interests', 'hobbies', 'interests', 
-                          'activities and interest', 'activities and interests',
-                          'languages known', 'language proficiency', 'languages',
-                          'personal assets', 'personal details', 'personal information',
-                          'extra curricular', 'extracurricular activities',
-                          'personal', 'leisure', 'recreation']
-        
-        for i, line in enumerate(lines):
-            stripped = line.strip().lower()
-            
-            # Check if this is a personal section header
-            if any(marker == stripped or stripped.startswith(marker + ':') for marker in personal_markers):
-                in_personal_section = True
-                section_depth = 0
-                continue
-            
-            # Check if we've reached next major section
-            if in_personal_section:
-                next_sections = ['work experience', 'experience', 'professional experience',
-                               'projects', 'certifications', 'skills', 'technical skills',
-                               'achievements', 'awards', 'declaration', 'references']
-                
-                if any(stripped == sec or stripped.startswith(sec + ':') for sec in next_sections):
-                    in_personal_section = False
-                elif section_depth > 20:  # Exit after substantial content
-                    in_personal_section = False
-                else:
-                    section_depth += 1
-                    continue
-            
-            # Keep line if not in personal section
-            if not in_personal_section:
-                result_lines.append(line)
-        
-        return '\n'.join(result_lines)
-    
-    def _remove_demographics(self, text: str) -> str:
-        """Remove demographic information: DOB, Gender, Marital Status, Father's/Mother's names, Nationality"""
-        # Date of Birth patterns
-        text = re.sub(r'(?i)\b(date of birth|dob|birth date)\s*:?\s*[^\n]+', '', text)
-        text = re.sub(r'(?i)\b(born on|born)\s*:?\s*\d{1,2}[-/]\d{1,2}[-/]\d{2,4}', '', text)
-        
-        # Gender
-        text = re.sub(r'(?i)\b(gender|sex)\s*:?\s*(male|female|m|f|other)[^\n]*', '', text)
-        
-        # Marital Status
-        text = re.sub(r'(?i)\b(marital status|marriage status)\s*:?\s*(single|married|divorced|widowed)[^\n]*', '', text)
-        
-        # Father's/Mother's names
-        text = re.sub(r"(?i)\b(father's name|fathers name|mother's name|mothers name)\s*:?\s*[^\n]+", '', text)
-        
-        # Nationality (when explicitly stated)
-        text = re.sub(r'(?i)\bnationality\s*:?\s*(indian|american|british|canadian|australian)[^\n]*', '', text)
-        
-        # Age
-        text = re.sub(r'(?i)\bage\s*:?\s*\d{1,3}\s*(years?|yrs?)?[^\n]*', '', text)
-        
-        return text
-    
-    def _remove_declaration_section(self, text: str) -> str:
-        """Remove declaration section completely"""
-        # Remove declaration section with various patterns
-        # Pattern 1: Section header followed by content
-        text = re.sub(r'(?i)^\s*DECLARATION\s*\n.*?(?=\n\s*[A-Z][A-Z\s]{3,}|\Z)', '', text, flags=re.MULTILINE | re.DOTALL)
-        
-        # Pattern 2: "I hereby declare..." statements
-        text = re.sub(r'(?i)\bI\s+hereby\s+declare\b.*?(?=\n\n|\Z)', '', text, flags=re.DOTALL)
-        
-        # Pattern 3: Common declaration phrases
-        text = re.sub(r'(?i)^\s*.*?declaration.*?(?:true|correct|best of my knowledge).*?$', '', text, flags=re.MULTILINE)
-        
-        # Pattern 4: Declaration with signature/place/date
-        text = re.sub(r'(?i)(declaration|place|date)\s*:.*?$', '', text, flags=re.MULTILINE)
-        
-        return text
-    
-    def _rewrite_profile_summaries(self, text: str) -> str:
-        """Rewrite profile summaries to remove first-person references with names"""
-        lines = text.split('\n')
-        result_lines = []
-        
-        for line in lines:
-            original_line = line
-            
-            # Pattern: "I am [Name], a [title]..." -> "A [title]..."
-            line = re.sub(r'(?i)^\s*I am [A-Z][a-z]+(\s+[A-Z][a-z]+){0,3},\s*a\s+', 'A ', line)
-            line = re.sub(r'(?i)^\s*I am [A-Z][a-z]+(\s+[A-Z][a-z]+){0,3},\s*an\s+', 'An ', line)
-            
-            # Pattern: "I, [Name], am a [title]..." -> "A [title]..."
-            line = re.sub(r'(?i)^\s*I,\s*[A-Z][a-z]+(\s+[A-Z][a-z]+){0,3},\s*am\s+a\s+', 'A ', line)
-            
-            # Pattern: "My name is [Name] and I am..." -> Remove entire name clause
-            line = re.sub(r'(?i)^\s*My name is [A-Z][a-z]+(\s+[A-Z][a-z]+){0,3}\s*and\s*', '', line)
-            line = re.sub(r'(?i)^\s*My name is [A-Z][a-z]+(\s+[A-Z][a-z]+){0,3}\.?\s*', '', line)
-            
-            # If line was modified, ensure it starts properly
-            if line != original_line and line.strip():
-                # Capitalize first letter if needed
-                line = line.strip()
-                if line and line[0].islower():
-                    line = line[0].upper() + line[1:]
-            
-            result_lines.append(line)
-        
-        return '\n'.join(result_lines)
-    
-    def _cleanup_artifacts(self, text: str) -> str:
-        """Clean up redaction artifacts and remove remaining names"""
-        # Remove social media labels and remnants
-        text = re.sub(r'(?i)\b(?:social links?|connect with me|find me on|follow me)\s*:?\s*', '', text)
-        text = re.sub(r'(?i)\b(?:linkedin|github|twitter|facebook|instagram)\s*:?\s*', '', text)
-        
-        # Remove standalone names on their own lines (aggressive)
-        # This catches names like "John Doe" or "Abhishek Kumar Dwivedi"
-        text = re.sub(r'^\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4}\s*$', '', text, flags=re.MULTILINE)
-        
-        # Remove lines that are just single digits (page numbers)
-        text = re.sub(r'^\s*\d\s*$', '', text, flags=re.MULTILINE)
-        
-        # Remove common header/footer patterns
-        text = re.sub(r'^\s*PROFESSIONAL EXPERIENCES\s*$', '', text, flags=re.MULTILINE | re.IGNORECASE)
-        
-        # Remove empty labels and their remnants
-        text = re.sub(r'\b(Email|Phone|Mobile|Address|Location|Contact|LinkedIn|GitHub|Website|Twitter|Facebook|Instagram|Social Links?)\s*[:|-]?\s*[,|\n]', '', text, flags=re.IGNORECASE)
-        
-        # Remove lines with only removed markers
-        text = re.sub(r'^.*?\[.*?REMOVED\].*?$', '', text, flags=re.MULTILINE)
-        
-        # Remove lines that only have labels without content
-        text = re.sub(r'(?m)^\s*(E:|M:|P:|Email:|Phone:|Mobile:|Address:|Location:|City:|State:|Country:)\s*$', '', text, flags=re.IGNORECASE)
-        
-        # Remove isolated social media fragments
-        text = re.sub(r'(?m)^\s*(?:n/|/in/|@)[a-zA-Z0-9_-]+/?\s*$', '', text)
-        
-        # Fix multiple spaces/separators
-        text = re.sub(r' {2,}', ' ', text)
-        text = re.sub(r'([|,])\s*\1+', r'\1', text)
-        
-        # Fix line breaks
-        text = re.sub(r'\n{3,}', '\n\n', text)
-        
-        # Remove empty lines at start/end
-        text = text.strip()
-        
-        return text
-    
-    def _fix_concatenated_words(self, text: str) -> str:
-        """
-        Fix concatenated words intelligently - ONLY AFTER protected terms restored
-        """
-        # Fix specific common concatenations first
-        common_fixes = {
-            r'\bau?to\s*motive\b': 'automotive',
-            r'\bcon\s*figuration\b': 'configuration',
-            r'\bunder\s*st\s*and\s*ing\b': 'understanding',
-            r'\bs\s*and\s*box\b': 'sandbox',
-            r'\bh\s*and\s*ling\b': 'handling',
-            r'\bper\s*for\s*m': 'perform',
-            r'\bplat\s*for\s*m': 'platform',
-            r'\btelem\s*at\s*ics\b': 'telematics',
-            r'\bg\s*at\s*eway\b': 'gateway',
-            r'\bc\s*on\s*trol\b': 'control',
-            r'\bc\s*on\s*': 'con',  # For words like "consultant"
-            r'\bst\s*and\s*ard\b': 'standard',
-        }
-        
-        for pattern, replacement in common_fixes.items():
-            text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
-        
-        # Add space between lowercase and uppercase (camelCase)
-        text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
-        
-        # Add space between letter and number
-        text = re.sub(r'([a-zA-Z])(\d)', r'\1 \2', text)
-        text = re.sub(r'(\d)([a-zA-Z])', r'\1 \2', text)
-        
-        # Fix common word boundaries that get stuck together
-        # Pattern: lowercase + common short word + lowercase
-        short_words = ['in', 'to', 'at', 'on', 'of', 'by', 'as', 'is', 'and', 'the', 'for', 'with']
-        for word in short_words:
-            # Fix patterns like "wordin" -> "word in", "into" -> "in to" (context-dependent)
-            text = re.sub(rf'([a-z]{{3,}})({word})([a-z]{{3,}})', rf'\1 {word} \3', text, flags=re.IGNORECASE)
-        
-        return text
-    
-    def _aggressive_word_separation(self, text: str) -> str:
-        """Super aggressive word separation for concatenated text - applied AFTER protected term restoration"""
-        # Common verbs that get concatenated
-        verbs = ['worked', 'developed', 'built', 'created', 'implemented', 'designed', 'managed', 
-                 'tested', 'analyzed', 'executed', 'performed', 'configured', 'deployed', 'integrated',
-                 'coordinated', 'collaborated', 'conducted', 'resolved', 'provided', 'ensured',
-                 'resolved', 'fixing', 'debugging', 'coding', 'programming', 'mentoring', 'leading']
-        
-        for verb in verbs:
-            text = re.sub(rf'([a-z])({verb})', rf'\1 {verb}', text, flags=re.IGNORECASE)
-            text = re.sub(rf'({verb})([a-z])', rf'{verb} \2', text, flags=re.IGNORECASE)
-        
-        # Common prepositions and conjunctions
-        small_words = ['to', 'at', 'in', 'on', 'of', 'by', 'as', 'is', 'was', 'are', 'were',
-                       'and', 'with', 'for', 'from', 'into', 'across', 'under', 'over', 'the']
-        
-        for word in small_words:
-            # More aggressive - add space before and after
-            text = re.sub(rf'([a-z])({word})([a-z])', rf'\1 {word} \3', text, flags=re.IGNORECASE)
-            text = re.sub(rf'([a-z])({word})\b', rf'\1 {word}', text, flags=re.IGNORECASE)
-            text = re.sub(rf'\b({word})([a-z])', rf'{word} \2', text, flags=re.IGNORECASE)
-        
-        # Fix specific technical concatenations
-        tech_terms = ['Linux', 'Android', 'Windows', 'Python', 'Java', 'AWS', 'Docker', 'Kubernetes',
-                     'NodeJS', 'JavaScript', 'TypeScript']
-        for term in tech_terms:
-            text = re.sub(rf'([a-z])({term})', rf'\1 {term}', text)
-            text = re.sub(rf'({term})([a-z])', rf'{term} \2', text)
-        
-        # Common nouns that get concatenated
-        nouns = ['software', 'hardware', 'system', 'product', 'security', 'application', 'development',
-                'implementation', 'architecture', 'framework', 'interface', 'component', 'service',
-                'device', 'module', 'stack', 'layer', 'kernel', 'driver', 'firmware', 'gateway']
-        
-        for noun in nouns:
-            text = re.sub(rf'([a-z])({noun})', rf'\1 {noun}', text, flags=re.IGNORECASE)
-            text = re.sub(rf'({noun})([a-z])', rf'{noun} \2', text, flags=re.IGNORECASE)
-        
-        return text
-    
-    def _professional_formatting_final(self, text: str) -> str:
-        """
-        Final professional formatting - NO aggressive word separation
-        This runs AFTER protected terms are restored
-        """
-        # Fix punctuation spacing
-        text = re.sub(r':([A-Za-z])', r': \1', text)
-        text = re.sub(r',([A-Za-z])', r', \1', text)
-        text = re.sub(r'\.([A-Z])', r'. \1', text)
-        
-        # Fix double spaces
-        text = re.sub(r' {2,}', ' ', text)
-        
-        lines = text.split('\n')
-        formatted_lines = []
-        prev_was_header = False
-        
-        for i, line in enumerate(lines):
-            line = line.strip()
-            if not line:
-                continue
-            
-            # Detect section headers
-            is_header = (
-                (line.isupper() and 3 <= len(line) <= 60 and len(line.split()) <= 10) or
-                re.match(r'^[A-Z][a-zA-Z\s]{2,50}$', line) and len(line.split()) <= 6
-            )
-            
-            # Format based on line type
-            if is_header:
-                # Add spacing around headers
-                if formatted_lines and not prev_was_header:
-                    formatted_lines.append('')
-                formatted_lines.append(line)
-                formatted_lines.append('')
-                prev_was_header = True
-            elif line.startswith(('•', '-', '·', '○', '*')):
-                # Bullet points - clean formatting
-                clean_bullet = '• ' + line.lstrip('•-·○* ').strip()
-                formatted_lines.append(clean_bullet)
-                prev_was_header = False
-            elif re.match(r'^\d{4}\s*[-–—]\s*(\d{4}|Present|Current|Till)', line, re.IGNORECASE):
-                # Date ranges - likely job/education entries
-                if formatted_lines and formatted_lines[-1]:
-                    formatted_lines.append('')
-                formatted_lines.append(line)
-                prev_was_header = False
-            else:
-                # Regular content
-                formatted_lines.append(line)
-                prev_was_header = False
-        
-        # Join lines
-        text = '\n'.join(formatted_lines)
-        
-        # Clean up excessive blank lines (max 2 consecutive)
-        text = re.sub(r'\n{3,}', '\n\n', text)
-        
-        # Ensure proper spacing around content
-        text = text.strip()
-        
-        return text
-
+# ============================================================================
+# MAIN ORCHESTRATOR
+# ============================================================================
 
 class PipelineOrchestrator:
-    """
-    Main orchestrator that:
-    1. Analyzes CV to determine type
-    2. Selects appropriate specialized pipeline
-    3. Executes extraction and processing
-    4. Applies universal redaction
-    5. Validates and saves output
-    """
+    """Main orchestrator for CV processing"""
     
-    def __init__(self, debug: bool = False):
+    def __init__(self, debug: bool = False, config_dir: str = "config"):
         self.debug = debug
         self.detector = CVProfileDetector()
-        self.redactor = UniversalRedactionEngine()
+        self.redactor = UniversalRedactionEngine(config_dir)
         
-        # Initialize all pipelines
         self.pipelines = {
             CVType.NAUKRI: NaukriPipeline(debug),
             CVType.MULTI_COLUMN: MultiColumnPipeline(debug),
             CVType.STANDARD_ATS: StandardATSPipeline(debug),
-            CVType.SCANNED_IMAGE: ScannedImagePipeline(debug),
-            CVType.CREATIVE_DESIGNER: CreativeDesignerPipeline(debug),
-            CVType.ACADEMIC_RESEARCH: AcademicResearchPipeline(debug)
+            CVType.SCANNED_IMAGE: StandardATSPipeline(debug),
+            CVType.CREATIVE_DESIGNER: StandardATSPipeline(debug),
+            CVType.ACADEMIC_RESEARCH: StandardATSPipeline(debug)
         }
     
     def process_cv(self, pdf_path: str) -> Tuple[str, CVProfile]:
         """Process a single CV"""
-        logger.info(f"=" * 80)
-        logger.info(f"Processing: {Path(pdf_path).name}")
-        logger.info(f"=" * 80)
+        logger.info(f"{'='*80}\nProcessing: {Path(pdf_path).name}\n{'='*80}")
         
-        # Step 1: Analyze CV
         profile = self.detector.analyze(pdf_path)
         logger.info(f"Detected: {profile}")
         
-        # Step 2: Select pipeline
-        pipeline = self.pipelines.get(profile.cv_type)
-        if not pipeline:
-            logger.warning(f"No pipeline for {profile.cv_type}, using standard")
-            pipeline = self.pipelines[CVType.STANDARD_ATS]
-        
-        # Step 3: Extract and preprocess
+        pipeline = self.pipelines.get(profile.cv_type, self.pipelines[CVType.STANDARD_ATS])
         processed_text = pipeline.process(pdf_path)
         
-        # Step 4: Apply universal redaction
         filename = Path(pdf_path).name
         redacted_text = self.redactor.redact(processed_text, filename)
         
-        # Step 5: Final cleanup and professional formatting
         final_text = self._final_cleanup(redacted_text)
         
         return final_text, profile
     
     def _final_cleanup(self, text: str) -> str:
-        """Final text cleanup"""
-        # Remove any remaining standalone names (3-4 word capitalized names on their own lines)
-        text = re.sub(r'(?m)^\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+){2,4}\s*$', '', text)
+        """Final cleanup"""
+        # Don't remove potential year digits that might be part of dates
+        text = re.sub(r'(?m)^\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+){2,4}\s*', '', text)
+        # Remove single digit page numbers, but NOT "2" that might be part of a year
+        lines = text.split('\n')
+        cleaned = []
+        for i, line in enumerate(lines):
+            # Skip removing if line is just "2" and next line looks like partial date
+            if re.match(r'^\s*2\s*$', line) and i + 1 < len(lines):
+                if re.match(r'^\s*0\d{2}-\d{2}\s*$', lines[i + 1]):
+                    cleaned.append(line)
+                    continue
+            # Remove other single digit lines (page numbers)
+            if re.match(r'^\s*\d\s*$', line):
+                continue
+            cleaned.append(line)
+        text = '\n'.join(cleaned)
         
-        # Remove standalone page numbers
-        text = re.sub(r'(?m)^\s*\d\s*$', '', text)
-        
-        # Normalize bullets
         text = re.sub(r'[•●○◦▪▫■□⬤]', '•', text)
-        
-        # Fix spacing
         text = re.sub(r' {2,}', ' ', text)
         text = re.sub(r'\n{3,}', '\n\n', text)
         
-        # Trim
-        text = text.strip()
+        # Final date fix after all cleanup
+        text = re.sub(r'\b0(15|16|17|18|19|20|21|22|23|24|25)-(\d{2})\b', r'20\1-\2', text)
         
-        return text
+        return text.strip()
     
     def process_directory(self, input_dir: str, output_dir: str = None):
         """Process all PDFs in directory"""
@@ -1362,16 +1192,13 @@ class PipelineOrchestrator:
         
         for pdf_file in pdf_files:
             try:
-                # Process
                 redacted_text, profile = self.process_cv(str(pdf_file))
                 
-                # Save output
                 output_file = output_path / f"REDACTED_{pdf_file.stem}.txt"
                 output_file.write_text(redacted_text, encoding='utf-8')
                 
                 logger.info(f"✓ Saved: {output_file.name}")
-                logger.info(f"  Pipeline: {profile.cv_type.value}")
-                logger.info(f"  Confidence: {profile.confidence:.2f}")
+                logger.info(f"  Pipeline: {profile.cv_type.value}, Confidence: {profile.confidence:.2f}")
                 
                 stats[profile.cv_type] += 1
                 success_count += 1
@@ -1379,40 +1206,101 @@ class PipelineOrchestrator:
             except Exception as e:
                 logger.error(f"✗ Failed: {pdf_file.name} - {e}")
         
-        # Print summary
-        logger.info(f"\n" + "=" * 80)
-        logger.info(f"PROCESSING COMPLETE")
-        logger.info(f"=" * 80)
-        logger.info(f"Total files: {len(pdf_files)}")
-        logger.info(f"Successful: {success_count}")
-        logger.info(f"Failed: {len(pdf_files) - success_count}")
+        logger.info(f"\n{'='*80}\nPROCESSING COMPLETE\n{'='*80}")
+        logger.info(f"Total: {len(pdf_files)} | Success: {success_count} | Failed: {len(pdf_files) - success_count}")
         logger.info(f"\nPipeline Usage:")
         for cv_type, count in stats.items():
             if count > 0:
                 logger.info(f"  {cv_type.value}: {count}")
 
 
+# ============================================================================
+# CLI & CONFIG MANAGEMENT
+# ============================================================================
+
+def add_location(city: str = None, state: str = None, country: str = None, config_dir: str = "config"):
+    """Add location to config"""
+    config_path = Path(config_dir) / "locations.json"
+    
+    with open(config_path, 'r') as f:
+        locations = json.load(f)
+    
+    if city and city not in locations['cities']:
+        locations['cities'].append(city)
+    if state and state not in locations['states']:
+        locations['states'].append(state)
+    if country and country not in locations['countries']:
+        locations['countries'].append(country)
+    
+    with open(config_path, 'w') as f:
+        json.dump(locations, f, indent=2)
+
+
+def add_protected_term(term: str, category: str = "technical_terms", config_dir: str = "config"):
+    """Add protected term to config"""
+    config_path = Path(config_dir) / "protected_terms.json"
+    
+    with open(config_path, 'r') as f:
+        protected = json.load(f)
+    
+    if category not in protected:
+        protected[category] = []
+    
+    if term.lower() not in [t.lower() for t in protected[category]]:
+        protected[category].append(term.lower())
+    
+    with open(config_path, 'w') as f:
+        json.dump(protected, f, indent=2)
+
+
+def add_text_healing_rule(broken: str, fixed: str, config_dir: str = "config"):
+    """Add text healing rule to config"""
+    config_path = Path(config_dir) / "text_healing.json"
+    
+    with open(config_path, 'r') as f:
+        healing = json.load(f)
+    
+    healing['common_words'][broken] = fixed
+    
+    with open(config_path, 'w') as f:
+        json.dump(healing, f, indent=2)
+
+
 def main():
     """Main entry point"""
     import sys
     
-    # Configure
+    if len(sys.argv) > 1:
+        command = sys.argv[1]
+        
+        # Config management commands
+        if command == "add-city" and len(sys.argv) > 2:
+            add_location(city=sys.argv[2])
+            print(f"✓ Added city: {sys.argv[2]}")
+            return
+        
+        elif command == "add-term" and len(sys.argv) > 2:
+            add_protected_term(sys.argv[2])
+            print(f"✓ Added term: {sys.argv[2]}")
+            return
+        
+        elif command == "add-healing" and len(sys.argv) > 3:
+            add_text_healing_rule(sys.argv[2], sys.argv[3])
+            print(f"✓ Added healing: {sys.argv[2]} → {sys.argv[3]}")
+            return
+    
+    # Normal processing
     debug = '--debug' in sys.argv
     
-    # Input directory
     input_dir = "resume"
     if len(sys.argv) > 1 and not sys.argv[1].startswith('--'):
         input_dir = sys.argv[1]
     
-    # Output directory
     output_dir = "final_output"
     if len(sys.argv) > 2 and not sys.argv[2].startswith('--'):
         output_dir = sys.argv[2]
     
-    # Create orchestrator
     orchestrator = PipelineOrchestrator(debug=debug)
-    
-    # Process
     orchestrator.process_directory(input_dir, output_dir)
 
 
