@@ -59,9 +59,9 @@ Assisted in the deployment and conﬁguration of web
 applications on production, staging servers, ensuring
 smooth and seamless deployment processes.
 
-SKILLS
-
 [REDACTED_SOCIAL]
+
+SKILLS
 
 Asp. Net C# Blazor MVC 5 WebAPI
 

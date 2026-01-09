@@ -1159,22 +1159,131 @@ class NaukriPipeline(BasePipeline):
         """Clean up and reorganize Naukri content"""
         text = re.sub(r'Naukri\.com|www\.naukri\.com', '', text, flags=re.IGNORECASE)
         
-        # Replace sidebar marker with SKILLS
-        text = re.sub(r'===\s*SIDEBAR\s*===', '\n\nSKILLS\n', text)
-        
-        # Remove duplicate SKILLS headers (keep first occurrence)
         lines = text.split('\n')
-        seen_skills = False
-        cleaned_lines = []
-        for line in lines:
-            if line.strip() == 'SKILLS':
-                if not seen_skills:
-                    cleaned_lines.append(line)
-                    seen_skills = True
-                # Skip duplicate SKILLS headers
-            else:
-                cleaned_lines.append(line)
-        text = '\n'.join(cleaned_lines)
+        
+        # Find the main SKILLS section and ALL sidebar markers
+        skills_idx = -1
+        sidebar_indices = []
+        prof_exp_idx = -1
+        
+        for i, line in enumerate(lines):
+            line_stripped = line.strip()
+            if line_stripped == 'SKILLS' and skills_idx == -1:
+                skills_idx = i
+            if line_stripped == '=== SIDEBAR ===':
+                sidebar_indices.append(i)
+            if 'PROFESSIONAL EXPERIENCE' in line_stripped.upper() and prof_exp_idx == -1:
+                prof_exp_idx = i
+        
+        # If we have main skills section and at least one sidebar, merge them
+        if skills_idx != -1 and sidebar_indices and prof_exp_idx != -1:
+            # Collect all sidebar skills from all sidebar sections
+            all_sidebar_skills = []
+            
+            for sidebar_idx in sidebar_indices:
+                # Find the end of this sidebar section (actual sidebar is ~10-12 lines max)
+                end_idx = min(sidebar_idx + 12, len(lines))  # Limit to 12 lines max
+                for next_sidebar in sidebar_indices:
+                    if next_sidebar > sidebar_idx:
+                        end_idx = min(end_idx, next_sidebar)
+                        break
+                
+                sidebar_content = lines[sidebar_idx+1:end_idx]
+                
+                # Extract only skills, skip contact info and stop at job content
+                skills_section_active = False
+                for line in sidebar_content:
+                    line_lower = line.strip().lower()
+                    line_stripped = line.strip()
+                    
+                    # Skip empty lines
+                    if len(line_stripped) < 3:
+                        continue
+                    
+                    # Skip contact info patterns (first few lines)
+                    if any(x in line for x in ['@', '•']) or re.search(r'\d{5,}|linkedin|github', line, re.IGNORECASE):
+                        continue
+                    
+                    # Stop if we hit job-related content (company names, job titles, dates)
+                    if any(marker in line_lower for marker in ['engineer', 'developer', 'analyst', 'manager', 'paytm', 'springer', 'infosys', 'tcs', 'wipro', 'technologies', 'limited', 'pvt', 'inc', 'corporation', 'project']):
+                        break
+                    
+                    # Stop if we hit date patterns (job dates)
+                    if re.search(r'\b(20\d{2}|19\d{2})\b|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)', line_lower):
+                        break
+                    
+                    # Stop if line starts with bullet points (likely job descriptions)
+                    if line_stripped.startswith('•') or line_stripped.startswith('-') or line_stripped.startswith('o '):
+                        break
+                    
+                    # Stop if line starts with lowercase or contains phrases like "emphasizing", "for the", "it offers" (descriptive text)
+                    if line_stripped and (line_stripped[0].islower() or any(phrase in line_lower for phrase in ['emphasizing', 'for the', 'it offers', 'using', 'designed to', 'leverages', 'created'])):
+                        break
+                    
+                    # Keep only clear skills patterns (must start with capital or contain comma-separated tech terms)
+                    if any(keyword in line_lower for keyword in ['cloud', 'aws', 'api', 'flask', 'django', 'framework', 'office', 'html', 'css', 'javascript', 'python', 'java', 'react', 'sql', 'mongodb', 'docker', 'kubernetes', 'azure', 'gcp', 'terraform']):
+                        # Reject sentence fragments (ends with prepositions/conjunctions)
+                        if line_lower.rstrip().endswith(('for', 'to', 'of', 'in', 'on', 'at', 'with', 'from', 'by', 'as', 'the', 'a', 'an', 'and', 'or')):
+                            continue
+                        
+                        # Must start with capital letter or contain multiple commas (skill lists)
+                        if line_stripped[0].isupper() and (',' in line or len(line_stripped.split()) <= 10):
+                            if line not in all_sidebar_skills:
+                                all_sidebar_skills.append(line)
+                                skills_section_active = True
+                        elif skills_section_active and line_stripped[0].isupper():
+                            # Continue with continuation lines if we're in skills section
+                            if line not in all_sidebar_skills:
+                                all_sidebar_skills.append(line)
+            
+            # Now reconstruct document in correct order:
+            # 1. Everything before SKILLS section
+            # 2. SKILLS section with sidebar skills merged
+            # 3. PROFESSIONAL EXPERIENCE section and everything after (excluding sidebars)
+            
+            result = []
+            sidebar_ranges = []
+            
+            # Calculate ranges to skip (sidebar sections only)
+            for sidebar_idx in sidebar_indices:
+                start = sidebar_idx
+                end = sidebar_idx + 1
+                # Skip contact and skill lines
+                for j in range(sidebar_idx + 1, min(sidebar_idx + 30, len(lines))):
+                    if j in sidebar_indices:
+                        break  # Hit next sidebar
+                    line_lower = lines[j].strip().lower()
+                    # Check if this is sidebar content (contact or skills)
+                    is_sidebar_content = (
+                        any(x in lines[j] for x in ['@', '•']) or
+                        re.search(r'\d{5,}|linkedin|github', lines[j], re.IGNORECASE) or
+                        any(keyword in line_lower for keyword in ['cloud', 'aws', 'api', 'flask', 'django', 'framework', 'office', 'html', 'css', 'javascript', 'python', 'java', 'react', 'sql', 'mongodb', 'docker', 'kubernetes', 'azure', 'gcp']) or
+                        (len(lines[j].strip()) > 10 and (',' in lines[j] or 'and' in line_lower))
+                    )
+                    if is_sidebar_content or len(lines[j].strip()) < 3:
+                        end = j + 1
+                    else:
+                        break  # Hit actual content
+                sidebar_ranges.append((start, end))
+            
+            # Add lines, skipping sidebar ranges
+            for i in range(len(lines)):
+                # Skip if in any sidebar range
+                if any(start <= i < end for start, end in sidebar_ranges):
+                    continue
+                
+                # Insert sidebar skills after SKILLS section (before PROF EXP)
+                if i == prof_exp_idx and all_sidebar_skills:
+                    result.append("")
+                    result.extend(all_sidebar_skills)
+                    result.append("")
+                
+                result.append(lines[i])
+            
+            text = '\n'.join(result)
+        else:
+            # Fallback: just remove all sidebar markers and their immediate content
+            text = re.sub(r'===\s*SIDEBAR\s*===', '', text)
         
         # Clean up extra whitespace
         text = re.sub(r' {2,}', ' ', text)

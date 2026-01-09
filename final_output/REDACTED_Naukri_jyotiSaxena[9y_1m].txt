@@ -44,8 +44,6 @@ and Kotlin.
 • Work with outside data sources and API’s.
 • Work on bug fixing and improving application performance
 
-SKILLS
-
 Fluent
 
 Fluent

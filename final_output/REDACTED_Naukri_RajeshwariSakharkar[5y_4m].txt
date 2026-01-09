@@ -27,8 +27,6 @@ Role : Senior Associate Consultant
 Responsibilities :
 • Analysis of existing business Process.
 
-SKILLS
-
 [PAGE_NUMBER]
 
 • Developing/Enhancing Maps for EDI standards X12(850,855,856,810,820,180), XML, EDIFACT.
