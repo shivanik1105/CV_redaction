@@ -1,81 +1,62 @@
-m
+MAYUR PHONE
 
-[REDACTED_NAME]
+PATIL EMAIL
 
 LOCATION
-
-[LOCATION][LOCATION]
 
 MULESOFT DEVELOPER
 
 EXPERIENCE
 
-3 Years 0 Month
-
 Profile Summary
 
-Key Skills
+3+ years experience in customer relationship
+Key Skills and supply chain management. Adept at supply
 
 Software Design
 
 Mulesoft Developer
 
-Work Experience
-Software Engineering
-
-07/2021 - Present
+Software Development Work Experience
+Software Engineering 07/2021 - Present
 
 Database Handling
 
-Application Development
-
-Object Oriented
-
-Programming
-
-Spring Boot
-
-Mulesoft Anypoint
-
-Mule ESB
-
-Mulesoft Integration
-
-Mulesoft Anypoint Platform
-
-Certification
-
-MuleSoft Certified
-
-Developer - Level 1 (Mule 4)
-
-Languages
-
 • Proven experience in Mulesoft development,
-with a strong grasp of Anypoint Platform
-components, particularly Anypoint Studio. -
-Hands-on experience with Mule 3. X and 4. X. -
+Application Development with a strong grasp of Anypoint Platform
+Object Oriented components, particularly Anypoint Studio. -
+Programming Hands-on experience with Mule 3. X and 4. X. -
 
 Knowledge of enhancing and developing
 
+Spring Boot
+
 Restful APIs to facilitate seamless data
 
-exchange between end applications. -
+Mulesoft Anypoint exchange between end applications. -
 Proficiency in designing RAML-based APIs and
+
+Mule ESB
+
 ensuring proper documentation. - Strong skills
-in complex Dataweave (DWL) transformations
-and the utilization of various connectors like
+Mulesoft Integration in complex Dataweave (DWL) transformations
+Mulesoft Anypoint Platform and the utilization of various connectors like
 expressions, files, schedulers, and more. -
 Unlock the full potential of databases with a
-hands-on journey through Postgres, MS-SQL,
-and MySQL - Sound knowledge of ObjectOriented Programming (OOP) Patterns and
-Concepts of Java Programming. - Experience
+Certification hands-on journey through Postgres, MS-SQL,
+and MySQL - Sound knowledge of ObjectMuleSoft Certified Oriented Programming (OOP) Patterns and
+Developer - Level 1 (Mule 4) Concepts of Java Programming. - Experience
 with Mule flows, scopes, debugger, error
-handling strategies, and logger for robust
+Languages handling strategies, and logger for robust
 integration solutions. - Ability to prepare
 
 English
 
+SKILLS
+
+m
+Pune, INDIA
+3 Years 0 Month
 g
 
 Hindi
@@ -83,6 +64,11 @@ Hindi
 Social links
 
 n/mayur-patil96/
+
+[REMOVED_SECTION_EDUCATION]
+
+Projects
+
 comprehensive documentation, including API
 specifications and technical design
 documents. - Familiarity with MUnit testing for
@@ -94,10 +80,19 @@ integration with client infrastructure. -
 Familiarity with Postman collections for testing
 
 HTTP methods.
+MBA/PGDM - Information Technology
+2021
 
-[REMOVED_SECTION_EDUCATION]
+Centre for Development of Advanced
 
-Projects
+Computing (CDAC)
+B. Ed - Education
+2018
+[LOCATION]University
+10th
+2012
+[LOCATION], Marathi
+Grade - 80-84.9%
 
 Midas
 
@@ -119,11 +114,13 @@ JS. ?? Ensured seamless migrations from
 legacy systems to modern platforms through
 meticulous planning, testing, and execution.
 ?? Mentored junior developers to improve
-their technical skills, fostering a culture of
-continuous learning within the team
 
 Odyssey
 
+Erasure
+
+their technical skills, fostering a culture of
+continuous learning within the team
 1063 Days
 It is company intranet system where is project
 management, HR management, employee
@@ -141,8 +138,6 @@ and code Build process. ?? Worked closely
 with others team members to plan design and
 
 Develop robust solution in timely manner
-
-Erasure
 
 610 Days
 It's a device data sanitization project

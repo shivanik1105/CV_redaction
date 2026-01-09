@@ -1,12 +1,6 @@
-[LOCATION][LOCATION]421501 •
-
-[REDACTED_PHONE] •
-
 [REDACTED_NAME]
 
 PYTHON DEVELOPER
-
-[REDACTED_EMAIL] •
 
 PROFILE
 
@@ -18,56 +12,68 @@ SKILLS
 
 Python Programming
 
-Cloud platforms like Amazon Web Services,
-Microsoft Azure, Terraform, GCP ,
 Microservices, REST API's, HTTP REQUEST
-FastApi, Flask, Django, FastAPI, Pyspark, Streamlit, Plotly-dash
 Git, JIRA, Jenkins, CI/CD, Kubernetes dashboard
-AWS services like – AWS Step Functions, Lambda,
 Jmeter, Rally, Azure DevOps, Elasticsearch
-S3, Ec2, ECS, SNS
 SQLite, PostgreSQL, SQL, MongoDB
-Advance Microsoft Office, Excel and PowerPoint
 
 Fluent with English speaking and writing
-
-Html, css, Javascript, React.js
 
 PROFESSIONAL EXPERIENCE
 
 Springer Nature Publishing Technologies
 
 Python Developer, October 2023 – Present
-This project aims to build an automated system for journal abstraction and indexing, emphasizing efficiency, user-friendliness, and
-advanced analytics. It combines Python Django for the backend, HTML, JavaScript, AJAX, and CSS for the frontend, and MySQL for data
-management. Using Google Cloud Platform (GCP) for scalable storage of journal PDFs and Plotly Dash for dynamic dashboards, it offers
+This project aims to build an automated system for journal abstraction and indexing
+advanced analytics. It combines Python Django for the backend,
+management. Using Google Cloud Platform (GCP) for scalable storage of journal PDFs and
 robust analytics. Tableau further enhances decision-making with advanced data visualization.
 Key Contribution:
 1. Journal Abstraction and Indexing
-o
-Automatically index journals by metadata (title, author, keywords).
-o
-Extract abstracts and key sections from articles.
-o
-Provide intuitive search and categorization.
+o Automatically index journals by metadata (title, author, keywords).
+o Extract abstracts and key sections from articles.
+o Provide intuitive search and categorization.
 2. Cloud Storage and File Management
-o
-Securely store PDFs on GCP.
-o
-Allow users to upload, download, and manage files with privacy controls.
+o Securely store PDFs on GCP.
+o Allow users to upload, download, and manage files with privacy controls.
 3. Backend (Django)
-o
-Role-based user authentication and subscription management.
-o
-MySQL integration for structured metadata and user records.
-o
-Python scripts for metadata extraction and keyword indexing.
+o Role-based user authentication and subscription management.
+o MySQL integration for structured metadata and user records.
+o Python scripts for metadata extraction and keyword indexing.
 4. Frontend
-o
-Responsive UI with AJAX for smooth interactions.
-o
+o Responsive UI with AJAX for smooth interactions.
+o Personalized dashboards and embedded PDF viewers.
+5. Analytics
+o Use Plotly Dash for sales, subscriptions, and user engagement insights
+Pune, Maharashtra, 421501 •
 
-[REMOVED_SECTION_PERSONAL]
+[REDACTED_PHONE] •
+
+[REDACTED_EMAIL] •
+
+Cloud platforms like Amazon Web Services,
+Microsoft Azure, Terraform, GCP ,
+FastApi, Flask, Django, FastAPI, Pyspark, Streamlit, Plotly-dash
+AWS services like – AWS Step Functions, Lambda,
+S3, Ec2, ECS, SNS
+Advance Microsoft Office, Excel and PowerPoint
+Html, css, Javascript, React.js
+, emphasizing efficiency, user-friendliness, and
+HTML, JavaScript, AJAX, and CSS for the frontend, and MySQL for data
+Plotly Dash for dynamic dashboards, it offers
+Paytm(Paytm m’loyal)
+Software Engineer, June 2022 – August 2023
+m’loyal™ is an advanced mobile loyalty, data analytics, and precision marketing platform seamlessly integrating mobile
+technology, web-based CRM, and visual analytics. Designed to drive exceptional results for retail brands, it combines cuttingedge tools like PySpark for large-scale data processing, AWS cloud services for secure, scalable infrastructure, and
+advanced data management.
+The platform leverages machine learning algorithms and real-time analytics to empower marketers with personalized
+campaigns, improving customer engagement and maximizing ROI. Its hassle-free SaaS model ensures effortless deployment and
+functionality, making it a trusted solution for retail brands aiming for unprecedented growth.
+Key Contributions:
+• Backend Development : Created Django APIs based on business logic; used Flask with Pickle for login and data input pages.
+• Frontend Enhancements : Designed user-friendly HTML pages using React.js and coordinated with the design team for
+better UI/UX. Implemented validations for email and mobile input.
+• Data Management : Filtered data from MySQL to create MongoDB collections; designed and optimized SQL queries for
 
 [REMOVED_SECTION_PERSONAL]
 

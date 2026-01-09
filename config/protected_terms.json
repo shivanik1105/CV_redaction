@@ -29,7 +29,10 @@
     "dotnet",
     "blazor",
     "openstack",
-    "openshift"
+    "openshift",
+    "ext.js",
+    "extjs",
+    "sencha"
   ],
   "databases": [
     "mysql",
@@ -82,7 +85,11 @@
     "lead",
     "scrum master",
     "team leading",
-    "individual contributor"
+    "individual contributor",
+    "system engineer",
+    "senior system engineer",
+    "software engineer",
+    "senior software engineer"
   ],
   "technical_terms": [
     "automotive",

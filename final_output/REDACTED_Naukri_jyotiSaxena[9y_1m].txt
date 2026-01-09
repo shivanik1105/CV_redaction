@@ -1,93 +1,42 @@
 [NAME]
 
-Profile Summary
+Senior Android Developer with over 9 years of experience R Email
 
-R
+dustries including B2B, Order management, E Commerce
 
-Ó
-
-
-
-Location
-
-[LOCATION]
-
-[LOCATION][LOCATION]
-
-Senior Android Developer with over 9 years of experience
-in software and mobile development in a broad range of industries including B2B, Order management, E Commerce
-and automotive. Solid understanding of full mobile and [NAME] (SDLC) including Waterfall
-and Agile methodologies. Well conversant with version control including CVS, SVN and Git. Familiar with third party
-libraries and tools like firebase, volley, proguard, eventbus,
+ware [NAME] (SDLC) including Waterfall [REDACTED_PHONE]
+and Agile methodologies. Well conversant with version con- Location
+trol including CVS, SVN and Git. Familiar with third party  [LOCATION]
+libraries and tools like firebase, volley, proguard, eventbus, [LOCATION][LOCATION]
 google analytics, Retrofit, glide, picasso.
 
 Skills
 
 Work experience
 
-• 
-Java, Kotlin
-• 
-
-Android SDK
-
-• 
-
-MVP, MVVM
-
-Cerence
-
-Senior Software Engineer
-
-Sep 2024
-↑
-Apr 2022
-• 
-Retrofit, Volley, Firebase
-• 
-Version Control : GIT, SVN
-• 
-Android UI: Custom views, Android
-activity, fragments, layouts
-• 
-Agile methodologies: SCRUM
-• 
-
-Android JetPack
-
-• 
-Picasso, Glide
-• 
-
-Design patterns
-
-Languages
-
+• Java, Kotlin
+Sep 2024 Cerence • Android SDK
+↑ Senior Software Engineer • MVP, MVVM
+Apr 2022 • Retrofit, Volley, Firebase
 • Working as a Senior Android Developer on a custom Input
-Method Editor (IME) for automotive applications.
-• Involved in the design and development of a custom IME
+Method Editor (IME) for automotive applications. • Version Control : GIT, SVN
+• Involved in the design and development of a custom IME Android UI: Custom views, Android
+• activity, fragments, layouts
 tailored for different clients including Audi, Porsche, VW
-etc, ensuring it meets the unique requirements of automotive environments, such as ease of use while driving and
-minimizing driver distraction.
-• Architect the IME to leverage RRO for customizing system resources such as layouts, themes, and string resources
+etc, ensuring it meets the unique requirements of automo- • Agile methodologies: SCRUM
+tive environments, such as ease of use while driving and • Android JetPack
+minimizing driver distraction. • Picasso, Glide
+• Architect the IME to leverage RRO for customizing sys-
+• Design patterns
+tem resources such as layouts, themes, and string resources
 without modifying the underlying system code.
-• Implement automotive-specific features such as voice
-input, predictive text, and specialized automotive vocabularies.
-
-English
-
-Fluent
-
-Hindi
-
-Fluent
-
-Infosys
+• Implement automotive-specific features such as voice Languages
+input, predictive text, and specialized automotive vocabularies. English
+Apr 2022 Infosys
+↑ Hindi
 
 Technology Analyst
 
-Apr 2022
-↑
 Sept 2021
 • Working as a Technology Analyst to design and build advanced applications for the Android platform in both Java
 and Kotlin.
@@ -95,12 +44,14 @@ and Kotlin.
 • Work with outside data sources and API’s.
 • Work on bug fixing and improving application performance
 
-Altran Technologies
+SKILLS
 
-Senior Software Engineer
+Fluent
 
-Aug 2021
-↑
+Fluent
+
+Aug 2021 Altran Technologies
+↑ Senior Software Engineer
 Nov 2018
 • Worked as a Senior Software Engineer in PremierOne
 Handheld team.
@@ -119,12 +70,8 @@ where we optimised the modules and implement new features for better user experi
 DB improvement for different regional languages.
 • Checked and cross verified respective flag values for
 different version of mobile before release
-Pooraa (Sister Company of IndiaMART)
-
-Consultant
-
-Nov 2018
-↑
+Nov 2018 Pooraa (Sister Company of IndiaMART)
+↑ Consultant
 Aug 2018
 • Developed an application from scratch that enables user
 to see stock availability, place orders, get updates on its
@@ -136,13 +83,8 @@ status, download invoices and LR - on the go.
 • Optimize the interfacing of the apps with a variety of systems to ensure flexible and agile use.
 • Involved in unit testing and bug fixes to reduce any
 runtime crashes and bug free release on playstore.
-
-IndiaMART InterMESH Ltd
-
-[NAME]
-
-Aug 2018
-↑
+Aug 2018 IndiaMART InterMESH Ltd
+↑ Software Programmer
 Aug 2015
 • Was a part of the team that was involved in the development of new features and it’s existing feature improvement
 to develop a user friendly application that enables millions

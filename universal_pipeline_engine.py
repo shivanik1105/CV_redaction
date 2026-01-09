@@ -455,26 +455,31 @@ class RuleBasedRedactor:
         
         # Look backwards to find if we're in skills section
         found_skills = False
+        found_skills_at = -1
         start_idx = max(0, line_index - 100)  # Look back 100 lines
         
+        # First pass: find skills marker
         for i in range(line_index, start_idx, -1):
             line_lower = lines[i].strip().lower()
             
-            # Check if we hit a section stopper first
-            if any(stopper in line_lower for stopper in section_stoppers):
-                # If we haven't found skills marker yet, we're not in skills section
-                if not found_skills:
-                    return False
-                # If we found skills marker earlier, now we hit a stopper, so we're past skills
-                else:
-                    return False
-            
-            # Check for skills markers
+            # Check for skills markers - must be a standalone section header (not in prose)
             if any(marker in line_lower for marker in skills_markers):
-                found_skills = True
-                return True
+                # Only count as skills section if it's a short line (header, not prose)
+                if len(line_lower) < 50:  # Headers are typically short
+                    found_skills = True
+                    found_skills_at = i
+                    break
         
-        return found_skills
+        # If we found a skills marker, check if there's a stopper between it and current line
+        if found_skills:
+            for i in range(line_index, found_skills_at, -1):
+                line_lower = lines[i].strip().lower()
+                if any(stopper in line_lower for stopper in section_stoppers):
+                    # There's a stopper between current line and skills marker
+                    return False
+            return True
+        
+        return False
     
     def _remove_pii(self, text: str) -> str:
         """Remove PII using patterns from config - ALWAYS redact contact info, skip other redaction in experience/skills"""
@@ -578,8 +583,26 @@ class RuleBasedRedactor:
                 matches = re.finditer(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4}\b', line)
                 for match in reversed(list(matches)):
                     matched_text = match.group()
+                    
                     # Check if this is a protected term
-                    if matched_text.lower() not in protected_lower and not any(word.lower() in protected_lower for word in matched_text.split()):
+                    is_protected = matched_text.lower() in protected_lower or any(word.lower() in protected_lower for word in matched_text.split())
+                    
+                    # Also check if there's a file extension after (e.g., "Ext.js")
+                    if not is_protected and match.end() < len(line):
+                        # Check for ".js", ".py", ".ts" etc after the match
+                        next_chars = line[match.end():match.end()+5]
+                        if next_chars.startswith('.'):
+                            # Try combining with extension - check last word + extension
+                            ext_match = re.match(r'\.\w+', next_chars)
+                            if ext_match:
+                                # Get the last word from the match
+                                words = matched_text.split()
+                                last_word = words[-1] if words else matched_text
+                                full_term = last_word.lower() + ext_match.group().lower()
+                                if full_term in protected_lower:
+                                    is_protected = True
+                    
+                    if not is_protected:
                         # Replace from end to start to preserve indices
                         line = line[:match.start()] + '[NAME]' + line[match.end():]
                 lines[i] = line
@@ -1025,28 +1048,139 @@ class StandardATSPipeline(BasePipeline):
 
 
 class NaukriPipeline(BasePipeline):
-    """Naukri.com format extraction"""
+    """Naukri.com format extraction - handles two-column layout with coordinate-based extraction"""
     
     def extract_text(self, pdf_path: str) -> str:
         if not HAS_FITZ:
             return "Error: PyMuPDF not available"
         
-        text_blocks = []
-        with fitz.open(pdf_path) as doc:
-            for page in doc:
-                blocks = page.get_text("blocks", sort=True)
-                for block in blocks:
-                    if block[6] == 0:
-                        text = block[4].strip()
-                        if text:
-                            text_blocks.append(text)
+        all_pages_text = []
         
-        return "\n\n".join(text_blocks)
+        with fitz.open(pdf_path) as doc:
+            for page_num, page in enumerate(doc):
+                page_width = page.rect.width
+                page_height = page.rect.height
+                
+                # Get all text blocks with coordinates
+                blocks = page.get_text("dict")["blocks"]
+                
+                text_elements = []
+                for block in blocks:
+                    if "lines" in block:  # Text block
+                        for line in block["lines"]:
+                            for span in line["spans"]:
+                                text = span["text"].strip()
+                                if text and text not in ['Naukri', 'www.naukri.com']:
+                                    # Get bounding box
+                                    bbox = span["bbox"]  # (x0, y0, x1, y1)
+                                    x0, y0, x1, y1 = bbox
+                                    text_elements.append({
+                                        'text': text,
+                                        'x0': x0,
+                                        'y0': y0,
+                                        'x1': x1,
+                                        'y1': y1,
+                                        'width': x1 - x0
+                                    })
+                
+                # Determine column split point - Naukri has ~60-65% main column, ~35-40% sidebar
+                # Analyze x-positions to find the gap between columns
+                x_positions = [elem['x0'] for elem in text_elements]
+                if x_positions:
+                    # Find natural split - look for gap in x-coordinates
+                    x_positions_sorted = sorted(set(x_positions))
+                    max_gap = 0
+                    split_point = page_width * 0.60  # default
+                    
+                    for i in range(len(x_positions_sorted) - 1):
+                        gap = x_positions_sorted[i + 1] - x_positions_sorted[i]
+                        if gap > max_gap and x_positions_sorted[i] > page_width * 0.4:
+                            max_gap = gap
+                            split_point = (x_positions_sorted[i] + x_positions_sorted[i + 1]) / 2
+                
+                # Separate into left (main) and right (sidebar) columns
+                main_column = []
+                sidebar = []
+                
+                for elem in text_elements:
+                    if elem['x0'] < split_point:
+                        main_column.append(elem)
+                    else:
+                        sidebar.append(elem)
+                
+                # Sort each column by y-position (top to bottom)
+                main_column.sort(key=lambda e: e['y0'])
+                sidebar.sort(key=lambda e: e['y0'])
+                
+                # Group elements into lines based on y-position proximity
+                def group_into_lines(elements, tolerance=5):
+                    if not elements:
+                        return []
+                    
+                    lines = []
+                    current_line = [elements[0]]
+                    current_y = elements[0]['y0']
+                    
+                    for elem in elements[1:]:
+                        if abs(elem['y0'] - current_y) < tolerance:
+                            # Same line
+                            current_line.append(elem)
+                        else:
+                            # New line
+                            # Sort current line by x-position (left to right)
+                            current_line.sort(key=lambda e: e['x0'])
+                            lines.append(' '.join([e['text'] for e in current_line]))
+                            current_line = [elem]
+                            current_y = elem['y0']
+                    
+                    # Add last line
+                    if current_line:
+                        current_line.sort(key=lambda e: e['x0'])
+                        lines.append(' '.join([e['text'] for e in current_line]))
+                    
+                    return lines
+                
+                # Convert to lines
+                main_lines = group_into_lines(main_column)
+                sidebar_lines = group_into_lines(sidebar)
+                
+                # Combine: main content first, then sidebar
+                if main_lines:
+                    all_pages_text.extend(main_lines)
+                
+                if sidebar_lines:
+                    all_pages_text.append("")  # Separator
+                    all_pages_text.append("=== SIDEBAR ===")
+                    all_pages_text.extend(sidebar_lines)
+        
+        return "\n".join(all_pages_text)
     
     def preprocess(self, text: str) -> str:
+        """Clean up and reorganize Naukri content"""
         text = re.sub(r'Naukri\.com|www\.naukri\.com', '', text, flags=re.IGNORECASE)
+        
+        # Replace sidebar marker with SKILLS
+        text = re.sub(r'===\s*SIDEBAR\s*===', '\n\nSKILLS\n', text)
+        
+        # Remove duplicate SKILLS headers (keep first occurrence)
+        lines = text.split('\n')
+        seen_skills = False
+        cleaned_lines = []
+        for line in lines:
+            if line.strip() == 'SKILLS':
+                if not seen_skills:
+                    cleaned_lines.append(line)
+                    seen_skills = True
+                # Skip duplicate SKILLS headers
+            else:
+                cleaned_lines.append(line)
+        text = '\n'.join(cleaned_lines)
+        
+        # Clean up extra whitespace
+        text = re.sub(r' {2,}', ' ', text)
         text = re.sub(r'\n{3,}', '\n\n', text)
-        return text
+        
+        return text.strip()
 
 
 class MultiColumnPipeline(BasePipeline):

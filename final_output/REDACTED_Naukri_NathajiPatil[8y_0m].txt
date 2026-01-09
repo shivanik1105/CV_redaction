@@ -2,13 +2,8 @@
 
 Consultant
 
-MOB - [REDACTED_PHONE]
-
-www.[REDACTED_SOCIAL]
-
-: [LOCATION]
-
-OBJECTIVE: To obtain a position that will help me to grow my knowledge and lead me towards the success of myself
+www.[REDACTED_SOCIAL] : [LOCATION]
+OBJECTIVE : To obtain a position that will help me to grow my knowledge and lead me towards the success of myself
 and my organization.
 
 SUMMARY:
@@ -17,7 +12,7 @@ SUMMARY:
 ➢ Currently Working as Consultant in ATOS from Feb -2022 till date.
 ➢ I have been working as Technology Analyst in Infosys Limited from March-2019 to Feb-2022.
 ➢ Was working with Aloha Technology as a Software Developer for 3.4 yrs. of experience in
-Microsoft Technologies.
+Microsoft Technologies .
 ➢ Experienced in programming and Testing of web, windows, and distributed applications.
 ➢ Having basic knowledge about Angular.
 ➢ Having good experience on jQuery and JavaScript.
@@ -26,227 +21,153 @@ Microsoft Technologies.
 ➢ Proficient in TDM tools like JIRA .
 ➢ Experience in Agile methodology.
 ➢ Experience in end-to-end delivery of projects.
-➢ Good Analytical, Debugging & Problem-solving skills.
+➢ [NAME], Debugging & Problem-solving skills.
 
 TECHNICAL SKILLS:
 
-Programming Languages
-
-C# . Net MVC
-
-Web support languages
-
-Angular, HTML5, JAVASCRIPT, JQUERY, JSON, CSS3, BOOTSTRAP
-
-APIs & Frameworks
-
-. Net 3.0,4.0,4.5, ASP. NET MVC, ENTITY FRAMEWROK, Web API
-
-Tools
-
-Visual studio 10/12/13/15 to 22
-
-Selenium, RPA
+Programming Languages C# . Net MVC
+Web support languages Angular, HTML5, JAVASCRIPT, JQUERY, JSON, CSS3, BOOTSTRAP
+APIs & Frameworks . Net 3.0,4.0,4.5, ASP. NET MVC, ENTITY FRAMEWROK, Web API
+Tools Visual studio 10/12/13/15 to 22
+Automation Testing Tools Selenium, RPA
 
 PROFESSIONAL EXPERIENCE:
 
-Name Of The
-
-Designation
-
-Technologies
-
-From
-
-To
+Name Of The Designation Technologies From
 
 Company
 
-Feb-2022
-
-Present
-
-ATOS
+ATOS C#, . Net Framework, . Net Core, Feb-2022
 
 Consultant
 
-C#, . Net Framework, . Net Core,
 Web API, Sql Database, Angular
 Web Services, Visual Studio
 C#, . Net Framework, . Net Core, Web API, Sql
 
-Infosys Limited
-
 Technology
 
-MAR-2019
-
-Feb-2022
+Infosys Limited Database, Angular MAR-2019
 
 Analyst
 
-Database, Angular
 Web Services, Visual Studio, RPA
 C#. Net, VB. Net, ASP. NET, SQL SERVER,
 ASP. NET MVC, Entity Framework,
 
-Aloha Technology
+Aloha Technology Software
 
-FEB-2015
+ADO. NET, WCF, FEB-2015
 
-AUG-2018
-
-Pvt Ltd.
-
-Software
-
-Developer
-
-ADO. NET, WCF,
-
+Pvt Ltd. Developer
 JavaScript, JQuery, HTML,
 CSS, Bootstrap
+
+SKILLS
+
+To
+
+Present
+
+Feb-2022
+
+AUG-2018
 
 [REMOVED_SECTION_EDUCATION]
 
 PROJECT DETAILS:
 
 PROJECT 1 : Atos
+Client Moody’s Analytics
 
-Client
+Project BVD Orbis
 
-Moody’s Analytics
-
-Project
-
-BVD Orbis
-
-[NAME]
-
-Feb-2022
-
-Ongoing
+Duration Of Project Feb-2022
+C#, . Net Framework, . Net MVC , Visual Studio
 
 Environment
 
-C#, . Net Framework, . Net MVC , Visual Studio
-
-[NAME]
-
-Consultant
-
 • Leaded some modules of the project
-
-Roles and Responsibilities
-
-• Involved in designing the framework
+Roles and Responsibilities -Involved in designing the framework
 • Writing code definitions.
 • Added Quality control attributes in the cshtml files for QA Understanding.
 PROJECT 2 : Infosys Limited.
 
-Client
-
-[NAME]
-
-Project
-
 [NAME]
 
 [NAME]
 
-Dec-2019
-Feb-2022
+Duration Of Project Dec-2019
+C#, . Net Framework, . Net Core, Web Api, Sql Database, Web Services, Visual
 
 Environment
 
-C#, . Net Framework, . Net Core, Web Api, Sql Database, Web Services, Visual
 Studio, RPA
-
-[NAME]
-
-Technology Analyst
-
-Roles and Responsibilities
 
 • Requirement Gathering and Estimation preparation.
 • Managing application development, testing and deployment
+
+Roles and Responsibilities
+
 • Knowledge Sharing – Helped team members understand application
 architecture.
 PROJECT 3: Infosys Limited.
 
-Client
+Client Assistegde RPA
 
-Assistegde RPA
+Project KM Portal
 
-Project
+Duration of Project March-2019
+Environment Angular, C#, . Net Framework, Sql Database, Web Services, Visual Studio
 
-KM Portal
-
-Duration of Project
-
-March-2019
-Dec-2019
-
-Environment
-
-Angular, C#, . Net Framework, Sql Database, Web Services, Visual Studio
-
-[NAME]
-
-Technology Analyst
+• Requirement Gathering.
 
 Roles and Responsibilities
 
-• Requirement Gathering.
 • Build end to end Web application and deployed on server.
+Marks %
+66.20 %
+62.28 %
+53.83 %
+65.20 %
+
+Ongoing
+
+Feb-2022
+Dec-2019
 PROJECT 4: Aloha Technology Pvt. Ltd.
 
-Title
-
 [NAME]
 
-[NAME]
-
-April-2015
-Aug-2018
-
-Information
-
-Faronics Web Console is a product developed and maintained by Aloha
+Duration Of Project April-2015
+Information Faronics Web Console is a product developed and maintained by Aloha
 technology. It is a web console containing multiple products like Deep freeze
 cloud, Antivirus, Anti-Executable, DeepFreeze On Demands, WinSelect,
 Campus affairs, MDM, Faronics Core Etc.
+. Net Framework 4.0, MVC 4, C#, Javascript, Jquery, Ajax,
 
 Environment
 
-. Net Framework 4.0, MVC 4, C#, Javascript, Jquery, Ajax,
 DevExpress gridview, Sql Server 2008
+• Design and build application as per the mock
 
 Roles and Responsibilities
 
-• Design and build application as per the mock
 • Test and Deploy the changes on the server
 PROJECT 5: Aloha Technology Pvt. Ltd.
 
-Title
-
 [NAME]
 
-Information
-
-Employee Management system has been a demo project, containing
+Information Employee Management system has been a demo project, containing
 Employee and Department details. The project has been developed for
 management and maintenance of Employee and department. This is CRUD
 application developed using JAVA technology (Spring MVC) .
-
-Environment
-
-Spring MVC, Javasript, Jquery, Bootstrap, HTML5, CSS3
+Environment Spring MVC, Javasript, Jquery, Bootstrap, HTML5, CSS3
 Apache Tomcat 7, MYSQL.
+• Requirment gathering
 
 Roles and Responsibilities
 
-• Requirment gathering
 • Design and Development
 
 [REMOVED_SECTION_PERSONAL]
