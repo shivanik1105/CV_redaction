@@ -4,11 +4,7 @@ A highly motivated person with strong technical, team player and problem solving
 enhance a potential and apply technical knowledge while facing new challenges, resulting in growth and
 development of company.
 
-[REDACTED_EMAIL]
-
-[REDACTED_PHONE]
-
-[LOCATION][LOCATION][LOCATION]
+Pune, Maharashtra, India
 
 [REDACTED_SOCIAL]
 
@@ -27,7 +23,7 @@ WebAPI
 
 IBM
 
-[NAME]
+Web Services
 
 HTML
 
@@ -36,9 +32,9 @@ JavaScript
 jQuery
 12/2021 - Present,
 
-[LOCATION]
+Pune
 
-Client- NBS (Banking Domain-[LOCATION])
+Client- NBS (Banking Domain-UK)
 Achievements/Tasks
 
 SQL

@@ -3,10 +3,6 @@
 thinking solutions to tomorrow's productivity problems. Resourceful and adaptable approach to
 challenges.
 
-[REDACTED_EMAIL]
-
-[REDACTED_PHONE]
-
 [LOCATION][LOCATION][LOCATION]
 
 [REDACTED_SOCIAL]
@@ -32,13 +28,12 @@ using Angular 13 and React JS 18.
 
 Software Developer
 
-[NAME]
+Tudip Technologies
 
 07/2018 - 07/2022,
+Pune, India
 
-[LOCATION][LOCATION]
-
-[LOCATION]
+Remote
 
 Experience in developing commercial healthcare and ﬁnance
 software using the . NET Framework MVC architecture and

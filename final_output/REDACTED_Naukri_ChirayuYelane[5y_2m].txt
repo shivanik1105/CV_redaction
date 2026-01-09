@@ -18,12 +18,12 @@ SKILLS
 
 Python Programming
 
-Cloud platforms like [NAME],
+Cloud platforms like Amazon Web Services,
 Microsoft Azure, Terraform, GCP ,
 Microservices, REST API's, HTTP REQUEST
 FastApi, Flask, Django, FastAPI, Pyspark, Streamlit, Plotly-dash
 Git, JIRA, Jenkins, CI/CD, Kubernetes dashboard
-AWS services like – AWS [NAME], Lambda,
+AWS services like – AWS Step Functions, Lambda,
 Jmeter, Rally, Azure DevOps, Elasticsearch
 S3, Ec2, ECS, SNS
 SQLite, PostgreSQL, SQL, MongoDB

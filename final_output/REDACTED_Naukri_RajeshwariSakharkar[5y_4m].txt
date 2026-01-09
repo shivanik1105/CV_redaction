@@ -157,7 +157,7 @@ DETAILS OF INFOSYS TRAINING UNDERGONE
 
 #
 
-[NAME]
+Trained On
 
 Period(in Days)
 

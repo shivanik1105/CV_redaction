@@ -27,7 +27,9 @@
     "laravel",
     "aspnet",
     "dotnet",
-    "blazor"
+    "blazor",
+    "openstack",
+    "openshift"
   ],
   "databases": [
     "mysql",
@@ -77,7 +79,10 @@
     "senior",
     "junior",
     "principal",
-    "lead"
+    "lead",
+    "scrum master",
+    "team leading",
+    "individual contributor"
   ],
   "technical_terms": [
     "automotive",
@@ -99,6 +104,13 @@
     "administration",
     "coordination",
     "occupation",
-    "organization"
+    "organization",
+    "backend development",
+    "data science",
+    "machine learning",
+    "artificial intelligence",
+    "design patterns",
+    "project management",
+    "apis"
   ]
 }

@@ -2,8 +2,6 @@
 
 Strategy, problem solving, DSA, AOSP, Yocto, System design, Software & prod. development
 
-[REDACTED_CONTACT_LINE]
-
 L: [REDACTED_URL] | [LOCATION][LOCATION]
 
 Exp: 17 years into engineering
@@ -504,8 +502,6 @@ Hardware
 
 Platform: Qualcomm MSM chip-ARM9, Trace32, QXDM, QPST,
 
-[REDACTED_CONTACT_LINE]
-
 Description: Worked for BREW platform based CDMA phones for the
 US market; Used Trace32 debugging tools with good understanding of
 ARM9 architecture, QXDM; was involved in extending interface layer,
@@ -555,8 +551,6 @@ Hardware
 
 Duration: November 2006 to July 2007
 Platform: Qualcomm MSM chip-ARM9, Trace32, QXDM, QPST,
-
-[REDACTED_CONTACT_LINE]
 
 Description: Worked for CDMA phones; Used debugging tools Trace32
 JTAG, QXDM Qualcomm logger. Worked for the call-processing

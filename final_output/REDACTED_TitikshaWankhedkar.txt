@@ -1,9 +1,5 @@
 [REDACTED_NAME]
 
-[REDACTED_CONTACT_LINE]
-
-[REDACTED_CONTACT_LINE]
-
 [NAME]:
 
 • Having 2.5+ Years of IT experience in MuleSoft AnyPoint Platform (Mule ESB).

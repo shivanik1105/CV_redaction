@@ -4,8 +4,6 @@ Consultant
 
 MOB - [REDACTED_PHONE]
 
-[REDACTED_CONTACT_LINE]
-
 www.[REDACTED_SOCIAL]
 
 : [LOCATION]
@@ -28,7 +26,7 @@ Microsoft Technologies.
 ➢ Proficient in TDM tools like JIRA .
 ➢ Experience in Agile methodology.
 ➢ Experience in end-to-end delivery of projects.
-➢ [NAME], Debugging & Problem-solving skills.
+➢ Good Analytical, Debugging & Problem-solving skills.
 
 TECHNICAL SKILLS:
 
@@ -47,8 +45,6 @@ APIs & Frameworks
 Tools
 
 Visual studio 10/12/13/15 to 22
-
-[NAME]
 
 Selenium, RPA
 

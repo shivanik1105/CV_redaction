@@ -437,20 +437,54 @@ class RuleBasedRedactor:
         
         return found_experience
     
+    def _is_in_skills_section(self, line_index: int, lines: list) -> bool:
+        """Check if a line is within a skills section"""
+        skills_markers = [
+            'skills', 'technical skills', 'key skills', 'core competencies',
+            'technical competencies', 'expertise', 'technologies', 'proficiencies'
+        ]
+        
+        # Section stoppers - if we hit these, we're out of skills section
+        section_stoppers = [
+            'work experience', 'professional experience', 'employment history',
+            'education', 'academic', 'certification', 'certifications', 
+            'declaration', 'personal details', 'personal information',
+            'projects', 'achievements', 'awards', 'publications', 'references',
+            'work history', 'career history', 'summary', 'objective', 'profile'
+        ]
+        
+        # Look backwards to find if we're in skills section
+        found_skills = False
+        start_idx = max(0, line_index - 100)  # Look back 100 lines
+        
+        for i in range(line_index, start_idx, -1):
+            line_lower = lines[i].strip().lower()
+            
+            # Check if we hit a section stopper first
+            if any(stopper in line_lower for stopper in section_stoppers):
+                # If we haven't found skills marker yet, we're not in skills section
+                if not found_skills:
+                    return False
+                # If we found skills marker earlier, now we hit a stopper, so we're past skills
+                else:
+                    return False
+            
+            # Check for skills markers
+            if any(marker in line_lower for marker in skills_markers):
+                found_skills = True
+                return True
+        
+        return found_skills
+    
     def _remove_pii(self, text: str) -> str:
-        """Remove PII using patterns from config - skip in experience sections"""
+        """Remove PII using patterns from config - ALWAYS redact contact info, skip other redaction in experience/skills"""
         lines = text.split('\n')
         result_lines = []
         
         for i, line in enumerate(lines):
-            # Check if we're in an experience section
-            if self._is_in_experience_section(i, lines):
-                # Keep line as-is in experience section
-                result_lines.append(line)
-                continue
-            
-            # Apply PII redaction outside experience sections
             processed_line = line
+            
+            # ALWAYS redact PII patterns (email, phone, URL, social media) regardless of section
             processed_line = self.patterns['email'].sub('[REDACTED_EMAIL]', processed_line)
             
             for phone_pattern in self.patterns['phone']:
@@ -461,7 +495,7 @@ class RuleBasedRedactor:
             for social_pattern in self.patterns['social']:
                 processed_line = social_pattern.sub('[REDACTED_SOCIAL]', processed_line)
             
-            # Check for contact lines
+            # ALWAYS redact contact lines
             if re.match(r'(?i)^.*?(email|e-mail|phone|mobile|contact|linkedin|github).*?[:|-].*?$', processed_line):
                 processed_line = '[REDACTED_CONTACT_LINE]'
             
@@ -470,15 +504,15 @@ class RuleBasedRedactor:
         return '\n'.join(result_lines)
     
     def _remove_locations(self, text: str) -> str:
-        """Remove locations using list from config - skip in experience sections"""
+        """Remove locations using list from config - skip in experience and skills sections"""
         locations = self.config.load('locations')
         lines = text.split('\n')
         result_lines = []
         
         for i, line in enumerate(lines):
-            # Check if we're in an experience section
-            if self._is_in_experience_section(i, lines):
-                # Keep line as-is in experience section
+            # Check if we're in an experience or skills section
+            if self._is_in_experience_section(i, lines) or self._is_in_skills_section(i, lines):
+                # Keep line as-is in experience or skills section
                 result_lines.append(line)
                 continue
             
@@ -515,7 +549,7 @@ class RuleBasedRedactor:
         return text
     
     def _remove_position_based_names(self, text: str) -> str:
-        """Remove names based on position - skip in experience sections"""
+        """Remove names based on position - skip in experience and skills sections"""
         preserve_headers = self.config.get_flat_list('sections', 'preserve')
         
         # Get all protected terms to avoid marking them as names
@@ -525,8 +559,8 @@ class RuleBasedRedactor:
         lines = text.split('\n')
         
         for i in range(len(lines)):
-            # Skip if in experience section
-            if self._is_in_experience_section(i, lines):
+            # Skip if in experience or skills section
+            if self._is_in_experience_section(i, lines) or self._is_in_skills_section(i, lines):
                 continue
                 
             line = lines[i]
@@ -1205,6 +1239,19 @@ class PipelineOrchestrator:
         
         for i, line in enumerate(lines):
             line_lower = line.strip().lower()
+            
+            # Remove contact detail lines (Phone, E-mail, LinkedIn headers and their content)
+            if re.match(r'^\s*(phone|e-mail|email|linkedin|github|mobile|contact)\s*$', line, re.IGNORECASE):
+                continue
+            # Remove lines with "Phone", "E-mail" followed by redacted markers or actual contact info
+            if re.search(r'(phone|e-mail|email|mobile|contact|linkedin)\s*[:\s]*\[?REDACTED', line, re.IGNORECASE):
+                continue
+            # Skip lines that are just redacted markers without context
+            if re.match(r'^\s*\[REDACTED_(PHONE|EMAIL|URL|CONTACT_LINE)\]\s*$', line):
+                continue
+            # Skip remaining parts of LinkedIn/social media URLs  
+            if re.match(r'^\s*akash-tandale-\d+\s*$', line):  # Leftover URL fragments
+                continue
             
             # Skip entire ACTIVITIES, INTEREST, HOBBIES sections
             if any(keyword in line_lower for keyword in ['activities and interest', 'hobbies', 'activities & interest', 'personal interest']):
