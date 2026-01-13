@@ -46,74 +46,26 @@ Designation: Software Developer
 Duration: FEB-2015 to AUG-2018
 Technologies: JavaScript, JQuery, HTML, CSS, Bootstrap, C#. Net, VB. Net, ASP. NET, SQL SERVER, ASP. NET MVC, Entity Framework, ADO. NET, WCF
 PROJECT 1 : Atos
-
-Client
-
-Project
-
-Duration Of Project
-
-Environment
-
-Project Role
-
-Roles and Responsibilities
-
+Client: Moody’s Analytics
+Project: BVD Orbis
+Duration Of Project: Feb-2022 Ongoing
+Environment: C#, . Net Framework, . Net MVC , Visual Studio
+Project Role: Consultant
+Roles and Responsibilities: - Leaded some modules of the project
 PROJECT 2 : Infosys Limited.
-
-Client
-
-Project
-
-Duration Of Project
-
-Environment
-
-Project Role
-
-Roles and Responsibilities
-
+Client: -Involved in designing the framework
+Project: - Writing code definitions.
+Duration Of Project: -Added Quality control attributes in the cshtml files for QA Understanding.
+Environment: Boeing Aerospace
+Project Role: Sales Order Creation
+Roles and Responsibilities: Dec-2019 Feb-2022
 PROJECT 3: Infosys Limited.
-
-Client
-
-Project
-
-Duration of Project
-
-Environment
-
-Project Role
-
-Roles and Responsibilities
-
-Moody’s Analytics
-
-BVD Orbis
-
-Feb-2022 Ongoing
-C#, . Net Framework, . Net MVC , Visual Studio
-
-Consultant
-
-• Leaded some modules of the project
-• Involved in designing the framework
-• Writing code definitions.
-• Added Quality control attributes in the cshtml files for QA Understanding.
-
-Boeing Aerospace
-
-Sales Order Creation
-
-Dec-2019 Feb-2022
-C#, . Net Framework, . Net Core, Web Api, Sql Database, Web Services, Visual
-Studio, RPA
-
-Technology Analyst
-
-• Requirement Gathering and Estimation preparation.
-• Managing application development, testing and deployment
-• Knowledge Sharing – Helped team members understand application
+Client: C#, . Net Framework, . Net Core, Web Api, Sql Database, Web Services, Visual
+Project: Studio, RPA
+Duration of Project: Technology Analyst
+Environment: -Requirement Gathering and Estimation preparation.
+Project Role: - Managing application development, testing and deployment
+Roles and Responsibilities: - Knowledge Sharing – Helped team members understand application
 architecture.
 
 Assistegde RPA

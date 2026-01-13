@@ -1179,11 +1179,16 @@ class NaukriPipeline(BasePipeline):
         
         lines = text.split('\n')
         
+        # Extract technical skills from PERSONAL DETAILS section before it gets redacted
+        # Returns both the skills lines and the indices to remove from original content
+        technical_skills, lines_to_remove = self._extract_technical_skills(lines)
+        
         # Find the main SKILLS section and ALL sidebar markers
         skills_idx = -1
         sidebar_indices = []
         prof_exp_idx = -1
         work_exp_idx = -1
+        personal_details_end_idx = -1
         
         for i, line in enumerate(lines):
             line_stripped = line.strip()
@@ -1195,9 +1200,18 @@ class NaukriPipeline(BasePipeline):
                 prof_exp_idx = i
             if 'WORK EXPERIENCE' in line_stripped.upper() and work_exp_idx == -1:
                 work_exp_idx = i
+            # Track where PERSONAL DETAILS section ends (look for next major section or first project)
+            if 'PERSONAL DETAILS' in line_stripped.upper():
+                # Find where personal details ends (usually before first project or next section)
+                for j in range(i + 1, min(i + 40, len(lines))):
+                    if (re.match(r'^\d+\.\s*(Company|Project)', lines[j].strip(), re.IGNORECASE) or 
+                        any(section in lines[j].upper() for section in ['PROFESSIONAL EXPERIENCE', 'WORK EXPERIENCE', 'PROJECT DETAILS', 'EDUCATIONAL QUALIFICATION'])):
+                        personal_details_end_idx = j
+                        break
         
         # Use either PROFESSIONAL EXPERIENCE or WORK EXPERIENCE as the insertion point
-        experience_idx = prof_exp_idx if prof_exp_idx != -1 else work_exp_idx
+        # If neither exists, use the end of PERSONAL DETAILS section
+        experience_idx = prof_exp_idx if prof_exp_idx != -1 else (work_exp_idx if work_exp_idx != -1 else personal_details_end_idx)
         
         # If we have sidebar(s) and an experience section, merge sidebar skills
         if sidebar_indices and experience_idx != -1:
@@ -1408,8 +1422,8 @@ class NaukriPipeline(BasePipeline):
             from_date_line_idx = -1  # Track line with "From" date to add "To" date after
             
             for i in range(len(lines)):
-                # Skip if in any sidebar range
-                if any(start <= i < end for start, end in sidebar_ranges):
+                # Skip if in any sidebar range or if this line was extracted to technical skills
+                if any(start <= i < end for start, end in sidebar_ranges) or i in lines_to_remove:
                     continue
                 
                 # Track if we're in PROFESSIONAL EXPERIENCE section
@@ -1418,20 +1432,30 @@ class NaukriPipeline(BasePipeline):
                 elif lines[i].strip() in ['PROJECT DETAILS:', 'PROJECTS:', 'EDUCATIONAL QUALIFICATION:', 'EDUCATION:']:
                     in_prof_experience = False
                 
-                # If we're at the experience section and have sidebar skills
-                if i == experience_idx and all_sidebar_skills:
-                    # If there's no main SKILLS section, create one
-                    if skills_idx == -1:
+                # If we're at the experience section, insert technical skills first
+                if i == experience_idx:
+                    # Insert technical skills from PERSONAL DETAILS if found
+                    if technical_skills:
                         result.append("")
-                        result.append("SKILLS")
+                        result.append("TECHNICAL SKILLS")
                         result.append("")
-                        result.extend(all_sidebar_skills)
+                        result.extend(technical_skills)
                         result.append("")
-                    else:
-                        # Insert skills before experience section (they're already in the main SKILLS section)
-                        result.append("")
-                        result.extend(all_sidebar_skills)
-                        result.append("")
+                    
+                    # Then insert sidebar skills if available
+                    if all_sidebar_skills:
+                        # If there's no main SKILLS section, create one
+                        if skills_idx == -1:
+                            result.append("")
+                            result.append("SKILLS")
+                            result.append("")
+                            result.extend(all_sidebar_skills)
+                            result.append("")
+                        else:
+                            # Insert skills before experience section (they're already in the main SKILLS section)
+                            result.append("")
+                            result.extend(all_sidebar_skills)
+                            result.append("")
                 
                 # Add the line
                 result.append(lines[i])
@@ -1505,7 +1529,101 @@ class NaukriPipeline(BasePipeline):
         # Reformat Professional Experience tables for clarity
         text = self._reformat_professional_experience(text)
         
+        # Reformat PROJECT sections to combine headers with values
+        text = self._reformat_projects(text)
+        
         return text.strip()
+    
+    def _extract_technical_skills(self, lines: list) -> tuple:
+        """Extract technical skills fields from PERSONAL DETAILS section
+        Returns: (technical_skills_lines, indices_to_remove)
+        """
+        technical_skills = []
+        lines_to_remove = set()
+        personal_details_idx = -1
+        
+        # Find PERSONAL DETAILS section
+        for i, line in enumerate(lines):
+            if 'PERSONAL DETAILS' in line.strip().upper():
+                personal_details_idx = i
+                break
+        
+        if personal_details_idx == -1:
+            return technical_skills, lines_to_remove
+        
+        # Technical field patterns to extract
+        tech_patterns = [
+            r'^CURRENT OCCUPATION\s*[:：]',
+            r'^COMPUTER LANGUAGES\s*[:：]',
+            r'^OPERATING SYSTEMS?\s*[:：]',
+            r'^DATABASES?\s*(?:AND SERVICES)?\s*[:：]',
+            r'^TOOLS\s*[:：]',
+            r'^CLIENT SPECIFIC TOOLS?\s*[:：]'
+        ]
+        
+        # Extract lines matching technical patterns (within next 50 lines)
+        j = personal_details_idx + 1
+        while j < min(personal_details_idx + 50, len(lines)):
+            line = lines[j].strip()
+            
+            # Stop if we hit another major section or project start
+            if (any(marker in line.upper() for marker in ['PROFESSIONAL EXPERIENCE', 'WORK EXPERIENCE', 'PROJECT DETAILS', 'EDUCATIONAL QUALIFICATION', 'EDUCATION:']) or
+                re.match(r'^\d+\.\s*(Company|Project)', line, re.IGNORECASE)):
+                break
+            
+            # Check if line matches a technical field pattern
+            is_tech_field = False
+            current_pattern_idx = -1
+            for idx, pattern in enumerate(tech_patterns):
+                if re.match(pattern, line, re.IGNORECASE):
+                    is_tech_field = True
+                    current_pattern_idx = idx
+                    break
+            
+            if is_tech_field:
+                # Found a technical field - add the header line
+                technical_skills.append(line)
+                lines_to_remove.add(j)  # Mark this line for removal
+                
+                # Collect all continuation lines until we hit another field or section
+                k = j + 1
+                while k < min(j + 10, len(lines)):
+                    next_line = lines[k].strip()
+                    
+                    # Stop if empty line
+                    if not next_line:
+                        k += 1
+                        continue
+                    
+                    # Stop if we hit another technical field
+                    is_another_field = False
+                    for pattern in tech_patterns:
+                        if re.match(pattern, next_line, re.IGNORECASE):
+                            is_another_field = True
+                            break
+                    if is_another_field:
+                        break
+                    
+                    # Stop if we hit a major section or project
+                    if (any(marker in next_line.upper() for marker in ['PROFESSIONAL EXPERIENCE', 'WORK EXPERIENCE', 'PROJECT DETAILS', 'EDUCATIONAL QUALIFICATION', 'EDUCATION:']) or
+                        re.match(r'^\d+\.\s*(Company|Project)', next_line, re.IGNORECASE)):
+                        break
+                    
+                    # Stop if we hit fields that are NOT part of technical skills (NAME, ADDRESS, DOB, etc.)
+                    if re.match(r'^(NAME|ADDRESS|DATE OF BIRTH|MARITAL STATUS|NATIONALITY|EDUCATIONAL BACKGROUND|PASSPORT NO)', next_line, re.IGNORECASE):
+                        break
+                    
+                    # This is a continuation line - add it
+                    technical_skills.append(lines[k])
+                    lines_to_remove.add(k)  # Mark this line for removal
+                    k += 1
+                
+                # Move j to after all the lines we just processed
+                j = k
+            else:
+                j += 1
+        
+        return technical_skills, lines_to_remove
     
     def _reformat_professional_experience(self, text: str) -> str:
         """Reformat Professional Experience table to make it more readable"""
@@ -1967,6 +2085,117 @@ class NaukriPipeline(BasePipeline):
                 i += 1
                 continue
             
+            result.append(lines[i])
+            i += 1
+        
+        return '\n'.join(result)
+
+    def _reformat_projects(self, text: str) -> str:
+        """Reformat PROJECT sections to combine headers with their values"""
+        lines = text.split('\n')
+        result = []
+        i = 0
+        
+        while i < len(lines):
+            line = lines[i].strip()
+            
+            # Check if this is a PROJECT header (e.g., "PROJECT 1 : Atos", "PROJECT 2: Infosys Limited.")
+            if re.match(r'^PROJECT\s+\d+\s*[:]\s*.+', line, re.IGNORECASE):
+                # Collect consecutive PROJECT headers and their field headers
+                project_sections = []
+                j = i
+                
+                while j < len(lines):
+                    current_line = lines[j].strip()
+                    
+                    # Check if it's a PROJECT header
+                    if re.match(r'^PROJECT\s+\d+\s*[:]\s*.+', current_line, re.IGNORECASE):
+                        project_title = lines[j]
+                        j += 1
+                        
+                        # Collect field headers for this project
+                        field_headers = []
+                        while j < len(lines) and j < i + 100:
+                            next_line = lines[j].strip()
+                            
+                            # Stop at empty line or another PROJECT
+                            if not next_line:
+                                j += 1
+                                break
+                            if re.match(r'^PROJECT\s+\d+', next_line, re.IGNORECASE):
+                                break
+                            
+                            # Check if it's a field header
+                            if (next_line in ['Client', 'Project', 'Duration', 'Duration Of Project', 'Duration of Project', 
+                                             'Environment', 'Project Role', 'Roles and Responsibilities', 'Title', 'Information'] or
+                                re.match(r'^(Client|Project|Duration|Environment|Role|Title|Information)$', next_line, re.IGNORECASE)):
+                                field_headers.append(next_line)
+                                j += 1
+                            else:
+                                # Hit non-header, stop
+                                break
+                        
+                        project_sections.append((project_title, field_headers))
+                    else:
+                        # Not a PROJECT header, break
+                        break
+                
+                # Now collect all the values that follow
+                values = []
+                while j < len(lines) and j < i + 200:
+                    val_line = lines[j].strip()
+                    
+                    # Stop if we hit another PROJECT header or section marker
+                    if re.match(r'^PROJECT\s+\d+', val_line, re.IGNORECASE):
+                        break
+                    if val_line and val_line.upper() in ['PERSONAL DETAILS:', 'EDUCATION:', 'EDUCATIONAL QUALIFICATION:', 'DECLARATION:']:
+                        break
+                    
+                    # Collect non-empty lines
+                    if val_line:
+                        values.append(val_line)
+                    
+                    j += 1
+                
+                # Distribute values across projects based on their field headers
+                if project_sections and values:
+                    # Calculate how many values each project should get
+                    total_fields = sum(len(headers) for _, headers in project_sections)
+                    
+                    if total_fields > 0 and len(values) >= total_fields:
+                        # Distribute values proportionally to each project
+                        value_idx = 0
+                        for project_title, field_headers in project_sections:
+                            result.append(project_title)
+                            
+                            # Assign values to this project's fields
+                            for header in field_headers:
+                                if value_idx < len(values):
+                                    result.append(f"{header}: {values[value_idx]}")
+                                    value_idx += 1
+                            
+                            result.append("")  # Empty line after each project
+                        
+                        # Add any remaining values (usually bullet points)
+                        while value_idx < len(values):
+                            result.append(values[value_idx])
+                            value_idx += 1
+                    else:
+                        # Not enough values or no structure - just output as-is
+                        for project_title, _ in project_sections:
+                            result.append(project_title)
+                        for val in values:
+                            result.append(val)
+                else:
+                    # No valid structure, keep as-is
+                    for project_title, _ in project_sections:
+                        result.append(project_title)
+                
+                # Move past all processed lines
+                i = j
+                continue
+            
+            # Not a PROJECT section, keep as-is
             result.append(lines[i])
             i += 1
         

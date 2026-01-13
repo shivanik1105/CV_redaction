@@ -4,17 +4,27 @@ RESUME
 
 [REMOVED_SECTION_EDUCATION]
 
+TECHNICAL SKILLS
+
+CURRENT OCCUPATION : Senior Associate Consultant
+COMPUTER LANGUAGES : C, C++, Java, Oracle PL/SQL,
+
+HTML
+
+OPERATING SYSTEMS : Windows 7/8/8.1, Windows Server
+DATABASES AND SERVICES : Oracle 11g, 12c, SQL Developer
+TOOLS : B2B Products: IBM Sterling B2B Integrator, IBM
+Sterling File Gateway, SAP ABAP, ORACLE
+11i/12g
 Others: Sterling Map Editor, Putty, SQL
-Developer, [NAME], Liaison EDI
+Developer, Citrix Command Center, Liaison EDI
 
 Notepad
 
-CLIENT SPECIFIC TOOLS [NAME], [NAME], GitLab,
+CLIENT SPECIFIC TOOLS Citrix Command Center, Service Now, GitLab,
 Microsoft SharePoint, Solman
-1. Company : [NAME]
-
-[NAME] : [NAME]
-
+1. Company : Infosys Limited
+Project Name : Roche Aspire
 Client : Global pharmaceutical Company
 
 Description of the project
@@ -75,9 +85,6 @@ process.
 data transmission.
 • Taking Corrective Actions and preventive measures to ensure On-Time Delivery with Highest Quality.
 Duration : SEPT 2022 – Feb 2024
-
-[PAGE_NUMBER]
-
 Software : Sterling B2B Integrator, Map Editor, SAP ABAP, TIBCO, CHERWELL,
 OpenText, Jira, POSTMAN.
 2. Company : Eaton Technologies Private Limited.
@@ -119,8 +126,3 @@ Microservices
 2 SEEBURGER
 
 3 AXWAY File Transfer
-Period(in Days)
-
-[PAGE_NUMBER]
-
-[PAGE_NUMBER]
