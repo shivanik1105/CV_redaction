@@ -1,5 +1,7 @@
 [NAME]
 
+Senior Android Developer
+
 Profile Summary
 
 Senior Android Developer with over 9 years of experience
@@ -48,6 +50,37 @@ and Kotlin.
 • To collaborate with cross-functional teams to define, design, and ship new features.
 • Work with outside data sources and API’s.
 • Work on bug fixing and improving application performance
+
+Ó Phone
+
+Location
+
+ Pune
+Maharashtra, India
+
+Skills
+
+• Java, Kotlin
+• Android SDK
+
+• MVP, MVVM
+
+• Retrofit, Volley, Firebase
+• Version Control : GIT, SVN
+Android UI: Custom views, Android
+• activity, fragments, layouts
+• Agile methodologies: SCRUM
+• Android JetPack
+• Picasso, Glide
+• Design patterns
+
+Languages
+
+English Fluent
+
+Hindi Fluent
+
+Aug 2021 Altran Technologies
 ↑ Senior Software Engineer
 Nov 2018
 • Worked as a Senior Software Engineer in PremierOne

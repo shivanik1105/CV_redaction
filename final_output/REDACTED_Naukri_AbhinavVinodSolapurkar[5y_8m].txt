@@ -1,12 +1,13 @@
 [NAME]
 
+Senior System Engineer
+
 A highly motivated person with strong technical, team player and problem solving skills who like to
 enhance a potential and apply technical knowledge while facing new challenges, resulting in growth and
 development of company.
 
 [LOCATION][LOCATION][LOCATION]
 
-Asp. Net C# Blazor MVC 5 WebAPI
 [LOCATION][NAME] HTML JavaScript jQuery
 
 SQL Azure Agile Unit Testing SOAPUI
@@ -39,7 +40,6 @@ IBM
 Client- NBS (Banking Domain-UK)
 Achievements/Tasks
 Developed and maintained scalable web applications using
-ASP. NET MVC, adhering to best practices and design
 patterns.
 Designed and implemented RESTful Web APIs using ASP. NET
 Web API, facilitating seamless communication between
@@ -81,6 +81,21 @@ issues in a timely manner.
 Assisted in the deployment and conﬁguration of web
 applications on production, staging servers, ensuring
 smooth and seamless deployment processes.
+
+[REDACTED_SOCIAL]
+
+SKILLS
+
+Pune Web Services HTML JavaScript jQuery
+
+SQL Azure Agile Unit Testing SOAPUI
+
+VisualStudio Fiddler Documentation
+
+PROJECT ACHIEVEMENTS
+
+SAMM Team
+
 Recognized for consistently delivering high-quality code and
 innovative problem-solving, contributing signiﬁcantly to project
 success and team performance.

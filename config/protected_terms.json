@@ -32,7 +32,11 @@
     "openshift",
     "ext.js",
     "extjs",
-    "sencha"
+    "sencha",
+    "spring boot",
+    "mulesoft",
+    "anypoint",
+    "mule esb"
   ],
   "databases": [
     "mysql",
@@ -118,6 +122,9 @@
     "artificial intelligence",
     "design patterns",
     "project management",
-    "apis"
+    "apis",
+    "analytical",
+    "debugging",
+    "problem-solving"
   ]
 }

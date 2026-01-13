@@ -121,6 +121,8 @@ components, fixtures or fittings and managing budgets & records
 
 Managing functions including Risk Assessment Documentation, LOTO Procedures &
 
+Work Permit System Implementation
+
 
 Dealing with Sub-contracting Teams to execute client projects in coordination with
 

@@ -584,8 +584,22 @@ class RuleBasedRedactor:
                 for match in reversed(list(matches)):
                     matched_text = match.group()
                     
-                    # Check if this is a protected term
-                    is_protected = matched_text.lower() in protected_lower or any(word.lower() in protected_lower for word in matched_text.split())
+                    # Check if this is a protected term (exact match or contains protected words)
+                    matched_lower = matched_text.lower()
+                    
+                    # First check exact phrase match
+                    is_protected = matched_lower in protected_lower
+                    
+                    # Then check if any individual word is protected
+                    if not is_protected:
+                        is_protected = any(word.lower() in protected_lower for word in matched_text.split())
+                    
+                    # Also check if the phrase contains any multi-word protected term
+                    if not is_protected:
+                        for protected_term in protected_terms:
+                            if ' ' in protected_term and protected_term.lower() in matched_lower:
+                                is_protected = True
+                                break
                     
                     # Also check if there's a file extension after (e.g., "Ext.js")
                     if not is_protected and match.end() < len(line):
@@ -1095,9 +1109,9 @@ class NaukriPipeline(BasePipeline):
                     
                     for i in range(len(x_positions_sorted) - 1):
                         gap = x_positions_sorted[i + 1] - x_positions_sorted[i]
-                        # Look for gaps after at least 15% of page width (to avoid left margin)
+                        # Look for gaps after at least 10% of page width (to catch left sidebars)
                         # and before 80% (to avoid right margin)
-                        if page_width * 0.15 < x_positions_sorted[i] < page_width * 0.80:
+                        if page_width * 0.10 < x_positions_sorted[i] < page_width * 0.80:
                             if gap > max_gap and gap > 30:  # Minimum 30 pixel gap
                                 max_gap = gap
                                 split_point = (x_positions_sorted[i] + x_positions_sorted[i + 1]) / 2
@@ -1272,11 +1286,68 @@ class NaukriPipeline(BasePipeline):
             # 2. SKILLS section (create if doesn't exist) with sidebar skills
             # 3. EXPERIENCE section and everything after (excluding sidebars)
             
+            # Special handling: Extract "To" column dates from sidebar for table reconstruction
+            table_to_dates = []
+            project_details_data = {}  # Store project data from sidebars
+            
+            for sidebar_idx in sidebar_indices:
+                if sidebar_idx + 1 < len(lines) and lines[sidebar_idx + 1].strip() == 'To':
+                    # Found a "To" column header in sidebar - extract the dates
+                    for j in range(sidebar_idx + 2, min(sidebar_idx + 10, len(lines))):
+                        date_line = lines[j].strip()
+                        # Stop at section headers
+                        if date_line in ['EDUCATIONAL QUALIFICATION:', 'PROJECT DETAILS:', 'PERSONAL DETAILS:']:
+                            break
+                        # Collect date-like entries
+                        if date_line and (re.match(r'^(Present|[A-Z]{3}-\d{4}|[A-Z][a-z]{2}-\d{4}|\d{4})$', date_line) or
+                                        re.match(r'^[A-Z]{3,}-\d{4}$', date_line)):
+                            table_to_dates.append(date_line)
+                
+                # Extract project details that appear in sidebar
+                # Look for patterns like "Client Name" followed by "Project Name" followed by dates
+                for j in range(sidebar_idx + 1, min(sidebar_idx + 100, len(lines))):
+                    line = lines[j].strip()
+                    
+                    # Stop if we hit another sidebar or PROJECT header in main content
+                    if j in sidebar_indices or re.match(r'^PROJECT\s+\d+', line, re.IGNORECASE):
+                        break
+                    
+                    # Check if this looks like a client/company name (usually all caps or title case, not a date)
+                    # Followed by a project name, then dates
+                    if (len(line) > 3 and not re.match(r'^[A-Z]{3,}-?\d{4}', line) and 
+                        not line.lower() in ['to', 'from', 'duration', 'environment', 'project role'] and
+                        not line.startswith(('-', '•'))):
+                        
+                        # Potential client or project data - collect next few lines
+                        potential_data = [line]
+                        for k in range(j+1, min(j+10, len(lines))):
+                            next_line = lines[k].strip()
+                            if next_line and len(next_line) > 2:
+                                potential_data.append(next_line)
+                                # Stop after collecting enough (client, project, dates, environment, role, responsibilities)
+                                if len(potential_data) >= 5:
+                                    break
+                        
+                        # Store this data to merge later
+                        if len(potential_data) >= 3:
+                            project_details_data[j] = potential_data
+            
             result = []
             sidebar_ranges = []
             
             # Calculate ranges to skip (sidebar sections only)
             for sidebar_idx in sidebar_indices:
+                # Check if we're in PROJECT DETAILS section by looking backwards
+                in_project_details = False
+                for k in range(max(0, sidebar_idx - 20), sidebar_idx):
+                    if 'PROJECT DETAILS' in lines[k].upper() or 'PROJECT' in lines[k].upper() and ':' in lines[k]:
+                        in_project_details = True
+                        break
+                
+                # If we're in project details, don't mark this sidebar for removal
+                if in_project_details:
+                    continue
+                
                 start = sidebar_idx
                 end = sidebar_idx + 1
                 # Skip ALL sidebar content until we hit main content or next sidebar
@@ -1290,14 +1361,35 @@ class NaukriPipeline(BasePipeline):
                     if any(header in line_lower for header in ['work experience', 'professional experience', 'employment', 'projects', 'certifications']):
                         break
                     
-                    # Continue if this looks like sidebar content
+                    # Stop if we hit a PROJECT header (e.g., "PROJECT 4:", "PROJECT 5:")
+                    # This indicates we're entering actual project details that should be kept
+                    if re.match(r'^PROJECT\s+\d+', line_stripped, re.IGNORECASE):
+                        break
+                    
+                    # Check if this is a paragraph/sentence (likely job description continuation)
+                    # Paragraphs start with lowercase or are long sentences with proper punctuation
+                    is_paragraph = (
+                        len(line_stripped) > 60 or  # Long line likely a paragraph
+                        (line_stripped and line_stripped[0].islower()) or  # Starts with lowercase
+                        (line_lower.startswith('and ') or line_lower.startswith('or ') or 
+                         line_lower.startswith('with ') or line_lower.startswith('to ')) or  # Sentence continuation
+                        re.search(r'\.\s*-\s*[A-Z]', lines[j]) or  # Bullet point format "... . - Word"
+                        line_stripped.startswith('-') or line_stripped.startswith('•')  # Responsibility bullets
+                    )
+                    
+                    # If it's a paragraph or responsibility bullet, keep it (don't mark as sidebar)
+                    if is_paragraph:
+                        break
+                    
+                    # Continue if this looks like sidebar content (metadata, contact, skills list)
                     is_sidebar_content = (
                         len(line_stripped) < 3 or  # Empty or very short
                         any(x in lines[j] for x in ['@', '•', '○']) or  # Contact markers or bullets
                         re.search(r'\d{5,}|linkedin|github|phone|email|contact|location', lines[j], re.IGNORECASE) or  # Contact patterns
-                        line_stripped in ['Skills', 'SKILLS', 'Languages', 'LANGUAGES', 'Contact', 'CONTACT', 'R', 'Ó'] or  # Section headers or symbols
-                        any(keyword in line_lower for keyword in ['java', 'kotlin', 'python', 'javascript', 'react', 'angular', 'vue', 'node', 'express', 'django', 'flask', 'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'git', 'sql', 'mongodb', 'postgresql', 'mysql', 'html', 'css', 'api', 'rest', 'graphql', 'agile', 'scrum', 'mvvm', 'mvc', 'retrofit', 'volley', 'firebase', 'android', 'ios', 'swift', 'jetpack']) or  # Tech keywords
-                        (len(line_stripped) > 10 and ',' in lines[j]) or  # Comma-separated lists
+                        line_stripped in ['Skills', 'SKILLS', 'Languages', 'LANGUAGES', 'Contact', 'CONTACT', 'R', 'Ó', 'Education', 'EDUCATION'] or  # Section headers or symbols
+                        # Only treat as skill if it's a short line (< 50 chars) with tech keywords
+                        (len(line_stripped) < 50 and any(keyword in line_lower for keyword in ['java', 'kotlin', 'python', 'javascript', 'react', 'angular', 'vue', 'node', 'express', 'django', 'flask', 'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'git', 'sql', 'mongodb', 'postgresql', 'mysql', 'html', 'css', 'api', 'rest', 'graphql', 'agile', 'scrum', 'mvvm', 'mvc', 'retrofit', 'volley', 'firebase', 'android', 'ios', 'swift', 'jetpack'])) or
+                        (len(line_stripped) > 10 and len(line_stripped) < 50 and ',' in lines[j]) or  # Short comma-separated lists
                         re.match(r'^[A-Z][a-z]+,\s*[A-Z][a-z]+', line_stripped)  # State, Country format
                     )
                     if is_sidebar_content:
@@ -1311,10 +1403,20 @@ class NaukriPipeline(BasePipeline):
                 sidebar_ranges.append((start, end))
             
             # Add lines, skipping sidebar ranges
+            table_date_idx = 0  # Track which "To" date to use next
+            in_prof_experience = False
+            from_date_line_idx = -1  # Track line with "From" date to add "To" date after
+            
             for i in range(len(lines)):
                 # Skip if in any sidebar range
                 if any(start <= i < end for start, end in sidebar_ranges):
                     continue
+                
+                # Track if we're in PROFESSIONAL EXPERIENCE section
+                if 'PROFESSIONAL EXPERIENCE' in lines[i].upper():
+                    in_prof_experience = True
+                elif lines[i].strip() in ['PROJECT DETAILS:', 'PROJECTS:', 'EDUCATIONAL QUALIFICATION:', 'EDUCATION:']:
+                    in_prof_experience = False
                 
                 # If we're at the experience section and have sidebar skills
                 if i == experience_idx and all_sidebar_skills:
@@ -1331,18 +1433,544 @@ class NaukriPipeline(BasePipeline):
                         result.extend(all_sidebar_skills)
                         result.append("")
                 
+                # Add the line
                 result.append(lines[i])
+                
+                # If in professional experience and line contains a "From" date, prepare to add "To" date
+                if in_prof_experience and table_to_dates and table_date_idx < len(table_to_dates):
+                    # Check if this line contains a FROM date pattern (e.g., "Feb-2022", "MAR-2019", "FEB-2015")
+                    if re.search(r'\b([A-Z]{3}-\d{4}|[A-Z][a-z]{2}-\d{4})\s*$', lines[i]):
+                        # Add "To" date on the same line or next line
+                        to_date = table_to_dates[table_date_idx]
+                        result[-1] = result[-1] + f" to {to_date}"
+                        table_date_idx += 1
             
             text = '\n'.join(result)
         else:
             # Fallback: just remove all sidebar markers and their immediate content
             text = re.sub(r'===\s*SIDEBAR\s*===', '', text)
         
+        # Always remove sidebar markers that remain
+        text = re.sub(r'===\s*SIDEBAR\s*===', '', text)
+        
+        # Remove education/university data that appears in project details sidebars
+        # Remove lines like "Board/University Year Of Passing Marks %"
+        lines = text.split('\n')
+        cleaned_lines = []
+        skip_education_table = False
+        for line in lines:
+            line_lower = line.strip().lower()
+            # Check for education table headers
+            if 'board/university' in line_lower or ('year of passing' in line_lower and 'marks' in line_lower):
+                skip_education_table = True
+                continue
+            # Skip education table rows (university names with years and percentages)
+            if skip_education_table:
+                if re.match(r'^[A-Za-z\s]+(university|board|college)\s+\d{4}\s+[\d.]+\s*%', line.strip(), re.IGNORECASE):
+                    continue
+                # Stop skipping when we hit actual content (longer than 50 chars or starts with letter but not university pattern)
+                if len(line.strip()) > 50 or (line.strip() and not re.search(r'(university|board|college|\d{4}|%)', line_lower)):
+                    skip_education_table = False
+            
+            cleaned_lines.append(line)
+        
+        text = '\n'.join(cleaned_lines)
+        
+        # Remove sidebar fragment patterns that slip through
+        # These are typically single-letter fragments, language names, or social link headers
+        lines = text.split('\n')
+        cleaned_lines = []
+        for i, line in enumerate(lines):
+            line_stripped = line.strip()
+            # Skip single letters or very short fragments that are likely sidebar remnants
+            if len(line_stripped) == 1 and line_stripped in ['g', 'G', 'R', 'Ó']:
+                continue
+            # Skip "Social links" headers and partial LinkedIn URLs
+            if line_stripped in ['Social links', 'SOCIAL LINKS', 'Social Links']:
+                continue
+            if re.match(r'^[a-z]/[\w-]+/$', line_stripped):  # Partial LinkedIn URL like "n/mayur-patil96/"
+                continue
+            # Skip standalone language names that appear outside of language sections
+            if line_stripped in ['Hindi', 'English', 'Marathi', 'Telugu', 'Tamil', 'Kannada', 'Bengali']:
+                # Only skip if not part of a sentence (check if previous/next lines are empty or headers)
+                if i > 0 and (len(lines[i-1].strip()) < 3 or lines[i-1].strip().isupper()):
+                    continue
+            cleaned_lines.append(line)
+        text = '\n'.join(cleaned_lines)
+        
         # Clean up extra whitespace
         text = re.sub(r' {2,}', ' ', text)
         text = re.sub(r'\n{3,}', '\n\n', text)
         
+        # Reformat Professional Experience tables for clarity
+        text = self._reformat_professional_experience(text)
+        
         return text.strip()
+    
+    def _reformat_professional_experience(self, text: str) -> str:
+        """Reformat Professional Experience table to make it more readable"""
+        lines = text.split('\n')
+        result = []
+        in_prof_exp = False
+        processed_lines = set()  # Track lines we've already processed as part of entries
+        i = 0
+        
+        while i < len(lines):
+            # Skip if this line was already processed as part of another entry
+            if i in processed_lines:
+                i += 1
+                continue
+            
+            line = lines[i].strip()
+            line_upper = line.upper()
+            
+            # Check if we're entering Professional Experience section
+            if 'PROFESSIONAL EXPERIENCE' in line_upper or 'WORK EXPERIENCE' in line_upper:
+                result.append(lines[i])
+                in_prof_exp = True
+                i += 1
+                continue
+            
+            # Check if we're leaving Professional Experience section
+            if in_prof_exp and (
+                'PROJECT' in line_upper or 
+                'EDUCATION' in line_upper or
+                'PERSONAL DETAILS' in line_upper or
+                'DECLARATION' in line_upper
+            ):
+                in_prof_exp = False
+            
+            # Skip table headers like "Name Of The Designation Technologies From"
+            if in_prof_exp and (
+                ('NAME OF THE' in line_upper and ('COMPANY' in line_upper or 'DESIGNATION' in line_upper)) or
+                ('DESIGNATION' in line_upper and 'TECHNOLOGIES' in line_upper and 'FROM' in line_upper)
+            ):
+                logger.info(f"[REFORMAT] Line {i}: Skipped header: {line}")
+                i += 1
+                continue
+            
+            # Skip standalone "Company" header
+            if in_prof_exp and line_upper in ['COMPANY', 'ORGANIZATION', 'EMPLOYER']:
+                logger.info(f"[REFORMAT] Line {i}: Skipped standalone header: {line}")
+                i += 1
+                continue
+            
+            # Reformat company entries
+            if in_prof_exp and line and not line.startswith('-') and not line.startswith('•'):
+                # Check if this line has a date with "to" format
+                date_match = re.search(r'\b([A-Z]{3}-\d{4}|[A-Z][a-z]{2}-\d{4})\s+to\s+(Present|[A-Z]{3}-\d{4}|[A-Z][a-z]{2}-\d{4})', line)
+                
+                if date_match:
+                    # Extract duration
+                    duration = date_match.group(0)
+                    before_date = line[:date_match.start()].strip()
+                    
+                    # Try to extract company name and initial technologies
+                    company = None
+                    technologies = []
+                    technologies_before_date = []  # Store technologies from before the date separately
+                    designation_prefix = None  # Initialize here, may be set during company extraction
+                    
+                    # Check if the "before_date" part looks like it's all technologies (no company name)
+                    # Pattern: "ADO.NET,WCF, " or "Database, Angular "
+                    looks_like_all_tech = (
+                        re.match(r'^[A-Z][A-Z\.]+', before_date) or  # Starts with acronym like ADO.NET
+                        before_date.count(',') >= 2 or  # Multiple commas suggest list of technologies
+                        re.match(r'^(Database|Angular|React|SQL|Java|Python)', before_date, re.IGNORECASE)  # Starts with common tech
+                    )
+                    
+                    if looks_like_all_tech and i > 0:
+                        # Look backward for company name on previous line
+                        prev_line = lines[i-1].strip()
+                        prev_line_upper = prev_line.upper()
+                        # Skip if previous line is a header
+                        is_header = (
+                            prev_line_upper in ['COMPANY', 'ORGANIZATION', 'EMPLOYER'] or
+                            ('NAME OF THE' in prev_line_upper and 'COMPANY' in prev_line_upper)
+                        )
+                        # Company name line is usually short, doesn't have commas
+                        if prev_line and not is_header and not re.search(r'[,•\-:]', prev_line) and len(prev_line.split()) <= 5:
+                            company = prev_line
+                            processed_lines.add(i-1)  # Mark company line as processed
+                            
+                            # Check if company name ends with a designation prefix (e.g., "Aloha Technology Software")
+                            # If so, extract the prefix as part of designation
+                            company_words = company.split()
+                            if company_words and company_words[-1] in ['Software', 'Technology', 'Senior', 'Lead']:
+                                designation_prefix = company_words[-1]
+                                company = ' '.join(company_words[:-1])
+                            
+                            # Check if company name continues after date line (e.g., "Pvt Ltd." or "Pvt Ltd. Developer")
+                            if i + 1 < len(lines):
+                                after_date_line = lines[i + 1].strip()
+                                # Check if line starts with company suffix
+                                company_suffix_match = re.match(r'^(Pvt\.?|Ltd\.?|Limited|Inc\.?|Corp\.?|LLC)(\s+(Ltd\.?|Limited|Inc\.?))?', after_date_line, re.IGNORECASE)
+                                if company_suffix_match:
+                                    company_suffix = company_suffix_match.group(0)
+                                    company = f"{company} {company_suffix}"
+                            
+                            # Store before_date as technology (will be added at the end)
+                            if before_date:
+                                technologies_before_date.append(before_date)
+                    
+                    # Check BACKWARD from current date line for any technology lines that might have been skipped
+                    # by the previous entry (handles cases where PDF extraction misplaces technologies)
+                    if i > 2:  # Need at least 2 lines before to check
+                        k = i - 1
+                        # Collect any technology-looking lines that appear BEFORE this date line
+                        # but were not processed by the previous entry
+                        backward_tech = []
+                        hit_csharp_net_pattern = False
+                        while k >= 0:
+                            backward_line = lines[k].strip()
+                            
+                            # Stop if we hit another date line (previous entry's date)
+                            if re.search(r'\b([A-Z]{3}-\d{4}|[A-Z][a-z]{2}-\d{4})\s+to\s+(Present|PRESENT|[A-Z]{3}-\d{4}|[A-Z][a-z]{2}-\d{4})', backward_line):
+                                break
+                            
+                            # Check if we hit C#.Net pattern - if so, mark it and ONLY collect these patterns, not earlier tech
+                            # This handles case where C#.Net technologies belong to current entry, not shared with previous
+                            if re.match(r'^(C#\.Net|VB\.Net|ASP\.NET|SQL\s+SERVER|Entity\s+Framework|ADO\.NET|WCF)', backward_line, re.IGNORECASE):
+                                hit_csharp_net_pattern = True
+                                backward_tech.insert(0, backward_line)
+                                k -= 1
+                                continue
+                            
+                            # If we've already seen C#.Net pattern, don't collect any more lines (they're from previous entry)
+                            if hit_csharp_net_pattern:
+                                k -= 1
+                                continue
+                            
+                            # Skip designation lines (we don't collect them as tech)
+                            if backward_line and len(backward_line.split()) <= 2 and backward_line in ['Analyst', 'Developer', 'Engineer', 'Manager', 'Architect', 'Consultant', 'Lead', 'Senior']:
+                                k -= 1
+                                continue
+                            
+                            # Collect technology lines - collect all tech patterns that haven't been collected by C#.Net logic
+                            if backward_line and not (backward_line in ['Analyst', 'Developer', 'Engineer', 'Manager', 'Architect', 'Consultant', 'Lead', 'Senior', 'Technology', 'Software', 'Company']):
+                                # Check if line looks like technologies (contains tech keywords or is comma-separated list)
+                                is_tech_line = False
+                                
+                                # Pattern: C#, .Net Framework style patterns (ATOS/Infosys shared tech stack)
+                                if re.search(r'(C#|\.Net|Web API|Sql|Database|Angular|React|Python|Java)', backward_line, re.IGNORECASE):
+                                    is_tech_line = True
+                                # Pattern: Comma-separated list (general tech pattern)
+                                elif re.match(r'^[A-Z][^,]*,', backward_line) and not re.match(r'^[A-Z][a-z]+\s+[A-Z]', backward_line):
+                                    is_tech_line = True
+                                
+                                # Collect all tech lines found backward (they're from previous entry and should be shared)
+                                if is_tech_line:
+                                    backward_tech.insert(0, backward_line)
+                            
+                            k -= 1
+                        
+                        # Add collected backward technologies to the beginning of technologies_before_date
+                        if backward_tech:
+                            technologies_before_date = backward_tech + technologies_before_date
+                    
+                    # If we didn't find company backward, parse from before_date
+                    if not company:
+                        # Split by commas to separate company from tech
+                        parts = before_date.split(',')
+                        if parts:
+                            # First part might be "Company Name Tech1" or just "Company Name"
+                            first_part = parts[0].strip()
+                            words = first_part.split()
+                            
+                            # Look for tech indicators to split company from tech
+                            # Common pattern: "ATOS C#" -> company="ATOS", tech="C#"
+                            tech_found_idx = -1
+                            for j, word in enumerate(words):
+                                if re.match(r'^(C#|C\+\+|Java|Python|\.Net|SQL|Angular|React|Node|Vue|Spring|Django|Flask|Ruby)$', word, re.IGNORECASE):
+                                    tech_found_idx = j
+                                    break
+                            
+                            if tech_found_idx > 0:
+                                # Found tech keyword, company is everything before it
+                                company = ' '.join(words[:tech_found_idx])
+                                # Everything from tech keyword onward is technology (from before date)
+                                technologies_before_date.append(' '.join(words[tech_found_idx:]))
+                            elif len(words) <= 2:
+                                # No tech keyword and short (1-2 words) - likely all company name
+                                company = first_part
+                            else:
+                                # Longer name - assume first 2 words are company, rest might be tech or part of name
+                                # Common patterns: "Infosys Limited Database" -> "Infosys Limited", "Database"
+                                company = ' '.join(words[:2])
+                                if len(words) > 2:
+                                    # Check if 3rd word looks like tech or part of company name
+                                    third_word = words[2]
+                                    if re.match(r'^(Database|Framework|System|Server|Cloud|Platform)$', third_word, re.IGNORECASE):
+                                        # It's a tech term (from before date)
+                                        technologies_before_date.append(' '.join(words[2:]))
+                                    elif words[2] in ['Pvt', 'Ltd', 'Limited', 'Inc', 'Corp', 'LLC']:
+                                        # It's part of company name
+                                        company = ' '.join(words[:3])
+                                        if len(words) > 3:
+                                            technologies_before_date.append(' '.join(words[3:]))
+                                    else:
+                                        technologies_before_date.append(' '.join(words[2:]))
+                            
+                            # Add remaining comma-separated parts as technologies (from before date)
+                            if len(parts) > 1:
+                                technologies_before_date.extend([p.strip() for p in parts[1:] if p.strip()])
+                    
+                    # Look ahead for designation and more technologies
+                    designation = None
+                    j = i + 1
+                    
+                    # Check if there's a designation prefix on the line BEFORE the date line
+                    # Pattern: "Technology" on line before, "Analyst" after
+                    # This should be checked even if company was found
+                    if i > 0:
+                        prev_line = lines[i-1].strip()
+                        # Check if previous line is a single word that could be a designation prefix
+                        if prev_line and len(prev_line.split()) == 1 and prev_line in ['Technology', 'Software', 'Senior', 'Lead', 'Principal', 'Chief']:
+                            designation_prefix = prev_line
+                            processed_lines.add(i-1)  # Mark prefix line as processed
+                    
+                    # If company was found backward, check if first line after date has both company suffix and designation
+                    # Pattern: "Pvt Ltd. Developer" where "Pvt Ltd." is company suffix and "Developer" is designation
+                    if company and j < len(lines):
+                        first_line_after_date = lines[j].strip()
+                        company_suffix_match = re.match(r'^(Pvt\.?|Ltd\.?|Limited|Inc\.?|Corp\.?|LLC)(\s+(Ltd\.?|Limited|Inc\.?))?\s+(.+)$', first_line_after_date, re.IGNORECASE)
+                        if company_suffix_match:
+                            # Extract designation after the company suffix
+                            potential_designation = company_suffix_match.group(4).strip()
+                            if potential_designation and len(potential_designation.split()) <= 3:
+                                # Combine with designation_prefix if we found one
+                                if designation_prefix:
+                                    designation = f"{designation_prefix} {potential_designation}"
+                                else:
+                                    designation = potential_designation
+                                j += 1
+                    
+                    # First, get the designation from the immediate next non-empty line (if not already found)
+                    if not designation:
+                        while j < len(lines) and j < i + 3:  # Only look 2-3 lines ahead for designation
+                            next_line = lines[j].strip()
+                            if not next_line:
+                                j += 1
+                                continue
+                            
+                            # Check if this looks like a designation
+                            is_designation = (
+                                len(next_line.split()) <= 3 and  # Designations are usually 1-3 words
+                                not re.search(r'[,•\-:]', next_line) and
+                                not re.search(r'\d', next_line) and
+                                (next_line[0].isupper() or next_line.isupper()) and
+                                not re.match(r'^(C#|Java|Python|\.Net|SQL|Angular|React|Web|API|Database|HTML|CSS|JavaScript)', next_line, re.IGNORECASE)
+                            )
+                            
+                            if is_designation:
+                                # Combine with prefix if we found one
+                                if designation_prefix:
+                                    designation = f"{designation_prefix} {next_line}"
+                                else:
+                                    designation = next_line
+                                j += 1
+                                
+                                # Check if designation continues on next line (e.g., already combined, so skip this check if we had a prefix)
+                                if not designation_prefix and j < len(lines):
+                                    next_next_line = lines[j].strip()
+                                    if next_next_line and len(next_next_line.split()) <= 2 and not re.search(r'[,•\-:]', next_next_line):
+                                        # Check if it's part of designation (like "Analyst" following "Technology")
+                                        if next_next_line in ['Analyst', 'Developer', 'Engineer', 'Manager', 'Architect', 'Consultant', 'Lead', 'Senior']:
+                                            designation = f"{designation} {next_next_line}"
+                                            j += 1
+                                        # Or if it starts with date, it's a new entry
+                                        elif re.search(r'\b([A-Z]{3}-\d{4}|[A-Z][a-z]{2}-\d{4})', next_next_line):
+                                            break
+                                break
+                            else:
+                                break
+                    
+                    # Now collect remaining technologies
+                    while j < len(lines) and j < i + 15:
+                        next_line = lines[j].strip()
+                        if not next_line:
+                            j += 1
+                            continue
+                        
+                        # If it's a new company entry (has date pattern), stop
+                        if re.search(r'\b([A-Z]{3}-\d{4}|[A-Z][a-z]{2}-\d{4})', next_line):
+                            break
+                        
+                        # If it looks like a bullet point or project section, stop
+                        if next_line.startswith('-') or next_line.startswith('•') or 'PROJECT' in next_line.upper():
+                            break
+                        
+                        # Check if it's a single-word designation prefix for the next entry (like "Technology")
+                        if len(next_line.split()) == 1 and next_line in ['Technology', 'Software', 'Senior', 'Lead', 'Principal', 'Chief']:
+                            break
+                        
+                        # Check if line starts with C#.Net or VB.Net pattern (indicates different tech stack for next entry)
+                        # This pattern is distinct from C# and indicates a transition to a new company's technologies
+                        if re.match(r'^(C#\.Net|VB\.Net|ASP\.NET\s+(MVC|Core))', next_line, re.IGNORECASE):
+                            # This is likely the start of a different company's tech stack, stop collecting
+                            break
+                        
+                        # Check if it's a company name line (for next entry) - short, no commas, no tech keywords at start
+                        is_likely_company = (
+                            len(next_line.split()) <= 5 and
+                            ',' not in next_line and
+                            not next_line[0].isdigit() and
+                            not re.match(r'^(C#|Java|Python|\.Net|SQL|Angular|React|Web|API|Database|HTML|CSS|JavaScript|ADO)', next_line, re.IGNORECASE)
+                        )
+                        
+                        # If it looks like company name, check if there are more tech lines before the next date
+                        # This handles cases where technologies appear between company name and date in table
+                        if is_likely_company:
+                            # Look ahead to see if there's technology content before the next date line
+                            k = j + 1
+                            found_tech_after_company = False
+                            while k < len(lines) and k < j + 10:
+                                peek_line = lines[k].strip()
+                                if not peek_line:
+                                    k += 1
+                                    continue
+                                # If we hit a date line, check if there are tech lines between company and date
+                                if re.search(r'\b([A-Z]{3}-\d{4}|[A-Z][a-z]{2}-\d{4})', peek_line):
+                                    # There are tech lines between current position and date
+                                    # These likely belong to the next entry, so stop collecting for current entry
+                                    found_tech_after_company = False
+                                    break
+                                # If this line has tech keywords or commas, it's likely technology
+                                if ',' in peek_line or re.match(r'^(C#|Java|Python|\.Net|SQL|Angular|React|Web|API|ADO|ASP)', peek_line, re.IGNORECASE):
+                                    found_tech_after_company = True
+                                    break
+                                k += 1
+                            
+                            # If we found tech after what looks like company name, and we already have some tech, stop
+                            if found_tech_after_company and len(technologies) > 0:
+                                break
+                            # If no tech found after, and we have some tech already, also stop
+                            elif not found_tech_after_company and len(technologies) > 0:
+                                break
+                        
+                        # Check if this line is a duplicate/subset of already collected technologies
+                        # This handles cases where table parsing creates duplicate summary lines
+                        already_collected_text = ', '.join(technologies + technologies_before_date).lower()
+                        is_duplicate = False
+                        if technologies or technologies_before_date:  # Check against all collected
+                            # Extract major technology keywords from the new line
+                            new_line_lower = next_line.lower()
+                            # Check if all major words in the new line are already in collected tech
+                            major_words = [w.strip(',.') for w in next_line.split() if len(w.strip(',.')) > 2]
+                            if major_words:
+                                matching_words = sum(1 for w in major_words if w.lower() in already_collected_text)
+                                # If more than 60% of words are already collected, it's likely a duplicate (lowered from 70%)
+                                if matching_words / len(major_words) > 0.6:
+                                    is_duplicate = True
+                        
+                        if not is_duplicate:
+                            # Otherwise, it's technology
+                            technologies.append(next_line)
+                        j += 1
+                    
+                    # Format output
+                    result.append("")
+                    if company:
+                        result.append(f"Company: {company}")
+                    if designation:
+                        result.append(f"Designation: {designation}")
+                    result.append(f"Duration: {duration}")
+                    
+                    # Combine technologies: after-date technologies first, then before-date technologies
+                    all_technologies = technologies + technologies_before_date
+                    
+                    if all_technologies:
+                        # Deduplicate technologies at word level to remove redundant entries
+                        # e.g., "Web API" + "Web API, Sql" -> keep both but track seen tech items
+                        seen_tech_items = set()
+                        deduplicated_tech = []
+                        
+                        for tech_line in all_technologies:
+                            # Split by commas to get individual technology items
+                            items = [item.strip() for item in tech_line.split(',') if item.strip()]
+                            unique_items = []
+                            
+                            for item in items:
+                                # Normalize for comparison (lowercase, remove extra spaces)
+                                item_normalized = ' '.join(item.lower().split())
+                                
+                                # Check if this exact item or a very similar item was already seen
+                                is_duplicate = False
+                                for seen_item in seen_tech_items:
+                                    # Check for exact match or high overlap
+                                    seen_words = set(seen_item.split())
+                                    item_words = set(item_normalized.split())
+                                    
+                                    # If exact match, it's duplicate
+                                    if item_normalized == seen_item:
+                                        is_duplicate = True
+                                        break
+                                    
+                                    # If one is subset of other, keep the longer one
+                                    if item_words.issubset(seen_words):
+                                        is_duplicate = True
+                                        break
+                                    elif seen_words.issubset(item_words):
+                                        # Current item is more complete, replace the old one
+                                        seen_tech_items.discard(seen_item)
+                                        break
+                                
+                                if not is_duplicate:
+                                    unique_items.append(item)
+                                    seen_tech_items.add(item_normalized)
+                            
+                            # Add the unique items from this line
+                            if unique_items:
+                                deduplicated_tech.extend(unique_items)
+                        
+                        # Join all deduplicated technologies
+                        if deduplicated_tech:
+                            all_tech = ', '.join(deduplicated_tech)
+                            all_tech = re.sub(r'\s*,\s*', ', ', all_tech)
+                            all_tech = re.sub(r',\s*,', ',', all_tech)
+                            result.append(f"Technologies: {all_tech}")
+                    
+                    # Mark all processed lines in range
+                    for k in range(i, j):
+                        processed_lines.add(k)
+                    
+                    # Skip the lines we processed
+                    i = j
+                    continue
+            
+            # Before adding this line to result, check if it's a designation prefix for the next date line
+            # If so, skip it - it will be processed when we hit the date line
+            if i + 1 < len(lines):
+                next_line = lines[i + 1].strip()
+                # Check if next line is a date line
+                date_pattern = r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[a-z]*[-\s]*\d{4}\s+to\s+(Present|PRESENT|[A-Za-z]+[-\s]*\d{4})'
+                if re.search(date_pattern, next_line):
+                    # Check if current line is a potential designation prefix
+                    if line and len(line.split()) == 1 and line in ['Technology', 'Software', 'Senior', 'Lead', 'Principal', 'Chief']:
+                        # Skip this line - it will be processed as part of the next entry
+                        i += 1
+                        continue
+            
+            # Similar check for company name: if current line looks like a company and next line starts with date/tech
+            if i + 1 < len(lines):
+                next_line = lines[i + 1].strip()
+                # Check if next line contains a date
+                if re.search(date_pattern, next_line):
+                    # Check if current line looks like a company name
+                    if line and not re.search(r'[,•\-:]', line) and len(line.split()) <= 5:
+                        # This might be a company name for the next entry
+                        i += 1
+                        continue
+            
+            # Skip lines that match C#.Net pattern - they will be collected backward by a later entry
+            if re.match(r'^(C#\.Net|VB\.Net|ASP\.NET|SQL\s+SERVER|Entity\s+Framework|ADO\.NET|WCF)', line, re.IGNORECASE):
+                i += 1
+                continue
+            
+            result.append(lines[i])
+            i += 1
+        
+        return '\n'.join(result)
 
 
 class MultiColumnPipeline(BasePipeline):
@@ -1439,7 +2067,177 @@ class MultiColumnPipeline(BasePipeline):
     def preprocess(self, text: str) -> str:
         text = re.sub(r'(\w+)-\s*\n\s*(\w+)', r'\1\2', text)
         text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        # Reformat Professional Experience tables for clarity
+        text = self._reformat_professional_experience(text)
+        
         return text
+    
+    def _reformat_professional_experience(self, text: str) -> str:
+        """Reformat Professional Experience table to make it more readable"""
+        lines = text.split('\n')
+        result = []
+        in_prof_exp = False
+        i = 0
+        
+        if self.debug:
+            logger.info(f"[REFORMAT] Starting with {len(lines)} lines")
+        
+        while i < len(lines):
+            line = lines[i].strip()
+            line_upper = line.upper()
+            
+            # Check if we're entering Professional Experience section
+            if 'PROFESSIONAL EXPERIENCE' in line_upper or 'WORK EXPERIENCE' in line_upper:
+                result.append(lines[i])
+                in_prof_exp = True
+                if self.debug:
+                    logger.info(f"[REFORMAT] Line {i}: Entered Professional Experience section")
+                i += 1
+                continue
+            
+            # Check if we're leaving Professional Experience section
+            if in_prof_exp and (
+                'PROJECT' in line_upper or 
+                'EDUCATION' in line_upper or
+                'PERSONAL DETAILS' in line_upper or
+                'DECLARATION' in line_upper
+            ):
+                in_prof_exp = False
+                if self.debug:
+                    logger.info(f"[REFORMAT] Line {i}: Exited Professional Experience section")
+            
+            # Skip table headers like "Name Of The Designation Technologies From"
+            if in_prof_exp and (
+                ('NAME OF THE' in line_upper and ('COMPANY' in line_upper or 'DESIGNATION' in line_upper)) or
+                ('DESIGNATION' in line_upper and 'TECHNOLOGIES' in line_upper and 'FROM' in line_upper)
+            ):
+                if self.debug:
+                    logger.info(f"[REFORMAT] Line {i}: Skipped header: {line}")
+                i += 1
+                continue
+            
+            # Skip standalone "Company" header
+            if in_prof_exp and line_upper in ['COMPANY', 'ORGANIZATION', 'EMPLOYER']:
+                if self.debug:
+                    logger.info(f"[REFORMAT] Line {i}: Skipped standalone header: {line}")
+                i += 1
+                continue
+            
+            # Reformat company entries
+            if in_prof_exp and line and not line.startswith('-') and not line.startswith('•'):
+                # Check if this line has a date with "to" format
+                date_match = re.search(r'\b([A-Z]{3}-\d{4}|[A-Z][a-z]{2}-\d{4})\s+to\s+(Present|[A-Z]{3}-\d{4}|[A-Z][a-z]{2}-\d{4})', line)
+                
+                if date_match:
+                    if self.debug:
+                        logger.info(f"[REFORMAT] Line {i}: Found date match: {line}")
+                    
+                    # Extract duration
+                    duration = date_match.group(0)
+                    before_date = line[:date_match.start()].strip()
+                    
+                    # Try to extract company name and initial technologies
+                    company = None
+                    technologies = []
+                    
+                    # Split by commas to separate company from tech
+                    parts = before_date.split(',')
+                    if parts:
+                        # First part might be "Company Name Tech1" or just "Company Name"
+                        first_part = parts[0].strip()
+                        # Company is typically 1-3 words (ATOS, Infosys Limited, Aloha Technology)
+                        words = first_part.split()
+                        if len(words) <= 3:
+                            company = first_part
+                            # Rest is technologies
+                            if len(parts) > 1:
+                                technologies.extend([p.strip() for p in parts[1:] if p.strip()])
+                        else:
+                            # Try to separate company from tech in first part
+                            # Common pattern: "ATOS C#" -> company="ATOS", tech="C#"
+                            # Look for tech indicators (C#, Java, .Net, etc.)
+                            tech_found = False
+                            for j, word in enumerate(words):
+                                if re.match(r'(C#|Java|Python|\.Net|SQL|Angular|React)', word, re.IGNORECASE):
+                                    company = ' '.join(words[:j])
+                                    technologies.append(' '.join(words[j:]))
+                                    tech_found = True
+                                    break
+                            if not tech_found:
+                                # Assume first 2 words are company, rest is tech
+                                company = ' '.join(words[:2])
+                                if len(words) > 2:
+                                    technologies.append(' '.join(words[2:]))
+                            # Add remaining parts as tech
+                            if len(parts) > 1:
+                                technologies.extend([p.strip() for p in parts[1:] if p.strip()])
+                    
+                    # Look ahead for designation and more technologies
+                    designation = None
+                    j = i + 1
+                    while j < len(lines) and j < i + 10:
+                        next_line = lines[j].strip()
+                        if not next_line:
+                            j += 1
+                            continue
+                        
+                        # Check if this looks like a designation (short, no special chars, titlecase)
+                        is_designation = (
+                            len(next_line.split()) <= 5 and 
+                            not re.search(r'[,•\-:]', next_line) and
+                            not re.search(r'\d', next_line) and
+                            (next_line[0].isupper() or next_line.isupper())
+                        )
+                        
+                        # Check if it looks like technology (has commas, tech keywords, or technical terms)
+                        is_tech = (
+                            ',' in next_line or 
+                            re.search(r'(C#|Java|Python|\.Net|SQL|Angular|React|Framework|API|Database)', next_line, re.IGNORECASE)
+                        )
+                        
+                        # If it's a new company entry (has date pattern), stop
+                        if re.search(r'\b([A-Z]{3}-\d{4}|[A-Z][a-z]{2}-\d{4})', next_line):
+                            break
+                        
+                        # If it looks like a bullet point or project section, stop
+                        if next_line.startswith('-') or next_line.startswith('•') or 'PROJECT' in next_line.upper():
+                            break
+                        
+                        if is_designation and not is_tech:
+                            designation = next_line
+                            j += 1
+                        elif is_tech:
+                            technologies.append(next_line)
+                            j += 1
+                        else:
+                            break
+                    
+                    # Format output
+                    result.append("")
+                    if company:
+                        result.append(f"Company: {company}")
+                    if designation:
+                        result.append(f"Designation: {designation}")
+                    result.append(f"Duration: {duration}")
+                    if technologies:
+                        # Clean up technologies - join and remove extra spaces
+                        all_tech = ', '.join(technologies)
+                        all_tech = re.sub(r'\s*,\s*', ', ', all_tech)
+                        all_tech = re.sub(r',\s*,', ',', all_tech)
+                        result.append(f"Technologies: {all_tech}")
+                    
+                    if self.debug:
+                        logger.info(f"[REFORMAT] Reformatted: Company={company}, Designation={designation}, Duration={duration}")
+                    
+                    # Skip the lines we processed
+                    i = j
+                    continue
+            
+            result.append(lines[i])
+            i += 1
+        
+        return '\n'.join(result)
 
 
 # ============================================================================
@@ -1527,6 +2325,11 @@ class PipelineOrchestrator:
         # First, reorganize any misplaced sections
         text = self._reorganize_sections(text)
         
+        # Get protected terms for name removal check
+        config_loader = ConfigLoader()
+        protected_terms = config_loader.get_flat_list('protected_terms')
+        protected_lower = [term.lower() for term in protected_terms]
+        
         # Remove name-like patterns, but preserve job titles in experience section
         lines = text.split('\n')
         cleaned = []
@@ -1575,7 +2378,13 @@ class PipelineOrchestrator:
             
             # Remove name-like patterns outside experience section
             if re.match(r'^\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+){2,4}\s*$', line):
-                continue
+                # Check if this line contains protected technical terms
+                line_lower = line.strip().lower()
+                is_protected = (line_lower in protected_lower or 
+                               any(word.lower() in protected_lower for word in line.strip().split()) or
+                               any(' ' in term and term.lower() in line_lower for term in protected_terms))
+                if not is_protected:
+                    continue
             
             # Skip removing if line is just "2" and next line looks like partial date
             if re.match(r'^\s*2\s*$', line) and i + 1 < len(lines):

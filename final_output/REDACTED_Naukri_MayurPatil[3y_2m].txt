@@ -1,64 +1,103 @@
-MAYUR PHONE
-
-PATIL EMAIL
-
-LOCATION
+[REDACTED_NAME]
 
 MULESOFT DEVELOPER
 
-EXPERIENCE
+Key Skills
+
+SQL
+
+AWS
+
+Java
+
+Software Development
+
+Software Design
+
+Java Spring Boot
+
+Software Engineering
+
+Database Handling
+
+Application Development
+
+Object Oriented
+
+Programming
+
+Spring Boot
+
+Mulesoft Anypoint
+
+Mule ESB
+
+Mulesoft Integration
+
+Mulesoft Anypoint Platform
+
+Certification
+
+MuleSoft Certified
+
+Developer - Level 1 (Mule 4)
+
+Languages
+
+English
+
+m
+
+LOCATION [LOCATION][LOCATION]
+
+EXPERIENCE 3 Years 0 Month
 
 Profile Summary
 
 3+ years experience in customer relationship
-Key Skills and supply chain management. Adept at supply
+and supply chain management. Adept at supply
+chain automation and Robotics automation.
+Proven track record of reversing customer pain
+points, especially during checkout. Team-player
+and an enthusiastic go-getter. Outgoing
+individual with a pleasant personality.
 
-Software Design
+Work Experience
 
 Mulesoft Developer
 
-Software Development Work Experience
-Software Engineering 07/2021 - Present
+Xcaliber Infotech Pvt Ltd
 
-Database Handling
-
+07/2021 - Present
 • Proven experience in Mulesoft development,
-Application Development with a strong grasp of Anypoint Platform
-Object Oriented components, particularly Anypoint Studio. -
-Programming Hands-on experience with Mule 3. X and 4. X. -
+with a strong grasp of Anypoint Platform
+components, particularly Anypoint Studio. -
+Hands-on experience with Mule 3. X and 4. X. -
 
 Knowledge of enhancing and developing
 
-Spring Boot
-
 Restful APIs to facilitate seamless data
 
-Mulesoft Anypoint exchange between end applications. -
+exchange between end applications. -
 Proficiency in designing RAML-based APIs and
-
-Mule ESB
-
 ensuring proper documentation. - Strong skills
-Mulesoft Integration in complex Dataweave (DWL) transformations
-Mulesoft Anypoint Platform and the utilization of various connectors like
+in complex Dataweave (DWL) transformations
+and the utilization of various connectors like
 expressions, files, schedulers, and more. -
 Unlock the full potential of databases with a
-Certification hands-on journey through Postgres, MS-SQL,
-and MySQL - Sound knowledge of ObjectMuleSoft Certified Oriented Programming (OOP) Patterns and
-Developer - Level 1 (Mule 4) Concepts of Java Programming. - Experience
+hands-on journey through Postgres, MS-SQL,
+and MySQL - Sound knowledge of ObjectOriented Programming (OOP) Patterns and
+Concepts of Java Programming. - Experience
 with Mule flows, scopes, debugger, error
-Languages handling strategies, and logger for robust
+handling strategies, and logger for robust
 integration solutions. - Ability to prepare
 
-English
-
+comprehensive documentation, including API
 specifications and technical design
 documents. - Familiarity with MUnit testing for
-Social links validating integration success and error
+validating integration success and error
 scenarios. - Knowledge of API deployment to
-
 on-premises environments for seamless
-n/mayur-patil96/
 integration with client infrastructure. -
 
 Familiarity with Postman collections for testing

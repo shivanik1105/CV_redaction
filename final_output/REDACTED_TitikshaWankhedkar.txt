@@ -10,7 +10,7 @@ and AnyPoint platform.
 • Designed and developed Mule ESB projects using various connectors like Database, Salesforce.
 • Exposure to Mule AnyPoint platform components (Any point studio, Anypoint API
 designer, [NAME] API manager, Connectors, AnyPoint API portal).
-• Implemented flows using [NAME] based on the client's requirements.
+• Implemented flows using Anypoint Studio based on the client's requirements.
 • Hands-on experience in data weave Language to access payload data, properties,
 and variables ofMule [NAME].
 • Good understanding of the [NAME] (SDLC)
@@ -26,7 +26,7 @@ Duration:
 Sep 2023 To Till Date
 Environment:
 
-[NAME]
+Anypoint Studio
 
 Description:
 Intel Market to Revenue project consists of different programs like Next
@@ -54,7 +54,7 @@ Duration:
 Nov 2022 to Sep 2023
 Environment:
 
-[NAME]
+Anypoint Studio
 
 Description:
 CISCO project consist of different programs like Service Delivery, Customer
