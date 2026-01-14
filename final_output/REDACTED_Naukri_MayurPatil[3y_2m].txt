@@ -110,7 +110,6 @@ Projects
 
 Midas
 
-790 Days
 ?? It is supply chain domain project where
 receiving of mobility devices done by
 automation. ?? In Midas there is different
@@ -133,7 +132,6 @@ continuous learning within the team
 
 Odyssey
 
-1063 Days
 It is company intranet system where is project
 management, HR management, employee
 management system build and integrated with
@@ -153,5 +151,4 @@ Develop robust solution in timely manner
 
 Erasure
 
-610 Days
 It's a device data sanitization project

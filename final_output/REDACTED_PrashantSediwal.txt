@@ -1,57 +1,34 @@
-[REMOVED_SECTION_PERSONAL]
-
 KEY SKILLS
 
-Feb 2022 -
+Automotive
 
-Present
+Unit Testing
 
-Nov 2018 - Feb
-2022
+C
 
-[REDACTED_NAME]
+C++
 
-WORK EXPERIENCE
-Lead Engineer - Product
+Linux
 
-Development
+UNIX
 
-M. Tech
+c++ Programming
 
-Rajiv Gandhi Proudyogiki Vishwavidyalaya
+Embedded C
 
-(RGPV), Bhopal
-B. Tech/B. E.
+Socket Programming
 
-Rajiv Gandhi Proudyogiki Vishwavidyalaya
+STL
 
-(RGPV), Bhopal
+OOPS
 
-XIIth
+Multithreading
 
-Hindi
+multi processing
 
-Xth
+Linux Development
 
-Hindi
-
-Lead Engineer - Product Development
-
-HARMAN
-
-C++ Linux development. cmake configuration, gtest
-and Design and develop automotive applications for
-Mrecedes-Benz and John Deere.
-
-Senior Software Engineer
-
-Worldline India Pvt Ltd
-
-C , C++, Oops, Socket Programming, IPC,
-Multithreading, File Handling, Shell Scripting, Shared
-Memory, STL, ant, Debian and rpm packages, gtest,
-authorization and switching, acquiring, ISO8583,
-payment domain, gtest.
+Docker
 
 Jenkins
 
@@ -75,35 +52,52 @@ CPP
 
 Qml
 
-OTHER PERSONAL DETAILS
+[REMOVED_SECTION_PERSONAL]
 
-City
+[REMOVED_SECTION_EDUCATION]
 
-[LOCATION]
+PROFILE SUMMARY
 
-Country
-
-[LOCATION]
-
-LANGUAGES
-
-english
+M. Tech. (honours) with 9+ years of C++ developments experience. I
+have worked on Linux/Unix Rhel Debian applications. I have strong
+knowledge about C, C++, QMl, shell scripts and objective oriented
+programming ( Oops ). During my career I have worked on many
+complex projects in C & CPP and Multithreading, multi processing, IPC
+and socket programming in C++, having experience in working on
+scaled agile framework, gtest, Jenkins, GitLab, iso8582, ant, ci
+pipeline. Having experience in Payment Domain & Automotive Domain.
+Rajiv Gandhi Proudyogiki Vishwavidyalaya (RGPV), [LOCATION]
+Rajiv Gandhi Proudyogiki Vishwavidyalaya (RGPV), [LOCATION]
 
 Hindi
 
-Feb 2017 - Nov
-2018
-Jun 2015 - Feb
-2017
+WORK EXPERIENCE
 
-Projects
+Lead Engineer - Product Development
 
-631 Days
-668 Days
+HARMAN
 
-[NAME]
+C++ Linux development. cmake configuration, gtest
+and Design and develop automotive applications for
+Mrecedes-Benz and John Deere.
 
-[NAME]
+Senior Software Engineer
+
+Worldline India Pvt Ltd
+
+C , C++, Oops, Socket Programming, IPC,
+Multithreading, File Handling, Shell Scripting, Shared
+Memory, STL, ant, Debian and rpm packages, gtest,
+authorization and switching, acquiring, ISO8583,
+payment domain, gtest.
+Feb 2017 - Nov 2018
+Jun 2015 - Feb 2017
+
+[REMOVED_SECTION_PERSONAL]
+
+Software Programmer
+
+Microworld Software Services
 
 Build linux / unix applications using C, C++, shell
 script., Unix, Multithreading, data structure and
@@ -114,7 +108,7 @@ packages and other build environment.
 
 Software Developer
 
-[NAME]
+Forbes Technosys Ltd
 
 • >Build linux / unix applications using C++ and QT
 platform ->Designed, coded, implemented and tested
@@ -147,15 +141,6 @@ then warn to ECU. ??? PC simulation based on Vector
 canoe we can see all input and output signal
 visualization on canoe graph for analysis of both
 subsystem SOD and DMS.
-214 Days
-578 Days
-457 Days
-485 Days
-276 Days
-335 Days
-
-COURSES & CERTIFICATIONS
-
 WLP-FO Acquiring Australia
 WLP-FO is standards framework for authorization &
 switching. Need to create acquiring instance for
@@ -166,7 +151,7 @@ validate different data element and send to authorizer
 service, and configure authorizer in such a way that
 after all checks it can able to switch out message to
 different scheme like Mastercard, Visa, Amex.
-WLP-FO Acquiring [LOCATION]
+WLP-FO Acquiring India
 Magnus is a 20+ years old legacy SWITCH. It has
 some limitations which restricts scalability & flexibility
 to rollout out new products & solutions at the
@@ -191,18 +176,20 @@ comprehensive security solution designed and
 developed to protect your Linux machines from virus
 and other such cyber threats.
 
-[NAME]
+Check Deposit Kiosk
 
 This application is used currently in many bank for
 check deposit pupose but we use raspberry-pi for
 executing this application for low cost and minimum
 space uses.
 
-[NAME]
+Coin Vending Machine
 
 This machine provides change of coin from note (note
 to coin changer) in require denomination as per bank
 requirement. Currently this project lives in many
 leading banks like SBI, Canara, and ICICI.
 
-[NAME]
+COURSES & CERTIFICATIONS
+
+Advanced Embeeded System Design

@@ -445,12 +445,13 @@ class RuleBasedRedactor:
         ]
         
         # Section stoppers - if we hit these, we're out of skills section
+        # REMOVED 'profile' from stoppers since KEY SKILLS can be followed by PROFILE SUMMARY
         section_stoppers = [
             'work experience', 'professional experience', 'employment history',
             'education', 'academic', 'certification', 'certifications', 
             'declaration', 'personal details', 'personal information',
             'projects', 'achievements', 'awards', 'publications', 'references',
-            'work history', 'career history', 'summary', 'objective', 'profile'
+            'work history', 'career history', 'summary', 'objective'
         ]
         
         # Look backwards to find if we're in skills section
@@ -514,10 +515,23 @@ class RuleBasedRedactor:
         lines = text.split('\n')
         result_lines = []
         
+        # Get protected company names to avoid redacting locations within them
+        protected_companies = self.config.load('protected_terms').get('companies', [])
+        protected_companies_lower = [comp.lower() for comp in protected_companies]
+        
         for i, line in enumerate(lines):
             # Check if we're in an experience or skills section
             if self._is_in_experience_section(i, lines) or self._is_in_skills_section(i, lines):
                 # Keep line as-is in experience or skills section
+                result_lines.append(line)
+                continue
+            
+            # Check if line contains a protected company name (e.g., "wlp-fo acquiring india")
+            line_lower = line.lower()
+            contains_protected_company = any(comp in line_lower for comp in protected_companies_lower)
+            
+            if contains_protected_company:
+                # Keep line as-is if it contains a protected company/project name
                 result_lines.append(line)
                 continue
             
@@ -643,31 +657,95 @@ class RuleBasedRedactor:
         section_depth = 0
         current_section_type = None
         
-        for line in lines:
+        # Education-related patterns to catch scattered education content
+        education_patterns = [
+            r'^(m\.\s*tech|b\.\s*tech|b\.\s*e\.|m\.\s*sc|b\.\s*sc|mba|bba|phd|diploma)',
+            r'^(xiith|xith|xth|10th|12th|tenth|twelfth)\s*$',
+            r'^(english|hindi|marathi|tamil|telugu|kannada|malayalam|bengali|gujarati|punjabi|urdu)\s*$',
+        ]
+        
+        for i, line in enumerate(lines):
             stripped = line.strip().lower()
             
+            # Check if this is scattered education content (not in a marked section)
+            if not in_remove_section:
+                is_education_content = any(re.match(pattern, stripped, re.IGNORECASE) for pattern in education_patterns)
+                if is_education_content:
+                    # Check context - if this appears near other education indicators
+                    context_window_start = max(0, i - 3)
+                    context_window_end = min(len(lines), i + 4)
+                    context = '\n'.join(lines[context_window_start:context_window_end]).lower()
+                    
+                    # Don't remove language names if they appear in LANGUAGES section
+                    if 'languages' in context:
+                        # This is language proficiency, not education medium
+                        pass
+                    # If we find education-related context, skip this line
+                    elif 'university' in context or 'college' in context or 'vishwavidyalaya' in context or 'rgpv' in context:
+                        logging.debug(f"Removing scattered education content: {stripped[:50]}")
+                        continue
+            
             # Check if entering a remove section
+            should_skip = False
             for section_type, markers in remove_sections.items():
                 if any(stripped.startswith(m.lower()) for m in markers):
                     in_remove_section = True
                     section_depth = 0
                     current_section_type = section_type.upper()
                     result_lines.append(f'[REMOVED_SECTION_{current_section_type}]')
+                    should_skip = True
                     break
+            
+            if should_skip:
+                continue
             
             if in_remove_section:
                 # Check if hit preserve section
                 if any(stripped.startswith(h.lower()) for h in preserve_sections):
-                    in_remove_section = False
-                    current_section_type = None
+                    # Check if this is a real section with content or just a sidebar label
+                    # Look ahead to see if there's substantial content
+                    has_content = False
+                    for j in range(i + 1, min(i + 5, len(lines))):
+                        next_line = lines[j].strip()
+                        # Check if next lines have substantial content (not just numbers or short labels)
+                        if len(next_line) > 50 or (len(next_line) > 20 and not re.match(r'^\d+\s*(Days|Months?|Years?)?$', next_line)):
+                            has_content = True
+                            break
+                    
+                    if has_content:
+                        # Real section with content - stop removing
+                        in_remove_section = False
+                        current_section_type = None
+                        result_lines.append(line)
+                        logging.debug(f"Stopped removal at preserve section with content: {stripped[:50]}")
+                    else:
+                        # Just a label without real content - continue removing
+                        section_depth += 1
+                        logging.debug(f"Skipping preserve section label without content: {stripped[:50]}")
+                
+                # Check if this looks like a job title (indicating we've entered work experience)
+                elif (len(stripped) < 60 and 
+                      any(role in stripped for role in ['engineer', 'developer', 'programmer', 'architect', 'manager', 'consultant', 'analyst']) and
+                      i + 1 < len(lines)):
+                    # Look ahead to see if next line is a company name (longer line, likely has company keywords)
+                    next_line = lines[i + 1].strip()
+                    if len(next_line) > 5 and len(next_line) < 100:
+                        # Likely a job title followed by company - stop removing
+                        in_remove_section = False
+                        current_section_type = None
+                        result_lines.append(line)
+                        logging.debug(f"Stopped removal at job title (work experience start): {stripped[:50]}")
+                
                 elif section_depth > 30:
                     in_remove_section = False
                     current_section_type = None
+                    result_lines.append(line)
+                    logging.debug(f"Stopped removal after 30 lines at: {stripped[:50]}")
                 else:
                     section_depth += 1
-                    continue
-            
-            if not in_remove_section:
+                    # Skip this line - it's part of a section to remove
+                    logging.debug(f"Removing line {section_depth}: {stripped[:50]}")
+            else:
                 result_lines.append(line)
         
         return '\n'.join(result_lines)
@@ -716,6 +794,11 @@ class RuleBasedRedactor:
                     # This "2" is part of a year, keep it
                     cleaned_lines.append(line)
                     continue
+            
+            # Skip standalone duration lines (project metadata from sidebar)
+            stripped = line.strip()
+            if re.match(r'^\d+\s+(Days?|Months?|Years?)$', stripped, re.IGNORECASE):
+                continue
             
             # Remove other single digit page numbers
             if re.match(r'^\s*\d\s*$', line):
@@ -1043,21 +1126,206 @@ class BasePipeline(abc.ABC):
 
 
 class StandardATSPipeline(BasePipeline):
-    """Standard single-column extraction"""
+    """Standard extraction with improved column handling"""
     
     def extract_text(self, pdf_path: str) -> str:
         if HAS_FITZ:
+            all_pages_text = []
+            
             with fitz.open(pdf_path) as doc:
-                return "\n\n".join([page.get_text() for page in doc])
+                for page in doc:
+                    page_width = page.rect.width
+                    page_height = page.rect.height
+                    
+                    # Get text blocks with coordinates
+                    blocks = page.get_text("dict")["blocks"]
+                    
+                    text_blocks = []
+                    for block in blocks:
+                        if "lines" in block:
+                            bbox = block["bbox"]
+                            text = " ".join([
+                                " ".join([span["text"] for span in line["spans"]])
+                                for line in block["lines"]
+                            ]).strip()
+                            if text:
+                                text_blocks.append({
+                                    'text': text,
+                                    'x0': bbox[0],
+                                    'y0': bbox[1],
+                                    'x1': bbox[2],
+                                    'y1': bbox[3]
+                                })
+                    
+                    if not text_blocks:
+                        continue
+                    
+                    # Detect two-column layout
+                    # Analyze x-positions to find column boundary
+                    x_starts = sorted([b['x0'] for b in text_blocks])
+                    
+                    # Find the largest gap in x-positions (indicates column separation)
+                    column_boundary = page_width / 2
+                    max_gap = 0
+                    
+                    for i in range(len(x_starts) - 1):
+                        gap = x_starts[i + 1] - x_starts[i]
+                        if gap > max_gap and gap > 30:  # Minimum 30 pixel gap
+                            # Only consider gaps in the middle 60% of page width
+                            if page_width * 0.2 < x_starts[i] < page_width * 0.8:
+                                max_gap = gap
+                                column_boundary = (x_starts[i] + x_starts[i + 1]) / 2
+                    
+                    # Separate into columns if significant gap found
+                    if max_gap > 30:
+                        # Two-column layout detected
+                        left_blocks = [b for b in text_blocks if (b['x0'] + b['x1']) / 2 < column_boundary]
+                        right_blocks = [b for b in text_blocks if (b['x0'] + b['x1']) / 2 >= column_boundary]
+                        
+                        # Sort each column by y-position
+                        left_blocks.sort(key=lambda b: b['y0'])
+                        right_blocks.sort(key=lambda b: b['y0'])
+                        
+                        # Output left column first, then right column
+                        page_lines = []
+                        page_lines.extend([b['text'] for b in left_blocks])
+                        page_lines.append("")  # Separator between columns
+                        page_lines.extend([b['text'] for b in right_blocks])
+                        
+                        page_text = "\n".join(page_lines)
+                    else:
+                        # Single column - sort by y then x
+                        text_blocks.sort(key=lambda b: (b['y0'], b['x0']))
+                        page_text = "\n".join([b['text'] for b in text_blocks])
+                    
+                    all_pages_text.append(page_text)
+                
+                return "\n\n".join(all_pages_text)
+        
         elif HAS_PDFPLUMBER:
             with pdfplumber.open(pdf_path) as pdf:
                 return "\n\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
+        
         return "Error: No PDF library available"
     
     def preprocess(self, text: str) -> str:
         text = re.sub(r'[•●○◦▪▫■□⬤→]', '•', text)
         text = re.sub(r' {2,}', ' ', text)
         text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        # Handle mixed column content for ATS-style resumes
+        lines = text.split('\n')
+        
+        # Detect if this is an ATS resume with sidebar
+        has_sidebar_format = False
+        key_skills_idx = -1
+        profile_summary_idx = -1
+        
+        for i, line in enumerate(lines):
+            if 'KEY SKILLS' in line.upper():
+                key_skills_idx = i
+                has_sidebar_format = True
+            if 'PROFILE SUMMARY' in line.upper():
+                profile_summary_idx = i
+        
+        if has_sidebar_format and key_skills_idx != -1 and profile_summary_idx != -1:
+            # Common tech skill keywords that appear in sidebars
+            tech_keywords = {'jenkins', 'gitlab', 'gtest', 'c++', 'agile', 'scrum', 'iso8583', 
+                           'c++ 11', 'c++ 14', 'payments', 'cpp', 'qml', 'docker', 'kubernetes',
+                           'python', 'java', 'javascript', 'angular', 'react', 'vue', 'linux',
+                           'unix', 'automotive', 'unit testing', 'c', 'c++ programming',
+                           'embedded c', 'socket programming', 'stl', 'oops', 'multithreading',
+                           'multi processing', 'linux development'}
+            
+            # Load protected terms from config
+            try:
+                protected_config = self.config.load('protected_terms')
+                protected_terms = []
+                for category in protected_config.values():
+                    if isinstance(category, list):
+                        protected_terms.extend(category)
+                protected_lower = [term.lower() for term in protected_terms]
+            except:
+                # Fallback if config can't be loaded
+                protected_lower = []
+            
+            # Collect all skill lines and non-skill lines separately
+            skills_section_lines = []
+            other_lines = []
+            in_key_skills = False
+            
+            for i, line in enumerate(lines):
+                line_stripped = line.strip()
+                line_lower = line_stripped.lower()
+                
+                if i == key_skills_idx:
+                    # Start of KEY SKILLS section
+                    in_key_skills = True
+                    skills_section_lines.append(line)
+                    continue
+                
+                # Stop collecting skills when we hit PROFILE SUMMARY
+                if i == profile_summary_idx:
+                    in_key_skills = False
+                    other_lines.append(line)
+                    continue
+                
+                # If we're before KEY SKILLS, just add to other lines
+                if i < key_skills_idx:
+                    other_lines.append(line)
+                    continue
+                
+                # Between KEY SKILLS and PROFILE SUMMARY - collect as skills (filtering dates/years/names/titles)
+                if i > key_skills_idx and i < profile_summary_idx:
+                    # Skip dates
+                    if re.match(r'^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4}\s*-', line_stripped, re.IGNORECASE):
+                        continue
+                    # Skip single years (education)
+                    if re.match(r'^\d{4}$', line_stripped):
+                        continue
+                    # Skip empty lines
+                    if not line_stripped:
+                        continue
+                    
+                    # Check if it's a protected term or tech keyword (definitely a skill)
+                    if line_lower in protected_lower or line_lower in tech_keywords:
+                        skills_section_lines.append(line)
+                        continue
+                    
+                    # Skip lines that look like names (2-3 capitalized words, but not tech terms)
+                    if re.match(r'^[A-Z][a-z]+\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?$', line_stripped):
+                        # This looks like a person name
+                        continue
+                    
+                    # Skip standalone generic words that aren't skills
+                    non_tech_words = ['development', 'management', 'engineering', 'testing', 
+                                     'programming', 'lead', 'senior', 'junior', 'principal']
+                    if line_lower in non_tech_words:
+                        continue
+                    
+                    # Skip lines with job title patterns (but not if they're compound tech terms)
+                    # Only skip if it's clearly a job title like "Lead Engineer" or "Senior Developer"
+                    if re.match(r'^(Lead|Senior|Junior|Principal)\s+(Engineer|Developer|Architect|Manager)', line_stripped, re.IGNORECASE):
+                        continue
+                    
+                    # Everything else between KEY SKILLS and PROFILE SUMMARY is likely a skill
+                    if len(line_stripped) <= 50:  # Skills are typically short
+                        skills_section_lines.append(line)
+                    else:
+                        # Too long, probably descriptive text
+                        continue
+                else:
+                    # After PROFILE SUMMARY - only collect if it's an exact match to tech keywords
+                    if line_lower in tech_keywords and len(line_stripped) < 30:
+                        # This is a skill keyword appearing later - add to skills section
+                        skills_section_lines.append(line)
+                    else:
+                        other_lines.append(line)
+            
+            # Reconstruct: skills section with all skills, then other content
+            result_lines = skills_section_lines + [''] + other_lines
+            text = '\n'.join(result_lines)
+        
         return text
 
 

@@ -82,3 +82,13 @@ better UI/UX. Implemented validations for email and mobile input.
 [REMOVED_SECTION_PERSONAL]
 
 [REMOVED_SECTION_EDUCATION]
+
+Bachelor of Engineering (B. E)
+G. H. Raisoni College of Engineering (CSE), Jun 2016 - Jun 2019
+• CGPA/Percentage - 7.6
+Government Polytechnix, Jun 2012 - Jun 2016
+• CGPA/Percentage – 79%
+X (Secondary), State Board
+• CGPA/Percentage – 78.18%
+
+SQL for

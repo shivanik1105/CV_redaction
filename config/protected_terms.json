@@ -76,6 +76,28 @@
     "windows",
     "yocto"
   ],
+  "companies": [
+    "harman",
+    "worldline",
+    "worldline india pvt ltd",
+    "microworld software services",
+    "forbes technosys ltd",
+    "john deere",
+    "mercedes-benz",
+    "citrix",
+    "microsoft",
+    "oracle",
+    "ibm",
+    "accenture",
+    "tcs",
+    "infosys",
+    "wipro",
+    "cognizant",
+    "hcl",
+    "tech mahindra",
+    "wlp-fo acquiring india",
+    "wlp-fo acquiring australia"
+  ],
   "roles": [
     "engineer",
     "developer",
@@ -93,7 +115,9 @@
     "system engineer",
     "senior system engineer",
     "software engineer",
-    "senior software engineer"
+    "senior software engineer",
+    "software programmer",
+    "software developer"
   ],
   "technical_terms": [
     "automotive",
@@ -125,6 +149,30 @@
     "apis",
     "analytical",
     "debugging",
-    "problem-solving"
+    "problem-solving",
+    "unit testing",
+    "socket programming",
+    "multithreading",
+    "multi processing",
+    "qml",
+    "oops",
+    "stl",
+    "agile",
+    "scrum",
+    "payments",
+    "cpp",
+    "gtest",
+    "iso8583",
+    "c++ 11",
+    "c++ 14",
+    "c++ programming",
+    "embedded c",
+    "linux development",
+    "check deposit kiosk",
+    "coin vending machine",
+    "hmi interface",
+    "pc simulation",
+    "advanced embeeded system design",
+    "advanced embedded system design"
   ]
 }
