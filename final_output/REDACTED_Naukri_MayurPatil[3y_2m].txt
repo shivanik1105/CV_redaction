@@ -86,8 +86,7 @@ and the utilization of various connectors like
 expressions, files, schedulers, and more. -
 Unlock the full potential of databases with a
 hands-on journey through Postgres, MS-SQL,
-and MySQL - Sound knowledge of ObjectOriented Programming (OOP) Patterns and
-Concepts of Java Programming. - Experience
+and MySQL - Sound knowledge of ObjectOriented Programming (OOP) Patterns and Concepts of Java Programming. - Experience
 with Mule flows, scopes, debugger, error
 handling strategies, and logger for robust
 integration solutions. - Ability to prepare
@@ -145,9 +144,7 @@ external services. ?? Developed Java code,
 developed web services for various
 requirements. Involved on Code deployment
 and code Build process. ?? Worked closely
-with others team members to plan design and
-
-Develop robust solution in timely manner
+with others team members to plan design and Develop robust solution in timely manner
 
 Erasure
 

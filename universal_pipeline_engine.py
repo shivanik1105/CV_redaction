@@ -401,38 +401,70 @@ class RuleBasedRedactor:
         return text
     
     def _is_in_experience_section(self, line_index: int, lines: list) -> bool:
-        """Check if a line is within an experience/work history section"""
+        """Check if a line is within an experience/work history section
+        
+        Handles two-column layouts where section headers from left column (ACHIEVEMENTS, SKILLS)
+        may be interleaved with experience content from right column.
+        """
         experience_markers = [
             'work experience', 'professional experience', 'employment history',
-            'professional experiences', 'work history', 'career history'
+            'professional experiences', 'work history', 'career history', 'experience'
         ]
         
+        # Check if the current line or nearby lines contain company/role patterns
+        # These patterns strongly indicate we're in experience content
+        company_role_patterns = [
+            r'\([A-Z][a-z]{2}\s+\d{4}\s*[-–]\s*(?:till\s+date|present|[A-Z][a-z]{2}\s+\d{4})\)',  # (Oct 2021 – till date)
+            r'\b(?:Lead|Senior|Junior|Principal|Staff)\s+(?:Engineer|Developer|Analyst|Architect|Manager|Consultant)\b',  # Job titles
+            r'\b(?:Pvt\.?\s+Ltd|Limited|Inc\.?|Corp\.?|LLC)\b',  # Company suffixes
+            r'(?:The major experience|skills gained during the period)',  # Common experience section phrases
+            r'(?:Involved in|Responsible for|Led|Managed|Developed|Implemented)',  # Action verbs
+        ]
+        
+        # Check current line and nearby lines (±5 lines) for strong experience indicators
+        check_start = max(0, line_index - 5)
+        check_end = min(len(lines), line_index + 6)
+        for i in range(check_start, check_end):
+            line = lines[i]
+            if any(re.search(pattern, line, re.IGNORECASE) for pattern in company_role_patterns):
+                # Strong indicator we're in experience content
+                # Now verify there's an experience marker somewhere above (not too strict about stoppers)
+                for j in range(line_index, max(0, line_index - 200), -1):
+                    if any(marker in lines[j].strip().lower() for marker in experience_markers):
+                        return True
+        
+        # Fallback to original logic if no strong patterns found
         # Section stoppers - if we hit these, we're out of experience section
+        # BUT: ignore section stoppers that are likely from a two-column layout (very short lines)
         section_stoppers = [
-            'education', 'academic', 'skills', 'technical skills', 'certification', 
+            'education', 'academic', 'technical skills', 'certification', 
             'certifications', 'declaration', 'personal details', 'personal information',
-            'projects', 'achievements', 'awards', 'publications', 'references'
+            'projects', 'publications', 'references'
         ]
         
         # Look backwards to find if we're in experience section
         found_experience = False
-        start_idx = max(0, line_index - 150)  # Increased range to 150 lines
+        found_experience_at = -1
+        start_idx = max(0, line_index - 200)
         
         for i in range(line_index, start_idx, -1):
             line_lower = lines[i].strip().lower()
             
-            # Check if we hit a section stopper first
+            # Check if we hit a section stopper
+            # IGNORE stoppers if they're on very short lines (likely column headers from two-column layout)
             if any(stopper in line_lower for stopper in section_stoppers):
-                # If we haven't found experience marker yet, we're not in experience section
-                if not found_experience:
-                    return False
-                # If we found experience marker earlier, now we hit a stopper, so we're past experience
-                else:
-                    return False
+                # Only treat as real stopper if line is long enough (not just a header)
+                if len(line_lower) > 50:  # Real content, not just header
+                    if not found_experience:
+                        return False
+                    else:
+                        return False
+                # Otherwise ignore this stopper (likely from sidebar/column header)
             
             # Check for experience markers
             if any(marker in line_lower for marker in experience_markers):
                 found_experience = True
+                found_experience_at = i
                 return True
         
         return found_experience
@@ -588,6 +620,20 @@ class RuleBasedRedactor:
             if any(stripped.startswith(h.lower()) for h in preserve_headers):
                 continue
             
+            # Handle all-caps names at the very beginning (first 5 lines)
+            # Pattern: 2-4 words, each 3+ chars, looks like a name
+            if line.strip().isupper() and i < 5:
+                words = line.strip().split()
+                # Check if it looks like a name: 2-4 words, each word 3+ characters
+                if 2 <= len(words) <= 4 and all(len(w) >= 3 and w.isalpha() for w in words):
+                    # Check it's not a protected term
+                    line_lower = line.strip().lower()
+                    is_protected = line_lower in protected_lower or any(w.lower() in protected_lower for w in words)
+                    if not is_protected:
+                        lines[i] = '[REDACTED_NAME]'
+                        continue
+            
+            # Skip other all-caps lines (section headers)
             if line.isupper():
                 continue
             
@@ -656,6 +702,7 @@ class RuleBasedRedactor:
         in_remove_section = False
         section_depth = 0
         current_section_type = None
+        skip_removal_until = -1  # Track lines to preserve after work experience detection
         
         # Education-related patterns to catch scattered education content
         education_patterns = [
@@ -666,6 +713,14 @@ class RuleBasedRedactor:
         
         for i, line in enumerate(lines):
             stripped = line.strip().lower()
+            # Normalize spacing - remove extra spaces between characters (common in PDFs with styled headings)
+            # Keep replacing until no more changes (handles "P E R S O N A L" -> "PERSONAL")
+            normalized = stripped
+            while True:
+                new_normalized = re.sub(r'(\w)\s+(\w)', r'\1\2', normalized)
+                if new_normalized == normalized:
+                    break
+                normalized = new_normalized
             
             # Check if this is scattered education content (not in a marked section)
             if not in_remove_section:
@@ -688,7 +743,7 @@ class RuleBasedRedactor:
             # Check if entering a remove section
             should_skip = False
             for section_type, markers in remove_sections.items():
-                if any(stripped.startswith(m.lower()) for m in markers):
+                if any(normalized.startswith(m.lower()) or normalized.startswith(m.lower().replace(' ', '')) for m in markers):
                     in_remove_section = True
                     section_depth = 0
                     current_section_type = section_type.upper()
@@ -700,8 +755,45 @@ class RuleBasedRedactor:
                 continue
             
             if in_remove_section:
+                # Check if we're in a "skip removal" window (preserving lines after work experience)
+                if i < skip_removal_until:
+                    result_lines.append(line)
+                    logging.debug(f"Preserved line in work experience cluster: {stripped[:60]}")
+                    continue
+                
+                # CRITICAL: Check if this line looks like work experience content
+                # Even if we're in a PERSONAL/EDUCATION section, preserve work experience lines
+                work_experience_indicators = [
+                    r'preparation of financial statements',
+                    r'assisted in.*audit',
+                    r'variance analysis',
+                    r'analysis/variance analysis',
+                    r'training under the guidance',
+                    r'the major experience',
+                    r'skills gained during',
+                    r'involved in',
+                    r'responsible for',
+                    r'developed',
+                    r'implemented',
+                    r'managed',
+                    r'years.*intensive.*training',
+                    r'\([A-Z][a-z]{2}\s+\d{4}\s*[-–]\s*(?:till\s+date|present|[A-Z][a-z]{2}\s+\d{4})\)',  # Date patterns
+                ]
+                
+                is_work_content = any(re.search(pattern, stripped, re.IGNORECASE) for pattern in work_experience_indicators)
+                
+                if is_work_content:
+                    # This line is work experience, preserve it and the next 2-3 lines
+                    # (they're likely part of the same job entry)
+                    result_lines.append(line)
+                    skip_removal_until = i + 3  # Preserve next 2 lines after this one
+                    logging.debug(f"Preserved work experience line and will preserve next 2 lines: {stripped[:60]}")
+                    continue
+                
                 # Check if hit preserve section
-                if any(stripped.startswith(h.lower()) for h in preserve_sections):
+                # Normalize preserve section names the same way
+                preserve_normalized = [re.sub(r'\s+', '', h.lower()) for h in preserve_sections]
+                if any(normalized.startswith(pn) for pn in preserve_normalized):
                     # Check if this is a real section with content or just a sidebar label
                     # Look ahead to see if there's substantial content
                     has_content = False
@@ -735,6 +827,23 @@ class RuleBasedRedactor:
                         current_section_type = None
                         result_lines.append(line)
                         logging.debug(f"Stopped removal at job title (work experience start): {stripped[:50]}")
+                
+                # For PERSONAL section, be more aggressive - remove until we hit a clear date pattern (indicating work history)
+                elif current_section_type == 'PERSONAL':
+                    # Check if this line has a date range pattern like "Aug'15 – Jul'18" or "Nov'12 – Apr'15"
+                    date_range_pattern = r"[a-z]{3}'?\d{2}\s*[–\-—]\s*[a-z]{3}'?\d{2}"
+                    # Also check if line is a redacted placeholder (should still be removed)
+                    is_redacted_placeholder = stripped.startswith('[redacted_')
+                    
+                    if re.search(date_range_pattern, stripped, re.IGNORECASE) and not is_redacted_placeholder:
+                        # This is a work experience entry - stop removing
+                        in_remove_section = False
+                        current_section_type = None
+                        result_lines.append(line)
+                        logging.debug(f"Stopped PERSONAL removal at date range: {stripped[:50]}")
+                    else:
+                        section_depth += 1
+                        logging.debug(f"Removing PERSONAL line {section_depth}: {stripped[:50]}")
                 
                 elif section_depth > 30:
                     in_remove_section = False
@@ -819,6 +928,66 @@ class RuleBasedRedactor:
         text = re.sub(r':([A-Za-z])', r': \1', text)
         text = re.sub(r',([A-Za-z])', r', \1', text)
         text = re.sub(r'\.([A-Z])', r'. \1', text)
+        
+        # Remove unnecessary spaced-out headers (like "C O N T A C T M E A T", "S O F T S K I L L S")
+        lines = text.split('\n')
+        cleaned_lines = []
+        remove_headers = ['contactmeat', 'softskills', 'profilesummary']
+        
+        for line in lines:
+            stripped = line.strip()
+            # Check if line is a spaced header we want to remove
+            normalized = re.sub(r'\s+', '', stripped.lower())
+            if normalized in remove_headers:
+                continue  # Skip this line
+            cleaned_lines.append(line)
+        
+        text = '\n'.join(cleaned_lines)
+        
+        # Fix broken sentences split by section headers
+        # Example: "experience across the entire gamut of Maintenance and" [HEADER] "Project Engineering & Management."
+        lines = text.split('\n')
+        fixed_lines = []
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            
+            # Check if line ends with incomplete conjunction/preposition
+            if line and re.search(r'\b(and|or|of|in|with|for|to|from|at)\s*$', line, re.IGNORECASE):
+                # Look ahead for next non-empty, non-header line
+                continuation = None
+                header_between = None
+                j = i + 1
+                while j < len(lines) and j < i + 3:  # Look ahead up to 3 lines
+                    next_line = lines[j].strip()
+                    if next_line:
+                        # Check if it's a section header (all caps with spaces between letters)
+                        if re.match(r'^[A-Z](\s+[A-Z])+(\s+[A-Z])*', next_line):
+                            header_between = j
+                            j += 1
+                            continue
+                        # Found continuation line
+                        continuation = next_line
+                        continuation_idx = j
+                        break
+                    j += 1
+                
+                # If we found a continuation that starts with capital and seems like a continuation
+                if continuation and re.match(r'^[A-Z]', continuation):
+                    # Merge the lines
+                    merged = line + ' ' + continuation
+                    fixed_lines.append(merged)
+                    # Skip the header and continuation
+                    if header_between is not None:
+                        i = continuation_idx + 1
+                    else:
+                        i += 2
+                    continue
+            
+            fixed_lines.append(lines[i])
+            i += 1
+        
+        text = '\n'.join(fixed_lines)
         
         # Fix broken dates: if a line is just "2" and next line is like "022-12", merge them
         lines = text.split('\n')
@@ -1129,6 +1298,7 @@ class StandardATSPipeline(BasePipeline):
     """Standard extraction with improved column handling"""
     
     def extract_text(self, pdf_path: str) -> str:
+        # Try PyMuPDF first with improved column detection
         if HAS_FITZ:
             all_pages_text = []
             
@@ -1137,7 +1307,7 @@ class StandardATSPipeline(BasePipeline):
                     page_width = page.rect.width
                     page_height = page.rect.height
                     
-                    # Get text blocks with coordinates
+                    # Get structured extraction to detect columns
                     blocks = page.get_text("dict")["blocks"]
                     
                     text_blocks = []
@@ -1158,31 +1328,38 @@ class StandardATSPipeline(BasePipeline):
                                 })
                     
                     if not text_blocks:
+                        # Fallback to simple extraction
+                        all_pages_text.append(page.get_text("text"))
                         continue
                     
-                    # Detect two-column layout
-                    # Analyze x-positions to find column boundary
-                    x_starts = sorted([b['x0'] for b in text_blocks])
+                    # Improved two-column detection
+                    # Analyze x-positions to detect columns
+                    x_positions = [b['x0'] for b in text_blocks]
+                    x_centers = [(b['x0'] + b['x1']) / 2 for b in text_blocks]
                     
-                    # Find the largest gap in x-positions (indicates column separation)
-                    column_boundary = page_width / 2
+                    # Find natural column boundary by looking for gaps
+                    sorted_x = sorted(set(x_centers))
                     max_gap = 0
+                    column_boundary = page_width / 2
                     
-                    for i in range(len(x_starts) - 1):
-                        gap = x_starts[i + 1] - x_starts[i]
-                        if gap > max_gap and gap > 30:  # Minimum 30 pixel gap
-                            # Only consider gaps in the middle 60% of page width
-                            if page_width * 0.2 < x_starts[i] < page_width * 0.8:
-                                max_gap = gap
-                                column_boundary = (x_starts[i] + x_starts[i + 1]) / 2
+                    for i in range(len(sorted_x) - 1):
+                        gap = sorted_x[i + 1] - sorted_x[i]
+                        # Look for significant gaps (at least 40 pixels) in the middle portion of the page
+                        if gap > max_gap and gap > 40 and page_width * 0.25 < sorted_x[i] < page_width * 0.75:
+                            max_gap = gap
+                            column_boundary = (sorted_x[i] + sorted_x[i + 1]) / 2
                     
-                    # Separate into columns if significant gap found
-                    if max_gap > 30:
-                        # Two-column layout detected
-                        left_blocks = [b for b in text_blocks if (b['x0'] + b['x1']) / 2 < column_boundary]
-                        right_blocks = [b for b in text_blocks if (b['x0'] + b['x1']) / 2 >= column_boundary]
-                        
-                        # Sort each column by y-position
+                    # Check if we have a true two-column layout
+                    left_blocks = [b for b in text_blocks if (b['x0'] + b['x1']) / 2 < column_boundary]
+                    right_blocks = [b for b in text_blocks if (b['x0'] + b['x1']) / 2 >= column_boundary]
+                    
+                    # Consider it a two-column layout if:
+                    # 1. We found a significant gap (> 40px)
+                    # 2. Both columns have substantial content (at least 3 blocks each)
+                    is_two_column = max_gap > 40 and len(left_blocks) >= 3 and len(right_blocks) >= 3
+                    
+                    if is_two_column:
+                        # Two-column layout detected - read LEFT column completely, then RIGHT column
                         left_blocks.sort(key=lambda b: b['y0'])
                         right_blocks.sort(key=lambda b: b['y0'])
                         
@@ -1194,7 +1371,7 @@ class StandardATSPipeline(BasePipeline):
                         
                         page_text = "\n".join(page_lines)
                     else:
-                        # Single column - sort by y then x
+                        # Single column or mixed layout - sort by y then x (top to bottom, left to right within same row)
                         text_blocks.sort(key=lambda b: (b['y0'], b['x0']))
                         page_text = "\n".join([b['text'] for b in text_blocks])
                     
@@ -1208,7 +1385,149 @@ class StandardATSPipeline(BasePipeline):
         
         return "Error: No PDF library available"
     
+    def _fix_concatenated_words(self, text: str) -> str:
+        """Fix words that are concatenated without spaces using comprehensive replacements"""
+        # Direct replacements for known concatenated patterns (order matters - longest first)
+        fixes = {
+            'proventrackrecordofstamping': 'proven track record of stamping',
+            'proventrackrecordof': 'proven track record of',
+            'proventrackrecord': 'proven track record',
+            'stampingsuccess across': 'stamping success across',
+            'stampingsuccessacross': 'stamping success across',
+            'theentiregamutof': 'the entire gamut of',
+            'Strategicprofessional': 'Strategic professional',
+            'offeringover': 'offering over',
+            'ofexperiencewith': 'of experience with',
+            'ofexperience': 'of experience',
+            'experiencewith': 'experience with',
+            'withstrong': 'with strong',
+            'businessacumen': 'business acumen',
+            'stampingsuccess': 'stamping success',
+            'successacross': 'success across',
+            'gamutof': 'gamut of',
+            'Maintenanceand': 'Maintenance and',
+            'Experiencedin': 'Experienced in',
+            'inmanaging': 'in managing',
+            'managingerection': 'managing erection',
+            'commissioningactivities': 'commissioning activities',
+            'maintenanceofawide': 'maintenance of a wide',
+            'ofawide': 'of a wide',
+            'RCAofbreakdowns': 'RCA of breakdowns',
+            'takingcorrective': 'taking corrective',
+            'preventivemeasures': 'preventive measures',
+            'correctivepreventive': 'corrective preventive',
+            'OEEmonitoringtool': 'OEE monitoring tool',
+            'Conditionmonitoringtool': 'Condition monitoring tool',
+            'monitoringtool': 'monitoring tool',
+            'resourceplanning': 'resource planning',
+            'vendormanagement': 'vendor management',
+            'costingandqualityassurance': 'costing and quality assurance',
+            'costingand': 'costing and',
+            'qualityassurance': 'quality assurance',
+            'analyzedratesfor': 'analyzed rates for',
+            'analyzedratesforeachactivityand': 'analyzed rates for each activity and',
+            'foreachactivityand': 'for each activity and',
+            'foreachactivity': 'for each activity',
+            'foreach': 'for each',
+            'eachactivityand': 'each activity and',
+            'eachactivity': 'each activity',
+            'activityand': 'activity and',
+            'andfigured': 'and figured',
+            'figuredvaluation': 'figured valuation',
+            'valuationof': 'valuation of',
+            'ofworkperformed': 'of work performed',
+            'ofwork': 'of work',
+            'workperformed': 'work performed',
+        }
+        
+        for old, new in fixes.items():
+            text = text.replace(old, new)
+        
+        return text
+    
+    def _reorganize_two_column_layout(self, text: str) -> str:
+        """Detect and reorganize two-column interleaved layouts"""
+        lines = text.split('\n')
+        
+        # Detect section headers with spaced capitals (e.g., "P ROFESSIONAL Q UALIFICATION")
+        section_header_pattern = r'^[A-Z\s]{10,60}$'
+        
+        # Find all section headers
+        section_headers = {}
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if stripped and re.match(section_header_pattern, stripped) and '  ' in stripped:
+                section_headers[i] = stripped
+        
+        # If we found 3+ section headers, likely interleaved
+        if len(section_headers) < 3:
+            return text
+        
+        logger.info(f"Detected two-column interleaving with {len(section_headers)} section headers")
+        
+        # Left column markers
+        left_markers = ['CAREER', 'PROFESSIONAL', 'ACHIEVEMENT', 'COMPUTER', 'PERSONAL', 'DECLARATION', 'EDUCATION']
+        
+        left_column = []
+        right_column = []
+        
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            upper = stripped.upper()
+            
+            # Is this a left column section header?
+            if i in section_headers:
+                left_column.append(line)
+                continue
+            
+            # Is this left column content (bullets under section headers)?
+            # Look back to see if previous section header was a left marker
+            prev_header = None
+            for h_idx in sorted(section_headers.keys(), reverse=True):
+                if h_idx < i:
+                    prev_header = section_headers[h_idx].upper()
+                    break
+            
+            if prev_header and any(marker in prev_header for marker in left_markers):
+                # We're under a left column header
+                # Check if this line is actually right column content
+                is_company_line = bool(re.search(r'(Pvt\.?\s+Ltd|Limited|Inc\.|Corporation)', stripped))
+                has_date_range = bool(re.search(r'\([A-Z][a-z]{2}\s+\d{4}\s*[-–]', stripped))
+                is_long_sentence = len(stripped) > 100
+                has_exp_keywords = bool(re.search(r'(The major experience|skills gained|Involved in|Controlling|Accounting|Management|Preparation)', stripped))
+                
+                if is_company_line or has_date_range or (is_long_sentence and has_exp_keywords):
+                    right_column.append(line)
+                else:
+                    # Short line or bullet under left header - keep in left
+                    left_column.append(line)
+            else:
+                # Not under a left header, goes to right column
+                right_column.append(line)
+        
+        # Reconstruct: left column, separator, right column
+        result = left_column + ['', '', ''] + right_column
+        return '\n'.join(result)
+    
     def preprocess(self, text: str) -> str:
+        # First, try to detect and fix two-column interleaving
+        text = self._reorganize_two_column_layout(text)
+        
+        # Fix numbers stuck to words
+        text = re.sub(r'(\d+)(years?|months?|days?)', r'\1 \2', text, flags=re.IGNORECASE)
+        
+        # Fix ampersands - add space before and after if missing
+        text = re.sub(r'([a-zA-Z])&([a-zA-Z])', r'\1 & \2', text)
+        text = re.sub(r'([a-zA-Z])&\s', r'\1 & ', text)
+        text = re.sub(r'\s&([a-zA-Z])', r' & \1', text)
+        
+        # Fix concatenated words by adding spaces before capital letters
+        # Handle patterns like "Strategicprofessional" -> "Strategic professional"
+        text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
+        
+        # Apply comprehensive word splitting for known concatenations
+        text = self._fix_concatenated_words(text)
+        
         text = re.sub(r'[•●○◦▪▫■□⬤→]', '•', text)
         text = re.sub(r' {2,}', ' ', text)
         text = re.sub(r'\n{3,}', '\n\n', text)

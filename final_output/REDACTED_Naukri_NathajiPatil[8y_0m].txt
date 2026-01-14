@@ -11,8 +11,7 @@ SUMMARY:
 8 + years of work experience in IT career.
 ➢ Currently Working as Consultant in ATOS from Feb -2022 till date.
 ➢ I have been working as Technology Analyst in Infosys Limited from March-2019 to Feb-2022.
-➢ Was working with Aloha Technology as a Software Developer for 3.4 yrs. of experience in
-Microsoft Technologies .
+➢ Was working with Aloha Technology as a Software Developer for 3.4 yrs. of experience in Microsoft Technologies .
 ➢ Experienced in programming and Testing of web, windows, and distributed applications.
 ➢ Having basic knowledge about Angular.
 ➢ Having good experience on jQuery and JavaScript.

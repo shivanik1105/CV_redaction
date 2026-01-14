@@ -8,12 +8,11 @@ and variables ofMule [NAME]. • Good understanding of the [NAME] (SDLC) [NAME]:
 • Infosys Limited – Total 2.5 years (MuleSoft Developer from April 2022 to till date) Details of Projects:
 [NAME] : INTEL (Market to Sales)
 Designation: [NAME](Mulesoft Developer)
-Duration: Sep 2023 [NAME]
+Duration: Sep 2023 To Till Date
 Environment: Anypoint Studio Description:
 [NAME] to Revenue project consists of different programs like [NAME] planning, Product integration, [NAME], and Registration. There are two parts of [NAME] and service after sales. To optimize and completion of Sales process and service- related process will be providing integration solutions for integrating multiple systems. This integration provided by using the cloud based MuleSoft [NAME] platform and studio.
 Roles:
-• [NAME] applications for ESB layer. • Experience in MULE componants like [NAME], Scopes, Filers, Munit, and
-Connectors. • Worked on SOAP and REST API’s • Implemented exceptional stretegies using Error handling and try-catch blocks. • Analyzed the recruitement of the project, Planned, and Coordinated with team members to
+• [NAME] applications for ESB layer. • Experience in MULE componants like [NAME], Scopes, Filers, Munit, and Connectors. • Worked on SOAP and REST API’s • Implemented exceptional stretegies using Error handling and try-catch blocks. • Analyzed the recruitement of the project, Planned, and Coordinated with team members to
 implemeted the objectives. • Participated in daily scrum meeting to discuss the progress of the projects and any blockage of
 the work and the solution of the block.
 Details of Projects:

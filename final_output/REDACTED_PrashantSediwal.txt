@@ -78,8 +78,7 @@ Lead Engineer - Product Development
 HARMAN
 
 C++ Linux development. cmake configuration, gtest
-and Design and develop automotive applications for
-Mrecedes-Benz and John Deere.
+and Design and develop automotive applications for Mrecedes-Benz and John Deere.
 
 Senior Software Engineer
 
@@ -121,13 +120,11 @@ applications matching clients requirement ->system
 programming for ubuntu and raspbian os for
 deployment in raspberrypi.
 HMI interface for NGPD and Gen 5 Displays
-??? Working for Construction & Forestry Division of
-John Deere automotive. ??? Worked for Automotive
+??? Working for Construction & Forestry Division of John Deere automotive. ??? Worked for Automotive
 Displays for HMI Development in C++, User Interface
 (UI) Design in Qt/QML.
 PC Simulation (SOD and DMS)
-??? The Seat occupant detection (SOD) sub system in
-MPIC system is responsible to detect the occupancy
+??? The Seat occupant detection (SOD) sub system in MPIC system is responsible to detect the occupancy
 detection/classification of the occupants present in
 the vehicle. The system then communicates the
 occupancy related information to the other
@@ -143,8 +140,7 @@ visualization on canoe graph for analysis of both
 subsystem SOD and DMS.
 WLP-FO Acquiring Australia
 WLP-FO is standards framework for authorization &
-switching. Need to create acquiring instance for
-Australia and New Zealand Banking Group Create an
+switching. Need to create acquiring instance for Australia and New Zealand Banking Group Create an
 Interface Base24 on ISO8583 using WLPFO protocol
 guidelines. This interface can compose decompose
 validate different data element and send to authorizer
