@@ -1,83 +1,19 @@
 [REDACTED_NAME]
 
-MULESOFT DEVELOPER
+MULESOFTDEVELOPER
 
 Key Skills
 
-SQL
-
-AWS
-
-Java
-
-Software Development
-
-Software Design
-
-Java Spring Boot
-
-Software Engineering
-
-Database Handling
-
-Application Development
-
-Object Oriented
-
-Programming
-
-Spring Boot
-
-Mulesoft Anypoint
-
-Mule ESB
-
-Mulesoft Integration
-
-Mulesoft Anypoint Platform
-
-Certification
-
-MuleSoft Certified
-
-Developer - Level 1 (Mule 4)
-
-Languages
-
-English
-
-m
-
-LOCATION [LOCATION][LOCATION]
-
-EXPERIENCE 3 Years 0 Month
-
-Profile Summary
-
-3+ years experience in customer relationship
-and supply chain management. Adept at supply
-chain automation and Robotics automation.
-Proven track record of reversing customer pain
-points, especially during checkout. Team-player
-and an enthusiastic go-getter. Outgoing
-individual with a pleasant personality.
-
-Work Experience
-
 Mulesoft Developer
-
-Xcaliber Infotech Pvt Ltd
-
+Work Experience
 07/2021 - Present
 • Proven experience in Mulesoft development,
+
 with a strong grasp of Anypoint Platform
 components, particularly Anypoint Studio. -
 Hands-on experience with Mule 3. X and 4. X. -
-
 Knowledge of enhancing and developing
-
 Restful APIs to facilitate seamless data
-
 exchange between end applications. -
 Proficiency in designing RAML-based APIs and
 ensuring proper documentation. - Strong skills
@@ -98,17 +34,13 @@ validating integration success and error
 scenarios. - Knowledge of API deployment to
 on-premises environments for seamless
 integration with client infrastructure. -
-
 Familiarity with Postman collections for testing
-
 HTTP methods.
 
 [REMOVED_SECTION_EDUCATION]
 
 Projects
-
 Midas
-
 ?? It is supply chain domain project where
 receiving of mobility devices done by
 automation. ?? In Midas there is different
@@ -128,9 +60,7 @@ meticulous planning, testing, and execution.
 ?? Mentored junior developers to improve
 their technical skills, fostering a culture of
 continuous learning within the team
-
 Odyssey
-
 It is company intranet system where is project
 management, HR management, employee
 management system build and integrated with
@@ -145,7 +75,5 @@ developed web services for various
 requirements. Involved on Code deployment
 and code Build process. ?? Worked closely
 with others team members to plan design and Develop robust solution in timely manner
-
 Erasure
-
 It's a device data sanitization project

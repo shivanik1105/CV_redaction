@@ -1,10 +1,21 @@
 RESUME
 
-[REMOVED_SECTION_PERSONAL]
+[REDACTED_NAME]
+
+NAME : [REDACTED_NAME]
+
+ADDRESS : [NAME] town,
+, 411028
+
+[REDACTED_DOB]
+
+[REDACTED_MARITAL]
+
+[REDACTED_NATIONALITY]
 
 [REMOVED_SECTION_EDUCATION]
 
-TECHNICAL SKILLS
+TECHNICALSKILLS
 
 CURRENT OCCUPATION : Senior Associate Consultant
 COMPUTER LANGUAGES : C, C++, Java, Oracle PL/SQL,
@@ -18,17 +29,13 @@ Sterling File Gateway, SAP ABAP, ORACLE
 11i/12g
 Others: Sterling Map Editor, Putty, SQL
 Developer, Citrix Command Center, Liaison EDI
-
 Notepad
-
 CLIENT SPECIFIC TOOLS Citrix Command Center, Service Now, GitLab,
 Microsoft SharePoint, Solman
 1. Company : Infosys Limited
 Project Name : Roche Aspire
 Client : Global pharmaceutical Company
-
 Description of the project
-
 The project involves delivery of EDI solutions to Global pharmaceutical major Roche.
 Onboarding new trading partners, developing maps for EDI transactions and creating mapping specs
 after talking with internal applications to share it with IBM Sterling B2B Integrator, involving
@@ -41,6 +48,7 @@ Responsibilities :
 
 • Developing/Enhancing Maps for EDI standards X12(850,855,856,810,820,180), XML, EDIFACT.
 • Resolution of issues related to business process, maps, SAP document processing errors and
+
 communication protocols.
 • Worked on AS2, SFTP and FTP connection setup (End – to – End).
 • Profile creation for various trading partner using Communication protocol (AS2, FTP, SFTP)
@@ -48,6 +56,7 @@ communication protocols.
 • Uploading and creating Map using IBM sterling Integrator, Envelopes, TP setup in SI(UAT/PROD)
 • Configured/ Enhanced Business Process.
 • Well, exposed to Business (B2B) Application Application and Supply Chain Domain and has worked on EDI
+
 Development/Support for IBM customers.
 • Experience in communicating with trading partners, sending documents through VAN, using FTP, AS2, FTPS,
 
@@ -55,6 +64,7 @@ SFTP, FTP.
 
 • Configured Communication Profiles for Partners for EMEA and NALA.
 • Developed and deployed Maps & Business process , resulting in a 30% reduction in system errors and
+
 improving application performance by 25%
 • Maintain well customer satisfaction statistic.
 Duration : Feb 2024 : Present
@@ -65,23 +75,29 @@ Client : Leading American chain of beauty stores.
 Role : Associate Consultant
 Responsibility :
 • Collaborated with cross-functional teams to analyze Requirements,
+
 Collaborate with the Basis team in managing and monitoring ABAP jobs, SAP interfaces, and EDI
 transactions
 • Enhance and maintain the applications supported IBM Sterling B2B Integrator tools.
 • Prioritizing the Production defects/incidents/Service requests and work on the issue to fix as per the
+
 urgency.
 • Developing specifications for mapping and validation of output.
 • Monitoring SI failures in production and basic knowledge in creating business processes using generic
+
 processes in Sterling Integrator.
 • Co-ordinated with related technical teams to resolve the problems reported by customer or others.
+
 Ticket handling activities as part of system support using Jira
 
 & CHERWELL .
 
 • Participate in KT sessions, help prepare system appreciation documents and support the Transition
+
 process.
 • Deployment and validation of monitoring agents for B2B Applications.
 • Work closely with business partners & trading partners on EDI setups and testing to ensure error-free
+
 data transmission.
 • Taking Corrective Actions and preventive measures to ensure On-Time Delivery with Highest Quality.
 Duration : SEPT 2022 – Feb 2024
@@ -98,10 +114,12 @@ Responsibility :
 • Analysis of existing business flows
 • Uploading and creating Map from Gentran file layout, envelopes, TP setup in SI(UAT/PROD
 • Well, exposed to Business to Business (B2B) Application and Supply Chain Domain and has worked on
+
 EDI Development/Support for IBM’s customers.
 • Developed map as per customer requirement.
 • Integrating Sterling Integrator with SAP and Oracle
 • Implemented the Release Management for the customer. Created the processing rules for Order
+
 Management level. Communicated the Translators and end customer for SPSI and SSSI transactions.
 Created Matching rules. Resolved the stagnated demand schedules from transaction work bench. •
 SAP IDOCS monitoring, issue resolution and reporting
@@ -111,12 +129,13 @@ FTPS, SFTP, POP3, FTP .
 
 • Maintain well customer satisfaction statistic.
 • Perform work-related tasks with minimal supervision and handle ambiguous situation with little
+
 supervisory assistance.
 Duration : June 2019 – Sept 2022
 Software : Sterling B2B Integrator 5.2.4, Sterling map editor, ORACLE
 11i/12g, VISTA, REMEDY.
 
-DETAILS OF INFOSYS TRAINING UNDERGONE
+DETAILSOFINFOSYSTRAININGUNDERGONE
 
 # Trained On
 1 Overview of API and Microservices

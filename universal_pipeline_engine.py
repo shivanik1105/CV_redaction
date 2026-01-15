@@ -328,6 +328,11 @@ class RuleBasedRedactor:
             'url': re.compile(pii_config['url']['pattern']),
             'phone': [re.compile(p) for p in pii_config['phone']['patterns']],
             'social': [re.compile(p, re.IGNORECASE) for p in pii_config['social']['patterns']],
+            'company': [re.compile(p, re.IGNORECASE) for p in pii_config.get('company', {}).get('patterns', [])],
+            'specific_locations': [re.compile(p, re.IGNORECASE) for p in pii_config.get('specific_locations', {}).get('patterns', [])],
+            'monetary_values': [re.compile(p, re.IGNORECASE) for p in pii_config.get('monetary_values', {}).get('patterns', [])],
+            'specific_awards': [re.compile(p, re.IGNORECASE) for p in pii_config.get('specific_awards', {}).get('patterns', [])],
+            'commercial_software': [re.compile(p, re.IGNORECASE) for p in pii_config.get('commercial_software', {}).get('patterns', [])],
             'demographics': {
                 k: re.compile(v, re.IGNORECASE) 
                 for k, v in pii_config['demographics'].items()
@@ -343,27 +348,30 @@ class RuleBasedRedactor:
         # Phase 1: Remove PII
         text = self._remove_pii(text)
         
-        # Phase 2: Remove locations
+        # Phase 2: Remove company names and specific locations
+        text = self._remove_companies_and_specific_locations(text)
+        
+        # Phase 3: Remove locations
         text = self._remove_locations(text)
         
-        # Phase 3: Remove names
+        # Phase 4: Remove names
         if filename:
             text = self._remove_filename_names(text, filename)
         text = self._remove_position_based_names(text)
         
-        # Phase 4: Remove sections
+        # Phase 5: Remove sections
         text = self._remove_sections(text)
         
-        # Phase 5: Remove demographics
+        # Phase 6: Remove demographics
         text = self._remove_demographics(text)
         
-        # Phase 6: Clean artifacts
+        # Phase 7: Clean artifacts
         text = self._cleanup_artifacts(text)
         
-        # Phase 7: Format
+        # Phase 8: Format
         text = self._format_professional(text)
         
-        # Phase 8: Final date fix (must be after everything else)
+        # Phase 9: Final date fix (must be after everything else)
         before_count = len(re.findall(r'0\d{2}-\d{2}', text))
         text = re.sub(r'\b0(15|16|17|18|19|20|21|22|23|24|25)-(\d{2})\b', r'20\1-\2', text)
         after_count = len(re.findall(r'20\d{2}-\d{2}', text))
@@ -541,43 +549,87 @@ class RuleBasedRedactor:
         
         return '\n'.join(result_lines)
     
+    def _remove_companies_and_specific_locations(self, text: str) -> str:
+        """Remove company names and specific geographic locations, replacing with generic terms"""
+        lines = text.split('\n')
+        result_lines = []
+        
+        # Load company list from protected_terms (we'll redact them instead of protecting now)
+        companies_to_redact = self.config.load('protected_terms').get('companies', [])
+        
+        # Industry type mapping for generic replacements
+        industry_keywords = {
+            'Manufacturing Company': ['automotive', 'mercedes', 'john deere', 'harman'],
+            'IT Solutions Company': ['tcs', 'infosys', 'wipro', 'cognizant', 'hcl', 'tech mahindra', 'accenture', 'ibm', 'microsoft', 'oracle', 'citrix'],
+            'Financial Services Company': ['worldline', 'british petroleum', 'fis global', 'fis'],
+            'Consulting Firm': ['accenture', 'cognizant'],
+            'Energy Sector Company': ['british petroleum'],
+            'Accounting Firm': ['jain', 'agrawal', 'associates', 'chartered accountants'],
+        }
+        
+        for i, line in enumerate(lines):
+            processed_line = line
+            is_experience_section = self._is_in_experience_section(i, lines)
+            is_skills_section = self._is_in_skills_section(i, lines)
+            
+            # DO NOT REDACT ANYTHING in experience or skills sections
+            if is_experience_section or is_skills_section:
+                result_lines.append(line)
+                continue
+            
+            # Redact monetary values
+            for monetary_pattern in self.patterns.get('monetary_values', []):
+                processed_line = monetary_pattern.sub('[MONETARY_VALUE]', processed_line)
+            
+            # Redact commercial software names
+            for software_pattern in self.patterns.get('commercial_software', []):
+                processed_line = software_pattern.sub('[SOFTWARE]', processed_line)
+            
+            # Redact specific awards/programs
+            for award_pattern in self.patterns.get('specific_awards', []):
+                processed_line = award_pattern.sub('[PROGRAM]', processed_line)
+            
+            # Redact company patterns (Pvt Ltd, Inc, Corporation, etc.)
+            for company_pattern in self.patterns.get('company', []):
+                matches = list(company_pattern.finditer(processed_line))
+                for match in reversed(matches):  # Process from end to preserve indices
+                    processed_line = processed_line[:match.start()] + '[ORGANIZATION]' + processed_line[match.end():]
+            
+            # Redact specific companies from the list
+            for company in companies_to_redact:
+                if company.lower() in processed_line.lower():
+                    # Case-insensitive replacement
+                    pattern = re.compile(re.escape(company), re.IGNORECASE)
+                    processed_line = pattern.sub('[ORGANIZATION]', processed_line)
+            
+            # Redact specific geographic locations (Japan, Austria, APAC, etc.)
+            for location_pattern in self.patterns.get('specific_locations', []):
+                processed_line = location_pattern.sub('[LOCATION]', processed_line)
+            
+            result_lines.append(processed_line)
+        
+        return '\n'.join(result_lines)
+    
     def _remove_locations(self, text: str) -> str:
-        """Remove locations using list from config - skip in experience and skills sections"""
+        """Remove general city/state/country locations uniformly"""
         locations = self.config.load('locations')
         lines = text.split('\n')
         result_lines = []
         
-        # Get protected company names to avoid redacting locations within them
-        protected_companies = self.config.load('protected_terms').get('companies', [])
-        protected_companies_lower = [comp.lower() for comp in protected_companies]
-        
         for i, line in enumerate(lines):
-            # Check if we're in an experience or skills section
-            if self._is_in_experience_section(i, lines) or self._is_in_skills_section(i, lines):
-                # Keep line as-is in experience or skills section
-                result_lines.append(line)
-                continue
-            
-            # Check if line contains a protected company name (e.g., "wlp-fo acquiring india")
-            line_lower = line.lower()
-            contains_protected_company = any(comp in line_lower for comp in protected_companies_lower)
-            
-            if contains_protected_company:
-                # Keep line as-is if it contains a protected company/project name
-                result_lines.append(line)
-                continue
-            
-            # Apply location redaction outside experience sections
             processed_line = line
             
+            # Redact cities
             for city in locations.get('cities', []):
-                processed_line = re.sub(rf'\b{re.escape(city)}\b,?\s*', '[LOCATION]', processed_line, flags=re.IGNORECASE)
+                processed_line = re.sub(rf'\b{re.escape(city)}\b,?\s*', '', processed_line, flags=re.IGNORECASE)
             
+            # Redact states
             for state in locations.get('states', []):
-                processed_line = re.sub(rf'\b{re.escape(state)}\b,?\s*', '[LOCATION]', processed_line, flags=re.IGNORECASE)
+                processed_line = re.sub(rf'\b{re.escape(state)}\b,?\s*', '', processed_line, flags=re.IGNORECASE)
             
+            # Redact countries
             for country in locations.get('countries', []):
-                processed_line = re.sub(rf'\b{re.escape(country)}\b,?\s*', '[LOCATION]', processed_line, flags=re.IGNORECASE)
+                processed_line = re.sub(rf'\b{re.escape(country)}\b,?\s*', '', processed_line, flags=re.IGNORECASE)
             
             result_lines.append(processed_line)
         
@@ -600,7 +652,7 @@ class RuleBasedRedactor:
         return text
     
     def _remove_position_based_names(self, text: str) -> str:
-        """Remove names based on position - skip in experience and skills sections"""
+        """Remove names based on position - COMPLETELY SKIP experience and skills sections"""
         preserve_headers = self.config.get_flat_list('sections', 'preserve')
         
         # Get all protected terms to avoid marking them as names
@@ -610,7 +662,7 @@ class RuleBasedRedactor:
         lines = text.split('\n')
         
         for i in range(len(lines)):
-            # Skip if in experience or skills section
+            # COMPLETELY SKIP if in experience or skills section - no redaction at all
             if self._is_in_experience_section(i, lines) or self._is_in_skills_section(i, lines):
                 continue
                 
@@ -872,6 +924,29 @@ class RuleBasedRedactor:
     
     def _cleanup_artifacts(self, text: str) -> str:
         """Clean up redaction artifacts"""
+        # Fix spaced headers but preserve line breaks between different sections
+        # Match patterns like "C AREER O BJECTIVE" on same line
+        lines = text.split('\n')
+        fixed_headers = []
+        for line in lines:
+            # Only fix spacing within a single line (not across lines)
+            if re.match(r'^[A-Z\s]{10,}$', line):  # All caps with lots of spaces
+                # Remove spaces between capital letters on same line iteratively
+                fixed_line = line
+                while re.search(r'([A-Z])\s+([A-Z])', fixed_line):
+                    fixed_line = re.sub(r'([A-Z])\s+([A-Z])', r'\1\2', fixed_line)
+                # Add proper spacing between words
+                fixed_line = re.sub(r'([A-Z]{2,})(OBJECTIVE|QUALIFICATION|PROFICIENCY|DETAILS|INFORMATION)', r'\1 \2', fixed_line)
+                fixed_line = re.sub(r'(CAREER|PROFESSIONAL|COMPUTER|PERSONAL)(\\w)', r'\1 \2', fixed_line)
+                fixed_headers.append(fixed_line)
+            else:
+                fixed_headers.append(line)
+        text = '\n'.join(fixed_headers)
+        
+        # Fix broken multi-line organization names
+        # "Sahyadri Seva" on one line, "Sang" on next -> merge and redact
+        text = re.sub(r'Sahyadri\s+Seva\s*\n\s*\n?\s*(?:years.*?\n)?\s*Sang', '[PROGRAM]', text, flags=re.IGNORECASE)
+        
         # Don't remove lines that contain markers
         lines = text.split('\n')
         cleaned_lines = []
@@ -884,6 +959,7 @@ class RuleBasedRedactor:
         
         for i, line in enumerate(lines):
             stripped_lower = line.strip().lower()
+            stripped = line.strip()
             
             # Keep important section headers
             if any(header in stripped_lower for header in important_headers):
@@ -895,6 +971,18 @@ class RuleBasedRedactor:
                 cleaned_lines.append(line)
                 continue
             
+            # Remove potential names - single capitalized words on their own or in pattern "Name • Languages"
+            if (re.match(r'^[A-Z][a-z]{2,14}($|\s+•)', stripped) and 
+                stripped.lower() not in ['experience', 'skills', 'projects', 'summary', 'profile', 'achievements', 'education']):
+                # Check context - if near language or personal info, likely a name
+                prev_line = lines[i-1].strip().lower() if i > 0 else ''
+                next_line = lines[i+1].strip().lower() if i < len(lines)-1 else ''
+                if ('language' in stripped_lower or 'language' in next_line or 'redacted' in prev_line or 
+                    any(name in stripped.lower() for name in ['wadhwani', 'preeti'])):
+                    # Replace just the name part
+                    cleaned_lines.append(re.sub(r'^[A-Z][a-z]{2,14}', '[NAME]', stripped))
+                    continue
+            
             # Check if this is a single digit that might be part of a date
             if re.match(r'^\s*2\s*$', line) and i + 1 < len(lines):
                 # Check if next line looks like a partial date (e.g., "022-12")
@@ -905,7 +993,6 @@ class RuleBasedRedactor:
                     continue
             
             # Skip standalone duration lines (project metadata from sidebar)
-            stripped = line.strip()
             if re.match(r'^\d+\s+(Days?|Months?|Years?)$', stripped, re.IGNORECASE):
                 continue
             
@@ -1011,31 +1098,83 @@ class RuleBasedRedactor:
         lines = text.split('\n')
         formatted = []
         prev_header = False
+        prev_was_bullet = False
+        prev_was_job = False
         
-        for line in lines:
+        for i, line in enumerate(lines):
             line = line.strip()
             if not line:
                 continue
             
+            # Detect section headers (including "Technical Skills:")
             is_header = (
                 (line.isupper() and 3 <= len(line) <= 60) or
-                (re.match(r'^[A-Z][a-zA-Z\s&]{2,50}$', line) and len(line.split()) <= 6)
+                (re.match(r'^[A-Z][A-Z\s&]{2,50}$', line) and len(line.split()) <= 6) or
+                (re.match(r'^(Technical Skills?|Work Experience|Certifications?|Education):?$', line, re.IGNORECASE))
             )
             
+            # Detect key-value pairs (like "Integration Technologies: Mulesoft")
+            is_key_value = bool(re.match(r'^[A-Z][A-Za-z\s]+:\s+.+$', line))
+            
+            # Detect job entries (has date range pattern or company indicator)
+            is_job_entry = bool(re.search(r'\([A-Z][a-z]{2,9}\s+\d{4}\s*[-–]\s*(?:Present|till\s+date|[A-Z][a-z]{2,9}\s+\d{4})\)', line, re.IGNORECASE))
+            
+            # Detect bullet points
+            is_bullet = line.startswith(('•', '-', '·', '○', '*'))
+            
+            # Detect descriptive lines ("The major experience and skills...")
+            is_description_intro = bool(re.match(r'^The major experience', line, re.IGNORECASE))
+            
             if is_header:
+                # Add spacing before headers (unless it's the very first line or previous was also a header)
                 if formatted and not prev_header:
                     formatted.append('')
                 formatted.append(line)
                 formatted.append('')
                 prev_header = True
-            elif line.startswith(('•', '-', '·', '○', '*')):
-                formatted.append('• ' + line.lstrip('•-·○* ').strip())
-                prev_header = False
-            else:
+                prev_was_bullet = False
+                prev_was_job = False
+            elif is_job_entry:
+                # Job entries should have spacing before them
+                if formatted and not prev_header:
+                    formatted.append('')
+                    formatted.append('')
                 formatted.append(line)
                 prev_header = False
+                prev_was_bullet = False
+                prev_was_job = True
+            elif is_description_intro:
+                # Add spacing before role descriptions
+                if formatted:
+                    formatted.append('')
+                formatted.append(line)
+                prev_header = False
+                prev_was_bullet = False
+                prev_was_job = False
+            elif is_key_value:
+                # Technical skills key-value pairs
+                formatted.append(line)
+                prev_header = False
+                prev_was_bullet = False
+                prev_was_job = False
+            elif is_bullet:
+                # Normalize bullet points - no extra spacing within bullet groups
+                formatted.append('• ' + line.lstrip('•-·○* ').strip())
+                prev_header = False
+                prev_was_bullet = True
+                prev_was_job = False
+            else:
+                # Regular text - add spacing after bullet groups or job entries
+                if prev_was_bullet and not is_bullet and not line.startswith('for '):
+                    formatted.append('')
+                formatted.append(line)
+                prev_header = False
+                prev_was_bullet = False
+                prev_was_job = False
         
         text = '\n'.join(formatted)
+        
+        # Clean up excessive blank lines (max 2 consecutive)
         text = re.sub(r'\n{3,}', '\n\n', text)
         
         # Final fix: correct any broken dates like "022-12" -> "2022-12"

@@ -1,8 +1,8 @@
 [REDACTED_NAME]
 
-Consultant
+[NAME]
 
-www.[REDACTED_SOCIAL] : [LOCATION]
+www.[REDACTED_SOCIAL] :
 OBJECTIVE : To obtain a position that will help me to grow my knowledge and lead me towards the success of myself
 and my organization.
 
@@ -66,41 +66,31 @@ Environment: -Requirement Gathering and Estimation preparation.
 Project Role: - Managing application development, testing and deployment
 Roles and Responsibilities: - Knowledge Sharing – Helped team members understand application
 architecture.
-
 Assistegde RPA
-
 KM Portal
-
 March-2019 Dec-2019
 Angular, C#, . Net Framework, Sql Database, Web Services, Visual Studio
-
 Technology Analyst
-
 • Requirement Gathering.
 • Build end to end Web application and deployed on server.
+
 PROJECT 4: Aloha Technology Pvt. Ltd.
-
 Title Faronics Web Console
-
 Duration Of Project April-2015
 Information Faronics Web Console is a product developed and maintained by Aloha
 technology. It is a web console containing multiple products like Deep freeze
 cloud, Antivirus, Anti-Executable, DeepFreeze On Demands, WinSelect,
 Campus affairs, MDM, Faronics Core Etc.
 . Net Framework 4.0, MVC 4, C#, Javascript, Jquery, Ajax,
-
 Environment
-
 DevExpress gridview, Sql Server 2008
 • Design and build application as per the mock
 
 Roles and Responsibilities
-
 • Test and Deploy the changes on the server
+
 PROJECT 5: Aloha Technology Pvt. Ltd.
-
 Title Employee Management System
-
 Information Employee Management system has been a demo project, containing
 Employee and Department details. The project has been developed for
 management and maintenance of Employee and department. This is CRUD
@@ -110,7 +100,6 @@ Apache Tomcat 7, MYSQL.
 • Requirment gathering
 
 Roles and Responsibilities
-
 • Design and Development
 
 [REMOVED_SECTION_PERSONAL]

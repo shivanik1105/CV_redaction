@@ -1,43 +1,35 @@
 [NAME]
 
 Senior System Engineer
-
 A highly motivated person with strong technical, team player and problem solving skills who like to
 enhance a potential and apply technical knowledge while facing new challenges, resulting in growth and
 development of company.
 
-[LOCATION][LOCATION][LOCATION]
-
-[LOCATION][NAME] HTML JavaScript jQuery
-
+[NAME] HTML JavaScript jQuery
 SQL Azure Agile Unit Testing SOAPUI
-
 VisualStudio Fiddler Documentation
 
-PROJECT ACHIEVEMENTS
+PROJECTACHIEVEMENTS
 
 SAMM Team
-
 Recognized for consistently delivering high-quality code and
 innovative problem-solving, contributing signiﬁcantly to project
 success and team performance.
-
 R&L Carriers
-
 Successfully navigated through complex code base to identify and
 resolve elusive bugs, enhancing system stability and user
 experience. Instrumental in architecting innovative solutions to
 intricate feature requests, optimizing performance and
 functionality while adhering to strict deadlines.
 
-WORK EXPERIENCE
+WORKEXPERIENCE
 
 Senior System Engineer
 
 IBM
 
 12/2021 - Present ,
-Client- NBS (Banking Domain-UK)
+Client- NBS (Banking Domain-)
 Achievements/Tasks
 Developed and maintained scalable web applications using
 patterns.
@@ -58,13 +50,10 @@ standards.
 Participated in sprint planning, daily stand-ups, and
 retrospective meetings to continuously improve team
 performance and project delivery.
-
 Software Engineer
-
 Capgemini
-
 04/2019 - 12/2021 ,
-Client- R&L Carriers(Logistic Domain-[LOCATION])
+Client- R&L Carriers(Logistic Domain-)
 Achievements/Tasks
 Developed and maintained ASP. NET web applications,
 following industry best practices and coding standards.
@@ -86,22 +75,17 @@ smooth and seamless deployment processes.
 
 SKILLS
 
-Pune Web Services HTML JavaScript jQuery
-
+Web Services HTML JavaScript jQuery
 SQL Azure Agile Unit Testing SOAPUI
-
 VisualStudio Fiddler Documentation
 
-PROJECT ACHIEVEMENTS
+PROJECTACHIEVEMENTS
 
 SAMM Team
-
 Recognized for consistently delivering high-quality code and
 innovative problem-solving, contributing signiﬁcantly to project
 success and team performance.
-
 R&L Carriers
-
 Successfully navigated through complex code base to identify and
 resolve elusive bugs, enhancing system stability and user
 experience. Instrumental in architecting innovative solutions to
@@ -111,17 +95,14 @@ functionality while adhering to strict deadlines.
 [REMOVED_SECTION_EDUCATION]
 
 Bachelor of Engineering
-
-Mauli Group of Institutions College of Navi [LOCATION]Engineering and Technology, Shegaon.
-08/2014 - 05/2017 , Shegaon, [LOCATION]
+Mauli Group of Institutions College of Navi Engineering and Technology, Shegaon.
+08/2014 - 05/2017 , Shegaon,
 
 LANGUAGES
 
 English German (A1)
 Full Professional Proﬁciency Elementary Proﬁciency
-
-[NAME]
-
+Hindi Marathi
 Professional Working Proﬁciency Native or Bilingual Proﬁciency
 
 [REMOVED_SECTION_PERSONAL]

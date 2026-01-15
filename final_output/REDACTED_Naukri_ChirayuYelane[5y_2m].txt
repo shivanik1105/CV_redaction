@@ -1,6 +1,6 @@
 [REDACTED_NAME]
 
-PYTHON DEVELOPER
+PYTHONDEVELOPER
 
 PROFILE
 
@@ -11,14 +11,11 @@ and the ability to function will in fast-paced/deadline-driven team environments
 SKILLS
 
 Python Programming
-
 Microservices, REST API's, HTTP REQUEST
 Git, JIRA, Jenkins, CI/CD, Kubernetes dashboard
 Jmeter, Rally, Azure DevOps, Elasticsearch
 SQLite, PostgreSQL, SQL, MongoDB
-
 Fluent with English speaking and writing
-
 Cloud platforms like Amazon Web Services,
 Microsoft Azure, Terraform, GCP ,
 FastApi, Flask, Django, FastAPI, Pyspark, Streamlit, Plotly-dash
@@ -26,9 +23,7 @@ AWS services like – AWS Step Functions, Lambda,
 Advance Microsoft Office, Excel and PowerPoint
 Html, css, Javascript, React.js
 
-PROFESSIONAL EXPERIENCE
-
-Springer Nature Publishing Technologies
+PROFESSIONALEXPERIENCE
 
 Python Developer, October 2023 – Present
 This project aims to build an automated system for
@@ -76,18 +71,29 @@ functionality, making it a trusted solution for retail brands aiming for unprece
 Key Contributions:
 • Backend Development : Created Django APIs based on business logic; used Flask with Pickle for login and data input pages.
 • Frontend Enhancements : Designed user-friendly HTML pages using React.js and coordinated with the design team for
+
 better UI/UX. Implemented validations for email and mobile input.
 • Data Management : Filtered data from MySQL to create MongoDB collections; designed and optimized SQL queries for
 
 [REMOVED_SECTION_PERSONAL]
+
+• Cloud Management : Managed AWS infrastructure (S3, EC2) for scalability and cost-efficiency.
+• Testing & Reporting : Conducted rigorous testing, documented issues in JIRA/ALM, and generated reports.
+
+With its focus on scalability, real-time insights, and personalization, m’loyal™ empowers retail brands to achieve significant
+API Development: Developed a FastAPI endpoint to accept user data and return loan eligibility predictions.
+Web Interface Design: Designed and integrated the data input form with the FastAPI backend for loan prediction.
+Data Validation: Implemented input validation using Pydantic to ensure data accuracy and proper formatting.
 
 [REMOVED_SECTION_EDUCATION]
 
 Bachelor of Engineering (B. E)
 G. H. Raisoni College of Engineering (CSE), Jun 2016 - Jun 2019
 • CGPA/Percentage - 7.6
+
 Government Polytechnix, Jun 2012 - Jun 2016
 • CGPA/Percentage – 79%
+
 X (Secondary), State Board
 • CGPA/Percentage – 78.18%
 

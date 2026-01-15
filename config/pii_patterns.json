@@ -17,6 +17,39 @@
       "github\\.com/[\\w\\-]+"
     ]
   },
+  "company": {
+    "patterns": [
+      "\\b[A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*\\s+(?:Pvt\\.?\\s+)?(?:Ltd\\.?|Limited|Inc\\.?|Corporation|Corp\\.?|LLC|LLP)\\b",
+      "\\b[A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*\\s+(?:Pvt\\.?\\s+)?(?:Ltd\\.?|Limited)\\b",
+      "\\b(?:shared\\s+service\\s+center|service\\s+center)\\b"
+    ]
+  },
+  "specific_locations": {
+    "patterns": [
+      "\\b(?:Japan|Austria|APAC|Jalgaon|Hansen\\s+beck)\\b"
+    ]
+  },
+  "monetary_values": {
+    "patterns": [
+      "\\b\\d+m?\\s*(?:JPY|USD|INR|EUR|GBP)\\b",
+      "\\b(?:savings\\s+of\\s+)?\\d+(?:\\.\\d+)?\\s*(?:million|m|billion|b)?\\s*(?:JPY|USD|INR|EUR|GBP|rupees?|dollars?|euros?|pounds?)(?:\\s+per\\s+annum|/year)?\\b"
+    ]
+  },
+  "specific_awards": {
+    "patterns": [
+      "Sahyadri\\s+Seva\\s+Sang",
+      "Hansen\\s+beck",
+      "\\bKaizen\\b",
+      "Spot\\s+recognition",
+      "Spot\\s+award",
+      "Kudos"
+    ]
+  },
+  "commercial_software": {
+    "patterns": [
+      "\\b(?:Tagetik|Blackline|Chat\\s+GPT|Tally\\s+ERP9?)\\b"
+    ]
+  },
   "demographics": {
     "dob": "\\b(date of birth|dob|born on)\\s*:?\\s*[^\\n]+",
     "gender": "\\b(gender|sex)\\s*:?\\s*(male|female|m|f)[^\\n]*",

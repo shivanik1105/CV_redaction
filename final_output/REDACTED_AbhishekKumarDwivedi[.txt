@@ -1,91 +1,82 @@
 [REDACTED_NAME]
 
-Exp: 17 years into engineering Specialisation: Android OS, Security, Yocto Linux, Embedded devices Product : Automotive digital cockpit | Android TV | IoT gateways Programming : C++, C, Python, Java, JavaScript
-
-L: [REDACTED_URL] | [LOCATION][LOCATION]
+L: [REDACTED_URL] |
 
 Summary
-
-Product development with product cycle in agile and V model ALM; expertise into software architecture and component development across the Android stack, low level embedded interfaces and linux. Proficient into cyber security management and control implementation under ISO 21434. Working into complex softwares involving virtualized multi OS, multi processor, tooling, backend and embedded peripherals. Security PO and technical lead to ensure product security implementation. Self motivated, fast learner and ownership driven.
-
-[REMOVED_SECTION_EDUCATION]
-
 Current Role:
 • Technical lead - System architecture - Android and Yocto linux - Systems and TARA analysis - Cyber security product owner
-BE : KLE College of Engineering and Technology , [LOCATION](full time in person) 09/2001 - 07/2005 B. E. in Telecommunication
-Work Experience 2022-12 Till date Principal Engineer II Harman, India • Automotive digital cockpit(Android and Yocto) - systems and security architecture; leading on various automotive features and working with stakeholders; C++, Java, UML implementation such as for ISO derived algorithm and state machine development. Android and Linux low level interfaces; Qualcomm and Samsung chipsets, systems of system concept design, PI and Scrum planning. Security feature implementation based on NIST and ISO guidelines such as driven by TARA to implement controls. 2020-07 2021-07 Principal Engineer Technicolor, India • Leading Android TV framework development, working with chip vendors, Netflix leadership as technical SPOC and internal product lead (includes DRM, HDMI, power management, HAL, C++, JavaScript, AWS) looking at three product lines. Took strategic decisions for business line growth smooth rollout, corporate issue identification and providing solutions with strong influence. 2020-07
 
 Programming
+• Primary: algorithm, C++, C - Additional: Java, Python, Node JS
 
-• Primary: algorithm, C++, C - Additional: Java, Python, NodeJS
 Past one year:
 • AOSP, Yocto, QNX, OTA, UDS, telematics, KMS, Architecture and development, team leading
 
 Embedded firmware
-
 • ARM core and internals - Assembly code understanding - Schematics, electronics component and debugging
 
 Embedded Linux and OS:
-• WiFi, BT, network - Audio, Multimedia - USB, SPI, I2C - Yocto linux - Peripheral bring-up - Embedded hardware modules - Hypervisor, QEMU - Kernel driver and configuration - Bootloader(u-boot, GRUB)
+• [NAME], BT, network - Audio, Multimedia - USB, SPI, I2C - Yocto linux - Peripheral bring-up - Embedded hardware modules - Hypervisor, QEMU - Kernel driver and configuration - Bootloader(u-boot, GRUB)
+
 Engineering practices:
-• Product Lifecycle Management - Product roadmap - INCOSE ISO 15288 - ASPICE ISO 15504 - C-SEC ISO 21434 - UN R155, R156 - Agile model - Requirement grooming - System design (UML) - Concept, HLD and LLD - Security across product life cycle
+• [NAME] - Product roadmap - INCOSE ISO 15288 - ASPICE ISO 15504 - C-SEC ISO 21434 - UN R155, R156 - Agile model - Requirement grooming - System design (UML) - Concept, HLD and LLD - Security across product life cycle
+
 Others:
 • Hardware debugging and probing - AWS cloud infra - Entrepreneurship - business model, marketing model, product roadmap and strategy, business issues, process optimization.
+Exp: 17 years into engineering Specialisation: Android OS, Security, Yocto Linux, Embedded devices Product : Automotive digital cockpit | Android TV | Io T gateways Programming : C++, C, Python, Java, Java Script
+Product development with product cycle in agile and V model ALM; expertise into software architecture and component development across the Android stack, low level embedded interfaces and linux. Proficient into cyber security management and control implementation under ISO 21434. Working into complex softwares involving virtualized multi OS, multi processor, tooling, backend and embedded peripherals. Security PO and technical lead to ensure product security implementation. Self motivated, fast learner and ownership driven.
 
-PROFESSIONAL EXPERIENCES
+[REMOVED_SECTION_EDUCATION]
 
-2016 to Till date
-Automotive systems and security for Harman (Android and Linux) Description: Principal engineer for systems & security domains including Android HAL, OS internals, vendor implementation for diagnostics, issues finding in TEE debug, KMS, software update, virtualization environment and kernel security. Stakeholders engagement for requirement grooming, high level technical specifications, system design, software design, component development. Work requires expertise in Android and Linux, hardware peripherals, generalist to overall system as well as system of system (such as GPS, bluetooth, WiFi, tuner, HTA, BIOS, kernel, bootloader, android systems internals, KPI, power, applications) and Autosar knowledge. Hands-on coding in C++ and Java. Product and process optimization areas findings.
-Android TV / STB development for Technicolor Description: As a principal engineer, to work with chip vendors, partners, Netflix, and internal few teams, resolving android TV low level issues. Contribution to product strategy. Work required some technical understanding of Codec, Multimedia, DRM, TEE OS, HDMI, power states and HAL implementations. Expertise in coding skills and analytical skills were the primary requirement. Work involved hands on into C++, Java, python and NodeJS.
+Work Experience 2022-12 Till date Principal Engineer II Harman, • Automotive digital cockpit(Android and Yocto) - systems and security architecture; leading on various automotive features and working with stakeholders; C++, Java, UML implementation such as for ISO derived algorithm and state machine development. Android and Linux low level interfaces; Qualcomm and Samsung chipsets, systems of system concept design, PI and Scrum planning. Security feature implementation based on NIST and ISO guidelines such as driven by TARA to implement controls. 2020-07 2021-07 Principal Engineer Technicolor, • Leading Android TV framework development, working with chip vendors, Netflix leadership as technical SPOC and internal product lead (includes DRM, HDMI, power management, HAL, C++, Java Script, AWS) looking at three product lines. Took strategic decisions for business line growth smooth rollout, corporate issue identification and providing solutions with strong influence. 2020-07
+
+Automotive systems and security for Harman (Android and Linux) Description: Principal engineer for systems & security domains including Android HAL, OS internals, vendor implementation for diagnostics, issues finding in TEE debug, KMS, software update, virtualization environment and kernel security. Stakeholders engagement for requirement grooming, high level technical specifications, system design, software design, component development. Work requires expertise in Android and Linux, hardware peripherals, generalist to overall system as well as system of system (such as GPS, bluetooth, Wi Fi, tuner, HTA, BIOS, kernel, bootloader, android systems internals, KPI, power, applications) and Autosar knowledge. Hands-on coding in C++ and Java. Product and process optimization areas findings.
+Android TV / STB development for Technicolor Description: As a principal engineer, to work with chip vendors, partners, Netflix, and internal few teams, resolving android TV low level issues. Contribution to product strategy. Work required some technical understanding of Codec, Multimedia, DRM, TEE OS, HDMI, power states and HAL implementations. Expertise in coding skills and analytical skills were the primary requirement. Work involved hands on into C++, Java, python and Node JS.
 Peripheral bring-up in Android device for Robert Bosch Description: To add touch screen (I2C) and HDMI, modules to Qulacomm board, to interface external microcontroller to the device for controlling motors and sensors and make it working from kernel layer bring-up as well as implementation of Android framework service to build control stack. Worked at hardware debugging with I2C sniffer and CRO probe along with hardware engineers to go through schematics and PCB. Android customization as per product requirements.
-[startup] Smart Home (IoT) gateway development Description: Yocto Linux bring-up into Intel board and pkgmgr. IoT gateway interface with several sensor controllers, such as LED strip, relay, analog sensors etc using low level interfaces, such as I2C, GPIO, USB, UART. ARM mBed for BLE gateway and end node interface. REST interface - Java, C, Android. Did research on building a dashboard and to come out with suitable frameworks. Built machine learning based smart city camera based on tensorflow and yolo with OCR and DNN model. Additionally used dlib SDK for motion tracing. Got traction for investment and built seed fund investor partnership.
-[contractor] Yocto based Embedded gateway bring-up for Intel Platform: Intel 32 bit and 64 bit processor Description: To interact with customers and build secure IoT gateway device development based on Yocto and Intel secure boot . Had to work on Grub bootloader, linux kernel, peripheral bring-up(bluetooth, WiFi, Zigbee) and iotivity stack bringup and package manager implementation for application sandboxing. NodeJs bringup, customised Yocto recipe as per customer requirement. Worked on four such different devices all based on Intel 32 bit and 64 bit processors.
-[startup] Android traveller application and cloud development Description: Implemented Android solution with MongoDB, NodeJS, Express into DevOps. Implemented data analysis at cloud for learning user activity and providing suggestions. Used facebook API, Google place API, Google Maps API, recyclerview and fragments for application development. Did marketing of the built solution to find potential partners and VC to invest in further expansion of the MVP. Got market traction.
+[startup] Smart Home (Io T) gateway development Description: Yocto Linux bring-up into Intel board and pkgmgr. Io T gateway interface with several sensor controllers, such as LED strip, relay, analog sensors etc using low level interfaces, such as I2C, GPIO, USB, UART. ARM m Bed for BLE gateway and end node interface. REST interface - Java, C, Android. Did research on building a dashboard and to come out with suitable frameworks. Built machine learning based smart city camera based on tensorflow and yolo with OCR and DNN model. Additionally used dlib SDK for motion tracing. Got traction for investment and built seed fund investor partnership.
+[contractor] Yocto based Embedded gateway bring-up for Intel Platform: Intel 32 bit and 64 bit processor Description: To interact with customers and build secure Io T gateway device development based on Yocto and Intel secure boot . Had to work on Grub bootloader, linux kernel, peripheral bring-up(bluetooth, Wi Fi, Zigbee) and iotivity stack bringup and package manager implementation for application sandboxing. Node Js bringup, customised Yocto recipe as per customer requirement. Worked on four such different devices all based on Intel 32 bit and 64 bit processors.
+[startup] Android traveller application and cloud development Description: Implemented Android solution with Mongo DB, Node JS, Express into Dev Ops. Implemented data analysis at cloud for learning user activity and providing suggestions. Used facebook API, Google place API, Google Maps API, recyclerview and fragments for application development. Did marketing of the built solution to find potential partners and VC to invest in further expansion of the MVP. Got market traction.
 [startup] Smart city gateway development Description: Requirement analysis and worked on ESP8266 based multi node network solution for interfacing nodes over MQTT and REST interfaces to gateway. Built gateway, coded in Node-RED, for complete solution. Built a team of new engineers to work on firmware.
 
 [REDACTED_NAME]
 
-Automotive BSP for AMD (Android and Linux) Description: Worked on android and Linux BSP software customization, hypervisor, VirtIO. Working at android IO systems, QEMU and Xen hypervisor configuration. Knowledge of BIOS, inter processor communication, in depth knowledge of AOSP, android emulation, GRUB configuration were needed to troubleshoot issues. Also did performance matrix and optimization for hypervisor, linux, Android OS and BIOS. Worked on intel architecture and android runtime analysis for ABI translation.
+PROFESSIONALEXPERIENCES
+
+2016 to Till date
+Automotive BSP for AMD (Android and Linux) Description: Worked on android and Linux BSP software customization, hypervisor, Virt IO. Working at android IO systems, QEMU and Xen hypervisor configuration. Knowledge of BIOS, inter processor communication, in depth knowledge of AOSP, android emulation, GRUB configuration were needed to troubleshoot issues. Also did performance matrix and optimization for hypervisor, linux, Android OS and BIOS. Worked on intel architecture and android runtime analysis for ABI translation.
 [startup] Connected vehicle Startup business plan Business: Pitched business plan to VCs in London with marketing, funding plan and 5 year roadmap. Tested market interest and hypothesis test and built a small founding team, however didn’t proceed due to financial risk. Built partners successfully to foster the implementation and scaling the solution in the green energy field. Demonstrated startup MVP strategy to reduce the cost.
 Telematics RIL development based on Yocto and Android for LG Description: Code customization in Telephony + RIL framework, based on Android, C++ coding for telematics devices. Coding standards followed based on automotive MISRA compliance and Yocto based OS. Good hands on with C++ coding required to perform my job. Coding was the primary work.
-[contractor] Smart home gateway hub development Platform: Dabian Linux, Android, Google cloud, Google voice assistant Programming: NodeJS Description: Port Linux OS into Mediatek based embedded board, integrated wake word detection engine and google voice assistant; fixing issues around peripheral, u-boot environment, kernel device tree. Implemented NodeJS based service interfacing BLE and Android OS customization. RNN AI algorithm integration and dataset update.
+[contractor] Smart home gateway hub development Platform: Dabian Linux, Android, Google cloud, Google voice assistant Programming: Node JS Description: Port Linux OS into Mediatek based embedded board, integrated wake word detection engine and google voice assistant; fixing issues around peripheral, u-boot environment, kernel device tree. Implemented Node JS based service interfacing BLE and Android OS customization. RNN AI algorithm integration and dataset update.
 Android O based Automotive infotainment HAL development Platform: Android O for Car | Programming: C, C++ Description: Did design automotive Car HAL as an architect in UML and design discussion with Sr. technical architects. Implementation of code based on design and to do further development. To explore android automotive HAL interfaces and higher stack provided by Google and mentoring other engineers for reference app implementation for verification of HAL implementation. To mentor application integrator engineers and resolve issues. To make pre-built client applications to work on Android O.
-[startup] Implementation of various embedded devices Platform: Broadcom processor, NodeMCU/ESP8266, Arduino Uno, ATtiny85, NRF51822, sensor modules, MT7688 Programming: Java, C, NodeJS, Lua, Arduino, OpenWRT, Linux, Android, Android Things, mBed. Description: Implementing end to end solution along with mentoring the engineering team. End sensor node firmware development with programming. Gateway research and development with programming. Integration to cloud. MEAN stack implementation. Hardware selection and proposal creation to fit in system design and BOM. Some R&D on development strategy to reduce effort and money to reduce end product cost. Also developed a few 3D enclosure mechanical models with fusion 360 and 3D printed for MVP demo. Worked with contractors to develop PCB manufacturing and assembly. Partner and supplier built-up.
-[startup] IoT gateway development Platform: NodeJS, Node-RED, Yocto Linux, Kaa SDK Description: Added C++ SDK interface with JavaScript using NAN interface. IoT backend gateway implementation for fetching street data to analytics dashboard. Mentored a few engineers to build ESP32 based edge nodes and WiFi mesh. Worked with manufacturers to make the product market ready.
-2006 to 2015
-Android OS stack specification, design and development for Linaro Description: Implemented Ara manager framework stack upon Qualcomm hardware system service, JNI, AIDL, HAL interface, binder, daemon and SDK library. Worked closely with Linaro and Google architect. HLD and LLD design, implementation in JAVA, C and C++. Worked with domains, kernel, MCU firmware and cloud team for concept and design discussion. Visited Google HQ at MV, California, US; Linaro meetup at [LOCATION]US; San Francisco, US for implemented solution integration to the device and to sync with other teams.
-IoT server automation framework, Android
+[startup] Implementation of various embedded devices Platform: Broadcom processor, Node MCU/ESP8266, Arduino Uno, ATtiny85, NRF51822, sensor modules, MT7688 Programming: Java, C, Node JS, Lua, Arduino, Open WRT, Linux, Android, Android Things, m Bed. Description: Implementing end to end solution along with mentoring the engineering team. End sensor node firmware development with programming. Gateway research and development with programming. Integration to cloud. MEAN stack implementation. Hardware selection and proposal creation to fit in system design and BOM. Some R & D on development strategy to reduce effort and money to reduce end product cost. Also developed a few 3D enclosure mechanical models with fusion 360 and 3D printed for MVP demo. Worked with contractors to develop PCB manufacturing and assembly. Partner and supplier built-up.
+[startup] Io T gateway development Platform: Node JS, Node-RED, Yocto Linux, Kaa SDK Description: Added C++ SDK interface with Java Script using NAN interface. Io T backend gateway implementation for fetching street data to analytics dashboard. Mentored a few engineers to build ESP32 based edge nodes and Wi Fi mesh. Worked with manufacturers to make the product market ready.
+Android OS stack specification, design and development for Linaro Description: Implemented Ara manager framework stack upon Qualcomm hardware system service, JNI, AIDL, HAL interface, binder, daemon and SDK library. Worked closely with Linaro and Google architect. HLD and LLD design, implementation in JAVA, C and C++. Worked with domains, kernel, MCU firmware and cloud team for concept and design discussion. Visited Google HQ at MV, California, US; Linaro meetup at US; San Francisco, US for implemented solution integration to the device and to sync with other teams.
+Io T server automation framework, Android
 Platform: JAVA, Ubuntu, Tradefed, Android, MQTT, Android Studio Description: MQTT mock server setup within LAN, server stub implementation in Java, MQTT and HTTP message traffic simulation from server and mobile app. Issue analysis with tcpdump and wireshark. SDP and SIP protocol analysis for an IP phone based solution issue fixes.
-Android porting, Intel and TI SoCs
 VOIP audio and SIP implementation, Android Description: Implementation update and bug fixing for VOIP solution based on SDP, SIP. Also, identified suitable audio compression solution, speex, and added to the implementation through research upon available optimal solutions. Did benchmarking the developed solution with different field scenario simulations.
-
-Android framework stability
-
-MM1 proxy server development Description: Implemented MM1 proxy server RFC single handedly for telecom messaging server protocols for frame and PDU parsing and packing. Implemented logic to take SMS and MMS traffic over IoT protocol stack based on MQTT and HTTP.
+MM1 proxy server development Description: Implemented MM1 proxy server RFC single handedly for telecom messaging server protocols for frame and PDU parsing and packing. Implemented logic to take SMS and MMS traffic over Io T protocol stack based on MQTT and HTTP.
 Android customization, HAL and JNI development on Qualcomm Snapdragon S2
-
-Samsung platform stability on Samsung phones
-
 Role: Technology research, solution development at android framework (JNI, HAL and system services) and application development with the help of my team of 4-6 engineers, mentoring them and self coding.
-Soaris and RedHat OS issues root case finding
+Soaris and Red Hat OS issues root case finding
 Description: Debugging, root cause analysis and fixing Linux OS issues with the help of kernel logs and system logs.
-
 BREW OEM developer for Samsung phones
-
-Automotive rig development
 
 BREW platform stability on Kyocera phones on Qualcomm Hardware
 
 [REDACTED_NAME]
 
+2006 to 2015
 Android Telephony Framework and RIL Changes
-
 Description: Code change estimation; modified RIL daemon and library to implement support call routing, within phone, between cellular network and wifi network based on certain parameters. Modified request handling part coming from the upper application layer.
 Android Audio stack analysis and HAL changes
-Platform: Android [Android framework, Audio, HAL] Description: TinyAlsa, Audioflinger, audio policy manager, Linux audio pseudo driver. Doing some minor changes at Audio HAL.
+Platform: Android [Android framework, Audio, HAL] Description: Tiny Alsa, Audioflinger, audio policy manager, Linux audio pseudo driver. Doing some minor changes at Audio HAL.
+Android porting, Intel and TI So Cs
 Description: Android, Intel Atom, OMAP3, GRUB bootloader, Linux file system, Linux kernel, Android HAL, Android system services and JNI. Ported Android stack into x86 based rugged tablet device with Grub bootloader configuration, debugging at HAL layer. Built custom ROM image. Debugging and fixing hardware bringup issues such as mesa display lib, bluez, wifi wpa supplicant, serial interface. Ported Android into TI OMAP3 along with u-boot and customised kernel training and mentoring a small team. Mentored team for application development. Experiment execution of Xen hypervisor in intel platform.
+Android framework stability
 Duration: February 2011 to May 2011 Platform: Qualcomm MSM chipset-ARM9, Trace32, Android file system | Programming: C, C++, Java Description: Android framework development, finding issue root cause at android framework and fixing independently.
+Samsung platform stability on Samsung phones
 
 Qualcomm and Kyocera native platform stability on Qualcomm Hardware
 
-Duration: Jan 2006 to October 2006 Platform: PIC microcontroller - PIC16F84A [Hardware design] Description: Microchip Assembly coding, C, Circuit designing around microcontroller, PCB designing for Multilink [LOCATION]. Worked with production lines to understand tools and limitations. Got a solution proposal selected with new electronic circuit and firmware design (in assembly coding) which reduced production line QA error from 30% to 0% and was put in use in the production line. Did firmware development for engine heating ECU development.
+Automotive rig development
+Duration: Jan 2006 to October 2006 Platform: PIC microcontroller - PIC16F84A [Hardware design] Description: Microchip Assembly coding, C, Circuit designing around microcontroller, PCB designing for Multilink . Worked with production lines to understand tools and limitations. Got a solution proposal selected with new electronic circuit and firmware design (in assembly coding) which reduced production line QA error from 30% to 0% and was put in use in the production line. Did firmware development for engine heating ECU development.
