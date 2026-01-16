@@ -378,6 +378,45 @@ class RuleBasedRedactor:
         if before_count > 0:
             logger.info(f"Date fix: found {before_count} old dates, converted {after_count} to 20XX format")
         
+        # Phase 10: Remove all placeholder markers
+        text = self._remove_placeholders(text)
+        
+        return text
+    
+    def _remove_placeholders(self, text: str) -> str:
+        """Remove all placeholder markers like [NAME], [EMAIL], etc."""
+        # Generic removal of all [REDACTED_*] and [REMOVED_*] markers
+        text = re.sub(r'\[REDACTED_[A-Z0-9_]+\]', '', text)
+        text = re.sub(r'\[REMOVED_[A-Z0-9_]+\]', '', text)
+        
+        placeholders = [
+            r'\[NAME\]',
+            r'\[EMAIL\]',
+            r'\[PHONE\]',
+            r'\[URL\]',
+            r'\[ORGANIZATION\]',
+            r'\[COMPANY[^\]]*\]',
+            r'\[LOCATION\]',
+            r'\[MONETARY_VALUE\]',
+            r'\[SOFTWARE\]',
+            r'\[PROGRAM\]',
+            r'\[DATE_OF_BIRTH\]',
+            r'\[ADDRESS\]',
+            r'\[PAGE_NUMBER\]',
+        ]
+        
+        for placeholder in placeholders:
+            text = re.sub(placeholder, '', text)
+        
+        # Clean up extra spaces, commas, and colons left behind
+        text = re.sub(r'\s*,\s*,', ',', text)  # Double commas
+        text = re.sub(r':\s*,', ':', text)  # Colon followed by comma
+        text = re.sub(r',\s*:', ':', text)  # Comma followed by colon
+        text = re.sub(r'^\s*,\s*', '', text, flags=re.MULTILINE)  # Leading commas
+        text = re.sub(r',\s*$', '', text, flags=re.MULTILINE)  # Trailing commas
+        text = re.sub(r'\s{2,}', ' ', text)  # Multiple spaces
+        text = re.sub(r'\n\s*\n\s*\n', '\n\n', text)  # Multiple blank lines
+        
         return text
     
     def _heal_text(self, text: str) -> str:
@@ -589,18 +628,18 @@ class RuleBasedRedactor:
             for award_pattern in self.patterns.get('specific_awards', []):
                 processed_line = award_pattern.sub('[PROGRAM]', processed_line)
             
-            # Redact company patterns (Pvt Ltd, Inc, Corporation, etc.)
+            # Redact company patterns (Pvt Ltd, Inc, Corporation, etc.) - Only generic patterns, not specific names
             for company_pattern in self.patterns.get('company', []):
                 matches = list(company_pattern.finditer(processed_line))
                 for match in reversed(matches):  # Process from end to preserve indices
                     processed_line = processed_line[:match.start()] + '[ORGANIZATION]' + processed_line[match.end():]
             
-            # Redact specific companies from the list
-            for company in companies_to_redact:
-                if company.lower() in processed_line.lower():
-                    # Case-insensitive replacement
-                    pattern = re.compile(re.escape(company), re.IGNORECASE)
-                    processed_line = pattern.sub('[ORGANIZATION]', processed_line)
+            # DISABLED: Do not redact specific companies from the list - User requests preserving them for accuracy
+            # for company in companies_to_redact:
+            #     if company.lower() in processed_line.lower():
+            #         # Case-insensitive replacement
+            #         pattern = re.compile(re.escape(company), re.IGNORECASE)
+            #         processed_line = pattern.sub('[ORGANIZATION]', processed_line)
             
             # Redact specific geographic locations (Japan, Austria, APAC, etc.)
             for location_pattern in self.patterns.get('specific_locations', []):
@@ -630,6 +669,11 @@ class RuleBasedRedactor:
             # Redact countries
             for country in locations.get('countries', []):
                 processed_line = re.sub(rf'\b{re.escape(country)}\b,?\s*', '', processed_line, flags=re.IGNORECASE)
+            
+            # Redact postal codes (6 digit numbers, common in India)
+            # Use negative lookbehind/lookahead to avoid matching within larger numbers or specific IDs if needed
+            # But aggressively removing 6-digit numbers in non-technical contexts is usually safe for resumes
+            processed_line = re.sub(r'\b[1-9]\d{5}\b', '', processed_line)
             
             result_lines.append(processed_line)
         
@@ -924,12 +968,50 @@ class RuleBasedRedactor:
     
     def _cleanup_artifacts(self, text: str) -> str:
         """Clean up redaction artifacts"""
-        # Fix spaced headers but preserve line breaks between different sections
-        # Match patterns like "C AREER O BJECTIVE" on same line
+        # First pass: Remove [NAME] markers that appear within skills/experience sections
         lines = text.split('\n')
-        fixed_headers = []
+        in_skills_or_exp = False
+        cleaned_first_pass = []
+        
+        for i, line in enumerate(lines):
+            line_lower = line.lower()
+            
+            # Track if we're in skills or experience sections
+            if any(marker in line_lower for marker in ['technical skills', 'work experience', 'professional experience', 'project', 'skills:', 'experience:']):
+                in_skills_or_exp = True
+            elif any(marker in line_lower for marker in ['education', 'certification', 'personal']):
+                in_skills_or_exp = False
+            
+            # Remove [NAME] markers in skills/experience sections
+            if in_skills_or_exp and '[NAME]' in line:
+                line = line.replace('[NAME]', '')
+                # Clean up extra spaces and colons left behind
+                line = re.sub(r'\s*:\s*,', ',', line)
+                line = re.sub(r',\s*,', ',', line)
+                line = re.sub(r'\s{2,}', ' ', line)
+            
+            cleaned_first_pass.append(line)
+        
+        
+        text = '\n'.join(cleaned_first_pass)
+        
+        # Second pass: Remove lines that are just labels (e.g. "Name : ", "Address :")
+        lines = text.split('\n')
+        cleaned_second_pass = []
+        
+        # Regex for common labels left behind
+        label_pattern = re.compile(r'^\s*(Resume Name|Name|Address|Email|Phone|Mobile|Contact|DOB|Date of Birth|Nationality|Marital Status|Gender|Sex|Profile)\s*[:\-]?\s*$', re.IGNORECASE)
+        
         for line in lines:
-            # Only fix spacing within a single line (not across lines)
+            # Skip lines that match the label pattern (meaning the value was redacted)
+            if label_pattern.match(line):
+                continue
+                
+            # Clean up "Name :" if it appears at the start of a line but has content (rare but possible artifact)
+            # e.g. "Name : Senior Developer" -> "Senior Developer"
+            line = re.sub(r'^\s*(Resume Name|Name|Address|Email|Phone|Mobile|Contact|DOB|Date of Birth)\s*[:\-]\s*', '', line, flags=re.IGNORECASE)
+
+            # Fix spaced headers
             if re.match(r'^[A-Z\s]{10,}$', line):  # All caps with lots of spaces
                 # Remove spaces between capital letters on same line iteratively
                 fixed_line = line
@@ -938,10 +1020,11 @@ class RuleBasedRedactor:
                 # Add proper spacing between words
                 fixed_line = re.sub(r'([A-Z]{2,})(OBJECTIVE|QUALIFICATION|PROFICIENCY|DETAILS|INFORMATION)', r'\1 \2', fixed_line)
                 fixed_line = re.sub(r'(CAREER|PROFESSIONAL|COMPUTER|PERSONAL)(\\w)', r'\1 \2', fixed_line)
-                fixed_headers.append(fixed_line)
-            else:
-                fixed_headers.append(line)
-        text = '\n'.join(fixed_headers)
+                line = fixed_line
+            
+            cleaned_second_pass.append(line)
+            
+        text = '\n'.join(cleaned_second_pass)
         
         # Fix broken multi-line organization names
         # "Sahyadri Seva" on one line, "Sang" on next -> merge and redact

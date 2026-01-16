@@ -15,5 +15,9 @@ spacy==3.7.2
 Pillow==10.1.0
 python-docx==1.1.0
 
+# Web UI Dependencies
+Flask==3.0.0
+Werkzeug==3.0.1
+
 # Note: After installing spacy, run:
 # python -m spacy download en_core_web_sm

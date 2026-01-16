@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Redaction Pipeline</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔒 CV Redaction Pipeline</h1>
+            <p class="subtitle">Upload your CV and get a privacy-protected version with all PII removed</p>
+        </header>
+
+        <div class="upload-section">
+            <div class="upload-box" id="uploadBox">
+                <div class="upload-icon">📄</div>
+                <h2>Drop your CV here or click to browse</h2>
+                <p>Supported formats: PDF, DOCX (Max 16MB)</p>
+                <input type="file" id="fileInput" accept=".pdf,.docx,.doc" style="display: none;">
+                <button class="browse-btn" type="button" onclick="event.stopPropagation(); document.getElementById('fileInput').click();">
+                    Browse Files
+                </button>
+            </div>
+            
+            <div id="fileName" class="file-name"></div>
+            
+            <button id="uploadBtn" class="upload-btn" style="display: none;">
+                Process CV
+            </button>
+        </div>
+
+        <div id="progressSection" class="progress-section" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p id="progressText" class="progress-text">Processing your CV...</p>
+        </div>
+
+        <div id="resultSection" class="result-section" style="display: none;">
+            <div class="result-header">
+                <h2>✅ Processing Complete!</h2>
+                <p>Your CV has been successfully redacted</p>
+            </div>
+            
+            <div class="preview-box">
+                <h3>Redacted CV Content:</h3>
+                <pre id="previewText"></pre>
+            </div>
+            
+            <div class="action-buttons">
+                <a id="downloadBtn" class="download-btn" href="#" download>
+                    ⬇️ Download Redacted CV
+                </a>
+                <button class="reset-btn" onclick="resetForm()">
+                    🔄 Process Another CV
+                </button>
+            </div>
+        </div>
+
+        <div id="errorSection" class="error-section" style="display: none;">
+            <h2>❌ Error</h2>
+            <p id="errorText"></p>
+            <button class="reset-btn" onclick="resetForm()">
+                Try Again
+            </button>
+        </div>
+
+        <footer>
+            <div class="info-box">
+                <h3>What gets redacted?</h3>
+                <ul>
+                    <li>✓ Names, email addresses, phone numbers</li>
+                    <li>✓ Personal identifiers (DOB, addresses)</li>
+                    <li>✓ Company names (replaced with generic industry terms)</li>
+                    <li>✓ Specific locations and cities</li>
+                    <li>✓ Monetary values and awards</li>
+                    <li><strong>✗ Skills and work experience content (preserved)</strong></li>
+                </ul>
+            </div>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
