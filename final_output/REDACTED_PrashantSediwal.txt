@@ -1,8 +1,24 @@
-KEYSKILLS Automotive
+KEYSKILLS
+
+Automotive
 Unit Testing
-C C++ Linux UNIX c++ Programming
+C
+
+C++
+
+Linux
+
+UNIX
+
+c++ Programming
 Embedded C
-Socket Programming STL OOPS Multithreading
+Socket Programming
+
+STL
+
+OOPS
+
+Multithreading
 multi processing
 Linux Development
 Docker
@@ -11,41 +27,73 @@ Gitlab
 gtest
 c++
 Agile
-Scrum ISO8583 c++ 11
+Scrum
+
+ISO8583
+
+c++ 11
 c++ 14
-Payments CPP Qml Lead Engineer - Product
+Payments
+
+CPP
+
+Qml
+
+[REDACTED_NAME]
+
+Lead Engineer - Product
 Development
-M. Tech. (honours) with 9+ years of C++ developments experience. I
 have worked on Linux/Unix Rhel Debian applications. I have strong
 knowledge about C, C++, QMl, shell scripts and objective oriented
 programming ( Oops ). During my career I have worked on many
 complex projects in C & CPP and Multithreading, multi processing, IPC
 and socket programming in C++, having experience in working on
-scaled agile framework, gtest, Jenkins, Git Lab, iso8582, ant, ci WORKEXPERIENCE Feb 2022 - Present
-Lead Engineer - Product Development HARMAN C++ Linux development. cmake configuration, gtest
+scaled agile framework, gtest, Jenkins, Git Lab, iso8582, ant, ci
+
+[REMOVED_SECTION_PERSONAL]
+
+[REMOVED_SECTION_EDUCATION]
+
+WORKEXPERIENCE
+
+Feb 2022 -
+Present
+Lead Engineer - Product Development
+
+HARMAN
+
+C++ Linux development. cmake configuration, gtest
 and Design and develop automotive applications for Mrecedes-Benz and John Deere.
-Nov 2018 - Feb 2022
+Nov 2018 - Feb
+
 Senior Software Engineer
 Worldline Pvt Ltd
-C , C++, Oops, Socket Programming, IPC
+C , C++, Oops, Socket Programming, IPC,
 Multithreading, File Handling, Shell Scripting, Shared
-Memory, STL, ant, Debian and rpm packages, gtest
-authorization and switching, acquiring, ISO8583
+Memory, STL, ant, Debian and rpm packages, gtest,
+authorization and switching, acquiring, ISO8583,
 payment domain, gtest.
-Feb 2017 - Nov 2018
-Jun 2015 - Feb 2017 Software Programmer
+Feb 2017 - Nov
+
+Jun 2015 - Feb
+
+Software Programmer
 Microworld Software Services
 Build linux / unix applications using C, C++, shell
 script., Unix, Multithreading, data structure and
-algorithms, socket programming, TCP & UDP Sockets
-STL. Design, build, and maintain efficient, reusable
+algorithms, socket programming, TCP & UDP Sockets,
+STL. Design, build, and maintain efficient, reusable,
 and reliable C++ code maintain Debian and Red hat
 packages and other build environment.
 Software Developer
 Forbes Technosys Ltd
-• >Build linux / unix applications using C++ and QT platform ->Designed, coded, implemented and tested
+• >Build linux / unix applications using C++ and QT
+
+platform ->Designed, coded, implemented and tested
 new features and modules for the derivatives system
-• >Perform special requests for different projects - >Analyzed server side infrastructure including
+• >Perform special requests for different projects -
+
+>Analyzed server side infrastructure including
 function calls for memory management, threads
 synchronization, multi threading, ->Create embedded
 applications matching clients requirement ->system
@@ -112,4 +160,8 @@ Coin Vending Machine
 This machine provides change of coin from note (note
 to coin changer) in require denomination as per bank
 requirement. Currently this project lives in many
-leading banks like SBI, Canara, and ICICI. COURSES & CERTIFICATIONS Advanced Embeeded System Design
+leading banks like SBI, Canara, and ICICI.
+
+COURSES & CERTIFICATIONS
+
+Advanced Embeeded System Design

@@ -1,0 +1,1 @@
+[ERROR: Failed to read document. file 'samples\more\JasimDB.doc' is not a Word file, content type is 'application/vnd.openxmlformats-officedocument.themeManager+xml']

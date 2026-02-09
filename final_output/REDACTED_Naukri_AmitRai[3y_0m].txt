@@ -1,0 +1,82 @@
+[REDACTED_NAME]
+
+[REDACTED_CONTACT_LINE]
+
+CAREER SUMMARY:
+
+Experienced MuleSoft Developer with ~3 years of experience in designing and implementing integration
+solutions. Skilled in Mule ESB, connectors like HTTP, Anypoint MQ, SFTP, DB, and Dataweave. Strong
+communicator, adept at collaborating with project teams. Eager to apply technical proficiency and
+contribute to a dynamic organization's success.
+
+
+WORK EXPERIENCE
+
+
+Emerson Electric Co.
+Engineer L1
+• Developed and maintained an online portal for Emerson, validating customer data and checking warranty
+
+details. Utilized JSON, REST, SOAP, XML, and HTTP protocols. Designed enterprise services using RAML
+and Rest-based APIs with APIKIT, applying policies like client-id-enforcement and auto-discovery.
+Conducted peer reviews and API testing.
+• Led the payment factory file transfer project, handling file transfer between SFTP locations and monitoring
+
+processes via dashboard. Configured Mule connectors like scatter-gather, choice router, and HTTP
+requesters. Generated MuleSoft code for exception handling, batch processing, scheduling, and pub-sub
+model. Conducted API testing.
+• Spearheaded the integration project for McKesson Corporation, fetching data from SFTP and managing
+
+order placement. Designed enterprise services using RAML and Rest-based APIs with APIKIT, applying
+policies like client-id-enforcement and Oauth 2.0. Configured Mule connectors and ensured robust
+debugging, monitoring, and performance enhancement. Successfully delivered APIs within tight deadlines.
+• Successfully managed multiple concurrent projects with competing priorities while consistently delivering
+
+excellent results.
+• Conducted comprehensive root cause analysis for recurring issues, leading to long-term resolutions and
+
+enhanced system reliability.
+• Led process improvement initiatives that resulted in increased production efficiency and reduced waste.
+• Provided technical support to various departments, enabling faster resolution of issues and increased
+
+customer satisfaction.
+
+
+SKILLS
+
+
+• MuleSoft Anypoint • REST
+
+Platform • SOAP
+• Anypoint Studio • Mule connectors
+• Mule ESB • API development using
+• Mule Runtime RAML and REST
+• Dataweave • Integration patterns
+• Postman • Error handling strategies
+
+
+CERTIFICATIONS
+
+
+MuleSoft Certified Developer (MCD) - level 1
+MuleSoft Certified Developer (MCD) - level 2.
+
+[REMOVED_SECTION_EDUCATION]
+
+ACHIEVEMENTS :
+
+The award is given in recognition of taking up the challenge and
+migration of SOA interface to Mulesoft.
+Awarded first prize for my final year project in the tech fest.
+• API testing & debugging
+• Anypoint Platform
+
+monitoring
+
+• JSON
+
+• XML
+
+• OOPS
+
+• Java Core

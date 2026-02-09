@@ -1,14 +1,137 @@
-KEYSKILLSWORKEXPERIENCE • C++ (11/14/17) and STL • Python • Boost • and Algorithms • Design (HLD/LLD) • Multithreading • NVMe • PCIe (PCI Express) • Socket, TCP/IP, UDP • Embedded Systems • RTOS • Agile Methodology • (Git/) • Travel / Hiking • Volunteering • Meditation AMIT PRAKASH Dynamic and detail-oriented Software Engineer with over 8 years of extensive experience in designing and developing robust software systems. Adept at leveraging the latest technologies and methodologies to create innovative and efficient solutions. Possesses exceptional problem-solving skills and a keen ability to quickly adapt to new challenges. Highly proficient in multiple programming languages and development frameworks, with a strong commitment to continuous learning and improvement
-Staff Engineer San Disk Device Design Centre Pvt. Ltd | 2022 – Present
-• Lead the design, development, and maintenance of robust system software within an Agile Scrum environment.
-• Collaborated with cross-functional teams to collect and analyze requirements for new features and enhancements.
-• Worked closely with architects and implemented scalable and efficient solutions to meet the evolving needs of the system.
-• Conducted code reviews to ensure adherence to coding standards, scalability, and performance benchmarks.
-• Collaborated closely with other team members, product owners, QA, and other stakeholders to deliver high- quality software on time.
-• Identified and resolved software issues and improved performance.
-• Created and maintained documentation for software components and processes.
-• Tech: C++, Python, Multithreading, NVMe, PCIe, Windows Internals, HLD/LLD Software Technologist
-Philips Pvt. Ltd. | 2021 – 2022
-• Designed and executed unit, integration, and system tests to ensure software quality and functionality. • Implemented the use of design patterns and best practices in software development. • Worked closely with product managers, designers, and other stakeholders to align software development with business goals. • Tech: C++, Multithreading, Ultrasound Concepts Senior Engineer L & T Technology Services | 2019 – 2021
-• Developed, and maintain complex, efficient, reusable, and reliable code. • Designed and executed unit, integration, and system tests to ensure software quality and functionality. • Lead a team of developers, providing guidance and direction on projects. • Documented and demonstrated solutions by developing documentation, flowcharts, layouts, diagrams, charts, code comments and clear code. • Tech: C++, Python, Multithreading, Boost Software Engineer Scientific Games Pvt. Ltd.| 2016 – 2019
-• Gathered business and technical requirements for software projects. • Developed, designed, tested, and maintained software, reusable, and reliable code. • Identified and fixed bugs in the software to improve performance and user experience. • Documented and demonstrated solutions by developing documentation, flowcharts, layouts, diagrams, charts, code comments and clear code. • Accomplished engineering and organization mission by completing related results as needed. • Tech: C language, C++, C#. Net, Socket Programming, TCP/IP, UDP Intern Alcatel Lucent Pvt. Ltd. |
+KEYSKILLS
+
+WORKEXPERIENCE
+
+C++ (11/14/17) and STL
+
+Python
+
+Boost
+
+Data Structure and Algorithms
+
+Design (HLD/LLD)
+
+Multithreading
+
+NVMe
+
+PCIe (PCI Express)
+
+Socket, TCP/IP, UDP
+
+Embedded Systems
+
+RTOS
+
+Agile Methodology
+
+(Git/Clear Case)
+
+ACTIVITIESANDINTEREST
+
+Travel / Hiking
+
+Volunteering
+
+Meditation
+
+[REDACTED_PHONE]
+
+[REDACTED_EMAIL]
+
+AMIT
+
+PRAKASH
+
+Dynamic and detail-oriented Software Engineer with over 8
+years of extensive experience in designing and developing
+robust software systems. Adept at leveraging the latest
+technologies and methodologies to create innovative and
+efficient solutions. Possesses exceptional problem-solving skills
+and a keen ability to quickly adapt to new challenges. Highly
+proficient in multiple programming languages and
+development frameworks, with a strong commitment to
+continuous learning and improvement
+Staff Engineer
+San Disk Device Design Centre Pvt. Ltd |
+2022 – Present
+
+Lead the design, development, and maintenance of
+robust system software within an Agile Scrum
+environment.
+
+Collaborated with cross-functional teams to collect and
+analyze requirements for new features and
+enhancements.
+
+Worked closely with architects and implemented
+scalable and efficient solutions to meet the evolving
+needs of the system.
+
+Conducted code reviews to ensure adherence to
+coding standards, scalability, and performance
+benchmarks.
+
+Collaborated closely with other team members, product
+owners, QA, and other stakeholders to deliver highquality software on time.
+
+Identified and resolved software issues and improved
+performance.
+
+Created and maintained documentation for software
+components and processes.
+Tech: C++, Python, Multithreading, NVMe, PCIe,
+Windows Internals, HLD/LLD
+Software Technologist
+Philips Pvt. Ltd. |
+
+Designed and executed unit, integration, and system
+tests to ensure software quality and functionality.
+
+Implemented the use of design patterns and best
+practices in software development.
+
+Worked closely with product managers, designers, and
+other stakeholders to align software development with
+business goals.
+Tech: C++, Multithreading, Ultrasound Concepts
+Senior Engineer
+L & T Technology Services |
+
+Developed, and maintain complex, efficient, reusable,
+and reliable code.
+
+Lead a team of developers, providing guidance and
+direction on projects.
+
+Documented and demonstrated solutions by
+developing documentation, flowcharts, layouts,
+diagrams, charts, code comments and clear code.
+Tech: C++, Python, Multithreading, Boost
+Software Engineer
+Scientific Games Pvt. Ltd.|
+
+Gathered business and technical requirements for
+software projects.
+
+Developed, designed, tested, and maintained software,
+reusable, and reliable code.
+
+Identified and fixed bugs in the software to improve
+performance and user experience.
+
+Documented and demonstrated solutions by
+developing documentation, flowcharts, layouts,
+diagrams, charts, code comments and clear code.
+
+Accomplished engineering and organization mission by
+completing related results as needed.
+Tech: C language, C++, C#. Net, Socket Programming,
+
+TCP/IP, UDP
+
+Intern
+Alcatel Lucent Pvt. Ltd. |
+
+[REMOVED_SECTION_EDUCATION]

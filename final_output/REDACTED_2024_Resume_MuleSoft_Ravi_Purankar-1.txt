@@ -1,0 +1,95 @@
+[NAME]
+
+[REDACTED_EMAIL]
+
+(Mob-[REDACTED_PHONE])
+Title:
+Sr. Consultant. (Capgemini)
+Location:
+Languages:
+English, Marathi, Hindi
+Experience Summary
+
+
+SKILLS
+
+
+
+Functional: Sprint Planning
+
+WORK EXPERIENCE
+
+
+Type of Industry:
+Retail
+
+PROJECTS
+
+Description:
+
+PVH CORP
+
+Role/Title:
+Consultant
+Project Duration:
+Nov 2021 till date
+
+
+Experience in integrating of different systems that includes Data Base, JMS.
+
+Involved in Transformations using Data Weave to transform data from one
+format to another format using Mule ESB.
+
+Involved in creating http inbound & outbound flows and orchestration using
+Mule ESB.
+
+Worked with Mule Soft Anypoint API Platform on designing the RAML for
+implementing REST API's
+
+Implemented RAML files for different entity creations and respective
+associations.
+
+Implemented and used Web Services with the help of WSDL and SOAP to get
+updates from the third parties.
+
+Used Mule soft logger for logging and debugging of the application.
+
+Business requirements analysis by interacting with the Lead/Architect.
+Operating Systems:
+Mule Soft, Anypoint Studio, Anypoint Platform, Bitbucket, Jenkins , Postman, Azure
+explorer, Goanywhere.
+
+WIPRO
+
+Responsibilities:
+
+I have worked as a Mulesoft tech lead where I have developed the rest apis for
+the client consisting of the system layer , process layer and experience layer.
+Followed the coding standards as per the C4E guidelines.
+Operating Systems:
+Mule Soft, Anypoint Studio, Anypoint Platform, Bitbucket, Jenkins , Postman, Azure
+explorer, Go anywhere
+
+Accenture (Feb 2018 – Jun 2021)
+
+
+Description:
+Salesforce Capability
+Role/Title:
+Application Development Analyst
+Project Duration:
+Feb 2018 to June 2021
+Responsibilities:
+
+Developing APIs using Mule Soft.
+Training, Certifications & Affiliations
+
+Mulesoft Certified Developer - Level 1 (MULE 4)
+
+Azure Fundamentals Certification - AZ-900
+
+OIC Application Integration Associate 2019 (1Z0-1042)
+
+Agilist safe 5
+
+Certified Connected Manager

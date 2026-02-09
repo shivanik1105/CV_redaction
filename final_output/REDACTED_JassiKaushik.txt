@@ -1,0 +1,66 @@
+[REDACTED_NAME]
+
+Technical Lead (Android Developer)
+
+[REDACTED_CONTACT_LINE]
+
+
+TECHNICAL SKILLS
+
+
+8.5+ years of experience in Android Mobile application design, development , deployment.
+
+Proficient in Java, Kotlin with expertise in the Kotlin programming language and coroutines for efficient asynchronous
+programming
+
+Experience working with data via REST API, JSON and third-party libraries APIs , Copilot and AI tools
+
+Strong understanding of the full mobile development life cycle.
+
+Knowledge of multithreading and memory management specific to mobile devices , caching mechanisms , offline storage,
+threading, and performance tuning with tools, accessibility.
+
+Well versed with CI/CD principles, and actively involved in solving troubleshooting issues in distributed services ecosystem
+
+Knowledge on MVVM, Clear Architecture, Solid Principles, DI, Firebase, perfetto.,
+
+Best Coding, Security, Unit testing and Documentation standards.
+
+Basic Jackpack compose
+
+Proven ability to handle projects as an individual contributor, application lead, and module lead across various team sizes
+
+4+ years of experience in team management.
+
+Initiated user engagement strategies, fostering innovation through iterative feedback and user-centric design principles.
+
+EXPERIENCE
+
+Paytm
+Aug 2017-Present
+Technical Lead
+
+Lead a team of 4 Senior Software Engineers, managing Scan & Pay and COMS module with over 65 millions monthly active
+Android users
+
+Developed several features from ground up, including UPI Push, UPI Lite, UPI TRAP, Postpaid, EMI and Coms SDK.
+
+Implemented Clean architecture for multiple modules, achieving a unit test coverage of 80% .
+
+Collaborated with cross-functional teams to deliver high-quality solutions for high-traffic users within project deadlines
+
+Optimized QR detection to Payment Flow page and successfully reduced time by 80% .
+
+Also successfully delivered Paytm First, Deals, Loyalty , Quick Payments, Enhance GA Handling.
+Craterzone
+June 2015 - Aug 2017
+Software Engineer
+Homesmart : Created UI components for mobile interface, implemented socket connections, maintained backend API,
+developed firmware files, and communicated with clients.
+Teenguard : Managed Agent functionality, UI for Client Feeds feature, API integration, tracking, and database management.
+
+Join8 for Customer : Managed UI components, API calls, and backend system maintenance.
+
+Interacting with Clients to gather requirements.
+
+[REMOVED_SECTION_EDUCATION]

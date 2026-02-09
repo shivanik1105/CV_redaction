@@ -1,0 +1,442 @@
+[NAME]
+
+AI/ML Engineer
+Experienced AI/ML Engineer with over 6 years of full-stack AI/ML solution development, specializing in Large Language Models (LLM),
+Generative AI, and GPT. Proficient in integrating state-of-the-art research into practical AI architectures successfully implemented
+LLM and Generative AI products in media and entertainment sectors. My leadership skills are demonstrated through guiding a team
+of five in AI/ML innovations, fostering a culture of continuous learning and innovation
+
+
+SUMMARY
+
+
+END-TO-END AI/ML SOLUTIONS: Demonstrated proficiency in full-stack AI/ML development, with a comprehensive
+background in LLM, Generative AI, Computer Vision, NLP, MLOps, and data engineering , leading to the delivery of robust
+AI products and actionable solutions for complex business challenges.
+STRATEGIC AI LEADERSHIP: As a team leader and mentor, guided AI/ML teams in developing and executing visionary AI
+strategies aligned with company goals. This includes managing vendor relations, heading project teams, and fostering a
+culture of continuous innovation and learning.
+AI RESEARCH AND DEVELOPMENT : Adapted cutting-edge research into practical applications, significantly enhancing AI
+architectures for business use cases. Notably authored award-winning research papers on digital governance and
+developed predictive models for e-governance, earning recognition in national reports.
+Diverse AI Framework Proficiency: Showcased versatility across multiple AI platforms and tools, including Tensor Flow,
+Py Torch, Fast API, and various cloud services . This also encompasses the deployment of machine learning models, leveraging
+Docker, Kubeflow, and MLflow, and optimizing infrastructure for scalability .
+
+AI/ML SKILLS
+
+✓
+Llama Index , RAG,
+Langchain, Vector
+store
+✓
+Tensorflow,
+TFlite & JS ,
+Pytorch
+✓
+Gen AI , LLM , Vision
+Tranformers ,
+Speech Models
+✓
+Opencv , Cuda
+✓
+Airflow, DAG,
+Pyspark
+✓
+MLops, Dockering,
+Kubeflow, MLFLow
+✓
+Knowledge of statistical
+methods, Transfer
+Learning
+
+
+PROFESSIONAL EXPERIENCE
+
+
+Asianet News Media & Entertainment, – Lead AI (June 2023 – Present)
+Roles & Responsibility:
+✓
+Versioning
+control in Gitlab
+& Git Hub
+✓
+Deployment of POC in Jetson
+nano, Pi devices
+✓
+Gradio, Fast API,
+Flask
+❖ Drive the AI/ML vision and strategy to bring the Seed funders , Investors for New Initiatives and R & D devlopments
+❖ Developing Finetuned custom LLM and Multimodal by training cleaned 25 yrs of Proprietary Video data
+❖ Oversee the design, development, and deployment of machine learning models cycle and Architecting for cloud
+deployments and sole responsible for deliverables
+❖ Cost Optimizing and Server Sizing for the AI ML applications and Gap analysis .
+❖ Heading 5 members of team , Mentor and guide the AI/ML team, fostering a culture of continuous learning and
+innovation. Recruit and retain top AI/ML talent.
+
+PROJECTS
+
+Asianxt Shorts – SVP (Founding Member)
+AI centric UGC app featured with Multilingual Audio conversation , text to video , AI noise removal & BGM with personalized
+content .
+✓
+Leading tech capabilities for the product and contributing to cross-functional teams and Analysis market fit.
+✓
+Engaging with academia and startups for ideation and solution development.
+✓
+Designed system architecture for AI workflows and established a cloud-based pipeline from scratch.
+✓
+Implemented agents in the pipeline to enhance RAG, optimize token usage, and reduce costs, while fine-tuning LLM models for business use cases and
+training on internal data to summarize regional content.
+Phn No
+
+: [REDACTED_PHONE]
+
+Email id
+
+: [REDACTED_EMAIL]
+
+[REDACTED_CONTACT_LINE]
+
+: [REDACTED_SOCIAL]
+
+✓
+Deep Knowledge on
+Object Deduction &
+Segmentation Models.
+✓
+AWS, GCP, Azure
+✓
+Pydantic , OOPS
+✓
+Tableau , SQL , Nosql
+✓
+LSTM, Attention &
+BERT, Transformer
+Models
+Varunsaagar Saravanan
+AI/ML Engineer
+Experienced AI/ML Engineer with over 6 years of full-stack AI/ML solution development, specializing in Large Language Models (LLM),
+Generative AI, and GPT. Proficient in integrating state-of-the-art research into practical AI architectures successfully implemented
+LLM and Generative AI products in media and entertainment sectors. My leadership skills are demonstrated through guiding a team
+of five in AI/ML innovations, fostering a culture of continuous learning and innovation
+
+✓
+Deep Knowledge on
+Object Deduction &
+Segmentation Models.
+✓
+AWS, GCP, Azure
+✓
+Pydantic , OOPS
+✓
+Tableau , SQL , Nosql
+✓
+LSTM, Attention &
+BERT, Transformer
+Models
+Models Used : Vi T, CLIP, Demcus , Mistral – 7b , SDXL , Indic2Trans , Knowledge Distillation , Fast Decoder , RVC , SEGAnything
+Frameworks – Chroma DB , Langchain , Llama Index, Pytorch , Route LLM
+Prompts to AI Anchor Video in regional language(CMS).
+LLM prompts to generate AI-driven video anchors that deliver news in regional languages. This project aims to revolutionize local
+news broadcasting.
+✓
+Multimodal GAN with Various Components: with Diff Talk , Real Gan , Bark , Sad Talker using pretrained weights .
+✓
+Fine-tuning/training Models( by following Lo Ra, QLora , PEFT, DPO techniques) for custom data. Controlling the Hallucinations and Improving the
+Reasoning /Knowledge of Data & Models via RAG + Langsmith Piplines.
+Models / Frameworks: Huggingface, Wav2lip , Bark, Lora , Real GAN , Crew AI , SD , Speech Diarization, TTS, Voice Clonning
+News based LLM and Contextual Machine Translation Models
+Expanding the Gemma 2b model's capabilities. Enhanced text generation by integrating an extended Kannada, Malayalam token
+set and employing efficient training methods.
+✓
+Enriched Gemma 2b model with 32,000 additional Malayalam, Kannada tokens with Culture X, Oscar data and Propertiy dataset
+✓
+Utilized Lo RA for effective fine-tuning on language datasets. Showcased improvements in reasoning and translation tasks with instruction fine tuning.
+Models Used : Flash attention, Unsloth , Graph RAG , Ragas , Pretraining , Sentence Piece Embeddings , Qdrant , Transformers
+Zee Entertainments, – SDE III / AI ML Engineer
+
+(May 2022 – June 2023)
+Roles & Responsibility
+❖ Generate Guest users and Uplift the Subscriptions by developing and implementing recommendation models in Zee5
+platform.
+❖ Increase Retention and reduce the churn users by implementing Life time value models .
+❖ Bringing new AI ML initiatives from Performance marketing team and implement personalised Ads across the social media.
+❖ Responsible for backend API deployed models and monitoring the metrics for live model.
+❖ Closely work with business and enhance personalized Cleaver tap notification using ARIMA Models.
+❖ Creating Tableau Dashboards for Business team and Reco API to metrics daily.
+❖ Work with cross functionally with Backend , Front end team to flawlessly implement CI/CD pipelines , DAGs , integrate the
+models on time.
+
+PROJECTS
+
+
+[REMOVED_SECTION_PERSONAL]
+
+✓ Developed a sub models content based and collaborative model , auto encoder , Bandit Reinforcement to increase the Likelihood Recommendation to
+power the inputs for PVR model.
+✓ Created a Fastapi for inferencing with a highly optimum low latency inferencing time because model optimized with Tensorflow lite which is 5mb .
+✓ Entire Architect is Developed on MLFlow dynamic in vertex ai , which is scheduled via airflow day at daily frequency .
+✓ Constructed a data pipeline and standardised a dataset by Py Spark and Big Query for inferencing.
+Platforms and frameworks I have worked with :
+✓ Multilabel Multiclassification has been developed and service runs on demand at metric of 5 percentage increase in effective catalogue.
+✓ Created an auto thumbnail generative api tool powered by KNN and Opencv which generates 1080p thubmnails .
+✓ On top of the generated thumbnail genre , blur , person deduction been predicted using transfer learning and computer vison techniques , Models has
+been developed which also generates the various metadata using Tensor Flow .
+✓ Parallelly developed a user cohort cluster which has taste and other feature. Mapped those AI generated thumbnail to user cohorts which associated with
+genre level personalization .
+Zee Entertainments, – SDE III / AI ML Engineer
+
+Roles & Responsibility
+❖
+Ideating department/government use cases and convert them into a well-defined key problem statement to End to end scalable AI solution followed by
+Prototyping, Testing and Productization. – including analysis, planning, model, design, develop, code, test, debug, documentation .
+❖
+Leading and handling the critical deliverables, benchmarking solutions, driving Key Metrics and ensuring projects are usable to state peoples.
+❖
+Collecting datasets required to develop predictive models for solving government problem statements.
+❖
+Developing Computer vision models , Natural Language Neural networks/Models and predictive algorithms to derive insights and business value from
+data.
+❖
+Making model as api service using Django , Flask , Fastapi as deployable solution in web application and mobile solution.
+❖
+Maintaining TESLA GPU Servers and whole organization project code in GITLAB . Automating the backup service with cronjob in servers.
+
+PROJECTS
+
+Epaarvai – AI Cataract deduction application
+An AI intelligent Android mobile application to provide immediate screening for cataract on an individual’s eyes and if found
+positive for cataract then share the details with the district and the state authorities.
+✓ Architected and Developed in the AWS server and Dockized the entire AI Stack , Backend with Lightweight Prediction services using fastapi framework
+and provides production-ready code and contributed in integration with flutter app
+✓ Created Entire training dataset was from scratch and developed standard operating procedures (So Ps) for collecting the dataset from over 700+ patient .
+Created a labelling platorm and annotated the datasets.
+✓ Combined a state of art AI Models like on CSPDarknet53, SPP, PANnet, and YOLOv3 . The model is Prediction is 98.5% Accuracy sensitive.
+Platforms and frameworks I have worked with :
+• Deployment tools &
+
+:
+AWS , Docker, DVC , Mlflow, Kubeflow.
+• Build
+
+:
+Cmake, Cuda
+services
+• Frameworks
+
+:
+Pytorch, Django, Ngnix , Fastapi , gunicorn
+• Database
+
+:
+Postgre SQL.
+• Languages
+
+:
+Python, HTML , Flutter , React JS
+Impact:
+The E-Paarvai app is currently being used by the State Control Blindness Society (TNSBCS) and the solution has been
+rolled out to more than 32+ districts and have screened more than 20000+ patients in the various rural areas of .
+Platforms and frameworks I have worked with :
+• Deployment tools & services
+
+:
+GCP , Docker, Airflow , Mlflow, Vertexai , Vision api
+• Frameworks/Libraries
+
+:
+Tensorflow, TFlite, Fastapi , gunicorn, opencv , keras , CCP , Cupy , Cuda
+• Languages
+
+:
+Python, CCP , Sql , Pyspark , bashscript , ymal
+Impact:
+Impression and Click rate has been increased to 72 percent which helps in User conversion and engagement.
+LTV Model and Performance model
+Scope of the model to predict the customer life cycle and ad spend value for customer which is decision driven metrics to user level.
+✓ CLTV estimation, Used regression based ensembled and estimators model , which benefit from the weak learners’ ability to cancel out their erroneous
+estimations.
+✓ Datapipline been pre-processed , encoded at low float level with high features and own evaluation metric been formulated.
+✓ Using the predicted cluster the personalised ad will be been rolled by performance marketing team and same data will be used for PVR models .
+✓ Developed a confidence prediction model for Ad campaigns which helps to spend high value on those has good score.
+Platforms and frameworks I have worked with :
+• Deployment tools & services
+
+:
+Sklearn , Pandas , numpy , bigquery
+• Languages
+
+:
+Python, CCP , Sql , Pyspark , bashscript , ymal
+Impact:
+Helps in Segment targeting and trigger targeting for Showing ads to groups of users with consideration certain set of attributes.
+Ad Bid Optimization
+Realtime bidding model to predict the price for the ads that’s published in social medias .
+✓ Using reinforcement learning Markov Decision Process (MDP) and model shall generates data per hour of the impressions performed during the real-time
+bidding in Po C . is powed by ADS Data hub which is large data Platform f and reduce 30% money in spending ads by decreasing the noise on non valuable
+ads in real time.
+
+:
+Python, HTML , Flutter , React JS
+Impact:
+The E-Paarvai app is currently being used by the State Control Blindness Society (TNSBCS) and the solution has been
+rolled out to more than 32+ districts and have screened more than 20000+ patients in the various rural areas of .
+Awards & Recognitions : - e Paarvai - AI Cataract Application
+✓ The innovation had a huge social impact won the Nasscom AI Gamechangers Award in 2021 as one of the best innovations
+in AI!
+✓ 75@75 's AI Journey report published by Digital in that our project secured place in top 3 .
+Uzhavan Predicto r – Pest and Disease detection & Recommendation System
+An AI intelligent solution to provide crop diagnosis and recommendation for fertilizers by identifying the pest & disease which has
+affected crop and sending the remedial measures using the photo.
+✓ Architected and Developed the End to End entire ML and CV Solution , Created a Flask api point for Web application stack and rendered the webpage to
+display the results.
+✓ Build a model, which can classify between healthy and diseased crop leaves and also if the crop have any disease, predict which disease is it.
+✓ Used a Res Net – 50 Model , results AI Prediction of 95.5% Accuracy sensitive measured using Classification Reports, Confusion Matrix, AUC Score. More
+than 20+ variety of crop classes are integrated.
+✓ Developed helper functions like data loaders been used and Data augmentation are followed for better outcomes.
+✓ Build various ML Algorithms – Decision Tree , Guassian Naïve Bayes , SVM , Logistic Regression , Random Forest , XGBoos t and compared the accuracy
+using TF Board . Best model is Served as the pickle file .
+✓ Performed a various pre-processing techniques for cleaning data cleansing .
+Platforms and frameworks I have worked with :
+• Deployment tools &
+
+:
+Flask , TF executor, TF jobs, TF Serving ,
+
+DVC .
+
+services
+• Frameworks
+
+:
+Pytorch, Fastai , uvicorn , nginx
+• Database
+
+:
+Mysql.
+• Languages
+
+:
+Python, HTML
+Impact:
+With No of cost farmers can find the
+Awards & Recognitions: - Uzhavan Recomendation system | Uzhavan Pest Deduction
+75@75 's AI Journey report published by Digital in that our project secured place in top 15.
+Facial Recognition System (Android & Edge Device )– For Schools , Rehabilitation (Refugees)
+& Medical institutes
+Developed a scalable and easy deployable android monitoring system for the migrants for identity tracking with their
+Geolocation.
+✓ Architected Centralized face attendance system, pipelined the stack , introduced ERP features in the Web dashboard .
+✓ Developed the Android Based Inference for Face recognition using TFlite , Opencv for Java , Camera X.
+
+Indian faces.
+✓ Training of user data will occur locally in the android device without any GPU dependencies separately for each users takes only 30s for creating the model
+/ embeddings.
+✓ Manually integrate PI 4 – Equipped with the camera and necessity components to the servers and train the users .
+Platforms and frameworks I have worked with :
+• Deployment tools &
+
+:
+Docker , Bash scripting , DVC ,
+PI 4 , Jetson Nano , Ubuntu servers,
+
+XAMP.
+
+:
+TFlite , Opencv Java , Django,
+Android Firebase
+• Inference
+
+:
+Android Camera X,
+PI Inferance
+• Languages
+
+:
+Python, HTML , Angular JS , PHP,
+Bash script
+Impact:
+The technology is currently being used by the Government Premise for monitoring the contactless attendance and for
+schools tracking the illiteracy count of the students over period.
+Awards & Recognitions - FRAS -AI Solution
+75@75 's AI Journey report published by Digital in that our project secured place in top 15.
+ASHOKLEYLAND - INDIAN DEFENCE SYSTEM , Hosur - Jr. NPD ENGINEER
+(May 2018 – Oct 2020 )
+✓ Developed a IOT based object deduction for Parts Inwarding store using SSD and Kalman filter to extract the part number.
+✓ Used google coral device to process high speed image recognition as input external device
+• Libraries
+
+:
+Scikit-learn , Pandas , Numpy
+, Seaborn, matplotlib
+Used
+• Libraries
+
+:
+Opencv, Dlib , Sckitlearn
+, Mlflow
+Used
+• Database
+
+:
+My SQL, SQLlite
+✓ Create and maintain optimal data pipeline architecture, assemble large data that meet functional / non-functional business
+requirements.
+✓ Identify, design, and implement internal process improvements: automating manual processes, optimizing data delivery,
+re-designing infrastructure for greater scalability.
+Libraries Worked with : Pandas, Tensor Flow , TF IDF, Opencv , Scikit-learn, TQDM
+Skillset : K-NN, Logistic Regression Classifier, Clustering, Transfer Learning, Resnet , VGG 18
+Responsibilities
+• Data labelling
+• Backend API Creation
+• Data Augmentation
+• Ensuring SQL Server
+• Deployment of models
+• Monitoring model
+• FMEA discussion
+• CFT Member
+• Achieving KRA / KPI monitoring
+
+Research Experience
+24 th National Conference on e Governance, Central Gov – Author/ Researcher
+(Jan 2022 )
+Awarding winning research paper from TN State government in theme of “ 's Techade: Digital Governance in a Post Pandamic
+World”
+✓ The architecture is based on the object detection algorithm that divides images into a grid system.
+✓ A deeper design gives tenfold improved expressive potential as compared to standard shallow models
+✓ The network has 16 convolutional (conv) layers, 2 up sampling layers, 4 concat layers, and a soft max classification layer,
+and can be optimised on an objective function.
+University of Brunei Darussalam, Brunei, NLP Research assistant
+
+(Dec 2020 –Feb 2021)
+✓ Developed a time series model as a proof of concept to recognize patterns using RNN for stock market. Proposed a
+methodology to solve the inadequate data problem of knowledgebase for Goal Oriented Accuracy, using transfer learning,
+attention mechanism and improved the performance by 10-15% .
+
+(Jan 2024 – Present)
+Bridging the gap between industry and academia by suggesting the syllabus. Also conducting Faculty Development
+Programs with professors and workshops for students.
+
+(Dec 2019 – Present)
+Teaches the students /aspirants for Building their career Field of AI/ML. Helped 40+ peoples for transiting into this tech.
+
+[REMOVED_SECTION_EDUCATION]
+
+B. E Automobile Engineering
+Hindusthan college of engineering &
+Technology, Coimbatore
+
+7.78(CGPA )
+
+HSC
+
+Cheran Higher secondary school, Karur
+
+82.25%
+
+SSLC
+
+80.25%
+
+(VARUNSAAGAR. S)

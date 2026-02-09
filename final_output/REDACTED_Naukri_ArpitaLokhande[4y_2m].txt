@@ -1,0 +1,80 @@
+[REDACTED_NAME]
+
+MuleSoft Developer at NTT Data
+
+[REDACTED_CONTACT_LINE]
+
+Location -
+
+OBJECTIVE
+
+Result-driven Mulesoft Certified Developer with 4.1 years of working experience in
+designing and developing integration solutions. Proficient in Anypoint Platform, Agile
+Methodologies and API-led Connectivity. Seeking a challenging role where I can
+contribute to organization’s and self growth.
+
+SKILLS
+
+MuleSoft ESB, Anypoint Platform, API Management, API development, Cloudhub
+Deployment, HTML, RAML, Java, Git, Maven, JSON, XML, SQL
+MuleSoft Connectors:
+Salesforce, HTTP, Database, SFTP, Anypoint MQ, VM, Object Store, EMail, Cloudhub
+Connector, Validation, SAP, Encryption, Secure Properties, Servicenow, Netsuite
+Certifications and Achievements:
+• MuleSoft Certified Developer
+Level-2
+• MuleSoft Certified Developer
+Level-1
+• MuleSoft Integration Associate
+• Salesforce Certified Associate
+• Star Performer of the Quarter
+Award
+• Apisero Vendustrious Award
+• Apisero Ace, Raving Reviews
+Awards
+• Apisero Wall of Fame
+
+PROFESSIONAL EXPERIENCE
+
+• Digital Engineering - Senior Engineer (MuleSoft)
+
+NTT Data North America (Aug 2020 - Present)
+• Working as a Senior Mulesoft Consultant for an Entertainment Events
+
+Provider. Integrating
+other systems
+• Working for a Health and Nutrition Customer with Involvement in design and
+
+implementation of APIs providing Bi-directional sync between SAP, Master
+Control, EMaint and other systems.
+• Experience in working with clients from the Health Sector, Finance and E-commerce domain.
+• Experience on managing APIs using API Platform utilities such as API
+
+Manager, Runtime Manager, Anypoint Exchange, Anypoint MQ, Anypoint
+Monitoring. API specifications and RAML/OAS design using Design Center.
+• Experience in building complex Mule Flows, Scopes, Error Handling
+
+Strategies, Message Filters, Validation, Transformation using Dataweave,
+Message Enricher and Flow Controls.
+• Hands-on experience on Munits Test Case creation and Unit Testing using
+
+Postman.
+• Good exposure in working on Continuous Integration and Deployment using
+
+CI/CD tools such as Maven, Azure Devops, Jenkins.
+• Experience in working with Git, Gitlab, Jira, Bitbucket.
+• Excellent experience in Software Development Life Cycle(SDLC) including
+
+Requirement Analysis, Design, Development and Testing of applications.
+• Involved in the discussions related to understanding the client requirements,
+
+business logic and proposing the real time solutions.
+• Experience in handling a team of 2-3 junior co-workers and guiding them
+
+during development phases.
+• Strong team player. Experience in working with different teams
+
+[REMOVED_SECTION_EDUCATION]
+
+• Bachelors of Computer Engineering
+• Higher Secondary School

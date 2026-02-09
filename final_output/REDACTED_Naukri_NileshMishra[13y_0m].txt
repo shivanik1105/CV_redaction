@@ -1,0 +1,121 @@
+[REDACTED_NAME]
+
+Lead Data Scientist – Here Technologies
+Male
+
+[REDACTED_CONTACT_LINE]
+
+Cell no .: [REDACTED_PHONE]
+
+I am eager to contribute to this revolution of automation, machine learning and data analytics domain. with
+around 13 years of experience in Information Technology sector and 9 years in data analysis, machine
+learning and deep learning domain, as well as team leadership and project/program management
+experience, and demonstrable communication skills, I have much to offer.
+Employment Experience:
+Ø Here Technologies, : From Aug 2023
+Ø Ubisoft Entertainment Pvt. Ltd, : From Jun’2018 to Aug 2023
+Ø Reliance Jio Media Pvt. Ltd, : From Aug’2015 to Jun’2018
+Ø NIIT Technologies, : From Sep’2014 to Aug’2015.
+Ø Hungama Digital Media Pvt. Ltd, : From Mar’2013 to Sep’2014.
+Ø Cynosure, : From Aug’2011 to Mar’2013.
+
+[REMOVED_SECTION_EDUCATION]
+
+Bachelor of Engineering Information Technology University
+Engineering
+Technical Skill Set:
+Programming languages/Technology Python, Big Data Analytics, Machine | Deep Learning,
+Computer Vision, NLP, AWS, HDFS, Scala, Apache Spark, MySQL, Cassandra, PHP, HTML, CSS, JavaScript.
+Database MySQL, Cassandra, Hive
+Technical Skills Python (NumPy, OpenCV, pandas, scikit-learn, nltk)
+Machine Learning Convolutional Neural Networks, TensorFlow | Keras,
+Reinforcement Learning, Computer Vision | OpenCV, NLP
+Year
+2014-2016
+2007-2011
+
+[PAGE_NUMBER]
+
+Project’s Experience:
+1# HERE Indoor Map Portal – Indoor maps generation
+Development and implementation of automation pipeline for Here indoor map portal for efficient indoor map
+navigation. The process utilized Lidar/imagery and point cloud data as input to generate precise indoor maps for
+various garages.
+Technologies/Tools: Python, AWS, DBSCAN, Deep Learning, Computer Vision | OpenCV, NumPy
+Role and Responsibilities:
+Involved in development and maintenance of pipelines for various services: point cloud down sampling, point
+cloud-processing, parking spot detection and ramp detection.
+2# Self-Driving Car / Automated Navigation of car and Bug Detection in an official Ubisoft game using
+Artificial Intelligence, Evolution strategy, Deep Learning and Computer Vision
+Designed and implemented self-driving car in an official game in Ubisoft. this project involved complete design
+& functionality analysis and at the same time assuring its quality using automation testing with AI self-driving
+agent trained on game environment and perform desired task without manual intervention.
+Technologies/Tools: Python, Evolution Strategy, DBSCAN, Deep Learning, Computer Vision | OpenCV, NumPy,
+TensorFlow | Keras, ELK Stack
+Role and Responsibilities:
+Ø Trained and generated a segmentation model for prediction of road detection using deep
+neural network and achieved 97% accuracy on hold-out test data set.
+Ø Implemented and trained multiple agents using CNN for on-road navigation and traverse
+between multiple points in the map without any manual intervention.
+Ø Trained and generated segmentation model to identify obstacle on-road as well as off-road and
+implemented feature detection for real time object detection and avoid collision and successfully
+traverse across open world navigation and drive between multiple checkpoints/co- ordinates in the
+map.
+Ø Identification and detection of defects in real time using DBSCAN Clustering.
+Ø Captured videos and logs and build Reporting Tool to do analysis of data using Elasticsearch,
+Logstash and Kibana
+3# Big Data Analysis and Data Science Solution for Jio Mobile Apps
+Involved in innovative mobile app product development and integration of mobile apps and conducting basic data
+& competitive analysis.
+Environment: Big Data Analytics, HDFS, Apache Spark, Machine-Learning, Python, Scala, Hive, PHP, MYSQL,
+Cassandra, JSON, XML, Android, iPhone.
+Role and Responsibilities:
+Ø Involved in implementation of high volume transactional mobile services used by 10M+
+customers using Spark and HDFS.
+Ø Designed and implemented Spark Jobs.
+Ø Analysis of users’ events and application and content downloaded, and time spent details.
+Ø Recognizing the themes and topics of the articles and Auto-summarizing text using K-Means and KNearest Neighbors.
+4# Sentiment Analysis & Intent Classification on Player’s Survey
+Analyze Customer survey free text response and Identify themes/groupings and report on players sentiment
+
+i.e., Intent Classification & Sentiment analysis of customer and display daily/weekly or monthly trends in
+dashboard charts.
+Environment: Python, Transformers, Rasa NLU, ELK Stack
+Role and Responsibilities:
+Ø Involved in Design, Development, Management, Maintenance, Testing of CRC project.
+Ø Involved in building pipeline for deployment and display daily/weekly/monthly status in
+dashboard charts in Kibana using ELK Stack
+5# AI based Video Content Moderation System
+AI based video content moderation system that accepts or rejects video automatically if child is alone in video i.e.,
+Identifying Child and Adult in a Video
+Environment: Python, Deep Learning, TensorFlow, OpenCV
+Role and Responsibilities:
+Ø Involved in Development, Management, Maintenance, Testing of Content Moderation project.
+Ø Data Preprocessing and Training Deep Learning model - Face detection and Age Detection to
+classify whether child and adult in the video or not.
+6# Duplicate Bug Analyzer
+AI based Duplicate bug analyzer that identifies if Jira bug is duplicate or reopened or closed.
+Environment: Python, Transformer, Pytorch, ELK stack
+Role and Responsibilities:
+Ø Involved in training and building pipeline for deployment and display
+daily/weekly/monthly status in dashboard charts in Kibana using ELK Stack.
+7# Text Accessibility Tool
+Text Accessibility Tool provides information like height of words in text, count of characters and lines of subtitle,
+sentence etc. Additionally, they also wanted to identify the contrast ratio of different foreground text and
+background colors in an image and validate WCAG standards.
+Environment: Python, Tesseract-OCR, PyQT5
+Role and Responsibilities:
+Ø Involved in Management, Development, Maintenance and Testing of the Tool
+8# Text-to-Speech Automation Tool
+Amazon Polly implementation to generate audio dialog files from text.
+Environment: Python, AWS, Amazon Polly, PySimpleGUI
+Role and Responsibilities:
+Ø Involved in Management, Development, Maintenance and Testing of the Tool
+9# Face Recognition System
+Implementation of facial recognition using OpenCV, Python and deep learning and perform face detection, extract
+face embeddings from each face using deep learning, and train a face recognition model on the embeddings and
+recognize faces in both images and video streams.
+Environment: Python, Deep Learning, Computer Vision | OpenCV, Random Forest
+Role and Responsibilities:
+Ø Trained a face recognition model using open face model and detected faces of both known and
+unknowns faces in both images and video streams and trained Random Forest to recognize person.

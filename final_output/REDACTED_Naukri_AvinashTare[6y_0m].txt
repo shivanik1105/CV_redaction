@@ -1,0 +1,95 @@
+[REDACTED_NAME]
+
+[REDACTED_EMAIL]
+
+[REDACTED_PHONE]
+
+Total work experience
+6 Years 4 Months
+
+KEYSKILLS
+
+Windows
+Oracle SQL
+Linux Server
+Windows Server
+AutoSys
+Linux
+
+UNIX
+
+SOAP UI
+
+WebLogic
+Servicenow
+WinSCP
+Swift Payments
+BMC Remedy
+JIRA Tool
+
+EFT
+
+RTGS
+
+Experience in Banking Domain For EFTS , Rtgs, Biller Payments,
+ECheque , WPS, Mi-revenue , Atm charging, Basel & IFRS reporting
+, Dcms Application Support, Base24, worked as Technical Application
+Engineer & work on both platforms Windows & Linux. Database - Sql
+server , Oracle Database. Soap Ui , Webabi, IIS, Automation , Autosys .
+
+[REMOVED_SECTION_EDUCATION]
+
+WORKEXPERIENCE
+
+Dec 2023 - Application Support Engineer
+Present
+Unity Infotech
+Currently Working from last 6 Months in Unity
+infotech for the Client Kuwait finance house in Bahrain
+Manama Location in Banking domain as Application
+support Engineer and development For the
+application EFTS , RTGS, WPS, E-cheque , Biller, IBan
+pro .
+May 2023 - Dec Deputy Manager
+
+HDFC Bank
+Worked on Scs Mi Revenue application, Monthly run
+, Batch Processing , Batch Monitoring, Datapatch, Data
+Extraction, Autosys, Service Now, Change
+Management
+
+[REMOVED_SECTION_PERSONAL]
+
+Worked on Basel & IFRS Application as IT Consultant
+in HDFC Bank as a Client .
+Financial Reporting Application For Bahrain and GCC
+Jan 2021 - Jul Production Support Executive
+
+Netbusiness solutions Pvt Ltd
+Worked as a Production support Engineer in IDFC
+First Bank Client For the Debit card Management
+Project.
+May 2018 - Dec Technical Support Engineer
+
+Experience in Dcms Application Support, Base24, uat
+server, connect-24 of aix server, implementation
+& development of script using Unix &Oracle(SQL).
+Currently working as Technical Associate Engineer &
+work on both platforms Windows & Linux. Database
+skills , Dcms Maintenance & support knowledge.
+
+PROJECTS
+
+1241 Days Debit Card Management System
+Production Support For Debit Card Management
+System .
+945 Days Debit Card Management System
+Current experience in Dcms Application
+Support, Base24. Currently working as Technical
+Associate Engineer & work on both platforms
+Windows & Linux. Database skills , Dcms Maintenance
+& support knowledge.
+
+COURSES & CERTIFICATIONS
+
+Java Certification

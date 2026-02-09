@@ -1,0 +1,178 @@
+[NAME]
+
+: [REDACTED_PHONE]
+
+[REDACTED_CONTACT_LINE]
+
+CAREER OBJECTIVE:
+
+To reach the most impeccable heights in software industry as a Software Engineer updating
+my knowledge and skill set forever.
+
+PROFESSIONAL SUMMARY:
+
+➢ 4.7 years of experience in all aspects of Design and Development of applications using
+Dot Net Core, ASP. NET MVC, WEB API, ASP. NET, C#. NET, Dot Net Core, SQL Server 2018,
+Java Script, JQuery with hands - on a multiple projects and products.
+➢ Good Knowledge of OOPs, SOLID Principle and Design Patterns.
+➢ Having experience in financial significant application.
+➢ Experience in Share Point Product Development, Application Development, Document
+Management System and Migration projects.
+➢ Experience in Share Point Client-Side Object Model (CSOM) development.
+➢ Strong skills in planning and executing the functionality of different application layers.
+➢ Core technology focused areas include ASP. NET MVC, Entity Framework, WEBAPI, . Net
+Framework, C# and SQL. During Service development Work with tools like Fiddler, Postman.
+➢ Highly motivated to take on responsibilities, an active team player and able to
+contribute Efficiently.
+➢ Having experience application support and functionality enhancement.
+
+
+WORK EXPERIENCE
+
+
+➢ Working as a Sr. Software Engineer at Yash Technologies from May 2022.
+➢ Working as a Software Engineer at Square Vision Technologies from Dec 2019 to May 2022.
+
+
+TECHNICAL SKILLS
+
+
+➢ Languages: OOPS, C#( C Sharp).
+➢ Web Technologies: ASP. NET, ADO. NET, ASP. NET MVC , LINQ, Entity Framework,
+HTML, CSS, WEB API, Ajax, . Net Core.
+➢ Data Base and Tools: SQL Server 2018, Postman tool.
+➢ Scripting Languages: Java Script, JQuery.
+➢ Dev. Environments: Visual Studio 2019/2022.
+➢ Standard Guidelines: SOLID Principles, Design Patterns.
+
+[REMOVED_SECTION_EDUCATION]
+
+Responsibilities:
+#Project 2:
+Project Title - Emirates Global Aluminium
+Front End: Angular
+Technologies: C#, Azure Dev Ops
+Duration: Oct 2022 to Feb 2023
+Role: Developer
+Description:
+Responsibilities:
+• Worked on timer jobs in c#.
+• Create APIs to call timer jobs from front-end
+• Worked on Document download from Share Point using c#.
+
+Caterpillar Account Reconciliation Tool in which user enter the monthly closing balance and
+comparing this balance with different account entry balance, on that base report generate by user for
+specific account.
+Caterpillar Account Entry System in which users enter the account balance through globe and
+application process the data through different approval filtration after that finally archive activity
+perform.
+• Requirement estimate the user stories requirement.
+• Create technical design.
+• Code development.
+• Publishing changes in different environment.
+• Responsible for bug fixes and enhancement in application as per business requirement.
+• Responsible for Deployment of User stories in multiple environments
+• Interaction with client for closing period and performing other enhancement activity.
+• Debugging, fixing bugs reported and working on continuous enhancements.
+
+Share Point applications which are still On-Premises and are required to move to Cloud (Policies and Procedures, Capital Project Vendor System, EHS Contractor Site) (My EGA to SPO365). Along with
+Integration Server and related services related detailed solution features and system functionality
+required for the current engagement.
+
+WORK HISTORY – PROJECTS:
+
+#Project 1:
+Project Title - Caterpillar Inc .
+Front End: HTML, CSS
+Technologies: C#, ASP. Net Core, Java Script.
+Database: SQL Server 2018
+Duration: April 2023 to March 2024
+Role: Developer
+Description:
+Responsibilities:
+#Project 2:
+Project Title - Emirates Global Aluminium
+Front End: Angular
+Technologies: C#, Azure Dev Ops
+Duration: Oct 2022 to Feb 2023
+Role: Developer
+Description:
+Responsibilities:
+• Worked on timer jobs in c#.
+• Create APIs to call timer jobs from front-end
+• Worked on Document download from Share Point using c#.
+
+Share Point applications which are still On-Premises and are required to move to Cloud (Policies and Procedures, Capital Project Vendor System, EHS Contractor Site) (My EGA to SPO365). Along with
+Integration Server and related services related detailed solution features and system functionality
+required for the current engagement.
+#Project 3:
+Project Title - CIMS (COLLEGE INTERVIEW MANAGEMENT SYSTEM).
+Front End: HTML, CSS, JQuery.
+Technologies: C#, MVC 5, Web API 2, Entity Framework, Java Script.
+Database: SQL Server 2014
+Duration: March 2021 to May 2022
+Role: Developer
+Description:
+Responsibilities:
+Project Title - Cosmetic Health Insure .
+Front End: HTML, CSS, JQuery.
+Technologies: C#, MVC, Web API, Entity Framework, Java Script.
+Database: SQL Server 2014
+Duration: July 2020 – Feb 2021
+Role: Developer
+Description:
+Responsibilities:
+of performance and client specific requirement.
+• Involved in Scrum meetings to understand client requirements.
+
+The objective of this project was to provide solution for online college interview process. It is
+an Australian based project to create a product solution to make interview process smoother than
+earlier. This product provides a facility to University, College, TPO, Student and an Organization HR to
+handle all responsible activities online very quickly. This product maintains all roles and
+responsibilities of an individual with all their tasks. This product contains all notifications which are
+required for every role based on their priority jobs.
+• Responsible for developing . NET based web services for sending notification over to the students
+
+regarding job.
+• Responsible for maintaining the application after development, enhancements and changes in
+
+terms of performance and client specific requirement.
+• Involved in Scrum meetings to understand client requirements.
+• Involvement during testing support.
+• Involvement during deployment activities.
+
+#Project 4:
+This is web application project developed in web application MVC. Basically, this project is in
+health domain. Project contain three types of users included admin, surgeon & agent. Agent has one
+or many surgeon assigned and surgeon have multiple patients assigned. Admin is system admin have
+all access. For expensive surgery, company agent enrolls patient for insurance by choosing policy
+with respect to the plans available. Claims are submitted on the basis of patient surgery which is
+registered on the policy plan.
+• Involved in developing and testing the application currently in use by the client developed using
+
+ASP. Net, C#, HTML, CSS, MVC, Java Script with SQL Server 2014 as the database.
+• Involved in maintaining the application after development, enhancements and changes in terms
+
+#Project 3:
+Project Title - CIMS (COLLEGE INTERVIEW MANAGEMENT SYSTEM).
+Front End: HTML, CSS, JQuery.
+Technologies: C#, MVC 5, Web API 2, Entity Framework, Java Script.
+Database: SQL Server 2014
+Duration: March 2021 to May 2022
+Role: Developer
+Description:
+Responsibilities:
+Project Title - Cosmetic Health Insure .
+Front End: HTML, CSS, JQuery.
+Technologies: C#, MVC, Web API, Entity Framework, Java Script.
+Database: SQL Server 2014
+Duration: July 2020 – Feb 2021
+Role: Developer
+Description:
+Responsibilities:
+of performance and client specific requirement.
+• Involved in Scrum meetings to understand client requirements.
+
+[REMOVED_SECTION_PERSONAL]
+
+[REMOVED_SECTION_DECLARATION]

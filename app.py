@@ -72,6 +72,7 @@ def upload_file():
         
         # Process the CV
         try:
+            # Create fresh orchestrator instance with latest code
             orchestrator = PipelineOrchestrator(config_dir='config')
             
             logger.info(f"Processing CV with pipeline...")
