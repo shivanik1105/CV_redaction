@@ -16,7 +16,7 @@ class LLMBatchProcessor:
     """Process multiple CVs through LLM for metadata extraction and JD matching"""
     
     def __init__(self, 
-                 api_provider: str = "openai",
+                 api_provider: str = "ollama",
                  model: str = None,
                  api_key: str = None,
                  output_dir: str = "llm_analysis"):
@@ -24,9 +24,9 @@ class LLMBatchProcessor:
         Initialize the batch processor
         
         Args:
-            api_provider: 'openai', 'anthropic', or 'gemini'
-            model: Model name (default: gpt-4o for OpenAI, claude-3-5-sonnet-20241022 for Anthropic, gemini-1.5-pro for Gemini)
-            api_key: API key (reads from env if not provided)
+            api_provider: 'openai', 'anthropic', 'gemini', or 'ollama' (default: ollama - FREE!)
+            model: Model name (default: gpt-4o for OpenAI, claude-3-5-sonnet-20241022 for Anthropic, gemini-2.0-flash for Gemini, qwen2.5:7b for Ollama)
+            api_key: API key (reads from env if not provided, not needed for Ollama)
             output_dir: Directory to save results
         """
         self.api_provider = api_provider.lower()
@@ -41,6 +41,8 @@ class LLMBatchProcessor:
                 self.model = "claude-3-5-sonnet-20241022"
             elif self.api_provider == "gemini":
                 self.model = "gemini-2.0-flash"  # Fast and available model
+            elif self.api_provider == "ollama":
+                self.model = "qwen2.5:7b"  # FREE local model
             else:
                 raise ValueError(f"Unsupported provider: {api_provider}")
         else:
@@ -57,6 +59,9 @@ class LLMBatchProcessor:
             from google import genai
             from google.genai import types
             self.client = genai.Client(api_key=api_key or os.getenv("GOOGLE_API_KEY"))
+        elif self.api_provider == "ollama":
+            import ollama
+            self.client = ollama  # Ollama uses module-level functions
         
         self.prompt_template = self._get_prompt_template()
     
@@ -135,6 +140,8 @@ class LLMBatchProcessor:
                 response = self._call_anthropic(prompt)
             elif self.api_provider == "gemini":
                 response = self._call_gemini(prompt)
+            elif self.api_provider == "ollama":
+                response = self._call_ollama(prompt)
             
             # Parse JSON response
             try:
@@ -211,6 +218,32 @@ class LLMBatchProcessor:
             )
         )
         return response.text
+    
+    def _call_ollama(self, prompt: str) -> str:
+        """Call Ollama (local LLM)"""
+        try:
+            response = self.client.chat(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a technical recruiter assistant. Always output valid JSON only."},
+                    {"role": "user", "content": prompt}
+                ],
+                options={
+                    "temperature": 0.3,
+                    "num_predict": 4096
+                },
+                format="json"  # Force JSON output
+            )
+            return response['message']['content']
+        except Exception as e:
+            if "connection" in str(e).lower():
+                raise Exception(
+                    "Cannot connect to Ollama. Please make sure Ollama is running.\n"
+                    "1. Download from: https://ollama.com/download\n"
+                    f"2. Run: ollama pull {self.model}\n"
+                    "3. Ollama will start automatically"
+                )
+            raise
     
     def process_directory(self, 
                          cv_directory: str,
@@ -381,13 +414,13 @@ def main():
     )
     parser.add_argument(
         "--provider",
-        choices=["openai", "anthropic", "gemini"],
-        default="openai",
-        help="LLM provider to use (default: openai)"
+        choices=["openai", "anthropic", "gemini", "ollama"],
+        default="ollama",
+        help="LLM provider to use (default: ollama - free and local!)"
     )
     parser.add_argument(
         "--model",
-        help="Model name (default: gpt-4o for OpenAI, claude-3-5-sonnet-20241022 for Anthropic, gemini-1.5-pro for Gemini)",
+        help="Model name (default: gpt-4o for OpenAI, claude-3-5-sonnet-20241022 for Anthropic, gemini-2.0-flash for Gemini, qwen2.5:7b for Ollama)",
         default=None
     )
     parser.add_argument(
@@ -440,11 +473,15 @@ def main():
     except Exception as e:
         print(f"\n❌ Fatal Error: {e}")
         print("\nTroubleshooting:")
-        print("1. Make sure you have set your API key:")
+        print("1. For Ollama (FREE - Recommended):")
+        print("   - Download: https://ollama.com/download")
+        print("   - Run: ollama pull qwen2.5:7b")
+        print("   - Then retry this command")
+        print("\n2. Or set API key for cloud providers:")
         print("   - OpenAI: set OPENAI_API_KEY=your-key")
         print("   - Anthropic: set ANTHROPIC_API_KEY=your-key")
         print("   - Gemini: set GOOGLE_API_KEY=your-key")
-        print("2. Install required packages: pip install openai anthropic google-generativeai")
+        print("\n3. Install packages: pip install openai anthropic google-genai ollama")
         return 1
     
     return 0

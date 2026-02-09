@@ -96,15 +96,27 @@ Transforms raw CV text into clean "Professional Profiles" safe for LLM consumpti
 
 **Automatically analyze anonymized CVs with AI for structured metadata extraction and JD matching.**
 
+### 🆓 FREE Option: Ollama (Recommended!) ⭐
 ```bash
-# Analyze all CVs with job description matching
-python llm_batch_processor.py final_output/ --jd job_description.txt
+# One-click setup (installs Ollama + model)
+.\setup_ollama.ps1
+
+# Then process CVs (unlimited, free, local!)
+python llm_batch_processor.py --jd job_description.txt
+```
+**Benefits:** 100% free, no API key, no rate limits, completely private!
+
+### ☁️ Cloud Options (OpenAI/Gemini/Anthropic)
+```bash
+# Setup
+pip install openai anthropic google-genai
+set OPENAI_API_KEY=your-key-here
 
 # Analyze single CV
-python single_cv_analyzer.py final_output/REDACTED_CV_Name.txt job.txt
+python single_cv_analyzer.py final_output/REDACTED_CV_Name.txt job.txt --provider openai
 
-# Complete pipeline: Redact + Analyze
-.\analyze_resumes.ps1 -JobDescription example_job_description.txt
+# Batch process
+python llm_batch_processor.py --provider openai --jd job.txt
 ```
 
 **Features:**
@@ -113,16 +125,20 @@ python single_cv_analyzer.py final_output/REDACTED_CV_Name.txt job.txt
 - 🔒 **Privacy-Safe**: Works with already-anonymized CVs, no PII exposure
 - 📊 **Batch Processing**: Analyze 100s of CVs in minutes
 - 💾 **JSON + Text Reports**: Machine-readable and human-readable outputs
+- 🆓 **FREE with Ollama**: Unlimited local processing, no API costs!
 
-**Setup (30 seconds):**
+**Setup:**
 ```bash
+# Option 1: FREE Local (Ollama) - RECOMMENDED
+.\setup_ollama.ps1
+
+# Option 2: Cloud APIs (Paid)
 pip install openai anthropic google-genai
 set OPENAI_API_KEY=your-key-here
-# OR use Anthropic/Gemini
-python llm_batch_processor.py --limit 3  # Test with 3 CVs
+python llm_batch_processor.py --provider openai --limit 3
 ```
 
-📖 **See [LLM_ANALYSIS_README.md](LLM_ANALYSIS_README.md) for complete guide**
+📖 **Full Guide:** [OLLAMA_SETUP.md](OLLAMA_SETUP.md) | [LLM_ANALYSIS_README.md](LLM_ANALYSIS_README.md)
 
 ---
 

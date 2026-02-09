@@ -1,0 +1,89 @@
+{
+  "metadata": {
+    "total_years_experience": 12,
+    "relevant_years_experience": 12,
+    "core_technical_skills": [
+      "Embedded C",
+      "C++",
+      "AUTOSAR",
+      "Software Architecture",
+      "Requirements Engineering",
+      "Automotive SPICE",
+      "ISO 26262 Functional Safety",
+      "ISO/SAE 21434 Cybersecurity",
+      "System Requirements Engineering",
+      "Software Requirements Engineering",
+      "FD CAN Protocol",
+      "Diagnostic Analysis"
+    ],
+    "tools_and_frameworks": [
+      "Vector CANoe",
+      "Eclipse C/C++",
+      "AUTOSAR Toolchain",
+      "PTC Integrity",
+      "IBM Rhapsody",
+      "Sparx Enterprise Architect",
+      "Infineon Aurix TC3xx",
+      "Lauterbach Trace32",
+      "JIRA",
+      "GIT",
+      "Gerrit",
+      "Docker",
+      "IBM DOORS",
+      "CodeBeamer"
+    ],
+    "industries": [
+      "Automotive",
+      "Electric Vehicle Systems",
+      "Power Electronics",
+      "Battery Management Systems"
+    ],
+    "seniority_level": "Senior",
+    "has_team_leadership": true,
+    "domain_expertise": [
+      "Automotive Embedded Systems",
+      "Electric Powertrain Development",
+      "Battery Management Systems",
+      "ADAS (Advanced Driver Assistance Systems)",
+      "Vehicle Dynamics Control",
+      "Automotive Cybersecurity",
+      "Diagnostic Systems",
+      "HMI Design",
+      "Hybrid Technology Integration",
+      "Electronic Parking Brake",
+      "Automatic Transmission Systems"
+    ]
+  },
+  "cleaned_narrative": "Senior automotive embedded software engineer with extensive expertise in AUTOSAR architecture and electric vehicle systems. Led software architecture projects for major OEMs including Mercedes, Volkswagen, Audi, and Land Rover, specializing in multicore embedded software development on Infineon Aurix platforms. Architected and integrated AUTOSAR software components for electric powertrains, hybrid technology, and battery management systems with 48V architectures, working across multiple tier-1 automotive suppliers including Continental, ZF, Schaeffler, and Bosch.\n\nDemonstrated leadership in automotive safety and cybersecurity compliance, with deep experience in ISO 26262 functional safety and ISO/SAE 21434 cybersecurity standards. Performed comprehensive Automotive SPICE assessments across multiple projects and conducted requirements engineering for critical safety systems including electronic parking brake, automatic transmission systems (8HP), and ADAS features. Developed diagnostic analysis and design expertise for FD CAN applications spanning multiple vehicle platforms and OEM specifications.\n\nTechnical accomplishments include developing embedded software for power electronics systems such as inverter AC/DC configurations and smart battery management with serial balancing. Established continuous integration processes using AUTOSAR toolchain from Vector, implemented MISRA C++ code compliance frameworks, and led cross-functional teams in software architecture roles. Expertise spans from low-level embedded C development on automotive microcontrollers to high-level system architecture design, with proven ability to bridge technical implementation and customer requirements across international automotive projects.",
+  "jd_fitment": {
+    "mandatory_requirements_met": [
+      "5+ years automotive embedded software development",
+      "Expert-level Embedded C and C++",
+      "Strong AUTOSAR architecture and integration",
+      "Infineon Aurix microcontroller experience",
+      "ISO 26262 functional safety knowledge",
+      "Automotive SPICE process experience",
+      "CAN/CAN-FD protocol expertise"
+    ],
+    "mandatory_requirements_missing": [],
+    "nice_to_have_skills_present": [
+      "ISO/SAE 21434 automotive cybersecurity certification",
+      "Electric vehicle and hybrid powertrain experience",
+      "Battery management system development",
+      "Vector CANoe and CANalyzer tools",
+      "Requirements engineering with DOORS and PTC Integrity",
+      "Experience with major OEMs (Mercedes, BMW, Volkswagen)",
+      "Team leadership and technical architect experience",
+      "MISRA C/C++ compliance expertise"
+    ],
+    "confidence_score": 98
+  },
+  "verdict": "SHORTLIST",
+  "reason": "Exceeds all mandatory requirements with 12 years of automotive embedded software experience, expert-level AUTOSAR architecture skills, and extensive ISO 26262 functional safety implementation. Demonstrated technical leadership across multiple OEM projects (Mercedes, Volkswagen, Audi, Land Rover) with direct Infineon Aurix multicore platform experience and comprehensive Automotive SPICE assessment capabilities.",
+  "_meta": {
+    "source_file": "REDACTED_CV Jonny Kanwar.txt",
+    "processed_at": "2026-02-09T20:00:00",
+    "model": "demo-output",
+    "provider": "example"
+  }
+}
