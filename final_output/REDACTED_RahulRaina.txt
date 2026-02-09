@@ -1,0 +1,191 @@
+[REDACTED_NAME]
+
+Sr. Android & Java Developer | 10+ Years Experience |
+Team Lead | Tech Enthusiast & Blogger |Good Learner |
+Proficient in various other Technologies | Ready to Learn New Technology
+
+
+EXPERIENCE
+
+
+Deloitte USI, — Software Consultant
+
+JAN 2021 - PRESENT
+
+As a developer, I craft code as per JIRA stories, debug issues, write unit tests, lead PR reviews, and
+collaborate on technical feasibility and solution improvements.
+Cybertech Software & Systems, — Senior Software Engineer.
+
+FEB 2018 - JAN 2021
+
+As a Native Android developer, I specialized in utilizing the Esri Arc GIS SDK for mobile applications
+and implementing cryptography with AES and RSA. I am also skilled in team management and
+overseeing the complete software development lifecycle (SDLC).
+Drushti Technet LLP, — Software Engineer
+
+AUG 2016 - FEB 2018
+
+Android Application Developer using Android Studio and Java, skilled in team management, client
+communication, and the complete SDLC. Experienced in My SQL database design and handling, with a
+focus on best practices and good-quality algorithms.
+Syntel Pvt Ltd, — Software Engineer
+
+AUG 2014 - JUNE 2016
+
+Android (Java) and i Phone (Swift) Application Developer with experience in REST, Hibernate, and Spring (J2EE) web services and applications. Proficient in best programming practices.
+
+[REMOVED_SECTION_EDUCATION]
+
+ROLES & RESPONSIBILITIES
+
+As a developer, my primary task includes crafting robust code to implement features as
+outlined in Sprint stories, tackle complex debugging challenges, craft rigorous unit tests to
+validate code integrity and lead Git PR code reviews to maintain code quality.
+
+[REDACTED_CONTACT_LINE]
+
+[REDACTED_PHONE]
+
+rahulrainahome@
+gmail.com
+Current Location:
+.
+Current Company:
+Deloitte USI.
+Primary Skills
+​ Android , Kotlin ,
+Java , Jetpack
+Compose , HILT,
+Coroutines, Flow,
+Room DB, Retrofit,
+SQL, Storage Data
+Classes,
+
+​REST, API,
+
+Security &
+Encryption
+
+(AES\RSA), SOLID
+
+Principles, Design
+Patterns & OOAD,
+Multi-Threading
+& Concurrency,
+
+MVVM.
+
+Additional
+Proficiencies
+​ React JS ,
+Javascript, CSS,
+HTML, Spring
+Boots , Rest
+Repository, JPA,
+Arc GIS SDK , GIS,
+
+SQL , MQTT
+
+Protocol (IOT),
+OAuth, Media
+Streaming
+Protocols.
+
+Coordinate with the product team to discuss and resolve queries related to story Acceptance
+Criterias to ensure technical clarity for seamless development.
+
+Enhanced feasibility activities to develop improved versions beyond previous iterations.
+
+Guide junior developers and collaborate on approach discussions prior to implementation.
+
+Organize meetings to address blockers and present well-reasoned solutions.
+
+Host technical sessions to explore and discuss emerging technologies.
+
+PROJECTS & WORK EXPERIENCE
+
+Foot Locker — Android, Kotlin, Jetpack Compose, MVI, Hilt, Room DB.
+Developed an e-commerce application on the Android platform for selling sportswear, merchandise,
+and related items. Users can also pre-order limited-edition products and choose between shipping or
+pickup options. The app features a robust, data-driven UI created with Jetpack Compose and MVI
+architecture, utilizing Hilt for dependency injection, Room DB for local storage, and Airship for
+notifications. Payment options include GPay, Klarna, and Pay Pal.
+Fed Ex Business Development Process — React JS, Javascript, Spring Boot.
+Developed a web application aimed at enhancing the business development process for leadership
+teams. The application facilitates setting priorities, targets, managing relationships, and conducting
+reviews, thereby supporting team-building efforts within specific sections. Built using React.js,
+Java Script, and Material UI, it incorporates Web Sockets to deliver real-time updates from other team
+members.
+USGA — Android, Jetpack Compose, MVI, Work Manager, Storage Class.
+Utilized Jetpack Compose to develop a data-driven UI for an Android Live Streaming & Scoring
+application with multilingual support. The application also includes key features such as ticket
+booking, merchandise purchases, and user preferences. As a developer, I was responsible for coding
+the functionalities (based on JIRA stories), debugging issues, writing unit tests, and reviewing pull
+requests to ensure high code quality.
+Lilly Together — Android, Kotlin, Data Binding, MVVM, MQTT, AES.
+Android healthcare application integrated with an auto-injector to monitor patient health and
+administer regular dosages. The app features symptom tracking, medication recommendations, and
+timely medicine reminders. Implemented MVVM architecture with data binding and AES encryption
+and employed the MQTT protocol for real-time notifications from the auto-injector.
+Jiometry — Android, Kotlin, Arc GIS SDK, RSA, AES, Spring Boot (JPA, REST).
+Developed multiple Android applications specialized for geospatial analysis (Using Arc GIS SDK
+100.x.x) for the Reliance Jio Giga-Fiber project. These applications include system-generated network
+planning for various geographical areas, cost and infrastructure estimations, and hosting services.
+Implemented robust security practices to protect data and the codebase, ensuring compliance with all
+relevant standards.
+Virtual Eye — Android, Java, Web RTC, Streaming API.
+Developed a video calling Android application utilizing a Web RTC backend for duplex communication
+
+Foot Locker — Android, Kotlin, Jetpack Compose, MVI, Hilt, Room DB.
+Developed an e-commerce application on the Android platform for selling sportswear, merchandise,
+and related items. Users can also pre-order limited-edition products and choose between shipping or
+pickup options. The app features a robust, data-driven UI created with Jetpack Compose and MVI
+architecture, utilizing Hilt for dependency injection, Room DB for local storage, and Airship for
+notifications. Payment options include GPay, Klarna, and Pay Pal.
+Fed Ex Business Development Process — React JS, Javascript, Spring Boot.
+Developed a web application aimed at enhancing the business development process for leadership
+teams. The application facilitates setting priorities, targets, managing relationships, and conducting
+reviews, thereby supporting team-building efforts within specific sections. Built using React.js,
+Java Script, and Material UI, it incorporates Web Sockets to deliver real-time updates from other team
+members.
+USGA — Android, Jetpack Compose, MVI, Work Manager, Storage Class.
+Utilized Jetpack Compose to develop a data-driven UI for an Android Live Streaming & Scoring
+application with multilingual support. The application also includes key features such as ticket
+booking, merchandise purchases, and user preferences. As a developer, I was responsible for coding
+the functionalities (based on JIRA stories), debugging issues, writing unit tests, and reviewing pull
+requests to ensure high code quality.
+Lilly Together — Android, Kotlin, Data Binding, MVVM, MQTT, AES.
+Android healthcare application integrated with an auto-injector to monitor patient health and
+administer regular dosages. The app features symptom tracking, medication recommendations, and
+timely medicine reminders. Implemented MVVM architecture with data binding and AES encryption
+and employed the MQTT protocol for real-time notifications from the auto-injector.
+Jiometry — Android, Kotlin, Arc GIS SDK, RSA, AES, Spring Boot (JPA, REST).
+Developed multiple Android applications specialized for geospatial analysis (Using Arc GIS SDK
+100.x.x) for the Reliance Jio Giga-Fiber project. These applications include system-generated network
+planning for various geographical areas, cost and infrastructure estimations, and hosting services.
+Implemented robust security practices to protect data and the codebase, ensuring compliance with all
+relevant standards.
+Virtual Eye — Android, Java, Web RTC, Streaming API.
+Developed a video calling Android application utilizing a Web RTC backend for duplex communication
+and integrating telephony APIs. This project served as a feasibility study for the eventual solution,
+exploring the use of Wowza Media Server and Vitam IO library to evaluate their viability.
+Fed Ex Delivery System — Android, Java, Arc GIS, Google Maps.
+a logistics application for the Android platform featuring Arc GIS integration for routing, real-time
+monitoring, and product delivery. The app includes offline support to ensure functionality without
+data connectivity. This project served as a feasibility study prior to finalizing the full solution.
+Syntel Mobile Device Management — Android, Java, Spring, Hibernate.
+A product suite for Syntel, compatible with all major mobile platforms (Android, i OS, Black Berry, and Windows), enabling employees to access enterprise data securely on personal devices while adhering
+to necessary policies and restrictions. The application safeguards enterprise data by disabling certain
+device features during working hours (e.g., camera, social apps) that could pose a threat to sensitive
+information. It also provides role-based access and includes activity tracking to monitor usage.
+and integrating telephony APIs. This project served as a feasibility study for the eventual solution,
+exploring the use of Wowza Media Server and Vitam IO library to evaluate their viability.
+Fed Ex Delivery System — Android, Java, Arc GIS, Google Maps.
+a logistics application for the Android platform featuring Arc GIS integration for routing, real-time
+monitoring, and product delivery. The app includes offline support to ensure functionality without
+data connectivity. This project served as a feasibility study prior to finalizing the full solution.
+Syntel Mobile Device Management — Android, Java, Spring, Hibernate.
+A product suite for Syntel, compatible with all major mobile platforms (Android, i OS, Black Berry, and Windows), enabling employees to access enterprise data securely on personal devices while adhering
+to necessary policies and restrictions. The application safeguards enterprise data by disabling certain
+device features during working hours (e.g., camera, social apps) that could pose a threat to sensitive
+information. It also provides role-based access and includes activity tracking to monitor usage.

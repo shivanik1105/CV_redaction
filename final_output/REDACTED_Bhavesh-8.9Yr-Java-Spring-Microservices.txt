@@ -1,0 +1,80 @@
+[REDACTED_NAME]
+
+MH | [REDACTED_PHONE]
+
+[REDACTED_EMAIL]
+
+
+SUMMARY
+
+Experienced Java Developer with over 8+ years of hands-on experience designing, developing, and deploying enterprise-level
+applications using Java, Spring Boot, and microservices architecture. Proven track record of delivering scalable and highperformance backend solutions for diverse industries. Strong background in backend development,
+RESTful APIs, and cloudnative applications, with a track record of delivering scalable and robust solutions to meet business objectives. Effective team
+leader and collaborator. Adept at leading Agile teams, fostering collaboration, and driving innovation through continuous
+improvement practices.
+
+SKILLS
+
+Java, Spring Boot, Spring Cloud, Spring Data, Spring Security, Spring MVC, Rest API, Hibernate, Microservices Architecture,
+Docker, Kubernetes, GIT, MAVEN, AWS, Azure Cloud, Oracle DB, Apache kafka, ELK, DSA
+Domain
+Banking, Infrastructure
+
+WORK EXPERIENCE
+
+Harman Connected Services
+Lead Engineer | 07/2021 - Present
+Project- Marimba
+Roles and Responsibilities:
+Microservices Architecture : Designed and developed scalable microservices using Spring Boot for modularity and efficient
+service-to-service communication.
+Spring Security Implementation : Integrated Spring Security for robust authentication and authorization across
+microservices.
+RESTful API Development : Developed and consumed RESTful APIs, ensuring seamless and secure data exchange between
+services and external systems.
+Spring Data & Persistence : Implemented data access layers with Spring Data JPA, optimizing database interactions and
+transaction management.
+Cloud Deployment & Management : Deployed and managed microservices on AWS Cloud, utilizing EC2, S3 and RDS for
+scalability and cost-efficiency.
+Distributed Messaging with Kafka: Leveraged Apache Kafka for communication between microservices.
+System Security & Compliance : Ensured system security and compliance using OAuth2 and JWT for secure API access and
+data protection.
+Team Leadership & Mentorship : Led a development team, provided technical guidance, conducted code reviews, and
+mentored junior developers.
+FIS Global Solution
+Senior Software Engineer | 04/2019 - 07/2021
+Project- Infinity Process Platform
+Roles and Responsibilities:
+Design and development of Java-based applications using Spring Boot and Microservices architecture.
+Built and maintained RESTful APIs for scalable, modular services.
+Optimized performance through JVM tuning, caching strategies, and query optimization.
+Led development teams , conducted code reviews, and provided mentorship to junior developers.
+Architected and implemented microservices , ensuring scalability, reliability, and fault tolerance.
+Automated CI/CD pipelines using Jenkins and Docker for continuous integration and deployment.
+Ensured security through OAuth, JWT, and encryption techniques for API authentication and data protection.
+Collaborated cross-functionally with frontend, QA, and Dev Ops teams for seamless software delivery.
+Performed debugging and troubleshooting of production issues using log analysis and performance monitoring tools.
+Documented technical solutions and maintained API documentation with Swagger.
+Infosys
+Senior Software Engineer | 01/2018 - 04/2019
+Project- Cummins SSA(Special Sales Allowances )
+Roles and Responsibilities:
+Requirements Gathering: Coordinated with onsite team leads to gather and clarify project requirements.
+Client Interaction: Engaged with clients to understand functional requirements and ensure alignment with project objectives.
+Code Delivery: Delivered code that adhered to client constraints and specifications, ensuring the final product met client
+expectations.
+System Engineer | 11/2015 - 01/2018
+Project- Intellect RBX
+Roles and Responsibilities:
+Requirements Coordination : Coordinated with onsite team leads to gather and clarify project requirements.
+SDLC Involvement : Participated in all phases of the Software Development Life Cycle (SDLC), including Analysis,
+Design, Development, Unit Testing, and Deployment.
+Client Interaction : Engaged with clients to understand and document functional requirements, ensuring alignment with
+project goals.
+Complex Functionality Implementation : Independently implemented complex functionalities to meet project needs.
+Code Delivery : Ensured that delivered code adhered to client constraints and specifications, meeting project requirements.
+Coordination Across Teams : Coordinated with both onsite and offshore teams throughout requirement analysis and
+development phases.
+Testing and Support : Involved in unit testing and provided production support activities to ensure system reliability.
+
+[REMOVED_SECTION_EDUCATION]

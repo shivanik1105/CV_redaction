@@ -1,0 +1,57 @@
+[NAME]
+
+[REDACTED_CONTACT_LINE]
+
+
+SKILLS
+
+Programming Languages : C, C++, Python, Core Java, SQL, HTML, XML
+Software Tools: Git Hub, Jenkins, Visual Studio Code, SVN, ROBOT, Coverity, Android Studio.
+Technical Skills: Docker, Linux Internals, Shell Scripting, Socket programming, multi-threading, Device
+driver, prompt engineering, AI/ML (Basics).
+
+WORKEXPERIENCE
+
+Nokia Networks, – Software Engineer (R & D 3) Jan 2021 - Present
+
+Developed a snapshot upload subsystem comprising two services that operate as a non-root user with
+limited privileges for file access and transfer. Created a plugin framework to manage input requests along
+with server configuration from the Network Management System (NMS). Implemented file transfers to the
+LSS server using the Paramiko library.
+
+Created a Diagnostic Check Framework that handles requests from the Network Management System (NMS)
+and provides diagnostic check results back to the NMS. This framework is part of the ne3s-agent,
+whichreceives managed object details from the NMS, performs basic validations, and passes the information
+to the diagnostic check plugin through the fpcmnms framework.
+
+Wrote entity specifications (EFS) and performed static code fixes using Coverity. Developed unit tests (UTs)
+utilizing the Google Test (gtest) framework and implemented functional tests (FT) using the ROBOT
+framework.
+
+As part of the fault management system, migrated startup scripts for Docker containers from Kubernetes to Swarm orchestration. Configured the containers to run as non-root users with limited privileges to enhance
+security and minimize potential risks associated with running processes as root.
+KPIT, – Software Engineer July 2019 - November 2020
+
+Implemented functionalities for the diagnostic framework of an all-wheel drive system. The project focused
+on controlling all four wheels and transmitting the required torque while ensuring the integration of safety
+features through the use of Electronic Control Units (ECUs). One ECU is responsible for delivering power to
+the rear unit, while another manages the clutch system. Communication between these components
+primarily utilizes the Flex Ray bus, with CAN bus employed for driver-specific communication.
+Appalto Electronics Pvt Ltd., – Embedded Software Developer(R & D) March 2018 - June 2019
+
+Developed a driver for a Digital-to-Analog Converter (DAC) to accurately convert digital audio in WAV format
+to analog sound. The driver receives digital audio from a microcontroller, which is then transmitted to the
+Audio DAC via SPI. The DAC produces an analog output that is amplified and sent to the speaker, enabling
+sound playback in unmanned systems.
+
+Ported the entire weighing indicator code to a multitasking environment and enhanced the date-wise
+searching algorithm to deliver faster results.
+
+Implemented data management features for unmanned systems, improving overall data handling and
+accessibility.
+
+[REMOVED_SECTION_EDUCATION]
+
+Developed a Tic-Tac-Toe game on the Linux platform using C programming language and the GTK library for
+the user interface design. The game allows two players to compete against each other, with each player
+taking turns placing their mark (either X or O) on a 3x3 grid. The game automatically detects a winner or a tie

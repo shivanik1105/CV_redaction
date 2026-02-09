@@ -21,3 +21,8 @@ Werkzeug==3.0.1
 
 # Note: After installing spacy, run:
 # python -m spacy download en_core_web_sm
+
+# LLM Analysis Dependencies (Optional - for AI-powered CV analysis)
+openai>=1.12.0
+anthropic>=0.18.0
+google-genai>=0.2.0

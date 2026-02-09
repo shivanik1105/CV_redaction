@@ -1,0 +1,33 @@
+Senior Automotive Embedded Software Engineer
+
+MANDATORY REQUIREMENTS (Must Have):
+• 5+ years of automotive embedded software development experience
+• Expert-level proficiency in Embedded C and C++
+• Strong AUTOSAR architecture and integration experience
+• Experience with Infineon Aurix or similar automotive microcontrollers
+• ISO 26262 functional safety knowledge and application
+• Automotive SPICE process experience
+• CAN/CAN-FD protocol expertise
+
+NICE TO HAVE (Preferred):
+• ISO/SAE 21434 automotive cybersecurity certification
+• Electric vehicle or hybrid powertrain experience
+• Battery management system (BMS) development
+• Vector CANoe, CANalyzer tools
+• Requirements engineering with DOORS, PTC Integrity, or CodeBeamer
+• Experience with major OEMs (Mercedes, BMW, Volkswagen, etc.)
+• Team leadership or technical architect experience
+• MISRA C/C++ compliance expertise
+
+ROLE DESCRIPTION:
+We are seeking a senior embedded software engineer to lead AUTOSAR architecture design and integration for next-generation electric vehicle platforms. The ideal candidate will work with cross-functional teams to develop safety-critical automotive systems, conduct SPICE assessments, and mentor junior engineers.
+
+Key responsibilities include:
+- Designing and implementing AUTOSAR software components
+- Conducting requirements engineering for electric powertrain systems
+- Performing functional safety analysis per ISO 26262
+- Integrating software on Infineon Aurix multicore platforms
+- Leading technical reviews and SPICE assessments
+- Collaborating with international OEM customers
+
+This role requires strong technical expertise, excellent communication skills, and the ability to work independently in a fast-paced automotive development environment.

@@ -1,0 +1,251 @@
+[NAME]
+
+[REDACTED_NAME]
+
+Android Developer ([NAME])
+Mob: [REDACTED_PHONE]
+
+[REDACTED_CONTACT_LINE]
+
+
+KEY SKILLS
+
+
+Android
+
+Android Auto
+
+Android SDK
+
+Kotlin
+
+Clean Architecture
+
+Jetpack Library
+
+
+JAVA
+
+
+
+JSON, XML
+
+
+Jetpack Compose
+
+SQLite
+
+Agile Methodology
+
+
+HTML
+
+JIRA
+
+UML
+
+MVVM
+
+REST & SOAP API
+
+
+My SQL
+
+Unit Testing
+
+GITHub, GIT Lab
+
+
+
+MVP
+
+UNIX
+
+ 
+ 
+Resume Highlights
+
+9 years of experience as Android Developer in automotive HMI application and mobile application development 
+
+Proficient in leveraging Jetpack library, Jetpack Compose, and Clean architecture for app development. 
+
+Successfully contributed to the development of HMI applications for Tuner and mobile applications in entertainment,
+business, and health domains. 
+
+Developed innovative features for proprietary Android applications deployed on phones, tablets, and Android Auto. 
+
+Demonstrated strong experience in designing, developing, and implementing software applications with a focus on
+robust architecture. 
+
+Experience in Android app development with Android Studio using Java and Kotlin 
+
+Proven track record in writing unit test cases using Junit and Mockito, ensuring high-quality software. 
+
+Very good understanding of Android Back -end and UI Guidelines 
+
+Used different architecture pattern MVVM, MVP for app development. 
+
+Extensive experience in integrating third-party SDKs (Conrad) and popular libraries (Volley, Retrofit, Room Persistence
+Library). 
+
+I mplemented SQLite, Google Maps, and seamlessly integrated APIs from Google, Facebook, and Twitter. 
+
+Experience in Object Oriented Architecture, and Design 
+
+Thorough understanding of Agile Software Development methodologies, actively participating in all Agile ceremonies. 
+
+Managed tasks within Agile frameworks, adept at clearing sprinted tasks, and controlled Jira workflows effectively. 
+
+Strong understanding of multi-threading, concurrency and memory management 
+
+Worked on mobile application in which payment gateway was used 
+
+Good Knowledge of OOPs concepts, Collection , Arrays and String in JAVA. 
+
+Have hands-on experience in complete project life cycle with domain knowledge in Mobile 
+
+Handling various technical aspects like coding of modules using given design specification, debugging and fixing the
+defects as well as analyzing its root cause 
+
+Experience of development of Park Assist , Radio app for automobile related clients 
+
+Proficient in Unified Modeling Tool (UML) for designing use cases, class diagrams, and sequence diagrams. 
+
+Worked on business application which include encryption 
+
+Manage the software life cycle from the level of design to implementation , testing 
+
+Ability to grasp and master new technologies, excellent analytical and problem-solving skills 
+
+Able to take initiative, work independently and also a good team player 
+Skills & Technology
+Language : JAVA, Kotlin, C, C++, HTML, XML
+Database : SQLite, MYSQL
+Tools : Android Studio, Eclipse, Git Hub, Git Lab, JIRA, UML, Gradle,
+Maven, Junit
+
+System : - Windows, Linux, UNIX
+MS Suit : Excel, Power point, Word etc.
+Curriculum Vitea
+
+Android Developer (Development Specialist)
+Mob: [REDACTED_PHONE]
+
+System : - Windows, Linux, UNIX
+MS Suit : Excel, Power point, Word etc.
+1. Company Name: KPIT, : From July 2023 to till date
+Client: Nissan
+
+Worked with architect to design application
+
+Used Jetpack Compose, Room for UI and DB purpose.
+
+Communicated with client for project understanding and requirement clarification
+
+Developed aosp Radio application having AM FM band to play different stations
+Client: Panasonic
+
+Collaborated with lead to design and develop customized products based on customer needs.
+
+Implemented advanced features using Jetpack Compose, ensuring a modern and intuitive user interface.
+
+Conducted requirement gathering and maintained effective communication with the client.
+
+Developed HMI application "Park Assist" for Infotainment, aiding drivers in car parking.
+
+Implemented video rendering feature and utilized tools such as Git and KPIT Agile Planning (Jira).
+2. Company Name: TATA Consultancy Services, : From May 2016 to July 2023
+Client: Nissan
+
+Good experience with CI/CD tools such as git, Git Hub, Jira
+
+Work with our API developers to provide data to the apps via RESTful APIs w/JSON
+Client: Mitsubishi Motors
+
+Coordinating with Architecture group on new designs and foundational / infrastructural application changes
+
+Android development for Car Infotainment system using Java, also worked on creating library
+Client: Pfizer
+
+Analyzing user stories and participating in sprint planning, scrums, demos and retrospectives
+
+Communicating ideas across teams effectively and quickly
+
+Providing estimates for new initiatives
+
+Developed health application for Phizer Hemophilia
+
+Worked on bug fixing and troubleshooting the production issues
+3. Company Name: JKT Learning Solutions, : From June 2015 to May 2016
+
+Gathered client requirement and involved in design and development of android app
+
+Used SVN for version control of the source code/module
+
+Performed unit testing and integration testing
+
+PROFESSIONALEXPERIENCE
+
+To manage project work and provide technical guidance to team for the design, development and delivery of product.
+
+Interact with customer/users on operational aspects of project related solution/service delivery, issue etc.
+
+Work with the Manager of Mobile Development to provide estimates and status updates
+
+Work closely with Development, QA, Project Management and Product teams to ensure timely and cost-effective delivery of
+final products,
+
+Act as technical lead on projects, assist with defining the solution, and working with a team of developers
+
+Performing software development for Android based Car Infotainment systems using Java and Kotlin, Android application
+Framework Architecture and APIs
+
+Work with lead mobile developer to establish common development tools, and frameworks/libraries that the group will use
+
+Communicate to the Digital Manager and Project Managers, providing development time estimates and progress updates, with
+efficiency and accuracy
+
+Providing architectural direction on behalf of the architecture
+
+Performing peer code reviews for immediate and related teams
+
+Sharing your technical solutions and product ideas with the Pain Scale team through design review, pair programming, code
+review and tech talk
+1. Company Name: KPIT, : From July 2023 to till date
+Client: Nissan
+
+Sharing your technical solutions and product ideas with the Pain Scale team through design review, pair programming, code
+review and tech talk
+
+Used Material Design using Card View, Recycler View and classic principle of good design
+
+Integrated REST Web services, JSON in app
+
+Used SQLite, worked on encryption using SMS4, AES256
+
+Created Release notes and Changes request for UAT and Production deployment
+4. Company Name: Purplechai Technologies, : From Feb 2014 to June 2015
+
+Integrated Google, Facebook for login
+
+Integrated Payment Gateway, worked on Rest API, JSON, HTML
+
+Designed SQLite database schema for implementing persistent data storage
+
+Designed custom animation for transition between application activities
+
+Utilized navigation drawer to easily switch between application activities and fragment
+
+Worked on Eclipse for app development and debugging the application using Logcat, DDMS
+
+Utilized git version control tool as source control management system
+
+Worked on implementing multi-language support
+
+Supported multiple screen resolutions to provide proper resizing across multiple devices
+
+[REMOVED_SECTION_EDUCATION]
+
+[REMOVED_SECTION_PERSONAL]
+
+[REMOVED_SECTION_DECLARATION]

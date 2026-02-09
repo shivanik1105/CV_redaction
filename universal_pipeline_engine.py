@@ -43,6 +43,12 @@ try:
 except ImportError:
     HAS_PDFPLUMBER = False
 
+try:
+    import docx
+    HAS_DOCX = True
+except ImportError:
+    HAS_DOCX = False
+
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -315,8 +321,9 @@ class RuleBasedRedactor:
     Zero hardcoded data - all rules from config files.
     """
     
-    def __init__(self, config_loader: ConfigLoader):
+    def __init__(self, config_loader: ConfigLoader, debug: bool = False):
         self.config = config_loader
+        self.debug = debug
         self._compile_patterns()
     
     def _compile_patterns(self):
@@ -347,6 +354,8 @@ class RuleBasedRedactor:
         
         # Phase 1: Remove PII
         text = self._remove_pii(text)
+        if self.debug and '[REDACTED' in text:
+            logger.info("PII redaction complete. Sample check: Found [REDACTED] markers.")
         
         # Phase 2: Remove company names and specific locations
         text = self._remove_companies_and_specific_locations(text)
@@ -373,13 +382,18 @@ class RuleBasedRedactor:
         
         # Phase 9: Final date fix (must be after everything else)
         before_count = len(re.findall(r'0\d{2}-\d{2}', text))
-        text = re.sub(r'\b0(15|16|17|18|19|20|21|22|23|24|25)-(\d{2})\b', r'20\1-\2', text)
-        after_count = len(re.findall(r'20\d{2}-\d{2}', text))
-        if before_count > 0:
-            logger.info(f"Date fix: found {before_count} old dates, converted {after_count} to 20XX format")
+        try:
+            text = re.sub(r'\b0(15|16|17|18|19|20|21|22|23|24|25)-(\d{2})\b', r'20\1-\2', text)
+        except Exception as e:
+            if self.debug:
+                logger.error(f"Phase 9 regex failed: {e}")
         
-        # Phase 10: Remove all placeholder markers
-        text = self._remove_placeholders(text)
+        a_count = len(re.findall(r'20\d{2}-\d{2}', text))
+        if before_count > 0 and self.debug:
+            logger.info(f"Date fix: found {before_count} old dates, converted {a_count} to 20XX format")
+        
+        # Phase 10: Remove all placeholder markers - DISABLED to preserve [REDACTED] tags
+        # text = self._remove_placeholders(text)
         
         return text
     
@@ -440,6 +454,12 @@ class RuleBasedRedactor:
         
         # Fix date formats: 022-12 -> 2022-12, 021-07 -> 2021-07, etc.
         text = re.sub(r'\b0(\d{2})-(\d{2})\b', r'20\1-\2', text)
+        
+        # CRITICAL: Remove names from page headers/footers
+        # Pattern: "Resume | FirstName LastName |" or "FirstName LastName |"
+        # This catches names that appear in headers before they get through
+        text = re.sub(r'Resume\s*\|\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\s*\|', 'Resume |', text)
+        text = re.sub(r'\|\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\s*\|', '|', text)
         
         # Generic cleanup
         text = re.sub(r' {2,}', ' ', text)
@@ -581,8 +601,12 @@ class RuleBasedRedactor:
                 processed_line = social_pattern.sub('[REDACTED_SOCIAL]', processed_line)
             
             # ALWAYS redact contact lines
+            original_line = line
             if re.match(r'(?i)^.*?(email|e-mail|phone|mobile|contact|linkedin|github).*?[:|-].*?$', processed_line):
                 processed_line = '[REDACTED_CONTACT_LINE]'
+            
+            if processed_line != original_line and self.debug:
+                 logger.info(f"Redacted PII in line: '{original_line.strip()}' -> '{processed_line.strip()}'")
             
             result_lines.append(processed_line)
         
@@ -734,9 +758,9 @@ class RuleBasedRedactor:
                 continue
             
             # Find potential names
-            if i < 30:
-                # Aggressive in header
-                matches = re.finditer(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4}\b', line)
+            if i < 50:
+                # Aggressive in header - redact all capitalized words that look like names
+                matches = re.finditer(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}\b', line)
                 for match in reversed(list(matches)):
                     matched_text = match.group()
                     
@@ -802,9 +826,12 @@ class RuleBasedRedactor:
         
         # Education-related patterns to catch scattered education content
         education_patterns = [
-            r'^(m\.\s*tech|b\.\s*tech|b\.\s*e\.|m\.\s*sc|b\.\s*sc|mba|bba|phd|diploma)',
+            r'^(m\.\s*tech|b\.\s*tech|b\.\s*e\.|m\.\s*sc|b\.\s*sc|mba|bba|phd|diploma|m\.?\s*c\.?a|b\.?\s*c\.?a|bachelor|master|degree)',
             r'^(xiith|xith|xth|10th|12th|tenth|twelfth)\s*$',
             r'^(english|hindi|marathi|tamil|telugu|kannada|malayalam|bengali|gujarati|punjabi|urdu)\s*$',
+            r'university|college|institute|school$',
+            r'^\d{4}\s*[-–]\s*\d{4}$',
+            r'^(cgpa|gpa|percentage|marks?)\s*[:=]',
         ]
         
         for i, line in enumerate(lines):
@@ -951,6 +978,14 @@ class RuleBasedRedactor:
                     # Skip this line - it's part of a section to remove
                     logging.debug(f"Removing line {section_depth}: {stripped[:50]}")
             else:
+                # NOT in a removal section - but still check for scattered education content
+                is_education_content = any(re.match(pattern, stripped, re.IGNORECASE) for pattern in education_patterns)
+                
+                if is_education_content:
+                    # Skip this education-related line
+                    logging.debug(f"Removing scattered education content: {stripped[:50]}")
+                    continue
+                
                 result_lines.append(line)
         
         return '\n'.join(result_lines)
@@ -1033,6 +1068,7 @@ class RuleBasedRedactor:
         # Don't remove lines that contain markers
         lines = text.split('\n')
         cleaned_lines = []
+        seen_headers = set()  # Track headers to prevent duplicates
         
         # Section headers that should never be removed
         important_headers = [
@@ -1044,9 +1080,13 @@ class RuleBasedRedactor:
             stripped_lower = line.strip().lower()
             stripped = line.strip()
             
-            # Keep important section headers
+            # Keep important section headers (but only once)
             if any(header in stripped_lower for header in important_headers):
-                cleaned_lines.append(line)
+                # Check if we've already seen this exact header
+                header_key = stripped.upper()
+                if header_key not in seen_headers:
+                    seen_headers.add(header_key)
+                    cleaned_lines.append(line)
                 continue
                 
             # Keep lines with markers
@@ -1272,9 +1312,9 @@ class UniversalRedactionEngine:
     Delegates to configuration-driven redactor.
     """
     
-    def __init__(self, config_dir: str = "config"):
+    def __init__(self, config_dir: str = "config", debug: bool = False):
         self.config_loader = ConfigLoader(config_dir)
-        self.redactor = RuleBasedRedactor(self.config_loader)
+        self.redactor = RuleBasedRedactor(self.config_loader, debug=debug)
     
     def redact(self, text: str, filename: str = "") -> str:
         """Main redaction entry point"""
@@ -1293,6 +1333,7 @@ class CVType(Enum):
     SCANNED_IMAGE = "scanned_image"
     CREATIVE_DESIGNER = "creative"
     ACADEMIC_RESEARCH = "academic"
+    DOCX_FORMAT = "docx_format"
 
 
 @dataclass
@@ -1330,6 +1371,9 @@ class CVProfileDetector:
         if not HAS_FITZ and not HAS_PDFPLUMBER:
             return self._create_profile(CVType.STANDARD_ATS, 0.5, pdf_path)
         
+        if str(pdf_path).lower().endswith('.docx') or str(pdf_path).lower().endswith('.doc'):
+             return self._create_profile(CVType.DOCX_FORMAT, 1.0, pdf_path)
+             
         try:
             structure = self._analyze_structure(pdf_path)
             cv_type, confidence = self._classify_type(structure, filename)
@@ -1536,18 +1580,26 @@ class StandardATSPipeline(BasePipeline):
                     for block in blocks:
                         if "lines" in block:
                             bbox = block["bbox"]
-                            text = " ".join([
+                            text = "\n".join([
                                 " ".join([span["text"] for span in line["spans"]])
                                 for line in block["lines"]
                             ]).strip()
                             if text:
-                                text_blocks.append({
-                                    'text': text,
-                                    'x0': bbox[0],
-                                    'y0': bbox[1],
-                                    'x1': bbox[2],
-                                    'y1': bbox[3]
-                                })
+                                # Check for duplicates (common in some OCR/layered PDFs)
+                                is_duplicate = False
+                                for existing in text_blocks:
+                                    if existing['text'] == text and abs(existing['y0'] - bbox[1]) < 2:
+                                        is_duplicate = True
+                                        break
+                                
+                                if not is_duplicate:
+                                    text_blocks.append({
+                                        'text': text,
+                                        'x0': bbox[0],
+                                        'y0': bbox[1],
+                                        'x1': bbox[2],
+                                        'y1': bbox[3]
+                                    })
                     
                     if not text_blocks:
                         # Fallback to simple extraction
@@ -1582,8 +1634,8 @@ class StandardATSPipeline(BasePipeline):
                     
                     if is_two_column:
                         # Two-column layout detected - read LEFT column completely, then RIGHT column
-                        left_blocks.sort(key=lambda b: b['y0'])
-                        right_blocks.sort(key=lambda b: b['y0'])
+                        left_blocks.sort(key=lambda b: (b['y0'], b['x0']))
+                        right_blocks.sort(key=lambda b: (b['y0'], b['x0']))
                         
                         # Output left column first, then right column
                         page_lines = []
@@ -1593,19 +1645,39 @@ class StandardATSPipeline(BasePipeline):
                         
                         page_text = "\n".join(page_lines)
                     else:
-                        # Single column or mixed layout - sort by y then x (top to bottom, left to right within same row)
-                        text_blocks.sort(key=lambda b: (b['y0'], b['x0']))
+                        # Standard Sort: Primary Sort Y (Top->Bottom), Secondary Sort X (Left->Right)
+                        # We use a tolerance for Y to group items on roughly the same line
+                        text_blocks.sort(key=lambda b: (round(b['y0'] / 5) * 5, b['x0']))
                         page_text = "\n".join([b['text'] for b in text_blocks])
                     
                     all_pages_text.append(page_text)
                 
-                return "\n\n".join(all_pages_text)
+                full_text = "\n\n".join(all_pages_text)
+                
+                # Validation checks to trigger fallback:
+                # 1. Text is too short (< 100 chars)
+                # 2. Text has very few newlines (< 5) but is long (> 500 chars) - indicates structure loss
+                is_too_short = len(full_text.strip()) < 100
+                has_structure_loss = len(full_text) > 500 and full_text.count('\n') < 5
+                
+                if (is_too_short or has_structure_loss) and HAS_PDFPLUMBER:
+                    logger.info(f"Suboptimal text extraction (len={len(full_text)}, lines={full_text.count(chr(10))}), falling back to pdfplumber")
+                    return self._pdfplumber_fallback(pdf_path)
+                    
+                return full_text
         
-        elif HAS_PDFPLUMBER:
-            with pdfplumber.open(pdf_path) as pdf:
-                return "\n\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
+        if HAS_PDFPLUMBER:
+             return self._pdfplumber_fallback(pdf_path)
         
         return "Error: No PDF library available"
+
+    def _pdfplumber_fallback(self, pdf_path: str) -> str:
+        try:
+             with pdfplumber.open(pdf_path) as pdf:
+                return "\n\n".join([page.extract_text() or "" for page in pdf.pages])
+        except Exception as e:
+            logger.error(f"pdfplumber fallback failed: {e}")
+            return ""
     
     def _fix_concatenated_words(self, text: str) -> str:
         """Fix words that are concatenated without spaces using comprehensive replacements"""
@@ -1660,6 +1732,9 @@ class StandardATSPipeline(BasePipeline):
             'ofworkperformed': 'of work performed',
             'ofwork': 'of work',
             'workperformed': 'work performed',
+            'AssociateStaffEngineer': 'Associate Staff Engineer',
+            'StaffEngineer': 'Staff Engineer',
+            'WORKEXPERIENCE': 'WORK EXPERIENCE',
         }
         
         for old, new in fixes.items():
@@ -3278,6 +3353,60 @@ class MultiColumnPipeline(BasePipeline):
         return '\n'.join(result)
 
 
+
+class DocxPipeline(BasePipeline):
+    """DOCX extraction pipeline"""
+    
+    def extract_text(self, file_path: str) -> str:
+        if not HAS_DOCX:
+            return "Error: python-docx not installed"
+        
+        try:
+            doc = docx.Document(file_path)
+            full_text = []
+            for para in doc.paragraphs:
+                full_text.append(para.text)
+                
+            # Extract text from tables
+            for table in doc.tables:
+                for row in table.rows:
+                    row_text = []
+                    for cell in row.cells:
+                        if cell.text.strip():
+                            row_text.append(cell.text.strip())
+                    if row_text:
+                        full_text.append(" | ".join(row_text))
+                        
+            return '\n'.join(full_text)
+        except Exception as e:
+            # Check if this might be a binary .doc file
+            if "file is not a zip file" in str(e) or "BadZipFile" in str(e):
+                 logger.warning(f"Failed to read {file_path}. It might be a binary .doc file (not supported by python-docx).")
+                 return "[ERROR: Binary .doc file detected. Please convert to .docx or PDF to process this file.]"
+                 
+            logger.error(f"Error reading DOCX {file_path}: {e}")
+            return f"[ERROR: Failed to read document. {str(e)}]"
+
+    def preprocess(self, text: str) -> str:
+        # Fix numbers stuck to words
+        text = re.sub(r'(\d+)(years?|months?|days?)', r'\1 \2', text, flags=re.IGNORECASE)
+        
+        # Fix ampersands - add space before and after if missing
+        text = re.sub(r'([a-zA-Z])&([a-zA-Z])', r'\1 & \2', text)
+        text = re.sub(r'([a-zA-Z])&\s', r'\1 & ', text)
+        text = re.sub(r'\s&([a-zA-Z])', r' & \1', text)
+        
+        # Normalize bullets
+        text = re.sub(r'[•●○◦▪▫■□⬤→]', '•', text)
+        
+        # Clean up excessive spaces within lines (but preserve newlines)
+        text = re.sub(r' {2,}', ' ', text)
+        
+        # Clean up excessive blank lines (max 2 consecutive)
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        
+        return text.strip()
+
 # ============================================================================
 # MAIN ORCHESTRATOR
 # ============================================================================
@@ -3288,7 +3417,7 @@ class PipelineOrchestrator:
     def __init__(self, debug: bool = False, config_dir: str = "config"):
         self.debug = debug
         self.detector = CVProfileDetector()
-        self.redactor = UniversalRedactionEngine(config_dir)
+        self.redactor = UniversalRedactionEngine(config_dir, debug=debug)
         
         self.pipelines = {
             CVType.NAUKRI: NaukriPipeline(debug),
@@ -3296,7 +3425,8 @@ class PipelineOrchestrator:
             CVType.STANDARD_ATS: StandardATSPipeline(debug),
             CVType.SCANNED_IMAGE: StandardATSPipeline(debug),
             CVType.CREATIVE_DESIGNER: StandardATSPipeline(debug),
-            CVType.ACADEMIC_RESEARCH: StandardATSPipeline(debug)
+            CVType.ACADEMIC_RESEARCH: StandardATSPipeline(debug),
+            CVType.DOCX_FORMAT: DocxPipeline(debug)
         }
     
     def process_cv(self, pdf_path: str) -> Tuple[str, CVProfile]:
@@ -3313,6 +3443,9 @@ class PipelineOrchestrator:
         redacted_text = self.redactor.redact(processed_text, filename)
         
         final_text = self._final_cleanup(redacted_text)
+        
+        if not final_text.strip():
+            final_text = "[ERROR: No text extracted. The document may be a scanned image, an empty file, or a binary format (like .doc) that cannot be read directly. Please use OCR or convert to .docx/PDF.]"
         
         return final_text, profile
     
@@ -3362,6 +3495,7 @@ class PipelineOrchestrator:
         """Final cleanup"""
         # First, reorganize any misplaced sections
         text = self._reorganize_sections(text)
+
         
         # Get protected terms for name removal check
         config_loader = ConfigLoader()
@@ -3377,15 +3511,19 @@ class PipelineOrchestrator:
         for i, line in enumerate(lines):
             line_lower = line.strip().lower()
             
-            # Remove contact detail lines (Phone, E-mail, LinkedIn headers and their content)
-            if re.match(r'^\s*(phone|e-mail|email|linkedin|github|mobile|contact)\s*$', line, re.IGNORECASE):
+            # FORCE PRESERVE REDACTED MARKERS
+            if '[REDACTED' in line:
+                cleaned.append(line)
                 continue
-            # Remove lines with "Phone", "E-mail" followed by redacted markers or actual contact info
-            if re.search(r'(phone|e-mail|email|mobile|contact|linkedin)\s*[:\s]*\[?REDACTED', line, re.IGNORECASE):
-                continue
-            # Skip lines that are just redacted markers without context
-            if re.match(r'^\s*\[REDACTED_(PHONE|EMAIL|URL|CONTACT_LINE)\]\s*$', line):
-                continue
+            
+            # PRESERVE contact detail headers and redacted lines as per user requestrs and their content)
+            # PRESERVE contact detail headers and redacted lines as per user request
+            # if re.match(r'^\s*(phone|e-mail|email|linkedin|github|mobile|contact)\s*$', line, re.IGNORECASE):
+            #     continue
+            # if re.search(r'(phone|e-mail|email|mobile|contact|linkedin)\s*[:\s]*\[?REDACTED', line, re.IGNORECASE):
+            #     continue
+            # if re.match(r'^\s*\[REDACTED_(PHONE|EMAIL|URL|CONTACT_LINE)\]\s*$', line):
+            #     continue
             # Skip remaining parts of LinkedIn/social media URLs  
             if re.match(r'^\s*akash-tandale-\d+\s*$', line):  # Leftover URL fragments
                 continue
@@ -3438,14 +3576,185 @@ class PipelineOrchestrator:
         
         text = '\n'.join(cleaned)
         
-        text = re.sub(r'[•●○◦▪▫■□⬤]', '•', text)
+        # ========== LLM-READY POST-PROCESSING ==========
+        
+        # 1. Remove page headers/footers with names
+        text = re.sub(r'Resume\s*\|[^|]*\|\s*Page\s+\d+\s*/\s*\d+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'Page\s+\d+\s*/\s*\d+', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'Page\s+\d+\s+of\s+\d+', '', text, flags=re.IGNORECASE)
+        
+        # 2. Remove standalone page numbers
+        text = re.sub(r'^\s*\d+\s*$', '', text, flags=re.MULTILINE)
+        
+        # 3. SMART BLOCK-LEVEL DEDUPLICATION
+        # Split into blocks (separated by blank lines)
+        blocks = re.split(r'\n\s*\n', text)
+        unique_blocks = []
+        seen_blocks = []  # Use list to maintain order and limit lookback
+        max_lookback = 5  # Only check last 5 blocks for duplicates
+        
+        for block in blocks:
+            # Normalize block for comparison (remove extra whitespace)
+            normalized = ' '.join(block.split())
+            
+            # Skip empty blocks
+            if not normalized:
+                continue
+            
+            # Skip if we've seen this EXACT block before
+            if normalized in seen_blocks:
+                continue
+            
+            # For substantial blocks (>10 words), check similarity
+            word_count = len(normalized.split())
+            if word_count >= 10:
+                # Check for substantial similarity (>85% match) in recent blocks only
+                is_duplicate = False
+                recent_blocks = seen_blocks[-max_lookback:] if len(seen_blocks) > max_lookback else seen_blocks
+                
+                for seen in recent_blocks:
+                    # Only compare substantial blocks
+                    if len(seen.split()) < 10:
+                        continue
+                    
+                    # Simple similarity: if 85%+ of words match, it's a duplicate
+                    block_words = set(normalized.lower().split())
+                    seen_words = set(seen.lower().split())
+                    
+                    intersection = block_words & seen_words
+                    similarity = len(intersection) / max(len(block_words), len(seen_words))
+                    
+                    if similarity > 0.85:
+                        is_duplicate = True
+                        break
+                
+                if is_duplicate:
+                    continue
+            
+            # Keep this block
+            unique_blocks.append(block)
+            seen_blocks.append(normalized)
+        
+        text = '\n\n'.join(unique_blocks)
+        
+        # 4. Remove broken table artifacts
+        text = re.sub(r'(Windows|Linux|Mac)\s*\n\s*Software\s*/\s*\n\s*Languages:', 
+                     r'\1 Software/Languages:', text)
+        text = re.sub(r'Operating\s*\n\s*Systems?:', 'Operating Systems:', text)
+        
+        # 5. Clean up numbered sections that are broken
+        text = re.sub(r'^\s*\d{1,2}\s*\n\s*Type of Industry:', 'Type of Industry:', 
+                     text, flags=re.MULTILINE)
+        
+        # 6. Remove empty bullets and clean up bullet formatting
+        lines = text.split('\n')
+        cleaned_lines = []
+        
+        for line in lines:
+            stripped = line.strip()
+            
+            # Skip lines that are just a bullet with no content
+            if re.match(r'^[•●○◦▪▫■□⬤]\s*$', stripped):
+                continue
+            
+            # Skip incomplete bullet lines (just "• word." with no substance)
+            if re.match(r'^[•●○◦▪▫■□⬤]\s+\w+\.$', stripped):
+                continue
+            
+            # Normalize all bullets to consistent style
+            if stripped.startswith(('•', '●', '○', '◦', '▪', '▫', '■', '□', '⬤')):
+                # Replace any bullet with standard •
+                line = re.sub(r'^[•●○◦▪▫■□⬤]', '•', line)
+            
+            cleaned_lines.append(line)
+        
+        text = '\n'.join(cleaned_lines)
+        
+        # 7. Normalize spacing
         text = re.sub(r' {2,}', ' ', text)
         text = re.sub(r'\n{3,}', '\n\n', text)
         
-        # Final date fix after all cleanup
+        # 8. Final date fix
         text = re.sub(r'\b0(15|16|17|18|19|20|21|22|23|24|25)-(\d{2})\b', r'20\1-\2', text)
         
+        # 9. Normalize section headers to consistent format (uppercase, no decorations)
+        # This makes it easier for LLM to parse
+        text = self._normalize_section_headers(text)
+        
+        # 10. Deduplicate section headers - only allow each section once
+        text = self._deduplicate_section_headers(text)
+        
         return text.strip()
+    
+    def _normalize_section_headers(self, text: str) -> str:
+        """Normalize section headers to consistent uppercase format without decorations"""
+        lines = text.split('\n')
+        normalized_lines = []
+        
+        # Section patterns to normalize
+        section_keywords = [
+            ('work experience', 'WORK EXPERIENCE'),
+            ('professional experience', 'WORK EXPERIENCE'),
+            ('experience', 'WORK EXPERIENCE'),
+            ('employment history', 'WORK EXPERIENCE'),
+            ('technical skills', 'SKILLS'),
+            ('key skills', 'SKILLS'),
+            ('skills', 'SKILLS'),
+            ('core competencies', 'SKILLS'),
+            ('education', '[REMOVED_SECTION_EDUCATION]'),
+            ('academic', '[REMOVED_SECTION_EDUCATION]'),
+            ('qualifications', '[REMOVED_SECTION_EDUCATION]'),
+            ('certifications', '[REMOVED_SECTION_EDUCATION]'),
+            ('certification', '[REMOVED_SECTION_EDUCATION]'),
+            ('training', '[REMOVED_SECTION_EDUCATION]'),
+            ('projects', 'PROJECTS'),
+            ('project', 'PROJECTS'),
+            ('summary', 'SUMMARY'),
+            ('profile', 'SUMMARY'),
+            ('objective', 'SUMMARY'),
+        ]
+        
+        for line in lines:
+            stripped_lower = line.strip().lower()
+            
+            # Check if this line is a section header
+            normalized = False
+            for keyword, replacement in section_keywords:
+                # Match if line is ONLY the keyword (possibly with colons/dashes)
+                if re.match(rf'^\s*{re.escape(keyword)}\s*[:;\-]*\s*$', stripped_lower):
+                    normalized_lines.append(f"\n{replacement}\n")
+                    normalized = True
+                    break
+            
+            if not normalized:
+                normalized_lines.append(line)
+        
+        return '\n'.join(normalized_lines)
+    
+    def _deduplicate_section_headers(self, text: str) -> str:
+        """Ensure each section header appears only once - keep first occurrence"""
+        lines = text.split('\n')
+        seen_sections = set()
+        deduped_lines = []
+        
+        # Standard section headers to track
+        section_headers = {'WORK EXPERIENCE', 'SKILLS', 'PROJECTS', 'SUMMARY', 'CERTIFICATIONS'}
+        
+        for line in lines:
+            stripped = line.strip()
+            
+            # Check if this is a section header we're tracking
+            if stripped in section_headers:
+                if stripped in seen_sections:
+                    # Skip this duplicate header and the extra blank line after it
+                    continue
+                else:
+                    seen_sections.add(stripped)
+                    deduped_lines.append(line)
+            else:
+                deduped_lines.append(line)
+        
+        return '\n'.join(deduped_lines)
     
     def process_directory(self, input_dir: str, output_dir: str = None):
         """Process all PDFs in directory"""
@@ -3453,13 +3762,16 @@ class PipelineOrchestrator:
         output_path = Path(output_dir) if output_dir else OUTPUT_DIR
         output_path.mkdir(exist_ok=True)
         
-        pdf_files = list(input_path.glob("**/*.pdf"))
-        logger.info(f"Found {len(pdf_files)} PDF files")
+        input_files = []
+        for ext in ['*.pdf', '*.docx', '*.doc']:
+             input_files.extend(list(input_path.glob(f"**/{ext}")))
+        
+        logger.info(f"Found {len(input_files)} files to process")
         
         stats = {cv_type: 0 for cv_type in CVType}
         success_count = 0
         
-        for pdf_file in pdf_files:
+        for pdf_file in input_files:
             try:
                 redacted_text, profile = self.process_cv(str(pdf_file))
                 
@@ -3476,7 +3788,7 @@ class PipelineOrchestrator:
                 logger.error(f"✗ Failed: {pdf_file.name} - {e}")
         
         logger.info(f"\n{'='*80}\nPROCESSING COMPLETE\n{'='*80}")
-        logger.info(f"Total: {len(pdf_files)} | Success: {success_count} | Failed: {len(pdf_files) - success_count}")
+        logger.info(f"Total: {len(input_files)} | Success: {success_count} | Failed: {len(input_files) - success_count}")
         logger.info(f"\nPipeline Usage:")
         for cv_type, count in stats.items():
             if count > 0:

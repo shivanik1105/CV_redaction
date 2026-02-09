@@ -1,0 +1,396 @@
+[NAME]
+
+[REDACTED_EMAIL]
+
+[REDACTED_PHONE]
+
+[NAME],
+
+Having 6+ years of experience in Production Support Role for
+supporting application developed on Windows and Linux servers. Having good understanding of monitoring production environment, incident management (ITIL), production deployment cycle, weekend activities/releases, change request, automation, escalation matrix and quarterly server activities. Involved in various projects and provided support throughout the project completion like Eo SL, application upgrade. Strong problem management and problem investigation skills with the ability to learn new skills quickly to value add in problem focus areas.
+
+[REMOVED_SECTION_EDUCATION]
+
+
+PROFESSIONAL EXPERIENCE
+
+UST Global- Prod Support Analyst
+Feb 2023 to Jan 2024
+Hard Skill
+SQL - Oracle DB, SQL server
+
+UNIX
+
+Power Bi
+Dekstop Power BI services
+MS Excel
+
+ITIL
+
+SDLC
+
+Geneos
+Control m
+Informatica
+Bistalk
+
+JIRA
+
+Key responsibilities:
+Soft Skill
+Observation
+Decision making Communication Multi-tasking
+Sneha Telkar
+Production Support Engineer
+Professional with total 6+ years of experience in consulting and
+supporting, functional as well as technical areas under the financia
+l domain . Experience d i n workin g alongsid e wit h busines s user s
+in and across Globe. Appreciated by clients, project manage
+rs, higher management at various instances for being proactive
+with responsibilit ies, sugges ting enhancem ent s in the exis ting process
+and providing commendable workarounds.
+As an Integration resource, responsible for providing production
+support to inbound and outbound process. 834 eligibility an
+d claim acknowledge.
+Working on control m failed and running job and taking
+necessary steps if the job fails or take more time than usual.
+Working on JIRA tickets that has been created in queue.
+Monitoring jobs in informatica, checking session logs in
+informatica.
+Scheduling adhoc run on jobs in control m for report generation
+Performing daily, monthly and quaterly activities like 834, 837
+inbound, FCF (FInalised claim file), EDI, 989 and 277CA
+acknowledgement.
+Closely worked on BA in the period of annual enrollment
+period - AEP
+Working on Tier one patching activity, active participation
+during deployment and UAT testing
+Basic check up of Biztalk jobs during job failures..
+worked in sql data migration project
+About Me
+My Contact
+
+Key responsibilities:
+Soft Skill
+Observation
+Decision making Communication Multi-tasking
+Sneha Telkar
+Production Support Engineer
+Professional with total 6+ years of experience in consulting and
+supporting, functional as well as technical areas under the financia
+l domain . Experience d i n workin g alongsid e wit h busines s user s
+in and across Globe. Appreciated by clients, project manage
+rs, higher management at various instances for being proactive
+with responsibilit ies, sugges ting enhancem ent s in the exis ting process
+and providing commendable workarounds.
+As an Integration resource, responsible for providing production
+support to inbound and outbound process. 834 eligibility an
+d claim acknowledge.
+Working on control m failed and running job and taking
+necessary steps if the job fails or take more time than usual.
+Working on JIRA tickets that has been created in queue.
+Monitoring jobs in informatica, checking session logs in
+informatica.
+Scheduling adhoc run on jobs in control m for report generation
+Performing daily, monthly and quaterly activities like 834, 837
+inbound, FCF (FInalised claim file), EDI, 989 and 277CA
+acknowledgement.
+Closely worked on BA in the period of annual enrollment
+period - AEP
+Working on Tier one patching activity, active participation
+during deployment and UAT testing
+Basic check up of Biztalk jobs during job failures..
+worked in sql data migration project
+Achievements
+Allscripts- Production Support Analyst
+Stood
+star
+performer
+of
+the
+month.
+Received
+a
+word
+of
+appreciation from client
+for completing current day work
+in time.
+Attended various learning and
+development
+trainings
+and
+received
+certificates.
+Awarded
+as
+best
+performer in fun activities
+August 2020 to January 2022
+Key responsibilities:
+My role in this organization demands me to stay on my toes
+whilst supporting application and production environment.
+Monitoring job, processes, messaging Q, servers, INC Q, web links
+and data inconsistency via Geneos tool.
+Handle support related issues to manage the support issue
+resolution within defined timelines.
+Accept tickets on problem management tool and work towards
+resolving them while working with the development team.
+Perform Root Cause Analysis of the reported issues. Work with
+the development team to understand the new release, produc
+t features.
+Create and maintain a knowledge base of known support issues
+and resolutions.
+We provide support to user’s query, data extraction request,
+enhancement request and all issues raised by them.
+Performing routine health for the application system by doing
+checkouts.
+Working on failed jobs promptly and coordinating with upstream
+and downstream systems to resolve the issue.
+Working closely with the users, operators to resolve their issue
+related to any dispute transaction.
+Active participation in the outage calls and interact with
+business to resolve the issue timely.
+Maintaining the in-house developed adapters in UNIX servers,
+deploying emergency fixes, scheduled bundles and patc
+h releases, monitoring of active connections, errors or exceptio
+ns thrown by the APIs to adapters, querying of database for report
+extraction are some of the tasks to summarize
+Highlighting recuring issues to BA and DEV to have permanent fix
+on them also identifying process which can be automated.
+
+CO-CURRUCULAR ACTIVITIES
+
+Participated in National Level
+Management Fest, Intra
+Management Fest.
+Won various prizes in Fest events.
+Won certificates in NCC.
+Participated in many NGO visit
+
+[REMOVED_SECTION_PERSONAL]
+
+Maersk - Support Analyst
+2019 to June 2020
+English: Speaking, Reading and Writing
+Hindi: Speaking, Reading and Writing
+Kannada: Speaking, Reading an
+d Writing
+Marathi: Speaking, Reading and Writing Konkani: Speaking
+Key responsibilities:
+Providing 24*7 support to multiple application used in
+invoice processing.
+Providing weekend on call support for weekend activities like
+service restart, server reboot, weekend jobs monitor.
+Creating weekend work book and cutover for weekend
+activities.
+Working on job failure by debugging job logs in log directory
+and taking appropriate action
+Work with Dev team at the time of deployment and
+supporting new product
+Ensuring all the application and process are up and running
+well
+Creation of SQL queries for the users for data extraction
+report
+from data base
+Scheduling adhoc Queries via task scheduler in windows server.
+Achievements
+Allscripts- Production Support Analyst
+Stood
+star
+performer
+of
+the
+month.
+Received
+a
+word
+of
+appreciation from client
+for completing current day work
+in time.
+Attended various learning and
+development
+trainings
+and
+received
+certificates.
+Awarded
+as
+best
+performer in fun activities
+August 2020 to January 2022
+Key responsibilities:
+My role in this organization demands me to stay on my toes
+whilst supporting application and production environment.
+Monitoring job, processes, messaging Q, servers, INC Q, web links
+and data inconsistency via Geneos tool.
+Handle support related issues to manage the support issue
+resolution within defined timelines.
+Accept tickets on problem management tool and work towards
+resolving them while working with the development team.
+Perform Root Cause Analysis of the reported issues. Work with
+the development team to understand the new release, produc
+t features.
+Create and maintain a knowledge base of known support issues
+and resolutions.
+We provide support to user’s query, data extraction request,
+enhancement request and all issues raised by them.
+Performing routine health for the application system by doing
+checkouts.
+Working on failed jobs promptly and coordinating with upstream
+and downstream systems to resolve the issue.
+Working closely with the users, operators to resolve their issue
+related to any dispute transaction.
+Active participation in the outage calls and interact with
+business to resolve the issue timely.
+Maintaining the in-house developed adapters in UNIX servers,
+deploying emergency fixes, scheduled bundles and patc
+h releases, monitoring of active connections, errors or exceptio
+ns thrown by the APIs to adapters, querying of database for report
+extraction are some of the tasks to summarize
+Highlighting recuring issues to BA and DEV to have permanent fix
+on them also identifying process which can be automated.
+
+Maersk - Support Analyst
+2019 to June 2020
+English: Speaking, Reading and Writing
+Hindi: Speaking, Reading and Writing
+Kannada: Speaking, Reading an
+d Writing
+Marathi: Speaking, Reading and Writing Konkani: Speaking
+Key responsibilities:
+Providing 24*7 support to multiple application used in
+invoice processing.
+Providing weekend on call support for weekend activities like
+service restart, server reboot, weekend jobs monitor.
+Creating weekend work book and cutover for weekend
+activities.
+Working on job failure by debugging job logs in log directory
+and taking appropriate action
+Work with Dev team at the time of deployment and
+supporting new product
+Ensuring all the application and process are up and running
+well
+Creation of SQL queries for the users for data extraction
+report
+from data base
+Scheduling adhoc Queries via task scheduler in windows server.
+Amazon Development Center - Fin Ops Support Analyst
+July 2018 to September 2019
+Key responsibilities:
+TATA Consultancy Services - Production Support Engineer
+Total Duration: June 2014 to October 2017 (3 Year 4 Months)
+Data Analyst (2yrs)
+Key responsibilities:
+Release co-ordination with stakeholders to ensure smooth deployment into production.
+Supporting in Accounts Receivable Cash, client billing and collection Applications for smooth payment and
+invoicing process.
+Performing application health checks and ensuring that all applications are green before the start of business.
+Monitoring production environment to ensure everything is up and running fine.
+Fixing the production issues to have zero business impact and ensuring that the SLAs are being met.
+Monitoring job’s, investigating job failures and resolve them. Participating in the deployment, Patching, DR &
+QMW weekend activities.
+Performing sanity checks for ensuring that the application is working fine and given post-deployment support
+Daily system and application health checks are performed to ensure the smooth running of the application.
+Identifying & resolving customer issues within SLA & following standard priority processes P1, P2
+Working on adhoc data extraction request from business.
+Addressing users query and providing solution on them.
+Documenting known production incidents into knowledge base.
+Key responsibilities:
+Responsible for 24*7 supporting and maintaining system application written in SQL, PL/SQL and Unix.
+Providing weekend on call support for weekend activities like Host Reboot, Hardware Replacement and
+deployment. Sending i Announce & i Alert to set of users which will be impacted by application outage.
+Providing real time and short-term solution to user’s query on critical issues.
+Working on Service Now to Attend tickets like product info missing, data discrepancy by datalink url and data
+extraction. Etc. Finding and sharing the root cause of the issue reported by users.
+Handling database alerts and taking appropriate action like adding table space, remove blocking, reduce
+replication latency, taking server out of rotation.
+Categorization of issues – create report in Ms-excel to check what are the frequent issue team is getting and
+reason behind it and address same to Dev to reduce volume.
+Creating KA for new issues and share with L1 support team so that they can resolve issue at their end by following
+the steps.
+Creating weekend workbook and cutover for weekend activities.
+Working on job failure by debugging job logs in log directory and taking appropriate action.
+Work with Dev team at the time of deployment and supporting new product.
+Ensuring all the application and process are up and running well.
+Extract data from data base as per user’s requirement.
+Extract data from data base as per user’s requirement. Preparing dashboards on Accounts Receivable data
+using Power Bi desktop.
+Helps in taking Decision based on the report findings Extracting the Financial AR and AP data from the data
+source like Ms Excel Oracle, SQL and sales force.
+working on Data Cleaning and removing unwanted information through Power Bi query editor Prepare reports
+and interactive dashboards on the above informatio and communicate the insights of these reports to th
+e particular location's Accounts Manager.
+Consult with team and have discussion regarding the dashboards to work on the improvement measures.
+Studying the why clients are terminating their services with the company and submitting the reports to AR
+manager that helps the manager to take necessary actions in retaining the clients.
+Extracting Accounts statement and aging report and preparing dashboards of the sane and sharing the reports
+with AR manager to chase the pending payment.
+Studying the data and understanding the client's demand for the particular healthcare product. Studying with
+customer's payment trend with the customer data, that helps in altering the credit period of clients by applying
+statistical forecasting and tests.
+Extracting the data on AR Dispute Cases and understanding the trend of disputes, sharing the reports with AR
+manager to understand the cases on payment hold.
+Preparing AR collection dashboards and submitting the reports to the AR Collection team to chase the pending
+payments.
+Preparing adhoc projects and dashboards as per the request.
+Amazon Development Center - Fin Ops Support Analyst
+July 2018 to September 2019
+Key responsibilities:
+TATA Consultancy Services - Production Support Engineer
+Total Duration: June 2014 to October 2017 (3 Year 4 Months)
+Data Analyst (2yrs)
+Key responsibilities:
+Release co-ordination with stakeholders to ensure smooth deployment into production.
+Supporting in Accounts Receivable Cash, client billing and collection Applications for smooth payment and
+invoicing process.
+Performing application health checks and ensuring that all applications are green before the start of business.
+Monitoring production environment to ensure everything is up and running fine.
+Fixing the production issues to have zero business impact and ensuring that the SLAs are being met.
+Monitoring job’s, investigating job failures and resolve them. Participating in the deployment, Patching, DR &
+QMW weekend activities.
+Performing sanity checks for ensuring that the application is working fine and given post-deployment support
+Daily system and application health checks are performed to ensure the smooth running of the application.
+Identifying & resolving customer issues within SLA & following standard priority processes P1, P2
+Working on adhoc data extraction request from business.
+Addressing users query and providing solution on them.
+Documenting known production incidents into knowledge base.
+Key responsibilities:
+Responsible for 24*7 supporting and maintaining system application written in SQL, PL/SQL and Unix.
+Providing weekend on call support for weekend activities like Host Reboot, Hardware Replacement and
+deployment. Sending i Announce & i Alert to set of users which will be impacted by application outage.
+Providing real time and short-term solution to user’s query on critical issues.
+Working on Service Now to Attend tickets like product info missing, data discrepancy by datalink url and data
+extraction. Etc. Finding and sharing the root cause of the issue reported by users.
+Handling database alerts and taking appropriate action like adding table space, remove blocking, reduce
+replication latency, taking server out of rotation.
+Categorization of issues – create report in Ms-excel to check what are the frequent issue team is getting and
+reason behind it and address same to Dev to reduce volume.
+Creating KA for new issues and share with L1 support team so that they can resolve issue at their end by following
+the steps.
+Creating weekend workbook and cutover for weekend activities.
+Working on job failure by debugging job logs in log directory and taking appropriate action.
+Work with Dev team at the time of deployment and supporting new product.
+Ensuring all the application and process are up and running well.
+Extract data from data base as per user’s requirement.
+Extract data from data base as per user’s requirement. Preparing dashboards on Accounts Receivable data
+using Power Bi desktop.
+Helps in taking Decision based on the report findings Extracting the Financial AR and AP data from the data
+source like Ms Excel Oracle, SQL and sales force.
+working on Data Cleaning and removing unwanted information through Power Bi query editor Prepare reports
+and interactive dashboards on the above informatio and communicate the insights of these reports to th
+e particular location's Accounts Manager.
+Consult with team and have discussion regarding the dashboards to work on the improvement measures.
+Studying the why clients are terminating their services with the company and submitting the reports to AR
+manager that helps the manager to take necessary actions in retaining the clients.
+Extracting Accounts statement and aging report and preparing dashboards of the sane and sharing the reports
+with AR manager to chase the pending payment.
+Studying the data and understanding the client's demand for the particular healthcare product. Studying with
+customer's payment trend with the customer data, that helps in altering the credit period of clients by applying
+statistical forecasting and tests.
+Extracting the data on AR Dispute Cases and understanding the trend of disputes, sharing the reports with AR
+manager to understand the cases on payment hold.
+Preparing AR collection dashboards and submitting the reports to the AR Collection team to chase the pending
+payments.
+Preparing adhoc projects and dashboards as per the request.

@@ -1,0 +1,27 @@
+{
+  "summary": {
+    "total": 1,
+    "success": 0,
+    "errors": 1,
+    "verdicts": {
+      "SHORTLIST": 0,
+      "BACKUP": 0,
+      "REJECT": 0,
+      "PENDING JD": 0
+    }
+  },
+  "job_description": null,
+  "processed_at": "2026-02-09T20:56:14.559647",
+  "model": "gemini-1.5-flash",
+  "provider": "gemini",
+  "results": [
+    {
+      "error": "API_ERROR",
+      "error_message": "404 NOT_FOUND. {'error': {'code': 404, 'message': 'models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.', 'status': 'NOT_FOUND'}}",
+      "_meta": {
+        "source_file": "REDACTED_2024_Resume_MuleSoft_Ravi_Purankar-1.txt",
+        "processed_at": "2026-02-09T20:56:14.058580"
+      }
+    }
+  ]
+}

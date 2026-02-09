@@ -1,9 +1,19 @@
+[NAME]
+
 Senior System Engineer
 A highly motivated person with strong technical, team player and problem solving skills who like to
 enhance a potential and apply technical knowledge while facing new challenges, resulting in growth and
-development of company. HTML JavaScript jQuery
+development of company.
+
+[REDACTED_EMAIL]
+
+[NAME] HTML JavaScript jQuery
 SQL Azure Agile Unit Testing SOAPUI
-VisualStudio Fiddler Documentation PROJECTACHIEVEMENTS SAMM Team
+VisualStudio Fiddler Documentation
+
+PROJECTACHIEVEMENTS
+
+SAMM Team
 Recognized for consistently delivering high-quality code and
 innovative problem-solving, contributing signiﬁcantly to project
 success and team performance.
@@ -12,7 +22,16 @@ Successfully navigated through complex code base to identify and
 resolve elusive bugs, enhancing system stability and user
 experience. Instrumental in architecting innovative solutions to
 intricate feature requests, optimizing performance and
-functionality while adhering to strict deadlines. WORKEXPERIENCE Senior System Engineer IBM 12/2021 - Present Client- NBS (Banking Domain-)
+functionality while adhering to strict deadlines.
+
+WORKEXPERIENCE
+
+Senior System Engineer
+
+IBM
+
+12/2021 - Present ,
+Client- NBS (Banking Domain-)
 Achievements/Tasks
 Developed and maintained scalable web applications using
 patterns.
@@ -35,9 +54,10 @@ retrospective meetings to continuously improve team
 performance and project delivery.
 Software Engineer
 Capgemini
-04/2019 - 12/2021 Client- R&L Carriers(Logistic Domain-)
+04/2019 - 12/2021 ,
+Client- R&L Carriers(Logistic Domain-)
 Achievements/Tasks
-Developed and maintained ASP. NET web applications
+Developed and maintained ASP. NET web applications,
 following industry best practices and coding standards.
 Implemented client-side scripting using jQuery to enhance
 user interactivity and responsiveness.
@@ -51,21 +71,39 @@ Collaborated with QA team to identify and resolve bugs and
 issues in a timely manner.
 Assisted in the deployment and conﬁguration of web
 applications on production, staging servers, ensuring
-smooth and seamless deployment processes. SKILLS Web Services HTML JavaScript jQuery
+smooth and seamless deployment processes.
+
+[REDACTED_SOCIAL]
+
+
+SKILLS
+
+
+Web Services HTML JavaScript jQuery
 SQL Azure Agile Unit Testing SOAPUI
-VisualStudio Fiddler Documentation PROJECTACHIEVEMENTS SAMM Team
+VisualStudio Fiddler Documentation
+
+SAMM Team
 Recognized for consistently delivering high-quality code and
 innovative problem-solving, contributing signiﬁcantly to project
 success and team performance.
 R&L Carriers
 Successfully navigated through complex code base to identify and
 resolve elusive bugs, enhancing system stability and user
-experience. Instrumental in architecting innovative solutions to
 intricate feature requests, optimizing performance and
-functionality while adhering to strict deadlines. Bachelor of Engineering
+functionality while adhering to strict deadlines.
+
+[REMOVED_SECTION_EDUCATION]
+
+Bachelor of Engineering
 Mauli Group of Institutions College of Navi Engineering and Technology, Shegaon.
-08/2014 - 05/2017 , Shegaon
-LANGUAGES English German (A1)
+08/2014 - 05/2017 , Shegaon,
+
+LANGUAGES
+
+English German (A1)
 Full Professional Proﬁciency Elementary Proﬁciency
 Hindi Marathi
 Professional Working Proﬁciency Native or Bilingual Proﬁciency
+
+[REMOVED_SECTION_PERSONAL]

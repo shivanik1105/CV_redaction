@@ -1,0 +1,114 @@
+[NAME]
+
+[REDACTED_CONTACT_LINE]
+
+
+SUMMARY
+
+
+7+Work Experience: I'm employed with Cognizant Technology
+Solution company at the moment. I can work with a variety of
+technologies as I have worked on projects at different phases of
+their life cycles.
+8+ years of experience in development and implementation in IT
+Industry with. Net MVC, C#, React JS, JavaScript, Jquery its My
+Technological forte.
+Over 5 years of Experience on Microsoft Technologies Visual Studio
+2012/2017 C#, ASP. NET-MVC, Web API, SQLSERVER and other
+Web related tools.
+Over 2 years of Experience on React JS, High chart JS, JavaScript.
+Experience in Scripting languages JavaScript and Jquery for better
+
+UI.
+
+Experience in Entity framework for Data manipulation database for
+retrieve & Store the Information value. Experience of working in the
+complete Software development life cycle
+
+PROFESSIONALEXPERIENCE
+
+OneBilling - UPS (Dec 2022- till) - Cognizant Tech
+Environment
+C# , . NET core MVC, Web API , Entity Framework, JavaScript
+Database
+MS-SQL Server 2019
+Role
+Development and architecture . Net core MVC solution
+Description: Employees at UPS may submit requests for any product
+(including hardware products) by utilizing this application. Once a
+request is made, it passes through several levels of review..
+Request Submit: User is below to one region so as per the region it
+will select the supervisor name .
+Once supervisor is selected then populates his details .(Account no
+, Region , Grade etc).
+User will select the item category -Medical, Mechanical , other
+material . After that user will select the actual product , required till
+date , amount , any document then request will submitted .
+Request Approval: for request approval request goes from various
+stages -supervisor , manager and regional approval . Approval can
+reject , approve, RFI (Request for Information) the request . Once
+request is approve then item is delivered to the user .
+ICLS3- Web - Client- UPS (Oct 2021-Nov20 23) -
+Cognizant Tech
+Environment
+React JS ,. NET Web API , C# , High Chartjs
+Database
+MS-SQL Server 2019
+Role
+Development and architecture React JS solution
+Description:
+For UPS (United Parcel Service), we developed this application. The
+ICLS3 program keeps track of transaction, report, and client
+information. 1. It keeps track of Customer data according to
+country.(Ex: Philips, Amersport) 2. Customers have a variety of
+accounts. So it will keep the account data updated. parcel that is
+transferred between accounts. 3. Reports on parcel deliveries to
+different accounts will be displayed by this program. The report
+comprises multiple filter parameters, including region, country, and
+date account.
+LMS Analytics Shapoorji Pallonji (Aug 2020- Sept 21)-
+ITCube Solution
+Environment
+C# 4.0, ReactJS, JavaScript, High Chartjs,. NET Web API, MaterialUI
+Database
+MS-SQL Server 2012
+Role
+Development and architecture React JS solution
+Description: The labor management system, or LMS, is the source
+application. We are presenting the information graphically
+according to the source application. We are displaying the data for
+the modules on attendance, labor, wage, and compliance using
+various filter parameters according to the region, project, and labor
+contractor. High Chart js is the graphical representation tool that
+we use.
+Project Module.
+Region Module.
+Corporate Module.
+Applying Filter.
+CPMS –Kuwait Oil Corporation (Aug 2018- Sept 20)- IT
+Cube Solution
+Environment
+C# 4.0, ASP. NET MVC , Ajax , JavaScript , Jquery
+Database
+MS-SQL Server 2012
+Role
+Development
+Responsibilities
+Involved in requirement gathering and implementation
+Development and Maintenance.
+Description: In accordance with the labor contract, we are keeping
+the labor information up to date. There are two types of labor:
+contract-based labor (which is not Kuwaiti labor) and KOC labor
+(which is Kuwaiti labor). Based on the nature of labor Regulations
+differ from rules. The administrator can establish the policies that
+apply to the staff. Admin: Using this system, the admin can
+establish attendance policies, holiday policies, and other guidelines
+that apply to employees based on project and contract
+specifications. The approval group can be set by the admin based on
+the module.
+
+BASICACADEMICCREDENTIALS
+
+[REMOVED_SECTION_EDUCATION]
+
+[REMOVED_SECTION_PERSONAL]

@@ -92,11 +92,48 @@ Transforms raw CV text into clean "Professional Profiles" safe for LLM consumpti
 
 ---
 
+## 🤖 LLM Analysis (NEW!)
+
+**Automatically analyze anonymized CVs with AI for structured metadata extraction and JD matching.**
+
+```bash
+# Analyze all CVs with job description matching
+python llm_batch_processor.py final_output/ --jd job_description.txt
+
+# Analyze single CV
+python single_cv_analyzer.py final_output/REDACTED_CV_Name.txt job.txt
+
+# Complete pipeline: Redact + Analyze
+.\analyze_resumes.ps1 -JobDescription example_job_description.txt
+```
+
+**Features:**
+- 🎯 **Structured Metadata Extraction**: Years of experience, skills, tools, seniority level
+- 📋 **JD Matching**: Automated SHORTLIST/BACKUP/REJECT verdicts with confidence scores
+- 🔒 **Privacy-Safe**: Works with already-anonymized CVs, no PII exposure
+- 📊 **Batch Processing**: Analyze 100s of CVs in minutes
+- 💾 **JSON + Text Reports**: Machine-readable and human-readable outputs
+
+**Setup (30 seconds):**
+```bash
+pip install openai anthropic google-genai
+set OPENAI_API_KEY=your-key-here
+# OR use Anthropic/Gemini
+python llm_batch_processor.py --limit 3  # Test with 3 CVs
+```
+
+📖 **See [LLM_ANALYSIS_README.md](LLM_ANALYSIS_README.md) for complete guide**
+
+---
+
 ## 📁 Files
 
 **Main System:**
 - `universal_pipeline_engine.py` - Complete pipeline system
 - `run_universal_pipeline.py` - Easy command-line runner
+- `llm_batch_processor.py` - LLM batch analysis (NEW!)
+- `single_cv_analyzer.py` - Single CV analyzer (NEW!)
+- `analyze_resumes.ps1` - Complete pipeline script (NEW!)
 
 **Documentation:**
 - `UNIVERSAL_PIPELINE_GUIDE.md` - Complete guide
