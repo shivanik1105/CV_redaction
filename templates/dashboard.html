@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recruiter Dashboard - CV Intelligence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2em;
+        }
+
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .stat-card .value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .main-panel {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .job-description-section {
+            margin-bottom: 30px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .button-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .candidates-grid {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .candidate-card {
+            border: 2px solid #eee;
+            padding: 20px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .candidate-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .candidate-card.shortlist {
+            border-left: 5px solid #10b981;
+        }
+
+        .candidate-card.backup {
+            border-left: 5px solid #f59e0b;
+        }
+
+        .candidate-card.reject {
+            border-left: 5px solid #ef4444;
+        }
+
+        .candidate-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .candidate-id {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .verdict-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .verdict-badge.shortlist {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .verdict-badge.backup {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .verdict-badge.review {
+            background: #f3e8ff;
+            color: #6b21a8;
+            border: 2px solid #a855f7;
+        }
+
+        .match-score {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .candidate-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .detail-section h4 {
+            color: #888;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .tag {
+            background: #f3f4f6;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            color: #555;
+        }
+
+        .narrative {
+            color: #666;
+            line-height: 1.6;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        #resultsCount {
+            color: #888;
+            margin-bottom: 15px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Recruiter Dashboard</h1>
+            <div class="nav-links">
+                <a href="/">Upload CVs</a>
+                <a href="/dashboard">Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <h3>Total Candidates</h3>
+                <div class="value" id="totalCandidates">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Shortlisted</h3>
+                <div class="value" id="shortlistedCount" style="color: #10b981;">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Backup</h3>
+                <div class="value" id="backupCount" style="color: #f59e0b;">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Needs Review</h3>
+                <div class="value" id="reviewCount" style="color: #8b5cf6;">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>⚠️ Human Review</h3>
+                <div class="value" id="humanReviewCount" style="color: #ef4444;">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Avg Match Score</h3>
+                <div class="value" id="avgScore">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Avg Confidence</h3>
+                <div class="value" id="avgConfidence" style="color: #8b5cf6;">-</div>
+            </div>
+        </div>
+
+        <!-- Job Description & Extraction -->
+        <div class="main-panel">
+            <h2 class="section-title">📝 Batch Extract Intelligence</h2>
+            
+            <div class="job-description-section">
+                <label for="jobDescription" style="font-weight: 600; display: block; margin-bottom: 10px;">
+                    Job Description:
+                </label>
+                <textarea 
+                    id="jobDescription" 
+                    placeholder="Paste the job description here to analyze all CVs against it..."></textarea>
+            </div>
+
+            <button class="button" onclick="batchExtract()">
+                🚀 Extract Intelligence from All CVs
+            </button>
+            
+            <button class="button button-secondary" onclick="loadCandidates()">
+                🔄 Refresh Data
+            </button>
+        </div>
+
+        <!-- Human Review Queue (Priority Section) -->
+        <div class="main-panel" style="border: 3px solid #ef4444; background: #fef2f2;">
+            <h2 class="section-title" style="color: #dc2626;">
+                ⚠️ Human Review Required (Confidence <70%)
+            </h2>
+            
+            <p style="margin-bottom: 20px; color: #666;">
+                <strong>No Auto-Reject Policy:</strong> These candidates have low AI confidence scores or unclear CVs. 
+                Human recruiter must review before any final decision.
+            </p>
+            
+            <button class="button" onclick="loadReviewQueue()" style="background: #dc2626;">
+                📋 Load Review Queue
+            </button>
+            
+            <div style="margin-top: 20px; font-size: 0.9em; color: #888;">
+                <span id="reviewQueueCount"></span>
+            </div>
+            
+            <div id="reviewQueue" style="margin-top: 20px;"></div>
+        </div>
+
+        <!-- Search & Filter -->
+        <div class="main-panel">
+            <h2 class="section-title">🔍 Search & Filter Candidates</h2>
+            
+            <div class="filter-section">
+                <div class="filter-group">
+                    <label for="filterVerdict">Verdict:</label>
+                    <select id="filterVerdict">
+                        <option value="">All</option>
+                        <option value="SHORTLIST">Shortlist</option>
+                        <option value="BACKUP">Backup</option>
+                        <option value="REVIEW">Review Needed</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="filterSeniority">Seniority Level:</label>
+                    <select id="filterSeniority">
+                        <option value="">All</option>
+                        <option value="ENTRY">Entry</option>
+                        <option value="MID">Mid</option>
+                        <option value="SENIOR">Senior</option>
+                        <option value="LEAD">Lead</option>
+                        <option value="EXECUTIVE">Executive</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="filterMinScore">Min Match Score:</label>
+                    <input type="number" id="filterMinScore" min="0" max="100" placeholder="0-100">
+                </div>
+
+                <div class="filter-group">
+                    <label for="filterMinConfidence">Min Confidence:</label>
+                    <input type="number" id="filterMinConfidence" min="0" max="100" placeholder="0-100">
+                </div>
+
+                <div class="filter-group">
+                    <label for="filterPrimaryDomain">Primary Domain:</label>
+                    <input type="text" id="filterPrimaryDomain" placeholder="e.g., DevOps, Backend...">
+                </div>
+
+                <div class="filter-group">
+                    <label for="filterMinYears">Min Years Experience:</label>
+                    <input type="number" id="filterMinYears" min="0" step="0.5" placeholder="e.g., 5">
+                </div>
+
+                <div class="filter-group">
+                    <label for="filterMaxYears">Max Years Experience:</label>
+                    <input type="number" id="filterMaxYears" min="0" step="0.5" placeholder="e.g., 10">
+                </div>
+
+                <div class="filter-group">
+                    <label for="filterSkills">Required Skills (comma-separated):</label>
+                    <input type="text" id="filterSkills" placeholder="Python, AWS, React...">
+                </div>
+            </div>
+
+            <button class="button" onclick="searchCandidates()">
+                🔍 Search
+            </button>
+            
+            <button class="button" onclick="clearFilters()" style="background: #6b7280;">
+                ✕ Clear Filters
+            </button>
+
+            <div id="resultsCount"></div>
+
+            <!-- Candidates List -->
+            <div id="candidatesList" class="candidates-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading candidates...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load statistics on page load
+        window.onload = function() {
+            loadStatistics();
+            loadCandidates();
+        };
+
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/statistics');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.statistics;
+                    document.getElementById('totalCandidates').textContent = stats.total_candidates || 0;
+                    document.getElementById('shortlistedCount').textContent = stats.shortlisted || 0;
+                    document.getElementById('backupCount').textContent = stats.backup || 0;
+                    document.getElementById('reviewCount').textContent = stats.review_needed || 0;
+                    document.getElementById('humanReviewCount').textContent = stats.requires_human_review || 0;
+                    document.getElementById('avgScore').textContent = stats.average_match_score || 0;
+                    document.getElementById('avgConfidence').textContent = stats.average_confidence_score || 0;
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        async function loadCandidates() {
+            const container = document.getElementById('candidatesList');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading candidates...</p></div>';
+            
+            try {
+                const response = await fetch('/api/all-candidates');
+                const data = await response.json();
+                
+                if (data.success && data.candidates.length > 0) {
+                    displayCandidates(data.candidates);
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <h3>No candidates found</h3>
+                            <p>Extract intelligence from CVs using the form above to get started.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading candidates:', error);
+                container.innerHTML = `
+                    <div class="alert alert-error">
+                        Error loading candidates. Make sure Supabase is configured.
+                    </div>
+                `;
+            }
+        }
+
+        async function batchExtract() {
+            const jobDescription = document.getElementById('jobDescription').value.trim();
+            
+            if (!jobDescription) {
+                alert('Please enter a job description first');
+                return;
+            }
+
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = '⏳ Extracting...';
+
+            try {
+                const response = await fetch('/api/batch-extract', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ job_description: jobDescription })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`✓ Extracted intelligence from ${data.successful}/${data.total} CVs`);
+                    loadStatistics();
+                    loadCandidates();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error extracting intelligence: ' + error.message);
+            } finally {
+                button.disabled = false;
+                button.textContent = '🚀 Extract Intelligence from All CVs';
+            }
+        }
+
+        async function searchCandidates() {
+            const filters = {
+                verdict: document.getElementById('filterVerdict').value,
+                seniority_level: document.getElementById('filterSeniority').value,
+                min_match_score: document.getElementById('filterMinScore').value ? parseInt(document.getElementById('filterMinScore').value) : null,
+                min_confidence_score: document.getElementById('filterMinConfidence').value ? parseInt(document.getElementById('filterMinConfidence').value) : null,
+                primary_domain: document.getElementById('filterPrimaryDomain').value || null,
+                min_years_experience: document.getElementById('filterMinYears').value ? parseFloat(document.getElementById('filterMinYears').value) : null,
+                max_years_experience: document.getElementById('filterMaxYears').value ? parseFloat(document.getElementById('filterMaxYears').value) : null,
+                required_skills: document.getElementById('filterSkills').value ? 
+                    document.getElementById('filterSkills').value.split(',').map(s => s.trim()) : null
+            };
+
+            const container = document.getElementById('candidatesList');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Searching...</p></div>';
+
+            try {
+                const response = await fetch('/api/search-candidates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(filters)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('resultsCount').textContent = `Found ${data.count} candidates`;
+                    if (data.candidates.length > 0) {
+                        displayCandidates(data.candidates);
+                    } else {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🔍</div>
+                                <h3>No candidates match your filters</h3>
+                                <p>Try adjusting your search criteria.</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    container.innerHTML = `<div class="alert alert-error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-error">Error searching: ${error.message}</div>`;
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('filterVerdict').value = '';
+            document.getElementById('filterSeniority').value = '';
+            document.getElementById('filterMinScore').value = '';
+            document.getElementById('filterMinConfidence').value = '';
+            document.getElementById('filterPrimaryDomain').value = '';
+            document.getElementById('filterMinYears').value = '';
+            document.getElementById('filterMaxYears').value = '';
+            document.getElementById('filterSkills').value = '';
+            document.getElementById('resultsCount').textContent = '';
+            loadCandidates();
+        }
+
+        function displayCandidates(candidates) {
+            const container = document.getElementById('candidatesList');
+            
+            container.innerHTML = candidates.map(candidate => `
+                <div class="candidate-card ${candidate.verdict.toLowerCase()}" onclick="viewCandidate('${candidate.anonymized_id}')">
+                    <div class="candidate-header">
+                        <div class="candidate-id">👤 ${candidate.anonymized_id}</div>
+                        <div class="verdict-badge ${candidate.verdict.toLowerCase()}">
+                            ${candidate.requires_human_review ? '⚠️ ' : ''}${candidate.verdict}
+                        </div>
+                        ${candidate.recruiter_override ? `
+                            <div class="verdict-badge" style="background: #059669; color: white; margin-left: 10px;">
+                                ✓ REVIEWED: ${candidate.recruiter_override}
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="match-score">
+                        Match: ${candidate.match_score}% 
+                        <span style="margin-left: 10px; color: ${candidate.confidence_score < 70 ? '#dc2626' : '#888'};">
+                            Confidence: ${candidate.confidence_score || 0}%${candidate.confidence_score < 70 ? ' ⚠️' : ''}
+                        </span>
+                    </div>
+                    
+                    <div class="candidate-details">
+                        <div class="detail-section">
+                            <h4>Experience</h4>
+                            <p><strong>${candidate.years_experience || candidate.total_years || 'N/A'}</strong> years</p>
+                            <p>${candidate.seniority_level || 'N/A'}</p>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h4>Core Technical Skills</h4>
+                            <div class="tags">
+                                ${(candidate.core_technical_skills || candidate.technical_skills || []).slice(0, 5).map(skill => 
+                                    `<span class="tag">${skill}</span>`
+                                ).join('')}
+                                ${(candidate.core_technical_skills || candidate.technical_skills || []).length > 5 ? '<span class="tag">...</span>' : ''}
+                            </div>
+                        </div>
+                        
+                        ${candidate.secondary_technical_skills && candidate.secondary_technical_skills.length > 0 ? `
+                        <div class="detail-section">
+                            <h4>Secondary Skills</h4>
+                            <div class="tags">
+                                ${candidate.secondary_technical_skills.slice(0, 3).map(skill => 
+                                    `<span class="tag" style="background: #e3f2fd;">${skill}</span>`
+                                ).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <div class="detail-section">
+                            <h4>Domain</h4>
+                            <div class="tags">
+                                ${candidate.primary_domain ? `<span class="tag" style="background: #667eea; color: white;">${candidate.primary_domain}</span>` : ''}
+                                ${(candidate.secondary_domains || candidate.domains || []).map(domain => 
+                                    `<span class="tag">${domain}</span>`
+                                ).join('')}
+                            </div>
+                        </div>
+                        
+                        ${candidate.leadership_indicators && candidate.leadership_indicators.length > 0 ? `
+                        <div class="detail-section">
+                            <h4>Leadership</h4>
+                            <div class="tags">
+                                ${candidate.leadership_indicators.map(indicator => 
+                                    `<span class="tag" style="background: #fff3cd; color: #856404;">🌟 ${indicator}</span>`
+                                ).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="narrative">${candidate.cleaned_narrative || candidate.narrative_summary || 'No summary available'}</div>
+                    
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; color: #888; font-size: 0.9em;">
+                        <strong>Verdict Reason:</strong> ${candidate.verdict_reason || candidate.reasoning || 'No reasoning provided'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewCandidate(candidateId) {
+            // For now, just log - you could open a modal with full details
+            console.log('Viewing candidate:', candidateId);
+            // Could implement a modal or redirect to detail page
+        }
+
+        // Human Review Queue Functions
+        async function loadReviewQueue() {
+            const container = document.getElementById('reviewQueue');
+            const countSpan = document.getElementById('reviewQueueCount');
+            
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading review queue...</p></div>';
+            
+            try {
+                const response = await fetch('/api/review-queue?limit=50');
+                const data = await response.json();
+                
+                if (data.success) {
+                    countSpan.textContent = data.message;
+                    
+                    if (data.candidates.length > 0) {
+                        container.innerHTML = data.candidates.map(candidate => `
+                            <div class="candidate-card" style="border: 2px solid #dc2626; background: white;">
+                                <div class="candidate-header">
+                                    <div class="candidate-id">👤 ${candidate.anonymized_id}</div>
+                                    <div class="verdict-badge" style="background: #fef2f2; color: #dc2626; border: 1px solid #dc2626;">
+                                        ⚠️ LOW CONFIDENCE: ${candidate.confidence_score || 0}%
+                                    </div>
+                                </div>
+                                
+                                <div class="match-score">
+                                    Match: ${candidate.match_score}% | Confidence: ${candidate.confidence_score || 0}%
+                                </div>
+                                
+                                <div class="candidate-details">
+                                    <div class="detail-section">
+                                        <h4>Experience</h4>
+                                        <p><strong>${candidate.years_experience || 'N/A'}</strong> years</p>
+                                        <p>${candidate.seniority_level || 'N/A'}</p>
+                                    </div>
+                                    
+                                    <div class="detail-section">
+                                        <h4>Core Skills</h4>
+                                        <div class="tags">
+                                            ${(candidate.core_technical_skills || []).slice(0, 5).map(skill => 
+                                                `<span class="tag">${skill}</span>`
+                                            ).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="narrative" style="margin: 15px 0; font-style: italic;">
+                                    ${candidate.cleaned_narrative || candidate.verdict_reason || 'No summary available'}
+                                </div>
+                                
+                                <div style="display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 2px solid #eee;">
+                                    <button onclick="recruiterOverride('${candidate.anonymized_id}', 'SHORTLIST')" 
+                                            class="button" style="background: #10b981; flex: 1;">
+                                        ✓ SHORTLIST
+                                    </button>
+                                    <button onclick="recruiterOverride('${candidate.anonymized_id}', 'REJECT')" 
+                                            class="button" style="background: #ef4444; flex: 1;">
+                                        ✗ REJECT
+                                    </button>
+                                    <button onclick="recruiterOverride('${candidate.anonymized_id}', 'ON_HOLD')" 
+                                            class="button" style="background: #f59e0b; flex: 1;">
+                                        ⏸ ON HOLD
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = `
+                            <div class="empty-state" style="background: #f0fdf4;">
+                                <div class="empty-state-icon" style="color: #10b981;">✓</div>
+                                <h3 style="color: #059669;">All Clear!</h3>
+                                <p>No candidates require human review at this time.</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    container.innerHTML = `<div class="alert alert-error">Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-error">Error loading review queue: ${error.message}</div>`;
+            }
+        }
+
+        async function recruiterOverride(anonymizedId, decision) {
+            const notes = prompt(`Add notes for this ${decision} decision (optional):`);
+            const recruiterId = prompt('Your recruiter ID:', 'recruiter');
+            
+            if (!recruiterId) return;
+            
+            try {
+                const response = await fetch(`/api/recruiter-override/${anonymizedId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        decision: decision,
+                        notes: notes || `Recruiter decided: ${decision}`,
+                        recruiter_id: recruiterId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✓ Override saved: ${decision}\n\nCandidate ${anonymizedId} marked as ${decision}`);
+                    loadReviewQueue(); // Reload queue
+                    loadStatistics(); // Update stats
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error saving override: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
