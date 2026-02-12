@@ -28,6 +28,7 @@ Once your project is created:
 2. Click **"API"** under Project Settings
 3. You'll see:
    - **Project URL** - looks like: `https://xxxxxxxxxxxxx.supabase.co`
+   https://dpnvwxsslvasyufwqzwr.supabase.co
    =>
    - **API Keys** section:
      - **anon public** key - this is what you need (starts with `eyJhb...`) //
