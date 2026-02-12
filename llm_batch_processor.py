@@ -245,6 +245,27 @@ class LLMBatchProcessor:
                 )
             raise
     
+    def generate_analysis(self, prompt: str) -> str:
+        """
+        Generate analysis from a prompt using the configured LLM
+        
+        Args:
+            prompt: The complete prompt to send to the LLM
+            
+        Returns:
+            Raw string response from the LLM
+        """
+        if self.api_provider == "openai":
+            return self._call_openai(prompt)
+        elif self.api_provider == "anthropic":
+            return self._call_anthropic(prompt)
+        elif self.api_provider == "gemini":
+            return self._call_gemini(prompt)
+        elif self.api_provider == "ollama":
+            return self._call_ollama(prompt)
+        else:
+            raise ValueError(f"Unsupported API provider: {self.api_provider}")
+    
     def process_directory(self, 
                          cv_directory: str,
                          job_description: Optional[str] = None,
