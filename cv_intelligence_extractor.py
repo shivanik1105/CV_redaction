@@ -8,6 +8,7 @@ import json
 import hashlib
 import random
 import string
+import re
 from typing import Dict, List, Optional
 from pathlib import Path
 import logging
@@ -76,7 +77,7 @@ class CVIntelligenceExtractor:
         
     def _create_extraction_prompt(self, cv_text: str, job_description: str, anonymized_id: str) -> str:
         """
-        Create a strict JSON extraction prompt for deep LLM analysis
+        Create a human-readable extraction prompt for prose-based LLM analysis
         
         Args:
             cv_text: Anonymized CV content
@@ -86,96 +87,212 @@ class CVIntelligenceExtractor:
         Returns:
             Formatted prompt string
         """
-        prompt = f"""You are a professional recruiter AI performing DEEP analysis of an anonymized CV against a job description.
+        prompt = f"""You are a senior technical recruiter. Analyze the anonymized professional profile and job description below.
 
-===== JOB DESCRIPTION =====
+IMPORTANT RULES:
+- The input CV is already anonymized (all PII removed). NEVER output names, emails, phone numbers, addresses, company locations, or institution names.
+- If you cannot determine something from the text, state "Not specified" — NEVER invent details.
+- Be concise but thorough. Focus on evidence explicitly stated in the profile.
+
+OUTPUT FORMAT (STRICTLY FOLLOW THIS STRUCTURE):
+
+SECTION 1 – General Resume Assessment:
+[2-3 paragraphs covering:
+- Total years of experience and career progression
+- Core technical strengths with specific technologies/tools mentioned
+- Notable projects or achievements (with measurable impact if stated)
+- One key weakness or gap (e.g., lack of quantifiable metrics, generic descriptions)]
+
+SECTION 2 – Job Description Fit:
+Mandatory Skills:
+- [Skill 1]: [Matched/Not found] — [brief evidence or "no mention"]
+- [Skill 2]: [Matched/Not found] — [brief evidence or "no mention"]
+[Continue for all mandatory skills listed in JD]
+
+Secondary Skills:
+- [Skill A]: [Partial match/Not found] — [brief context]
+- [Skill B]: [Partial match/Not found] — [brief context]
+[Continue for nice-to-have skills]
+
+Gap Analysis:
+[1-2 sentences: "Primary gap is X" OR "No critical gaps identified. Minor gaps include..."]
+
+SECTION 3 – Experience Breakdown:
+Years of Experience: [Extract exact number, e.g., "9 years" or "5-6 years"]
+Seniority Level: [ENTRY: 0-2yrs | MID: 2-5yrs | SENIOR: 5-10yrs | LEAD: 10-15yrs | EXECUTIVE: 15+yrs]
+Core Technical Skills: [List top 10 technical skills from CV]
+Leadership Indicators: [List concrete evidence: "Led 5-person team", "Mentored 3 juniors", or "None mentioned"]
+
+FINAL RECOMMENDATION:
+[SHORTLIST | BACKUP | REVIEW]
+Confidence: [0-100]%
+Match Score: [0-100]%
+
+Reason: [2-3 sentences. First: key strength/weakness vs mandatory requirements. Second: specific evidence from profile. Third: why this verdict.]
+
+===== CRITICAL DECISION RULES =====
+
+**NO AUTO-REJECT POLICY** - AI NEVER rejects candidates:
+- SHORTLIST: Meets 80%+ requirements, strong match, ready for interview
+- BACKUP: Meets 60-79% requirements, decent match, consider if shortlist pool exhausted
+- REVIEW: <60% requirements OR unclear CV → HUMAN RECRUITER MUST DECIDE. Use this for borderline cases.
+
+⚠️ You CANNOT reject candidates. When in doubt, use REVIEW.
+⚠️ If Confidence <70%, automatically route to REVIEW regardless of match score.
+
+**Evidence Requirement**:
+Your reason MUST cite specific examples from CV:
+- BAD: "Good technical skills and experience"
+- GOOD: "7 years Python/Django experience matching core stack. Led 3 microservices projects with AWS deployment. Missing Kubernetes (nice-to-have) but Docker experience present."
+
+---
+
+JOB DESCRIPTION:
 {job_description}
 
-===== ANONYMIZED CV =====
+---
+
+ANONYMIZED PROFESSIONAL PROFILE:
 {cv_text}
 
-===== YOUR TASK =====
-Extract structured intelligence and provide evidence-based analysis. Respond with ONLY valid JSON (no explanations, no markdown, no code blocks).
+---
 
-{{
-  "anonymized_id": "{anonymized_id}",
-  "analysis_date": "{datetime.now().isoformat()}",
-  
-  "cleaned_text": "Complete CV content with no PII, formatted as single paragraph for vector search",
-  "cleaned_narrative": "Concise 2-3 sentence professional summary highlighting key strengths and experience",
-  
-  "years_experience": 5.5,
-  "years_experience_range": "5-6",
-  "seniority_level": "ENTRY|MID|SENIOR|LEAD|EXECUTIVE",
-  
-  "core_technical_skills": ["Top 10 most important technical skills"],
-  "secondary_technical_skills": ["Additional technical skills beyond core"],
-  "frameworks_tools": ["Frameworks, tools, libraries, platforms"],
-  "soft_skills": ["Leadership, communication, problem-solving, etc."],
-  "certifications": ["Professional certifications, if any"],
-  
-  "primary_domain": "Main industry/sector",
-  "secondary_domains": ["Other domains with experience"],
-  "role_types": ["Developer, Engineer, Lead, Manager, Architect, etc."],
-  "leadership_indicators": ["Team size led", "Mentoring", "Hiring", "Strategic planning", etc.],
-  
-  "highest_degree": "Degree name or null",
-  "field_of_study": "Field name or null",
-  "education_level": "HIGH_SCHOOL|BACHELORS|MASTERS|PHD|OTHER",
-  
-  "verdict": "SHORTLIST|BACKUP|REVIEW",
-  "confidence_score": 85,
-  "match_score": 75,
-  "verdict_reason": "2-sentence evidence-based explanation. BE SPECIFIC with examples from CV.",
-  
-  "matched_requirements": ["Specific JD requirements this candidate CLEARLY meets"],
-  "missing_requirements": ["Specific JD requirements NOT found in CV"],
-  "key_strengths": ["Top 5 strengths relevant to THIS role"],
-  "potential_concerns": ["Red flags, gaps, or areas needing verification"],
-  
-  "search_keywords": ["Important keywords for search/filtering"],
-  "highlight_achievements": ["Notable projects, achievements, impact metrics"]
-}}
-
-===== CRITICAL INSTRUCTIONS =====
-
-1. **years_experience**: Extract exact decimal (e.g., 5.5) from CV. If range, use midpoint.
-2. **seniority_level**: 
-   - ENTRY: 0-2 years
-   - MID: 2-5 years
-   - SENIOR: 5-10 years
-   - LEAD: 10-15 years, team leadership
-   - EXECUTIVE: 15+ years, strategic leadership
-3. **core_technical_skills**: List ONLY the 10 most critical skills for THIS job. Prioritize by JD match + candidate expertise.
-4. **verdict - NO AUTO-REJECT POLICY**: 
-   - SHORTLIST: Meets 80%+ requirements, strong match, ready for interview
-   - BACKUP: Meets 60-79% requirements, decent match, consider if shortlist exhausted  
-   - REVIEW: <60% requirements OR unclear CV → HUMAN RECRUITER MUST REVIEW. AI never rejects.
-   
-   ⚠️ CRITICAL: You CANNOT reject candidates. Use REVIEW for borderline/unclear cases.
-   ⚠️ Recruiters review top 50 candidates even if score is low.
-   
-5. **confidence_score**: Your confidence in the verdict (0-100). Lower if CV is vague or incomplete.
-   ⚠️ If confidence <70%, candidate routes to human review immediately.
-6. **match_score**: How well candidate fits THIS specific JD (0-100). Be objective.
-7. **verdict_reason**: MUST cite specific examples from CV. NO generic statements.
-8. **cleaned_text**: Extract full CV content, remove any PII remnants, format as flowing text for vector search.
-9. **leadership_indicators**: Extract CONCRETE evidence (team sizes, "led 5 engineers", "hired 3 developers", "mentored juniors")
-
-===== EVIDENCE REQUIREMENT =====
-Your verdict_reason MUST reference:
-- Specific skills from CV
-- Years of experience with key technologies
-- Relevant project types or domains
-- Concrete achievements or impacts
-
-BAD: "Good technical skills and experience"
-GOOD: "7 years Python/AWS expertise matching core requirements. Led 3 microservices projects. Missing Kubernetes experience (nice-to-have)."
-
-===== OUTPUT FORMAT =====
-Return ONLY the JSON object. No markdown, no code blocks, no explanations before or after."""
+CANDIDATE ID: {anonymized_id}
+ANALYSIS DATE: {datetime.now().isoformat()}"""
         
         return prompt
+    
+    def _parse_prose_response(self, prose_response: str, anonymized_id: str) -> Dict:
+        """
+        Parse human-readable prose LLM response into structured JSON
+        
+        Args:
+            prose_response: The prose-format LLM response
+            anonymized_id: Candidate's anonymized ID
+            
+        Returns:
+            Structured dictionary with extracted fields
+        """
+        try:
+            # Extract verdict
+            verdict_match = re.search(r'FINAL RECOMMENDATION:\s*\n\[(SHORTLIST|BACKUP|REVIEW)\]', prose_response, re.IGNORECASE)
+            verdict = verdict_match.group(1).upper() if verdict_match else "REVIEW"
+            
+            # Extract confidence score
+            confidence_match = re.search(r'Confidence:\s*(\d+)%', prose_response)
+            confidence_score = int(confidence_match.group(1)) if confidence_match else 50
+            
+            # Extract match score
+            match_match = re.search(r'Match Score:\s*(\d+)%', prose_response)
+            match_score = int(match_match.group(1)) if match_match else 50
+            
+            # Extract verdict reason (text after "Reason:" until end or next section)
+            reason_match = re.search(r'Reason:\s*(.+?)(?:\n\n|$)', prose_response, re.DOTALL)
+            verdict_reason = reason_match.group(1).strip() if reason_match else "See detailed analysis above"
+            
+            # Extract years of experience
+            years_match = re.search(r'Years of Experience:\s*([0-9.]+(?:-[0-9.]+)?)\s*(?:years?)?', prose_response, re.IGNORECASE)
+            if years_match:
+                years_str = years_match.group(1)
+                if '-' in years_str:
+                    # Range like "5-6"
+                    start, end = years_str.split('-')
+                    years_experience = (float(start) + float(end)) / 2
+                    years_experience_range = years_str
+                else:
+                    years_experience = float(years_str)
+                    years_experience_range = f"{int(years_experience)}-{int(years_experience)+1}"
+            else:
+                years_experience = 0
+                years_experience_range = "Not specified"
+            
+            # Extract seniority level
+            seniority_match = re.search(r'Seniority Level:\s*(ENTRY|MID|SENIOR|LEAD|EXECUTIVE)', prose_response, re.IGNORECASE)
+            seniority_level = seniority_match.group(1).upper() if seniority_match else "MID"
+            
+            # Extract core technical skills (look for list after "Core Technical Skills:")
+            skills_section = re.search(r'Core Technical Skills:\s*\[(.+?)\]', prose_response, re.DOTALL)
+            if skills_section:
+                skills_text = skills_section.group(1)
+                core_technical_skills = [s.strip().strip('"\'') for s in skills_text.split(',')]
+            else:
+                core_technical_skills = []
+            
+            # Extract leadership indicators
+            leadership_section = re.search(r'Leadership Indicators:\s*\[(.+?)\]', prose_response, re.DOTALL)
+            if leadership_section:
+                leadership_text = leadership_section.group(1)
+                leadership_indicators = [s.strip().strip('"\'') for s in leadership_text.split(',')]
+            else:
+                leadership_indicators = []
+            
+            # Extract SECTION 1 (General Resume Assessment)
+            section1_match = re.search(r'SECTION 1[^\n]*\n(.+?)(?=SECTION 2|FINAL RECOMMENDATION|$)', prose_response, re.DOTALL)
+            cleaned_narrative = section1_match.group(1).strip() if section1_match else ""
+            
+            # Extract matched/missing requirements from SECTION 2
+            matched_requirements = []
+            missing_requirements = []
+            
+            # Find Mandatory Skills section
+            mandatory_section = re.search(r'Mandatory Skills:(.+?)(?:Secondary Skills:|Gap Analysis:|SECTION 3|$)', prose_response, re.DOTALL)
+            if mandatory_section:
+                mandatory_text = mandatory_section.group(1)
+                # Parse lines like "- Python: Matched — 9 years experience"
+                for line in mandatory_text.split('\n'):
+                    if 'Matched' in line or 'matched' in line:
+                        skill_match = re.search(r'-\s*([^:]+):', line)
+                        if skill_match:
+                            matched_requirements.append(skill_match.group(1).strip())
+                    elif 'Not found' in line or 'not found' in line or 'missing' in line.lower():
+                        skill_match = re.search(r'-\s*([^:]+):', line)
+                        if skill_match:
+                            missing_requirements.append(skill_match.group(1).strip())
+            
+            # Build structured response
+            intelligence = {
+                "anonymized_id": anonymized_id,
+                "analysis_date": datetime.now().isoformat(),
+                
+                # Core fields
+                "verdict": verdict,
+                "confidence_score": confidence_score,
+                "match_score": match_score,
+                "verdict_reason": verdict_reason,
+                
+                # Experience
+                "years_experience": years_experience,
+                "years_experience_range": years_experience_range,
+                "seniority_level": seniority_level,
+                
+                # Skills
+                "core_technical_skills": core_technical_skills,
+                "leadership_indicators": leadership_indicators,
+                
+                # Analysis
+                "cleaned_narrative": cleaned_narrative,
+                "matched_requirements": matched_requirements,
+                "missing_requirements": missing_requirements,
+                
+                # Full prose output for recruiter review
+                "detailed_analysis": prose_response
+            }
+            
+            return intelligence
+            
+        except Exception as e:
+            logger.error(f"Error parsing prose response: {e}")
+            # Return minimal structure with full prose
+            return {
+                "anonymized_id": anonymized_id,
+                "analysis_date": datetime.now().isoformat(),
+                "verdict": "REVIEW",
+                "confidence_score": 30,
+                "match_score": 50,
+                "verdict_reason": "Analysis parsing failed - requires human review",
+                "detailed_analysis": prose_response,
+                "parse_error": str(e)
+            }
     
     def extract_intelligence(
         self, 
@@ -208,19 +325,10 @@ Return ONLY the JSON object. No markdown, no code blocks, no explanations before
             logger.info(f"Analyzing {anonymized_id}...")
             raw_llm_response = self.llm_processor.generate_analysis(prompt)
             
-            # Parse JSON response
+            # Parse prose response (new human-readable format)
             try:
-                # Clean response (remove markdown code blocks if present)
-                response = raw_llm_response.strip()
-                if response.startswith("```json"):
-                    response = response[7:]
-                if response.startswith("```"):
-                    response = response[3:]
-                if response.endswith("```"):
-                    response = response[:-3]
-                response = response.strip()
-                
-                intelligence = json.loads(response)
+                # Use prose parser instead of JSON
+                intelligence = self._parse_prose_response(raw_llm_response, anonymized_id)
                 
                 # Add metadata
                 intelligence["original_filename"] = original_filename or "unknown"
@@ -233,10 +341,6 @@ Return ONLY the JSON object. No markdown, no code blocks, no explanations before
                 intelligence["original_cv_hash"] = original_cv_hash
                 intelligence["llm_prompt_used"] = prompt  # Full prompt for reproducibility
                 intelligence["llm_raw_response"] = raw_llm_response  # Raw LLM output
-                
-                # Ensure anonymized_id is set
-                if "anonymized_id" not in intelligence or not intelligence["anonymized_id"]:
-                    intelligence["anonymized_id"] = anonymized_id
                 
                 # NO AUTO-REJECT POLICY: Check confidence threshold
                 confidence = intelligence.get("confidence_score", 0)
@@ -251,13 +355,13 @@ Return ONLY the JSON object. No markdown, no code blocks, no explanations before
                 
                 return intelligence
                 
-            except json.JSONDecodeError as e:
-                logger.error(f"Failed to parse LLM response as JSON: {e}")
+            except Exception as e:
+                logger.error(f"Failed to parse LLM response: {e}")
                 logger.error(f"Raw response: {raw_llm_response[:500]}...")
                 
                 # Return error structure with audit trail
                 return {
-                    "error": "JSON_PARSE_ERROR",
+                    "error": f"PARSE_ERROR: {str(e)}",
                     "raw_response": raw_llm_response[:1000],
                     "anonymized_id": anonymized_id,
                     "original_filename": original_filename or "unknown",

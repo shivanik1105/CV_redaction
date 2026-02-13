@@ -1,0 +1,134 @@
+[NAME]
+
+Senior Android Developer
+Senior Android Developer with over 9 years of experience
+in software and mobile development in a broad range of industries including B2B, Order management, E Commerce
+and automotive. Solid understanding of full mobile and Software Development Life Cycle (SDLC) including Waterfall
+and Agile methodologies. Well conversant with version control including CVS, SVN and Git. Familiar with third party
+libraries and tools like firebase, volley, proguard, eventbus,
+google analytics, Retrofit, glide, picasso.
+
+
+SKILLS
+
+
+• Java, Kotlin
+• Android SDK
+
+• MVP, MVVM
+
+• Retrofit, Volley, Firebase
+• Version Control : GIT, SVN
+Android UI: Custom views, Android
+• activity, fragments, layouts
+• Agile methodologies: SCRUM
+• Android JetPack
+• Picasso, Glide
+• Design patterns
+
+
+WORK EXPERIENCE
+
+
+Sep 2024 Cerence
+↑ Senior Software Engineer
+Apr 2022
+• Working as a Senior Android Developer on a custom Input
+
+Method Editor (IME) for automotive applications.
+• Involved in the design and development of a custom IME
+
+tailored for different clients including Audi, Porsche, VW
+etc, ensuring it meets the unique requirements of automotive environments, such as ease of use while driving and
+minimizing driver distraction.
+• Architect the IME to leverage RRO for customizing system resources such as layouts, themes, and string resources
+
+without modifying the underlying system code.
+• Implement automotive-specific features such as voice
+
+input, predictive text, and specialized automotive vocabularies.
+Apr 2022 Infosys
+↑ Technology Analyst
+Sept 2021
+• Working as a Technology Analyst to design and build advanced applications for the Android platform in both Java
+
+and Kotlin.
+• To collaborate with cross-functional teams to define, design, and ship new features.
+• Work with outside data sources and API’s.
+• Work on bug fixing and improving application performance
+
+[REDACTED_EMAIL]
+
+Ó Phone
+
+[REDACTED_PHONE]
+
+
+• Java, Kotlin
+• Android SDK
+
+English Fluent
+Hindi Fluent
+Aug 2021 Altran Technologies
+↑ Senior Software Engineer
+Nov 2018
+• Worked as a Senior Software Engineer in PremierOne
+
+Handheld team.
+• The application provides mapping, status updates, and
+
+other dispatch/CAD features on the officer’s handheld device.
+• Resolution of defects, fixing crashes, improvement of UI.
+• Developed and executed test cases for new features developed.
+• Collaborated with other teams for bug debugging and resolution.
+• Involved in the migration of the existing legacy codebase
+
+to Kotlin, enhancing code quality, improving maintainability, and leveraging Kotlin’s modern language features
+for better performance and safety.
+• Worked on view system, keyboard view, engine module of
+
+the Samsung keyboard for Android OS upgrade projects
+where we optimised the modules and implement new features for better user experience.
+• Implemented fuzzy search functionality for transliteration.
+
+DB improvement for different regional languages.
+• Checked and cross verified respective flag values for
+
+different version of mobile before release
+Nov 2018 Pooraa (Sister Company of IndiaMART)
+↑ Consultant
+Aug 2018
+• Developed an application from scratch that enables user
+
+to see stock availability, place orders, get updates on its
+status, download invoices and LR - on the go.
+• Identified user needs for the development of new features.
+• Involved in continuous improvement of features and functionalities to make the app user friendly.
+• Changed the UI to decrease the bounce rate.
+• Dynamic change in app’s UI to meet the market requirement
+• Optimize the interfacing of the apps with a variety of systems to ensure flexible and agile use.
+• Involved in unit testing and bug fixes to reduce any
+
+runtime crashes and bug free release on playstore.
+Aug 2018 IndiaMART InterMESH Ltd
+↑ Software Programmer
+Aug 2015
+• Was a part of the team that was involved in the development of new features and it’s existing feature improvement
+
+to develop a user friendly application that enables millions
+of buyers sellers to connect with each other to fulfil their
+business requirements and browse through 63 Mn products services
+• Designed and build advanced features for the android application.
+• Collaborated with cross-functional teams to define, design,
+
+and ship new features
+• Worked with outside data sources and APIs
+• Worked on bug fixing and improving application performance
+• Continuously worked towards achieving maximum development efficiency
+• Help maintain code quality
+• Coordinate with team members to create app in a coordinated and timely manner.
+• Ensure that apps are tested to meet total performance
+
+requirements
+
+[REMOVED_SECTION_EDUCATION]
