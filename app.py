@@ -295,6 +295,10 @@ def batch_extract_intelligence():
         })
         
     except Exception as e:
+        import traceback
+        with open("last_error.txt", "w", encoding="utf-8") as f:
+            f.write(f"Error: {str(e)}\n\nTraceback:\n")
+            traceback.print_exc(file=f)
         logger.error(f"Error in batch extraction: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 

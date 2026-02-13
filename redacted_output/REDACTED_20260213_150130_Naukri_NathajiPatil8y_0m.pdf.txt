@@ -1,0 +1,115 @@
+[REDACTED_NAME]
+
+[NAME]
+
+[REDACTED_CONTACT_LINE]
+
+www.[REDACTED_SOCIAL] :
+OBJECTIVE : To obtain a position that will help me to grow my knowledge and lead me towards the success of myself
+and my organization.
+
+
+SUMMARY
+
+
+8 + years of work experience in IT career.
+➢ Currently Working as Consultant in ATOS from Feb -2022 till date.
+➢ I have been working as Technology Analyst in Infosys Limited from March-2019 to Feb-2022.
+➢ Was working with Aloha Technology as a Software Developer for 3.4 yrs. of experience in Microsoft Technologies .
+➢ Experienced in programming and Testing of web, windows, and distributed applications.
+➢ Having basic knowledge about Angular.
+➢ Having good experience on jQuery and JavaScript.
+➢ Having good knowledge on HTML5, CSS3, Responsive Theme, Bootstrap CSS.
+➢ Having good exposure in GIT, GITHUB.
+➢ Proficient in TDM tools like JIRA .
+➢ Experience in Agile methodology.
+➢ Experience in end-to-end delivery of projects.
+➢ Good Analytical, Debugging & Problem-solving skills.
+
+
+SKILLS
+
+
+Programming Languages C# . Net MVC
+Web support languages Angular, HTML5, JAVASCRIPT, JQUERY, JSON, CSS3, BOOTSTRAP
+APIs & Frameworks . Net 3.0,4.0,4.5, ASP. NET MVC, ENTITY FRAMEWROK, Web API
+Tools Visual studio 10/12/13/15 to 22
+Automation Testing Tools Selenium, RPA
+
+
+WORK EXPERIENCE
+
+
+Company: ATOS
+Designation: Consultant
+Duration: Feb-2022 to Present
+Technologies: Web API, Sql Database, Angular, Web Services, Visual Studio, ➢ Having basic knowledge about Angular., ➢ Having good experience on jQuery and JavaScript., Programming Languages C# . Net MVC, Web support languages Angular, HTML5, JAVASCRIPT, JSON, CSS3, BOOTSTRAP, APIs & Frameworks . Net 3.0, 4.0, 4.5, ASP. NET MVC, ENTITY FRAMEWROK, . Net Framework, . Net Core
+Company: Infosys Limited
+Designation: Technology Analyst
+Duration: MAR-2019 to Feb-2022
+Technologies: Web Services, Visual Studio, RPA, Web API, Sql Database, Angular, C#, . Net Framework, . Net Core
+Company: Aloha Technology Pvt Ltd.
+Designation: Software Developer
+Duration: FEB-2015 to AUG-2018
+Technologies: JavaScript, JQuery, HTML, CSS, Bootstrap, C#. Net, VB. Net, ASP. NET, SQL SERVER, ASP. NET MVC, Entity Framework, ADO. NET, WCF
+PROJECT 1 : Atos
+Client: Moody’s Analytics
+Project: BVD Orbis
+Duration Of Project: Feb-2022 Ongoing
+Environment: C#, . Net Framework, . Net MVC , Visual Studio
+Project Role: Consultant
+Roles and Responsibilities: - Leaded some modules of the project
+PROJECT 2 : Infosys Limited.
+Client: -Involved in designing the framework
+Project: - Writing code definitions.
+Duration Of Project: -Added Quality control attributes in the cshtml files for QA Understanding.
+Environment: Boeing Aerospace
+Project Role: Sales Order Creation
+Roles and Responsibilities: Dec-2019 Feb-2022
+PROJECT 3: Infosys Limited.
+Client: C#, . Net Framework, . Net Core, Web Api, Sql Database, Web Services, Visual
+Project: Studio, RPA
+Duration of Project: Technology Analyst
+Environment: -Requirement Gathering and Estimation preparation.
+Project Role: - Managing application development, testing and deployment
+Roles and Responsibilities: - Knowledge Sharing – Helped team members understand application
+architecture.
+Assistegde RPA
+KM Portal
+March-2019 Dec-2019
+Angular, C#, . Net Framework, Sql Database, Web Services, Visual Studio
+Technology Analyst
+• Requirement Gathering.
+• Build end to end Web application and deployed on server.
+
+PROJECT 4: Aloha Technology Pvt. Ltd.
+Title Faronics Web Console
+Duration Of Project April-2015
+Information Faronics Web Console is a product developed and maintained by Aloha
+technology. It is a web console containing multiple products like Deep freeze
+cloud, Antivirus, Anti-Executable, DeepFreeze On Demands, WinSelect,
+Campus affairs, MDM, Faronics Core Etc.
+. Net Framework 4.0, MVC 4, C#, Javascript, Jquery, Ajax,
+Environment
+DevExpress gridview, Sql Server 2008
+• Design and build application as per the mock
+
+Roles and Responsibilities
+• Test and Deploy the changes on the server
+
+PROJECT 5: Aloha Technology Pvt. Ltd.
+Title Employee Management System
+Information Employee Management system has been a demo project, containing
+Employee and Department details. The project has been developed for
+management and maintenance of Employee and department. This is CRUD
+application developed using JAVA technology (Spring MVC) .
+Environment Spring MVC, Javasript, Jquery, Bootstrap, HTML5, CSS3
+Apache Tomcat 7, MYSQL.
+• Requirment gathering
+
+Roles and Responsibilities
+• Design and Development
+
+[REMOVED_SECTION_PERSONAL]
+
+[REMOVED_SECTION_DECLARATION]

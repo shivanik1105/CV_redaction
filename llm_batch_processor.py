@@ -40,9 +40,10 @@ class LLMBatchProcessor:
             elif self.api_provider == "anthropic":
                 self.model = "claude-3-5-sonnet-20241022"
             elif self.api_provider == "gemini":
-                self.model = "gemini-2.0-flash"  # Fast and available model
+                # Allow environment override, default to 1.5-flash if requested, else 2.0-flash
+                self.model = os.getenv("LLM_MODEL", "gemini-2.0-flash")
             elif self.api_provider == "ollama":
-                self.model = "qwen2.5:7b"  # FREE local model
+                self.model = os.getenv("LLM_MODEL", "qwen2.5:7b")  # Allow override
             else:
                 raise ValueError(f"Unsupported provider: {api_provider}")
         else:
