@@ -1,5 +1,48 @@
 {
-  "error": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\\nPlease retry in 59.893239415s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_input_token_count', 'quotaId': 'GenerateContentInputTokensPerModelPerMinute-FreeTier', 'quotaDimensions': {'model': 'gemini-2.0-flash', 'location': 'global'}}, {'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.0-flash'}}, {'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.0-flash'}}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '59s'}]}}",
-  "anonymized_id": "CAND_660",
-  "original_filename": "REDACTED_20260116_142949_Ankush_Resume_2024_1_1.docx.txt"
+  "anonymized_id": "CAND_973",
+  "original_filename": "REDACTED_20260116_142949_Ankush_Resume_2024_1_1.docx.txt",
+  "analysis_date": "2026-02-26T00:08:20.676135",
+  "verdict": "REVIEW",
+  "confidence_score": 80,
+  "match_score": 30,
+  "verdict_reason": "Candidate has 6 years experience with relevant skills. Requires human review for role fit.",
+  "years_experience": 6,
+  "years_experience_range": "6-7",
+  "seniority_level": "SENIOR",
+  "core_technical_skills": [],
+  "secondary_technical_skills": [],
+  "frameworks_tools": [],
+  "soft_skills": [
+    "Communication",
+    "Team Collaboration"
+  ],
+  "certifications": [],
+  "primary_domain": "Software Engineering",
+  "secondary_domains": [],
+  "role_types": [
+    "SENIOR Software"
+  ],
+  "leadership_indicators": [],
+  "highest_degree": "Not specified",
+  "field_of_study": "Engineering",
+  "education_level": "BACHELORS",
+  "cleaned_narrative": "Professional with experience in software development.",
+  "cleaned_text": "[REDACTED_CONTACT_LINE]",
+  "matched_requirements": [],
+  "missing_requirements": [],
+  "key_strengths": [],
+  "potential_concerns": [
+    ""
+  ],
+  "search_keywords": [
+    "Software Engineering",
+    "SENIOR"
+  ],
+  "highlight_achievements": [],
+  "requires_human_review": false,
+  "llm_provider": "rule_based_extraction",
+  "llm_model": "skill_matcher_v1",
+  "extraction_timestamp": "2026-02-26T00:08:20.676135",
+  "job_description_hash": "09755b924237517f",
+  "original_cv_hash": "87ecf834a1dfb8f5f3a078161240a69a59875c46a1e11e3cf79d3d52473c6c76"
 }
