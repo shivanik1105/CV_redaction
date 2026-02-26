@@ -13,6 +13,13 @@ from pathlib import Path
 import logging
 from datetime import datetime
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not installed, rely on system env vars
+
 # Add current directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -809,6 +816,86 @@ def add_recruiter_override(anonymized_id):
     except Exception as e:
         logger.error(f"Error adding recruiter override: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/sync-to-supabase', methods=['POST'])
+def sync_to_supabase():
+    """Sync all local intelligence JSON files to Supabase database"""
+    try:
+        if not is_supabase_configured():
+            return jsonify({'error': 'Supabase not configured. Set SUPABASE_URL and SUPABASE_KEY in .env'}), 503
+        
+        # Reset the reachability flag to retry
+        global _supabase_reachable, _supabase_storage
+        _supabase_reachable = None
+        _supabase_storage = None
+        
+        storage = get_supabase_storage()
+        if not storage:
+            return jsonify({'error': 'Cannot connect to Supabase. Is the project active?'}), 503
+        
+        candidates = load_local_intelligence_files()
+        
+        if not candidates:
+            return jsonify({'error': 'No local intelligence files to sync'}), 404
+        
+        synced = 0
+        errors = 0
+        
+        for candidate in candidates:
+            try:
+                # Load the full JSON file for this candidate
+                filename = candidate.get('_filename', '')
+                filepath = Path(app.config['INTELLIGENCE_FOLDER']) / filename
+                if filepath.exists():
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        full_data = json.load(f)
+                    
+                    result = try_supabase_operation(
+                        lambda d=full_data: storage.store_intelligence(d),
+                        fallback_result=None,
+                        timeout_seconds=10
+                    )
+                    if result is not None:
+                        synced += 1
+                    else:
+                        errors += 1
+            except Exception as e:
+                logger.warning(f"Sync error for {candidate.get('anonymized_id')}: {e}")
+                errors += 1
+        
+        return jsonify({
+            'success': True,
+            'total': len(candidates),
+            'synced': synced,
+            'errors': errors,
+            'message': f'Synced {synced}/{len(candidates)} records to Supabase'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error syncing to Supabase: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/connection-status')
+def connection_status():
+    """Check real-time connection status of all services"""
+    status = {
+        'supabase': {
+            'configured': is_supabase_configured(),
+            'reachable': _supabase_reachable if _supabase_reachable is not None else 'unknown',
+            'url': os.getenv('SUPABASE_URL', 'NOT SET')
+        },
+        'llm': {
+            'provider': os.getenv('LLM_PROVIDER', 'not set'),
+            'model': os.getenv('LLM_MODEL', 'default'),
+            'api_key_set': bool(os.getenv('GOOGLE_API_KEY') or os.getenv('OPENAI_API_KEY'))
+        },
+        'local_data': {
+            'redacted_cvs': len(list(Path(app.config['OUTPUT_FOLDER']).glob('REDACTED_*.txt'))),
+            'intelligence_files': len(list(Path(app.config['INTELLIGENCE_FOLDER']).glob('*_intelligence.json')))
+        },
+        'env_loaded_from': '.env file' if os.path.exists('.env') else 'system environment'
+    }
+    return jsonify(status)
 
 if __name__ == '__main__':
     print("\n" + "="*60)

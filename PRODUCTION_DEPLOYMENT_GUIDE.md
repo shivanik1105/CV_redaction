@@ -18,7 +18,7 @@
 
 ```powershell
 # Google Gemini API (Already configured in your session)
-$env:GOOGLE_API_KEY="AIzaSyBW7pa0akQ24wxPwBy17TkaeJ3nh49gcG0"
+$env:GOOGLE_API_KEY="your-google-api-key-here"
 
 # Supabase (Get these from https://app.supabase.com)
 $env:SUPABASE_URL="https://your-project.supabase.co"
@@ -239,7 +239,7 @@ CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
 **Production .env file:**
 ```bash
 # .env (DO NOT commit to git)
-GOOGLE_API_KEY=AIzaSyBW7pa0akQ24wxPwBy17TkaeJ3nh49gcG0
+GOOGLE_API_KEY=your-google-api-key-here
 SUPABASE_URL=https://xxxxx.supabase.co
 SUPABASE_KEY=your-anon-key
 FLASK_ENV=production

@@ -134,7 +134,7 @@ You should now see **7/7 TESTS PASSED** ✅
 ### Your Credentials Template:
 ```powershell
 # Replace these with your actual values
-$env:GOOGLE_API_KEY="AIzaSyBW7pa0akQ24wxPwBy17TkaeJ3nh49gcG0"  # ✓ Already set!
+$env:GOOGLE_API_KEY="your-google-api-key-here"  # Get from Google AI Studio
 $env:SUPABASE_URL="https://YOUR-PROJECT.supabase.co"           # Get from Step 3
 $env:SUPABASE_KEY="eyJhbGciOiJIUz..."                           # Get from Step 3
 ```

@@ -12,9 +12,8 @@ First, make sure your credentials are set and start the Flask server:
 
 ```powershell
 # Set API credentials (copy-paste all 3 lines)
-$env:GOOGLE_API_KEY="AIzaSyBW7pa0akQ24wxPwBy17TkaeJ3nh49gcG0"
-$env:SUPABASE_URL="https://dpnvwxsslvasyufwqzwr.supabase.co"
-$env:SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwbnZ3eHNzbHZhc3l1ZndxendyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4MjYzNzAsImV4cCI6MjA4NjQwMjM3MH0.hTBeGnN_5YEi-oynzTAehWeRN8xd579K-nqjiLa19M0"
+# Credentials are loaded automatically from .env file
+# See .env.example for the template, then: cp .env.example .env
 
 # Start the server
 python app.py

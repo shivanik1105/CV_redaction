@@ -268,7 +268,7 @@ templates/        - HTML templates
 **Quick Setup Commands:**
 ```powershell
 # Set Google API key (already have one)
-$env:GOOGLE_API_KEY="AIzaSyBW7pa0akQ24wxPwBy17TkaeJ3nh49gcG0"
+$env:GOOGLE_API_KEY="your-google-api-key-here"
 
 # Create Supabase project at https://app.supabase.com
 # Then set:

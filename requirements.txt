@@ -28,5 +28,8 @@ anthropic>=0.18.0
 google-genai>=0.2.0
 ollama>=0.1.0  # FREE local LLM - no API key needed!
 
+# Environment Configuration
+python-dotenv>=1.0.0  # Load secrets from .env file
+
 # Supabase Integration (Optional - for database storage and vector search)
 supabase>=2.0.0

@@ -4,7 +4,7 @@
 
 ### 1. Google Gemini API ✅
 - **Status:** CONFIGURED & READY
-- **API Key:** Set (AIzaSy...gcG0)
+- **API Key:** Loaded from .env file
 - **Provider:** Google Gemini AI
 - **Cost:** ~$0.001 per CV analysis
 
