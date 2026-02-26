@@ -6,12 +6,8 @@ Copy and paste these commands in PowerShell before running `app.py`:
 
 ```powershell
 # Set all API credentials
-$env:GOOGLE_API_KEY="AIzaSyBW7pa0akQ24wxPwBy17TkaeJ3nh49gcG0"
-$env:SUPABASE_URL="https://dpnvwxsslvasyufwqzwr.supabase.co"
-$env:SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwbnZ3eHNzbHZhc3l1ZndxendyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4MjYzNzAsImV4cCI6MjA4NjQwMjM3MH0.hTBeGnN_5YEi-oynzTAehWeRN8xd579K-nqjiLa19M0"
-
-# Verify credentials are set
-Write-Host "✓ Credentials configured!" -ForegroundColor Green
+# Credentials are loaded automatically from .env file
+# See .env.example for the template
 
 # Start the application
 python app.py
@@ -32,10 +28,11 @@ notepad $PROFILE
 
 **Add these lines to the profile file:**
 ```powershell
-# CV Intelligence System API Keys
-$env:GOOGLE_API_KEY="AIzaSyBW7pa0akQ24wxPwBy17TkaeJ3nh49gcG0"
-$env:SUPABASE_URL="https://dpnvwxsslvasyufwqzwr.supabase.co"
-$env:SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwbnZ3eHNzbHZhc3l1ZndxendyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4MjYzNzAsImV4cCI6MjA4NjQwMjM3MH0.hTBeGnN_5YEi-oynzTAehWeRN8xd579K-nqjiLa19M0"
+# CV Intelligence System - load from .env file
+# Or set manually:
+$env:GOOGLE_API_KEY="your-google-api-key-here"
+$env:SUPABASE_URL="https://your-project.supabase.co"
+$env:SUPABASE_KEY="your-supabase-anon-key-here"
 ```
 
 **Save and close.** Next time you open PowerShell, credentials will auto-load!
@@ -47,11 +44,11 @@ $env:SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIs
 3. Click **Environment Variables**
 4. Under **User variables**, click **New** for each:
    - Name: `GOOGLE_API_KEY`  
-     Value: `AIzaSyBW7pa0akQ24wxPwBy17TkaeJ3nh49gcG0`
+     Value: (your Google API key)
    - Name: `SUPABASE_URL`  
-     Value: `https://dpnvwxsslvasyufwqzwr.supabase.co`
+     Value: (your Supabase project URL)
    - Name: `SUPABASE_KEY`  
-     Value: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwbnZ3eHNzbHZhc3l1ZndxendyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4MjYzNzAsImV4cCI6MjA4NjQwMjM3MH0.hTBeGnN_5YEi-oynzTAehWeRN8xd579K-nqjiLa19M0`
+     Value: (your Supabase anon key)
 5. Click **OK** on all dialogs
 6. **Restart PowerShell**
 

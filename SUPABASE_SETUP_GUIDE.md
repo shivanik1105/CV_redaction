@@ -28,11 +28,8 @@ Once your project is created:
 2. Click **"API"** under Project Settings
 3. You'll see:
    - **Project URL** - looks like: `https://xxxxxxxxxxxxx.supabase.co`
-   https://dpnvwxsslvasyufwqzwr.supabase.co
-   =>
    - **API Keys** section:
-     - **anon public** key - this is what you need (starts with `eyJhb...`) //
-     =>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwbnZ3eHNzbHZhc3l1ZndxendyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4MjYzNzAsImV4cCI6MjA4NjQwMjM3MH0.hTBeGnN_5YEi-oynzTAehWeRN8xd579K-nqjiLa19M0
+     - **anon public** key - this is what you need (starts with `eyJhb...`)
 
 **Copy these two values!** You'll need them in the next step.
 
@@ -120,7 +117,7 @@ To avoid setting them every time you open PowerShell:
 notepad $PROFILE
 
 # Add these lines to the file:
-$env:GOOGLE_API_KEY = "AIzaSyBW7pa0akQ24wxPwBy17TkaeJ3nh49gcG0"
+$env:GOOGLE_API_KEY = "your-google-api-key-here"
 $env:SUPABASE_URL = "https://xxxxxxxxxxxxx.supabase.co"
 $env:SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
