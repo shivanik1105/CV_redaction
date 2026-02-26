@@ -1,5 +1,85 @@
 {
-  "error": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash\\nPlease retry in 1.539818838s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.0-flash'}}, {'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.0-flash'}}, {'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_input_token_count', 'quotaId': 'GenerateContentInputTokensPerModelPerMinute-FreeTier', 'quotaDimensions': {'model': 'gemini-2.0-flash', 'location': 'global'}}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '1s'}]}}",
-  "anonymized_id": "CAND_548",
-  "original_filename": "REDACTED_20260116_141222_AdityaPatil.pdf.txt"
+  "anonymized_id": "CAND_553",
+  "original_filename": "REDACTED_20260116_141222_AdityaPatil.pdf.txt",
+  "analysis_date": "2026-02-26T00:08:20.074581",
+  "verdict": "REVIEW",
+  "confidence_score": 63,
+  "match_score": 30,
+  "verdict_reason": "Candidate has 5 years experience with Python, Angular, Django. Requires human review for role fit.",
+  "years_experience": 5,
+  "years_experience_range": "5-6",
+  "seniority_level": "MID",
+  "core_technical_skills": [
+    "Python",
+    "Angular",
+    "Django",
+    "Flask",
+    "AWS",
+    "Jenkins",
+    "CI/CD",
+    "SQL"
+  ],
+  "secondary_technical_skills": [
+    "REST",
+    "API",
+    "Pandas"
+  ],
+  "frameworks_tools": [
+    "Angular",
+    "Django",
+    "Flask"
+  ],
+  "soft_skills": [
+    "Communication",
+    "Team Collaboration"
+  ],
+  "certifications": [],
+  "primary_domain": "Backend Development",
+  "secondary_domains": [],
+  "role_types": [
+    "MID Backend"
+  ],
+  "leadership_indicators": [
+    "Leadership role mentioned"
+  ],
+  "highest_degree": "Not specified",
+  "field_of_study": "Computer Science",
+  "education_level": "BACHELORS",
+  "cleaned_narrative": "Associate Staff Engineer Associate Staff Engineer August 2021 - current",
+  "cleaned_text": "[REDACTED_NAME]\n\nAssociate Staff Engineer\n\n[REDACTED_EMAIL] [REDACTED_PHONE]\n\n[REDACTED_URL]\n\nWORKEXPERIENCE\n\nAssociate Staff Engineer\nNagarro,\nAugust 2021 - current\n• \nCore Skills : Python, Fast API, Django, AWS, CI/CD, Mongo DB,\nMy SQL, New Relic, Splunk\nRole : Full lifecycle involvement from requirement gathering\nto feature development and delivering end-to-end solutions.\nPayment Services (Cox Auto)\n\nLed feature development from initial grooming to\ndeployment, ensuring alignment with business objectives.\n• \n\nManaged cross-functional collaboration during sprint\nplanning, defining scope and timelines.\n• \n\nOversaw seamless deployment across multiple environments,\ncoordinating with QA to ensure software quality.\nAnalytics Engine (ZS Associate)\n• \n\nDeveloped Python modules for Marketing Mix Models,\nreducing manual work through dashboard automation.\n• \n\nBuilt UI and backend using Python Dash and optimized\nworkflows with Dataiku, enhancing efficiency and analytics.\n• \n\njunior developers.\nTechnical Consultant\nBirlasoft,\nMay 2019 - August 2021\n• \nCore Skills : Python, Flask, Angular, My SQL, Mongo DB, AWS,\nCI/CD, New Relic, Splunk\nRole : Led projects from inception to completion, involving fullstack development and automation.\n\n============================================================\n## PROJECTS\n============================================================\nTicketing System : Architected using Flask Rest APIs, Python,\nMy SQL, Mongo DB, and Angular 6.\nVisitor Management System : Developed with Python, Flask,\nand Angular JS.\nFinance Monthly Closure : Automated processes using Flask\nRest APIs and Angular JS, streamlining financial workflows.\n\n\n============================================================\n## SUMMARY\n============================================================\n\n\n============================================================\n## EXPERIENCE\n============================================================\n5.5 years of expertise in end to end\nsoftware development using ",
+  "matched_requirements": [
+    "Python",
+    "Angular",
+    "Django",
+    "Flask",
+    "AWS"
+  ],
+  "missing_requirements": [],
+  "key_strengths": [
+    "Python",
+    "Angular",
+    "Django"
+  ],
+  "potential_concerns": [
+    ""
+  ],
+  "search_keywords": [
+    "Python",
+    "Angular",
+    "Django",
+    "Flask",
+    "AWS",
+    "Jenkins",
+    "CI/CD",
+    "SQL",
+    "Backend Development",
+    "MID"
+  ],
+  "highlight_achievements": [],
+  "requires_human_review": true,
+  "llm_provider": "rule_based_extraction",
+  "llm_model": "skill_matcher_v1",
+  "extraction_timestamp": "2026-02-26T00:08:20.074581",
+  "job_description_hash": "09755b924237517f",
+  "original_cv_hash": "b29c18f8c9f1a96d33da5e182a3a51d383afda47c1459ded48f8a2ce6d4bbe3a"
 }

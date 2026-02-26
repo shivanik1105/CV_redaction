@@ -308,13 +308,23 @@ class LLMBatchProcessor:
             print(f"[{idx}/{len(cv_files)}] Processing: {cv_file.name}")
             
             try:
+                # Check if output already exists to avoid re-processing
+                intelligence_file = f"{cv_file.stem}_intelligence.json"
+                intelligence_path = self.output_dir / intelligence_file
+                
+                if intelligence_file in existing_files:
+                    print(f"  ⏭️  Skipping {cv_file.name} (Already analyzed)")
+                    # Load existing for results
+                    try:
+                        with open(intelligence_path, 'r', encoding='utf-8') as f:
+                            results.append(json.load(f))
+                    except:
+                        pass # If read fails, ignore
+                    continue
+
                 # Read CV content
                 with open(cv_file, 'r', encoding='utf-8') as f:
                     cv_text = f.read()
-                
-                # Process through LLM
-                result = self.process_single_cv(cv_text, cv_file.name, job_description)
-                results.append(result)
                 
                 # Update stats
                 if "error" not in result:

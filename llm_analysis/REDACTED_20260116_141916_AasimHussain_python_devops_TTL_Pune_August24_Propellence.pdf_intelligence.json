@@ -1,5 +1,91 @@
 {
-  "error": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\\nPlease retry in 1.119892459s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_input_token_count', 'quotaId': 'GenerateContentInputTokensPerModelPerMinute-FreeTier', 'quotaDimensions': {'model': 'gemini-2.0-flash', 'location': 'global'}}, {'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.0-flash'}}, {'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-2.0-flash'}}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '1s'}]}}",
-  "anonymized_id": "CAND_931",
-  "original_filename": "REDACTED_20260116_141916_AasimHussain_python_devops_TTL_Pune_August24_Propellence.pdf.txt"
+  "anonymized_id": "CAND_777",
+  "original_filename": "REDACTED_20260116_141916_AasimHussain_python_devops_TTL_Pune_August24_Propellence.pdf.txt",
+  "analysis_date": "2026-02-26T00:08:20.246287",
+  "verdict": "REVIEW",
+  "confidence_score": 93,
+  "match_score": 30,
+  "verdict_reason": "Candidate has 7 years experience with Python, JavaScript, Go. Requires human review for role fit.",
+  "years_experience": 7,
+  "years_experience_range": "7-8",
+  "seniority_level": "SENIOR",
+  "core_technical_skills": [
+    "Python",
+    "JavaScript",
+    "Go",
+    "Angular",
+    "Django",
+    "Flask",
+    "Azure",
+    "GCP"
+  ],
+  "secondary_technical_skills": [
+    "Docker",
+    "Kubernetes",
+    "Jenkins",
+    "SQL",
+    "MySQL",
+    "Redis",
+    "REST"
+  ],
+  "frameworks_tools": [
+    "Angular",
+    "Django",
+    "Flask",
+    "Docker",
+    "Kubernetes"
+  ],
+  "soft_skills": [
+    "Communication",
+    "Team Collaboration"
+  ],
+  "certifications": [],
+  "primary_domain": "Backend Development",
+  "secondary_domains": [],
+  "role_types": [
+    "SENIOR Backend"
+  ],
+  "leadership_indicators": [
+    "Leadership role mentioned"
+  ],
+  "highest_degree": "B.E./B.Tech",
+  "field_of_study": "Computer Science",
+  "education_level": "BACHELORS",
+  "cleaned_narrative": "Profile: Github , Linked In Profile :- • Develop back-end components to improve responsiveness and overall performance. • • Devops knowledge in Dockers Kubernetes, Red Hat Open Shift",
+  "cleaned_text": "[NAME]\n\nB303, [NAME], [NAME],\n\nKondhwa, -\n\n[REDACTED_CONTACT_LINE]\n\n[REDACTED_DOB]\n\nProfile: Github , Linked In Profile :-\n\n\nWORK EXPERIENCE\n\n\nTECHNICALSKILLS\n\n[REMOVED_SECTION_EDUCATION]\n\n• Develop back-end components to improve responsiveness and overall performance. •\n\nKnowledge in Database [RDBMS like Postgre SQL, MYSQL , SQLite\n• Devops knowledge in Dockers Kubernetes, Red Hat Open Shift\n• RESTful APIs using Flask and Django with general knowledge of Numpy, Pandas\n• Version Control Tool - GIT , Jira application to manage work tickets, SCRUM\n\nB. E - M. H. Saboo Siddik College of Engineering - 2015-16\nH. S. C - Smt. Meher Banu College of Science and Commerce - 2007-08\nS. S. C - Holy Cross Convent High School - 20015-06\nAasim Hussain\nB303, Sweety Arcade, Unity Park Road,\nKondhwa, -\n\nB. E - M. H. Saboo Siddik College of Engineering - 2015-16\nH. S. C - Smt. Meher Banu College of Science and Commerce - 2007-08\nS. S. C - Holy Cross Convent High School - 20015-06\n\nCONFERENCE/WORKSHOPS:\n\n.\n\n\nPROFESSIONAL EXPERIENCE\n\n\n.\nCompany - LTIMindtree.\nMy SQL, Kubernetes, Docker, Jenkins, Airflow\nProject - Fosfor-Aspect\nCompany - Colgate Palmolive Pvt. Ltd.\nKubernates\nProject- Atlas\n• Attended 06 days STTP on “Digital Wireless Communication '' at ACET, 2013. •Attended 02 days\n\nspecialized course on “Research Methodology Including Mathematical Modelling in Engineering and Technology” at PRPCET, Amravati in 2014.\n• Attended 02 days ISTE approved DP on “Achieving Excellence in Profession '' at PRPCEM,\n\nAravati in 2014.\nDuration - Jan 2022 till date\nTechnologies Used - Python, Flask Framework, Django Rest Framework, Celery, Rabbitmq, Redis, Postgre SQL,\n• Agnitio is data extraction related product which involves extracting data from various types as per configuration\n\nby user.\n• It follows microservice-based architecture.\n• It involves various AI models as well as Regular Expression Technique to basically extract data from documents\n\nalong with various parsers.\n• It has various models",
+  "matched_requirements": [
+    "Python",
+    "JavaScript",
+    "Go",
+    "Angular",
+    "Django"
+  ],
+  "missing_requirements": [],
+  "key_strengths": [
+    "Python",
+    "JavaScript",
+    "Go"
+  ],
+  "potential_concerns": [
+    ""
+  ],
+  "search_keywords": [
+    "Python",
+    "JavaScript",
+    "Go",
+    "Angular",
+    "Django",
+    "Flask",
+    "Azure",
+    "GCP",
+    "Backend Development",
+    "SENIOR"
+  ],
+  "highlight_achievements": [],
+  "requires_human_review": false,
+  "llm_provider": "rule_based_extraction",
+  "llm_model": "skill_matcher_v1",
+  "extraction_timestamp": "2026-02-26T00:08:20.246287",
+  "job_description_hash": "09755b924237517f",
+  "original_cv_hash": "ddd28a20b430c9be78e1fd2fe5e08c14a26818ebe2e90e5ee631601abfeb01ce"
 }
