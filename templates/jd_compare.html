@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JD Compare - CV Intelligence</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 { color: #667eea; font-size: 2em; }
+
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 500;
+        }
+        .nav-links a:hover { text-decoration: underline; }
+
+        .panel {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .input-row { grid-template-columns: 1fr; }
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 200px;
+        }
+        textarea:focus { outline: none; border-color: #667eea; }
+
+        label { display: block; font-weight: 600; color: #555; margin-bottom: 8px; }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+        select:focus, input[type="text"]:focus { outline: none; border-color: #667eea; }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .button-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        /* Spinner */
+        .spinner-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner-overlay.active { display: flex; }
+        .spinner-box {
+            background: white;
+            padding: 40px 50px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .spinner-box .loader {
+            width: 48px; height: 48px;
+            border: 5px solid #667eea;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner-box p { font-size: 1.1em; color: #555; }
+
+        /* Results */
+        .results-area { margin-top: 20px; }
+
+        .result-card {
+            border: 2px solid #eee;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        .result-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.15);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .result-header h3 { font-size: 1.3em; color: #333; }
+
+        .verdict-badge {
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9em;
+            text-transform: uppercase;
+        }
+        .verdict-SHORTLIST { background: #d1fae5; color: #065f46; }
+        .verdict-STRONG_SHORTLIST { background: #a7f3d0; color: #064e3b; }
+        .verdict-REVIEW { background: #fef3c7; color: #92400e; }
+        .verdict-REJECT { background: #fee2e2; color: #991b1b; }
+
+        .match-score {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #555;
+        }
+        .match-score strong { color: #667eea; font-size: 1.3em; }
+
+        /* Fitment Table */
+        .fitment-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.92em;
+        }
+        .fitment-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+        }
+        .fitment-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+        .fitment-table tr:hover td { background: #f7f8ff; }
+
+        .match-full { color: #065f46; font-weight: 600; }
+        .match-partial { color: #92400e; font-weight: 600; }
+        .match-no, .match-gap { color: #991b1b; font-weight: 600; }
+
+        .summary-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin: 15px 0;
+        }
+        .summary-box {
+            text-align: center;
+            padding: 12px;
+            border-radius: 10px;
+            background: #f7f8ff;
+        }
+        .summary-box .num { font-size: 1.8em; font-weight: 700; color: #667eea; }
+        .summary-box .lbl { font-size: 0.82em; color: #888; text-transform: uppercase; }
+
+        .sub-section { margin: 18px 0; }
+        .sub-section h4 {
+            font-size: 1.1em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .sub-section ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sub-section li {
+            padding: 6px 0 6px 20px;
+            position: relative;
+            color: #444;
+            line-height: 1.5;
+        }
+        .sub-section li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .strengths li::before { background: #10b981; }
+        .concerns li::before { background: #f59e0b; }
+        .gaps li::before { background: #ef4444; }
+
+        .overall-summary {
+            background: #f7f8ff;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            color: #444;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .recommendation-box {
+            background: #f0fdf4;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border-left: 4px solid #10b981;
+            color: #065f46;
+            font-weight: 500;
+            margin-top: 15px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            font-size: 1.1em;
+        }
+
+        .error-msg {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📊 JD Comparison</h1>
+            <div class="nav-links">
+                <a href="/">Upload CVs</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/jd-compare">JD Compare</a>
+            </div>
+        </div>
+
+        <!-- Input Panel -->
+        <div class="panel">
+            <h2 class="section-title">Compare Candidates Against Job Description</h2>
+            <div class="input-row">
+                <div>
+                    <label for="jdText">Job Description</label>
+                    <textarea id="jdText" placeholder="Paste the complete Job Description here...&#10;&#10;Example:&#10;Role: Senior Java Developer&#10;Experience: 5+ years&#10;Skills: Java, Spring Boot, Microservices, AWS&#10;..."></textarea>
+                </div>
+                <div>
+                    <label for="candidateSelect">Candidate</label>
+                    <select id="candidateSelect">
+                        <option value="">-- All Candidates (top 10) --</option>
+                    </select>
+                    <div style="margin-top: 20px;">
+                        <label for="jdFile">Or upload JD file</label>
+                        <input type="file" id="jdFile" accept=".txt,.doc,.docx,.pdf" style="padding:8px;">
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button class="button" id="btnCompare" onclick="runComparison()">
+                            🔍 Compare
+                        </button>
+                        <button class="button button-secondary" onclick="clearResults()">
+                            ✕ Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="panel" id="resultsPanel" style="display:none;">
+            <h2 class="section-title" id="resultsTitle">Comparison Results</h2>
+            <div id="resultsSummary" class="summary-row" style="display:none;"></div>
+            <div class="results-area" id="resultsArea"></div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="spinner-overlay" id="spinner">
+        <div class="spinner-box">
+            <div class="loader"></div>
+            <p id="spinnerText">Analyzing with LLM... This may take 1-3 minutes per candidate.</p>
+        </div>
+    </div>
+
+    <script>
+        // Load candidates on page load
+        document.addEventListener('DOMContentLoaded', loadCandidates);
+
+        // Handle file upload
+        document.getElementById('jdFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                document.getElementById('jdText').value = ev.target.result;
+            };
+            reader.readAsText(file);
+        });
+
+        async function loadCandidates() {
+            try {
+                const resp = await fetch('/api/all-candidates');
+                const data = await resp.json();
+                const sel = document.getElementById('candidateSelect');
+
+                let candidates = data.candidates || data || [];
+                if (!Array.isArray(candidates)) candidates = [];
+
+                candidates.sort((a, b) => {
+                    const idA = a.anonymized_id || '';
+                    const idB = b.anonymized_id || '';
+                    return idA.localeCompare(idB, undefined, {numeric: true});
+                });
+
+                candidates.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.anonymized_id;
+                    const skills = (c.key_skills || c.core_technical_skills || []).slice(0, 3).join(', ');
+                    const level = c.career_level || c.seniority_level || '';
+                    opt.textContent = `${c.anonymized_id} — ${level} ${skills ? '(' + skills + ')' : ''}`;
+                    sel.appendChild(opt);
+                });
+            } catch (err) {
+                console.error('Failed to load candidates:', err);
+            }
+        }
+
+        async function runComparison() {
+            const jd = document.getElementById('jdText').value.trim();
+            if (!jd) {
+                alert('Please paste or upload a Job Description first.');
+                return;
+            }
+
+            const candidateId = document.getElementById('candidateSelect').value;
+            const btn = document.getElementById('btnCompare');
+            const spinner = document.getElementById('spinner');
+
+            btn.disabled = true;
+            spinner.classList.add('active');
+
+            const body = { job_description: jd };
+            if (candidateId) body.anonymized_id = candidateId;
+
+            try {
+                const resp = await fetch('/api/jd-compare', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await resp.json();
+
+                if (!resp.ok) {
+                    showError(data.error || 'Comparison failed.');
+                    return;
+                }
+
+                renderResults(data);
+            } catch (err) {
+                showError('Network error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                spinner.classList.remove('active');
+            }
+        }
+
+        function renderResults(data) {
+            const panel = document.getElementById('resultsPanel');
+            const area = document.getElementById('resultsArea');
+            const summaryDiv = document.getElementById('resultsSummary');
+            const titleEl = document.getElementById('resultsTitle');
+
+            panel.style.display = 'block';
+            area.innerHTML = '';
+
+            titleEl.textContent = `Comparison Results — ${data.total_compared} Candidate(s)`;
+
+            // Summary counts
+            if (data.results && data.results.length > 1) {
+                const counts = { SHORTLIST: 0, STRONG_SHORTLIST: 0, REVIEW: 0, REJECT: 0 };
+                data.results.forEach(r => {
+                    const v = (r.verdict || 'REVIEW').toUpperCase();
+                    if (v in counts) counts[v]++;
+                    else counts['REVIEW']++;
+                });
+                summaryDiv.style.display = 'grid';
+                summaryDiv.innerHTML = `
+                    <div class="summary-box"><div class="num">${data.total_compared}</div><div class="lbl">Compared</div></div>
+                    <div class="summary-box"><div class="num" style="color:#065f46">${counts.STRONG_SHORTLIST + counts.SHORTLIST}</div><div class="lbl">Shortlist</div></div>
+                    <div class="summary-box"><div class="num" style="color:#92400e">${counts.REVIEW}</div><div class="lbl">Review</div></div>
+                    <div class="summary-box"><div class="num" style="color:#991b1b">${counts.REJECT}</div><div class="lbl">Reject</div></div>
+                `;
+            } else {
+                summaryDiv.style.display = 'none';
+            }
+
+            if (!data.results || data.results.length === 0) {
+                area.innerHTML = '<div class="no-results">No results found.</div>';
+                return;
+            }
+
+            data.results.forEach(r => area.appendChild(buildResultCard(r)));
+        }
+
+        function buildResultCard(r) {
+            const card = document.createElement('div');
+            const verdict = (r.verdict || 'REVIEW').toUpperCase();
+            card.className = 'result-card';
+
+            let html = `
+                <div class="result-header">
+                    <h3>${r.anonymized_id || 'Unknown'}</h3>
+                    <span class="verdict-badge verdict-${verdict}">${verdict.replace('_', ' ')}</span>
+                </div>
+            `;
+
+            // Match score
+            const score = r.match_score || r.confidence_score || 0;
+            if (score) {
+                html += `<div class="match-score">Match Score: <strong>${score}%</strong></div>`;
+            }
+
+            // Overall summary
+            const summary = r.overall_summary || r.evidence_based_reasoning || r.verdict_reason || '';
+            if (summary) {
+                html += `<div class="overall-summary">${escapeHtml(summary)}</div>`;
+            }
+
+            // Fitment analysis table
+            const fitment = r.fitment_analysis || [];
+            if (fitment.length > 0) {
+                html += `
+                    <div class="sub-section">
+                        <h4>Fitment Analysis</h4>
+                        <table class="fitment-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>JD Requirement</th>
+                                    <th>Candidate Profile</th>
+                                    <th>Match Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                fitment.forEach(f => {
+                    const status = (f.match_status || '').toUpperCase();
+                    let cls = 'match-partial';
+                    if (status.includes('FULL') || status.includes('YES') || status === 'MATCH') cls = 'match-full';
+                    else if (status.includes('NO') || status.includes('GAP') || status.includes('MISS')) cls = 'match-no';
+
+                    html += `
+                        <tr>
+                            <td><strong>${escapeHtml(f.category || '')}</strong></td>
+                            <td>${escapeHtml(f.jd_requirement || '')}</td>
+                            <td>${escapeHtml(f.candidate_profile || '')}</td>
+                            <td class="${cls}">${escapeHtml(f.match_status || '')}</td>
+                        </tr>
+                    `;
+                });
+                html += '</tbody></table></div>';
+            }
+
+            // Fitment summary stats
+            const fs = r.fitment_summary;
+            if (fs && fs.total_categories) {
+                html += `
+                    <div class="summary-row">
+                        <div class="summary-box"><div class="num">${fs.total_categories}</div><div class="lbl">Categories</div></div>
+                        <div class="summary-box"><div class="num" style="color:#065f46">${fs.full_match || 0}</div><div class="lbl">Full Match</div></div>
+                        <div class="summary-box"><div class="num" style="color:#92400e">${fs.partial_match || 0}</div><div class="lbl">Partial</div></div>
+                        <div class="summary-box"><div class="num" style="color:#991b1b">${fs.no_match || 0}</div><div class="lbl">No Match</div></div>
+                        <div class="summary-box"><div class="num">${fs.match_rate || '0%'}</div><div class="lbl">Match Rate</div></div>
+                    </div>
+                `;
+            }
+
+            // Key Strengths
+            const strengths = r.key_strengths || [];
+            if (strengths.length > 0) {
+                html += `<div class="sub-section strengths"><h4>✅ Key Strengths</h4><ul>`;
+                strengths.forEach(s => { html += `<li>${escapeHtml(s)}</li>`; });
+                html += '</ul></div>';
+            }
+
+            // Potential Concerns / Gaps
+            const concerns = r.potential_concerns || r.potential_gaps || [];
+            if (concerns.length > 0) {
+                html += `<div class="sub-section concerns"><h4>⚠️ Potential Gaps</h4><ul>`;
+                concerns.forEach(s => { html += `<li>${escapeHtml(s)}</li>`; });
+                html += '</ul></div>';
+            }
+
+            // Skills
+            const skills = r.core_technical_skills || r.key_skills || [];
+            const secondary = r.secondary_technical_skills || [];
+            if (skills.length > 0 || secondary.length > 0) {
+                html += `<div class="sub-section"><h4>🛠 Skills</h4>`;
+                if (skills.length) html += `<p><strong>Core:</strong> ${skills.map(escapeHtml).join(', ')}</p>`;
+                if (secondary.length) html += `<p style="margin-top:5px;"><strong>Secondary:</strong> ${secondary.map(escapeHtml).join(', ')}</p>`;
+                html += '</div>';
+            }
+
+            // Recommendation
+            const rec = r.recommendation || '';
+            if (rec) {
+                html += `<div class="recommendation-box">💡 <strong>Recommendation:</strong> ${escapeHtml(rec)}</div>`;
+            }
+
+            card.innerHTML = html;
+            return card;
+        }
+
+        function showError(msg) {
+            const panel = document.getElementById('resultsPanel');
+            const area = document.getElementById('resultsArea');
+            panel.style.display = 'block';
+            area.innerHTML = `<div class="error-msg">❌ ${escapeHtml(msg)}</div>`;
+        }
+
+        function clearResults() {
+            document.getElementById('resultsPanel').style.display = 'none';
+            document.getElementById('resultsArea').innerHTML = '';
+            document.getElementById('resultsSummary').style.display = 'none';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const d = document.createElement('div');
+            d.textContent = String(text);
+            return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

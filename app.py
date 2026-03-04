@@ -3,10 +3,12 @@ Flask Web UI for CV Redaction Pipeline with Intelligence Extraction
 Allows users to upload CVs, redact PII, extract intelligence, and search candidates
 Supports both Supabase and local JSON-based storage with automatic fallback
 """
+import dns_fix  # Fix JioFiber DNS hijacking - must be before any network imports
 import os
 import sys
 import json
 import glob
+from typing import Optional
 from flask import Flask, render_template, request, send_file, jsonify, url_for
 from werkzeug.utils import secure_filename
 from pathlib import Path
@@ -16,7 +18,7 @@ from datetime import datetime
 # Load environment variables from .env file
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(override=True)  # Override system env vars with .env values
 except ImportError:
     pass  # dotenv not installed, rely on system env vars
 
@@ -404,7 +406,9 @@ def dashboard():
 
 @app.route('/api/extract-intelligence', methods=['POST'])
 def extract_intelligence():
-    """Extract intelligence from redacted CV with job description"""
+    """Extract intelligence from redacted CV with job description.
+    Only processes anonymized CVs - returns error if CV is not anonymized.
+    """
     try:
         data = request.get_json()
         
@@ -425,6 +429,14 @@ def extract_intelligence():
         with open(cv_path, 'r', encoding='utf-8') as f:
             cv_text = f.read()
         
+        # Verify CV is anonymized before processing
+        from cv_intelligence_extractor import is_cv_anonymized
+        if not is_cv_anonymized(cv_text):
+            return jsonify({
+                'error': 'CV is not anonymized. Please redact PII first using the upload/redact feature before extracting intelligence.',
+                'action_required': 'anonymize_first'
+            }), 400
+        
         # Extract intelligence
         extractor = get_intelligence_extractor()
         intelligence = extractor.extract_intelligence(
@@ -433,19 +445,37 @@ def extract_intelligence():
             redacted_cv_file
         )
         
-        # Save intelligence JSON
+        # Check if extraction returned an error (e.g., CV not anonymized)
+        if intelligence.get("error") == "CV_NOT_ANONYMIZED":
+            return jsonify({
+                'error': intelligence.get('error_message', 'CV is not anonymized'),
+                'action_required': 'anonymize_first'
+            }), 400
+        
+        # Save intelligence JSON locally (includes raw filename for local tracking)
         intelligence_file = f"{Path(redacted_cv_file).stem}_intelligence.json"
         intelligence_path = os.path.join(app.config['INTELLIGENCE_FOLDER'], intelligence_file)
         with open(intelligence_path, 'w', encoding='utf-8') as f:
             json.dump(intelligence, f, indent=2, ensure_ascii=False)
         
-        # Store in Supabase if available
+        # Store in Supabase if available (only anonymized data goes to DB)
         stored = False
         if SUPABASE_AVAILABLE and "error" not in intelligence:
             storage = get_supabase_storage()
             if storage:
                 try:
                     storage.store_intelligence(intelligence)
+                    # Also store filename mapping for tracking
+                    anon_id = intelligence.get('anonymized_id')
+                    if anon_id:
+                        try:
+                            storage.store_filename_mapping(
+                                anonymized_id=anon_id,
+                                original_filename=redacted_cv_file,
+                                anonymized_filename=redacted_cv_file
+                            )
+                        except Exception as me:
+                            logger.warning(f"Could not store filename mapping: {me}")
                     stored = True
                 except Exception as e:
                     logger.warning(f"Could not store in Supabase: {e}")
@@ -463,7 +493,9 @@ def extract_intelligence():
 
 @app.route('/api/batch-extract', methods=['POST'])
 def batch_extract_intelligence():
-    """Batch extract intelligence from all redacted CVs"""
+    """Batch extract intelligence from all redacted CVs.
+    Only processes anonymized CVs — skips any that aren't properly redacted.
+    """
     try:
         data = request.get_json()
         job_description = data.get('job_description')
@@ -478,9 +510,12 @@ def batch_extract_intelligence():
         if not cv_files:
             return jsonify({'error': 'No redacted CVs found'}), 404
         
+        from cv_intelligence_extractor import is_cv_anonymized
+        
         # Process in batch
         extractor = get_intelligence_extractor()
         results = []
+        skipped_not_anonymized = 0
         
         for cv_file in cv_files:
             try:
@@ -504,6 +539,16 @@ def batch_extract_intelligence():
 
                 with open(cv_file, 'r', encoding='utf-8') as f:
                     cv_text = f.read()
+                
+                # Verify anonymization before processing
+                if not is_cv_anonymized(cv_text):
+                    skipped_not_anonymized += 1
+                    results.append({
+                        'file': cv_file.name,
+                        'status': 'error',
+                        'error': 'CV is not anonymized — please redact PII first'
+                    })
+                    continue
                 
                 intelligence = extractor.extract_intelligence(
                     cv_text,
@@ -529,6 +574,17 @@ def batch_extract_intelligence():
                     if storage:
                         try:
                             storage.store_intelligence(intelligence)
+                            # Also store filename mapping
+                            anon_id = intelligence.get('anonymized_id')
+                            if anon_id:
+                                try:
+                                    storage.store_filename_mapping(
+                                        anonymized_id=anon_id,
+                                        original_filename=cv_file.name,
+                                        anonymized_filename=cv_file.name
+                                    )
+                                except Exception as me:
+                                    logger.warning(f"Could not store filename mapping: {me}")
                         except Exception as e:
                             logger.warning(f"Could not store {cv_file.name} in Supabase: {e}")
                 
@@ -540,15 +596,20 @@ def batch_extract_intelligence():
                     'error': str(e)
                 })
         
-        successful = len([r for r in results if r['status'] == 'success'])
+        successful = len([r for r in results if r.get('status') == 'success'])
         
-        return jsonify({
+        response_data = {
             'success': True,
             'total': len(cv_files),
             'successful': successful,
             'failed': len(cv_files) - successful,
             'results': results
-        })
+        }
+        if skipped_not_anonymized > 0:
+            response_data['skipped_not_anonymized'] = skipped_not_anonymized
+            response_data['message'] = f'{skipped_not_anonymized} CVs were skipped because they are not anonymized. Please redact PII first.'
+        
+        return jsonify(response_data)
         
     except Exception as e:
         import traceback
@@ -567,7 +628,7 @@ def search_candidates():
         # Try Supabase first with timeout
         storage = get_supabase_storage()
         if storage:
-            results = try_supabase_operation(
+            raw_results = try_supabase_operation(
                 lambda: storage.search_by_filters(
                     verdict=data.get('verdict'),
                     seniority_level=data.get('seniority_level'),
@@ -581,9 +642,11 @@ def search_candidates():
                     limit=data.get('limit', 50)
                 ),
                 fallback_result=None,
-                timeout_seconds=5
+                timeout_seconds=10
             )
-            if results is not None:
+            if raw_results is not None:
+                # Convert DB records to app format
+                results = [storage._db_record_to_app_format(r) for r in raw_results]
                 return jsonify({
                     'success': True,
                     'count': len(results),
@@ -611,12 +674,13 @@ def get_candidate(anonymized_id):
         # Try Supabase first with timeout
         storage = get_supabase_storage()
         if storage:
-            candidate = try_supabase_operation(
+            raw_candidate = try_supabase_operation(
                 lambda: storage.get_candidate(anonymized_id),
                 fallback_result=None,
-                timeout_seconds=5
+                timeout_seconds=10
             )
-            if candidate:
+            if raw_candidate:
+                candidate = storage._db_record_to_app_format(raw_candidate)
                 return jsonify({
                     'success': True,
                     'candidate': candidate,
@@ -650,7 +714,7 @@ def get_statistics():
             result = try_supabase_operation(
                 lambda: storage.get_statistics(),
                 fallback_result=None,
-                timeout_seconds=5
+                timeout_seconds=10
             )
             if result:
                 result['data_source'] = 'supabase'
@@ -676,12 +740,14 @@ def get_all_candidates():
         # Try Supabase first with timeout
         storage = get_supabase_storage()
         if storage:
-            candidates = try_supabase_operation(
+            raw_candidates = try_supabase_operation(
                 lambda: storage.get_all_candidates(limit=limit),
                 fallback_result=None,
-                timeout_seconds=5
+                timeout_seconds=10
             )
-            if candidates is not None:
+            if raw_candidates is not None:
+                # Convert DB records to app format
+                candidates = [storage._db_record_to_app_format(r) for r in raw_candidates]
                 return jsonify({
                     'success': True,
                     'count': len(candidates),
@@ -816,6 +882,210 @@ def add_recruiter_override(anonymized_id):
     except Exception as e:
         logger.error(f"Error adding recruiter override: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
+
+@app.route('/jd-compare')
+def jd_compare_page():
+    """Render the JD Comparison page"""
+    return render_template('jd_compare.html')
+
+@app.route('/api/jd-compare', methods=['POST'])
+def jd_compare():
+    """
+    Compare a single candidate's CV against a new Job Description.
+    Uses the configured LLM to produce detailed fitment analysis.
+    
+    IMPORTANT: Only uses stored anonymized CV text. If no anonymized text 
+    is found for a candidate, returns an error asking to anonymize first.
+    
+    Request body: {
+        "anonymized_id": "CAND_274",  (optional - if omitted, analyzes all)
+        "job_description": "Senior Engineer role..."
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data or not data.get('job_description'):
+            return jsonify({'error': 'job_description is required'}), 400
+        
+        job_description = data['job_description']
+        anonymized_id = data.get('anonymized_id')
+        
+        from cv_intelligence_extractor import is_cv_anonymized
+        
+        # Get the CV text - try Supabase first, then local files
+        cv_texts = {}
+        not_anonymized = []
+        
+        if anonymized_id:
+            # Single candidate comparison
+            cv_text = _get_cv_text(anonymized_id)
+            if not cv_text:
+                return jsonify({'error': f'Anonymized CV text not found for {anonymized_id}. Please ensure this CV has been processed through the redaction pipeline.'}), 404
+            if not is_cv_anonymized(cv_text):
+                return jsonify({
+                    'error': f'CV for {anonymized_id} is not properly anonymized. Please re-process through the redaction pipeline first.',
+                    'action_required': 'anonymize_first'
+                }), 400
+            cv_texts[anonymized_id] = cv_text
+        else:
+            # Compare all candidates (limit to first 10 for performance)
+            candidates = load_local_intelligence_files()
+            for c in candidates[:10]:
+                aid = c.get('anonymized_id')
+                text = _get_cv_text(aid)
+                if text:
+                    if is_cv_anonymized(text):
+                        cv_texts[aid] = text
+                    else:
+                        not_anonymized.append(aid)
+        
+        if not cv_texts:
+            error_msg = 'No anonymized CV texts found to compare.'
+            if not_anonymized:
+                error_msg += f' {len(not_anonymized)} CVs need anonymization first.'
+            return jsonify({'error': error_msg}), 404
+        
+        # Run LLM analysis for each candidate
+        extractor = get_intelligence_extractor()
+        results = []
+        
+        for aid, cv_text in cv_texts.items():
+            try:
+                intelligence = extractor.extract_intelligence(
+                    cv_text, job_description, aid
+                )
+                
+                # Override the anonymized_id to keep the original
+                intelligence['anonymized_id'] = aid
+                
+                # Check for extraction errors
+                if intelligence.get("error") == "CV_NOT_ANONYMIZED":
+                    not_anonymized.append(aid)
+                    continue
+                
+                # Save updated intelligence — update existing file if it exists,
+                # otherwise create a new one. This ensures the latest JD comparison
+                # is always accessible.
+                # First look for existing intelligence file for this candidate
+                existing_file = None
+                for json_file in Path(app.config['INTELLIGENCE_FOLDER']).glob('*_intelligence.json'):
+                    try:
+                        with open(json_file, 'r', encoding='utf-8') as f:
+                            existing_data = json.load(f)
+                        if existing_data.get('anonymized_id') == aid:
+                            existing_file = json_file
+                            break
+                    except Exception:
+                        continue
+                
+                if existing_file:
+                    # Update existing file with new analysis
+                    intelligence_path = str(existing_file)
+                else:
+                    # Create new file
+                    intelligence_file = f"jd_compare_{aid}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_intelligence.json"
+                    intelligence_path = os.path.join(app.config['INTELLIGENCE_FOLDER'], intelligence_file)
+                
+                with open(intelligence_path, 'w', encoding='utf-8') as f:
+                    json.dump(intelligence, f, indent=2, ensure_ascii=False)
+                
+                # Update in Supabase if available (upserts on anonymized_id)
+                storage = get_supabase_storage()
+                if storage and "error" not in intelligence:
+                    try:
+                        storage.store_intelligence(intelligence)
+                    except Exception as e:
+                        logger.warning(f"Could not update Supabase for {aid}: {e}")
+                
+                results.append(intelligence)
+                
+            except Exception as e:
+                logger.error(f"Error comparing {aid}: {e}")
+                results.append({
+                    'anonymized_id': aid,
+                    'error': str(e),
+                    'verdict': 'REVIEW',
+                    'verdict_reason': f'Analysis failed: {str(e)}'
+                })
+        
+        # Sort by match_score descending
+        results.sort(key=lambda x: x.get('match_score', 0), reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'job_description': job_description[:200] + '...' if len(job_description) > 200 else job_description,
+            'total_compared': len(results),
+            'results': results
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in JD comparison: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+def _get_cv_text(anonymized_id: str) -> Optional[str]:
+    """
+    Get the anonymized CV text for a candidate.
+    Tries multiple sources in order:
+        1. Supabase backup JSON (cleaned_text field)
+        2. Local intelligence JSON files (cleaned_text field)
+        3. Matching redacted output files from disk
+    
+    Returns:
+        The anonymized CV text, or None if not found
+    """
+    # 1. Try from Supabase (stored in llm_raw_response JSON backup)
+    storage = get_supabase_storage()
+    if storage:
+        try:
+            record = try_supabase_operation(
+                lambda: storage.get_candidate(anonymized_id),
+                fallback_result=None,
+                timeout_seconds=10
+            )
+            if record:
+                raw = record.get('llm_raw_response', '')
+                if raw and raw.startswith('{'):
+                    full_data = json.loads(raw)
+                    if full_data.get('cleaned_text'):
+                        return full_data['cleaned_text']
+        except Exception:
+            pass
+    
+    # 2. Try from local intelligence JSON files (cleaned_text is now stored)
+    intelligence_dir = Path(app.config['INTELLIGENCE_FOLDER'])
+    for json_file in sorted(intelligence_dir.glob('*_intelligence.json'), 
+                           key=lambda x: x.stat().st_mtime, reverse=True):
+        try:
+            with open(json_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            if data.get('anonymized_id') == anonymized_id:
+                # Prefer cleaned_text (full anonymized CV)
+                if data.get('cleaned_text'):
+                    return data['cleaned_text']
+                # Fallback: try to find the original redacted file on disk
+                orig_file = data.get('original_filename_raw') or data.get('original_filename', '')
+                if orig_file:
+                    for folder in [app.config['OUTPUT_FOLDER'], 'final_output']:
+                        for txt_file in Path(folder).glob('REDACTED_*.txt'):
+                            if orig_file.replace('.txt', '') in txt_file.name:
+                                with open(txt_file, 'r', encoding='utf-8') as f:
+                                    return f.read()
+        except Exception:
+            continue
+    
+    # 3. Try matching from redacted output files by scanning intelligence records
+    candidates = load_local_intelligence_files()
+    for c in candidates:
+        if c.get('anonymized_id') == anonymized_id:
+            orig = c.get('original_filename', '')
+            if orig:
+                for folder in [app.config['OUTPUT_FOLDER'], 'final_output']:
+                    for txt_file in Path(folder).glob('REDACTED_*.txt'):
+                        if any(part in txt_file.name for part in orig.replace('.txt', '').split('_') if len(part) > 3):
+                            with open(txt_file, 'r', encoding='utf-8') as f:
+                                return f.read()
+    
+    return None
 
 @app.route('/api/sync-to-supabase', methods=['POST'])
 def sync_to_supabase():

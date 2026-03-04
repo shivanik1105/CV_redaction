@@ -19,6 +19,52 @@ from llm_batch_processor import LLMBatchProcessor
 
 logger = logging.getLogger(__name__)
 
+# Redaction markers that indicate a CV has been properly anonymized
+REDACTION_MARKERS = [
+    "[REDACTED", "[NAME]", "[REDACTED_NAME]", "[REDACTED_CONTACT",
+    "[REDACTED_EMAIL]", "[REDACTED_PHONE]", "[REDACTED_ADDRESS]",
+    "[REDACTED_SOCIAL]", "[REDACTED_LINKEDIN]", "[REDACTED_URL]",
+    "[REDACTED_CONTACT_LINE]", "[REDACTED_LOCATION]"
+]
+
+
+def is_cv_anonymized(cv_text: str) -> bool:
+    """
+    Check if a CV has been properly anonymized by looking for redaction markers.
+    
+    Args:
+        cv_text: The CV text to check
+        
+    Returns:
+        True if the CV contains redaction markers (is anonymized), False otherwise
+    """
+    if not cv_text or not cv_text.strip():
+        return False
+    return any(marker in cv_text for marker in REDACTION_MARKERS)
+
+
+def sanitize_filename_for_db(filename: str) -> str:
+    """
+    Strip PII from filenames before storing in database.
+    Original filenames may contain real names - replace with anonymized version.
+    
+    Args:
+        filename: Original filename that may contain real names
+        
+    Returns:
+        Sanitized filename safe for database storage
+    """
+    if not filename:
+        return "unknown"
+    # Keep only the REDACTED_ prefix and extension, strip embedded real names
+    import re
+    # If it starts with REDACTED_, keep the timestamp part only
+    match = re.match(r'(REDACTED_\d{8}_\d{6}_)', filename)
+    if match:
+        return match.group(1) + "anonymized_cv.txt"
+    # If no REDACTED prefix, just use a generic name
+    return "anonymized_cv.txt"
+
 
 class CVIntelligenceExtractor:
     """Extract structured intelligence from anonymized CVs using LLM with deep analysis"""
@@ -77,50 +123,62 @@ class CVIntelligenceExtractor:
         
     def _create_extraction_prompt(self, cv_text: str, job_description: str, anonymized_id: str) -> str:
         """
-        Create a human-readable extraction prompt for prose-based LLM analysis
-        
-        Args:
-            cv_text: Anonymized CV content
-            job_description: Job description to match against
-            anonymized_id: The generated anonymized candidate ID
-            
-        Returns:
-            Formatted prompt string
+        Create a detailed extraction prompt that produces Gemini-quality fitment analysis.
+        The output is structured prose that gets parsed into JSON.
         """
-        prompt = f"""You are a senior technical recruiter. Analyze the anonymized professional profile and job description below.
+        prompt = f"""You are a senior technical recruiter performing a detailed fitment analysis. Compare the anonymized professional profile against the job description below.
 
 IMPORTANT RULES:
-- The input CV is already anonymized (all PII removed). NEVER output names, emails, phone numbers, addresses, company locations, or institution names.
-- If you cannot determine something from the text, state "Not specified" — NEVER invent details.
-- Be concise but thorough. Focus on evidence explicitly stated in the profile.
+- The CV is already anonymized (all PII removed). NEVER output names, emails, phone numbers, addresses, or company locations.
+- If you cannot determine something, state "Not specified" — NEVER invent details.
+- Be thorough and evidence-based. Cite specific technologies, years, and project details from the CV.
+- Provide a DETAILED category-by-category comparison like a professional recruitment report.
+- The Overall Assessment MUST be an original analytical summary you write — do NOT copy-paste text from the CV.
 
-OUTPUT FORMAT (STRICTLY FOLLOW THIS STRUCTURE):
+OUTPUT FORMAT (FOLLOW THIS STRUCTURE EXACTLY):
 
-SECTION 1 – General Resume Assessment:
-[2-3 paragraphs covering:
-- Total years of experience and career progression
-- Core technical strengths with specific technologies/tools mentioned
-- Notable projects or achievements (with measurable impact if stated)
-- One key weakness or gap (e.g., lack of quantifiable metrics, generic descriptions)]
+SECTION 1 – Overall Assessment:
+[Write a 2-3 paragraph ORIGINAL executive summary in your own words covering:
+- Who the candidate is (years of experience, primary role, key expertise areas)
+- Why they are / are not a good fit for this specific role
+- One line recommendation
+IMPORTANT: This must be YOUR analytical summary, NOT copied text from the CV. Synthesize the information into a professional recruiter assessment.]
 
-SECTION 2 – Job Description Fit:
-Mandatory Skills:
-- [Skill 1]: [Matched/Not found] — [brief evidence or "no mention"]
-- [Skill 2]: [Matched/Not found] — [brief evidence or "no mention"]
-[Continue for all mandatory skills listed in JD]
+SECTION 2 – Fitment Analysis Table:
+For EACH major requirement category in the JD, provide a line in this exact format:
+CATEGORY: [category name]
+JD_REQUIRES: [what the JD asks for]
+CANDIDATE_HAS: [what the candidate actually has, with evidence]
+MATCH_STATUS: [FULL_MATCH | PARTIAL_MATCH | NO_MATCH]
 
-Secondary Skills:
-- [Skill A]: [Partial match/Not found] — [brief context]
-- [Skill B]: [Partial match/Not found] — [brief context]
-[Continue for nice-to-have skills]
+(Create one entry for each of these categories, adapting to the JD:
+- Total Experience
+- Core Programming Languages
+- Primary Domain / Industry
+- Frameworks & Tools
+- Architecture & Design Patterns
+- Cloud / Infrastructure
+- Leadership & Team Management
+- Education / Certifications
+- Any other JD-specific categories)
 
-Gap Analysis:
-[1-2 sentences: "Primary gap is X" OR "No critical gaps identified. Minor gaps include..."]
+SECTION 3 – Key Strengths:
+- [Strength 1 with specific evidence from CV]
+- [Strength 2 with specific evidence from CV]
+- [Strength 3 with specific evidence from CV]
+- [Strength 4 with specific evidence from CV (if applicable)]
 
-SECTION 3 – Experience Breakdown:
-Years of Experience: [Extract exact number, e.g., "9 years" or "5-6 years"]
+SECTION 4 – Potential Gaps / Areas to Verify:
+- [Gap 1: what is missing or unclear, and its impact]
+- [Gap 2: what is missing or unclear, and its impact]
+(If no gaps: "No critical gaps identified.")
+
+SECTION 5 – Experience Breakdown:
+Years of Experience: [exact number, e.g., "9 years" or "5-6 years"]
 Seniority Level: [ENTRY: 0-2yrs | MID: 2-5yrs | SENIOR: 5-10yrs | LEAD: 10-15yrs | EXECUTIVE: 15+yrs]
 Core Technical Skills: [List top 10 technical skills from CV]
+Secondary Skills: [List additional tools, frameworks, soft skills]
+Primary Domain: [Main industry/sector e.g., "Automotive Embedded", "Web Development"]
 Leadership Indicators: [List concrete evidence: "Led 5-person team", "Mentored 3 juniors", or "None mentioned"]
 
 FINAL RECOMMENDATION:
@@ -128,22 +186,14 @@ FINAL RECOMMENDATION:
 Confidence: [0-100]%
 Match Score: [0-100]%
 
-Reason: [2-3 sentences. First: key strength/weakness vs mandatory requirements. Second: specific evidence from profile. Third: why this verdict.]
+Reason: [2-3 sentences with specific evidence. First sentence: overall verdict with primary reason. Second: key matching evidence. Third: what tips the balance.]
 
-===== CRITICAL DECISION RULES =====
-
-**NO AUTO-REJECT POLICY** - AI NEVER rejects candidates:
-- SHORTLIST: Meets 80%+ requirements, strong match, ready for interview
-- BACKUP: Meets 60-79% requirements, decent match, consider if shortlist pool exhausted
-- REVIEW: <60% requirements OR unclear CV → HUMAN RECRUITER MUST DECIDE. Use this for borderline cases.
-
-⚠️ You CANNOT reject candidates. When in doubt, use REVIEW.
-⚠️ If Confidence <70%, automatically route to REVIEW regardless of match score.
-
-**Evidence Requirement**:
-Your reason MUST cite specific examples from CV:
-- BAD: "Good technical skills and experience"
-- GOOD: "7 years Python/Django experience matching core stack. Led 3 microservices projects with AWS deployment. Missing Kubernetes (nice-to-have) but Docker experience present."
+===== DECISION RULES =====
+- SHORTLIST: 80%+ requirements matched with strong evidence. Ready for interview.
+- BACKUP: 60-79% requirements matched. Good candidate but has some gaps.
+- REVIEW: <60% matched OR unclear/insufficient CV data → human must decide.
+- If Confidence <70%, automatically use REVIEW regardless of match score.
+- NEVER use REJECT — when in doubt, use REVIEW.
 
 ---
 
@@ -164,38 +214,31 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
     
     def _parse_prose_response(self, prose_response: str, anonymized_id: str) -> Dict:
         """
-        Parse human-readable prose LLM response into structured JSON
-        
-        Args:
-            prose_response: The prose-format LLM response
-            anonymized_id: Candidate's anonymized ID
-            
-        Returns:
-            Structured dictionary with extracted fields
+        Parse detailed prose LLM response into structured JSON.
+        Extracts fitment table, strengths, gaps, and all structured fields.
         """
         try:
             # Extract verdict
-            verdict_match = re.search(r'FINAL RECOMMENDATION:\s*\n\[(SHORTLIST|BACKUP|REVIEW)\]', prose_response, re.IGNORECASE)
+            verdict_match = re.search(r'FINAL RECOMMENDATION:\s*\n?\[?(SHORTLIST|BACKUP|REVIEW)\]?', prose_response, re.IGNORECASE)
             verdict = verdict_match.group(1).upper() if verdict_match else "REVIEW"
             
             # Extract confidence score
-            confidence_match = re.search(r'Confidence:\s*(\d+)%', prose_response)
+            confidence_match = re.search(r'Confidence:\s*\[?(\d+)\]?%', prose_response)
             confidence_score = int(confidence_match.group(1)) if confidence_match else 50
             
             # Extract match score
-            match_match = re.search(r'Match Score:\s*(\d+)%', prose_response)
+            match_match = re.search(r'Match Score:\s*\[?(\d+)\]?%', prose_response)
             match_score = int(match_match.group(1)) if match_match else 50
             
-            # Extract verdict reason (text after "Reason:" until end or next section)
-            reason_match = re.search(r'Reason:\s*(.+?)(?:\n\n|$)', prose_response, re.DOTALL)
+            # Extract verdict reason
+            reason_match = re.search(r'Reason:\s*(.+?)(?:\n\n|={3,}|$)', prose_response, re.DOTALL)
             verdict_reason = reason_match.group(1).strip() if reason_match else "See detailed analysis above"
             
             # Extract years of experience
-            years_match = re.search(r'Years of Experience:\s*([0-9.]+(?:-[0-9.]+)?)\s*(?:years?)?', prose_response, re.IGNORECASE)
+            years_match = re.search(r'Years of Experience:\s*\[?([0-9.]+(?:\s*-\s*[0-9.]+)?)\s*(?:years?)?\]?', prose_response, re.IGNORECASE)
             if years_match:
-                years_str = years_match.group(1)
+                years_str = years_match.group(1).replace(' ', '')
                 if '-' in years_str:
-                    # Range like "5-6"
                     start, end = years_str.split('-')
                     years_experience = (float(start) + float(end)) / 2
                     years_experience_range = years_str
@@ -207,47 +250,94 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                 years_experience_range = "Not specified"
             
             # Extract seniority level
-            seniority_match = re.search(r'Seniority Level:\s*(ENTRY|MID|SENIOR|LEAD|EXECUTIVE)', prose_response, re.IGNORECASE)
+            seniority_match = re.search(r'Seniority Level:\s*\[?(ENTRY|MID|SENIOR|LEAD|EXECUTIVE)\]?', prose_response, re.IGNORECASE)
             seniority_level = seniority_match.group(1).upper() if seniority_match else "MID"
             
-            # Extract core technical skills (look for list after "Core Technical Skills:")
-            skills_section = re.search(r'Core Technical Skills:\s*\[(.+?)\]', prose_response, re.DOTALL)
+            # Extract core technical skills (with or without brackets)
+            skills_section = re.search(r'Core Technical Skills:\s*\[?(.+?)\]?\s*(?:\n|$)', prose_response, re.DOTALL)
             if skills_section:
-                skills_text = skills_section.group(1)
-                core_technical_skills = [s.strip().strip('"\'') for s in skills_text.split(',')]
+                skills_text = skills_section.group(1).strip()
+                # Handle multi-line or comma-separated skills
+                core_technical_skills = [s.strip().strip('"\'[]') for s in skills_text.split(',') if s.strip() and s.strip() not in ['[', ']']]
+                core_technical_skills = [s for s in core_technical_skills if s]  # Remove empty
             else:
                 core_technical_skills = []
             
-            # Extract leadership indicators
-            leadership_section = re.search(r'Leadership Indicators:\s*\[(.+?)\]', prose_response, re.DOTALL)
+            # Extract secondary skills (with or without brackets)
+            secondary_section = re.search(r'Secondary Skills:\s*\[?(.+?)\]?\s*(?:\n|$)', prose_response, re.DOTALL)
+            if secondary_section:
+                sec_text = secondary_section.group(1).strip()
+                secondary_technical_skills = [s.strip().strip('"\'[]') for s in sec_text.split(',') if s.strip() and s.strip() not in ['[', ']']]
+                secondary_technical_skills = [s for s in secondary_technical_skills if s]
+            else:
+                secondary_technical_skills = []
+            
+            # Extract primary domain
+            domain_match = re.search(r'Primary Domain:\s*\[?([^\]\n]+)\]?', prose_response, re.IGNORECASE)
+            primary_domain = domain_match.group(1).strip().strip('"\'') if domain_match else ""
+            
+            # Extract leadership indicators (with or without brackets)
+            leadership_section = re.search(r'Leadership Indicators:\s*\[?(.+?)\]?\s*(?:\n|$)', prose_response, re.DOTALL)
             if leadership_section:
-                leadership_text = leadership_section.group(1)
-                leadership_indicators = [s.strip().strip('"\'') for s in leadership_text.split(',')]
+                leadership_text = leadership_section.group(1).strip()
+                if leadership_text.lower() in ['none mentioned', 'none mentioned.', 'none', 'n/a', 'not specified']:
+                    leadership_indicators = []
+                else:
+                    leadership_indicators = [s.strip().strip('"\'[]') for s in leadership_text.split(',') if s.strip()]
+                    leadership_indicators = [s for s in leadership_indicators if s]
             else:
                 leadership_indicators = []
             
-            # Extract SECTION 1 (General Resume Assessment)
+            # Extract SECTION 1 (Overall Assessment)
             section1_match = re.search(r'SECTION 1[^\n]*\n(.+?)(?=SECTION 2|FINAL RECOMMENDATION|$)', prose_response, re.DOTALL)
             cleaned_narrative = section1_match.group(1).strip() if section1_match else ""
             
-            # Extract matched/missing requirements from SECTION 2
-            matched_requirements = []
-            missing_requirements = []
+            # ===== NEW: Extract Fitment Analysis Table (SECTION 2) =====
+            fitment_analysis = []
+            section2_match = re.search(r'SECTION 2[^\n]*\n(.+?)(?=SECTION 3|Key Strengths|$)', prose_response, re.DOTALL)
+            if section2_match:
+                section2_text = section2_match.group(1)
+                # Parse CATEGORY/JD_REQUIRES/CANDIDATE_HAS/MATCH_STATUS blocks
+                # Support both plain "CATEGORY:" and dash-prefixed "- CATEGORY:" formats
+                categories = re.findall(
+                    r'-?\s*CATEGORY:\s*(.+?)\n-?\s*JD_REQUIRES:\s*(.+?)\n-?\s*CANDIDATE_HAS:\s*(.+?)\n-?\s*MATCH_STATUS:\s*(FULL_MATCH|PARTIAL_MATCH|NO_MATCH)',
+                    section2_text, re.DOTALL
+                )
+                for cat, jd_req, cand_has, status in categories:
+                    fitment_analysis.append({
+                        "category": cat.strip(),
+                        "jd_requirement": jd_req.strip(),
+                        "candidate_profile": cand_has.strip(),
+                        "match_status": status.strip()
+                    })
             
-            # Find Mandatory Skills section
-            mandatory_section = re.search(r'Mandatory Skills:(.+?)(?:Secondary Skills:|Gap Analysis:|SECTION 3|$)', prose_response, re.DOTALL)
-            if mandatory_section:
-                mandatory_text = mandatory_section.group(1)
-                # Parse lines like "- Python: Matched — 9 years experience"
-                for line in mandatory_text.split('\n'):
-                    if 'Matched' in line or 'matched' in line:
-                        skill_match = re.search(r'-\s*([^:]+):', line)
-                        if skill_match:
-                            matched_requirements.append(skill_match.group(1).strip())
-                    elif 'Not found' in line or 'not found' in line or 'missing' in line.lower():
-                        skill_match = re.search(r'-\s*([^:]+):', line)
-                        if skill_match:
-                            missing_requirements.append(skill_match.group(1).strip())
+            # ===== NEW: Extract Key Strengths (SECTION 3) =====
+            key_strengths = []
+            section3_match = re.search(r'(?:SECTION 3|Key Strengths)[^\n]*\n(.+?)(?=SECTION 4|Potential Gaps|SECTION 5|Experience Breakdown|FINAL|$)', prose_response, re.DOTALL)
+            if section3_match:
+                for line in section3_match.group(1).strip().split('\n'):
+                    line = line.strip()
+                    if line.startswith('-') or line.startswith('*'):
+                        key_strengths.append(line.lstrip('-* ').strip())
+            
+            # ===== NEW: Extract Potential Gaps (SECTION 4) =====
+            potential_concerns = []
+            section4_match = re.search(r'(?:SECTION 4|Potential Gaps)[^\n]*\n(.+?)(?=SECTION 5|Experience Breakdown|FINAL|$)', prose_response, re.DOTALL)
+            if section4_match:
+                for line in section4_match.group(1).strip().split('\n'):
+                    line = line.strip()
+                    if line.startswith('-') or line.startswith('*'):
+                        potential_concerns.append(line.lstrip('-* ').strip())
+            
+            # Extract matched/missing requirements from fitment table
+            matched_requirements = [f["category"] for f in fitment_analysis if f["match_status"] == "FULL_MATCH"]
+            missing_requirements = [f["category"] for f in fitment_analysis if f["match_status"] == "NO_MATCH"]
+            
+            # Count match stats
+            total_categories = len(fitment_analysis)
+            full_matches = len(matched_requirements)
+            partial_matches = len([f for f in fitment_analysis if f["match_status"] == "PARTIAL_MATCH"])
+            no_matches = len(missing_requirements)
             
             # Build structured response
             intelligence = {
@@ -267,12 +357,29 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                 
                 # Skills
                 "core_technical_skills": core_technical_skills,
+                "secondary_technical_skills": secondary_technical_skills,
                 "leadership_indicators": leadership_indicators,
+                
+                # Domain
+                "primary_domain": primary_domain,
+                "secondary_domains": [],
                 
                 # Analysis
                 "cleaned_narrative": cleaned_narrative,
                 "matched_requirements": matched_requirements,
                 "missing_requirements": missing_requirements,
+                "key_strengths": key_strengths,
+                "potential_concerns": potential_concerns,
+                
+                # NEW: Detailed fitment analysis table
+                "fitment_analysis": fitment_analysis,
+                "fitment_summary": {
+                    "total_categories": total_categories,
+                    "full_match": full_matches,
+                    "partial_match": partial_matches,
+                    "no_match": no_matches,
+                    "match_rate": round((full_matches + partial_matches * 0.5) / total_categories * 100, 1) if total_categories > 0 else 0
+                },
                 
                 # Full prose output for recruiter review
                 "detailed_analysis": prose_response
@@ -282,7 +389,6 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
             
         except Exception as e:
             logger.error(f"Error parsing prose response: {e}")
-            # Return minimal structure with full prose
             return {
                 "anonymized_id": anonymized_id,
                 "analysis_date": datetime.now().isoformat(),
@@ -301,10 +407,13 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
         original_filename: str = None
     ) -> Dict:
         """
-        Extract structured intelligence from a CV with deep analysis and audit trail
+        Extract structured intelligence from a CV with deep analysis and audit trail.
+        
+        IMPORTANT: Only processes anonymized CVs. If the CV is not anonymized,
+        returns an error asking the user to anonymize first.
         
         Args:
-            cv_text: Anonymized CV content
+            cv_text: Anonymized CV content (must contain [REDACTED_...] markers)
             job_description: Job description to match against
             original_filename: Original filename (for backend tracking only)
             
@@ -312,6 +421,20 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
             Dictionary with structured CV intelligence + full audit trail
         """
         try:
+            # CRITICAL: Verify CV is anonymized before processing
+            if not is_cv_anonymized(cv_text):
+                logger.error("CV is not anonymized. Cannot process non-anonymized CVs.")
+                return {
+                    "error": "CV_NOT_ANONYMIZED",
+                    "error_message": (
+                        "This CV has not been anonymized. Please run the CV through the "
+                        "redaction pipeline first (Upload → Redact PII) before extracting "
+                        "intelligence. Only anonymized CVs can be stored in the database."
+                    ),
+                    "anonymized_id": self._generate_anonymized_id(),
+                    "original_filename": sanitize_filename_for_db(original_filename) if original_filename else "unknown"
+                }
+            
             # Generate anonymized ID
             anonymized_id = self._generate_anonymized_id()
             
@@ -330,12 +453,16 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                 # Use prose parser instead of JSON
                 intelligence = self._parse_prose_response(raw_llm_response, anonymized_id)
                 
-                # Add metadata
-                intelligence["original_filename"] = original_filename or "unknown"
+                # Add metadata — sanitize filename to remove any real names
+                intelligence["original_filename"] = sanitize_filename_for_db(original_filename) if original_filename else "unknown"
+                intelligence["original_filename_raw"] = original_filename or "unknown"  # Keep raw for local use only
                 intelligence["llm_provider"] = self.api_provider
                 intelligence["llm_model"] = self.model
                 intelligence["extraction_timestamp"] = datetime.now().isoformat()
                 intelligence["job_description_hash"] = self._hash_job_description(job_description)
+                
+                # Store the anonymized CV text for future use (JD comparisons, re-analysis)
+                intelligence["cleaned_text"] = cv_text
                 
                 # Audit Trail (Full Explainability)
                 intelligence["original_cv_hash"] = original_cv_hash
@@ -442,7 +569,7 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                             storage.store_filename_mapping(
                                 anonymized_id=intelligence['anonymized_id'],
                                 original_filename=Path(cv_file).name,
-                                redacted_filename=Path(cv_file).name
+                                anonymized_filename=Path(cv_file).name
                             )
                             logger.info(f"  ☁️  Uploaded to Supabase")
                         except Exception as e:

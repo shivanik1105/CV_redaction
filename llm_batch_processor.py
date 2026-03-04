@@ -214,8 +214,7 @@ class LLMBatchProcessor:
                 temperature=0.3,
                 top_p=0.95,
                 top_k=40,
-                max_output_tokens=8192,
-                response_mime_type="application/json"
+                max_output_tokens=8192
             )
         )
         return response.text
@@ -226,14 +225,13 @@ class LLMBatchProcessor:
             response = self.client.chat(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a technical recruiter assistant. Always output valid JSON only."},
+                    {"role": "system", "content": "You are a senior technical recruiter assistant. Analyze CVs thoroughly and follow the output format exactly as specified in the prompt."},
                     {"role": "user", "content": prompt}
                 ],
                 options={
                     "temperature": 0.3,
-                    "num_predict": 4096
-                },
-                format="json"  # Force JSON output
+                    "num_predict": 8192
+                }
             )
             return response['message']['content']
         except Exception as e:

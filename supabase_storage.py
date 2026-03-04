@@ -2,6 +2,7 @@
 Supabase Storage Module
 Handles storing and retrieving CV intelligence data with vector search
 """
+import dns_fix  # Fix JioFiber DNS hijacking before any network imports
 import os
 import json
 from typing import Dict, List, Optional
@@ -160,13 +161,10 @@ USING GIN(to_tsvector('english', cleaned_text));
 
 -- Create filename mapping table (secure backend tracking)
 CREATE TABLE IF NOT EXISTS cv_filename_mapping (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    anonymized_id VARCHAR(20) UNIQUE NOT NULL REFERENCES cv_intelligence(anonymized_id),
-    original_filename VARCHAR(255) NOT NULL,
-    redacted_filename VARCHAR(255),
-    upload_timestamp TIMESTAMP DEFAULT NOW(),
-    uploaded_by VARCHAR(100),  -- For multi-user systems
-    UNIQUE(original_filename, uploaded_by)
+    anonymized_id TEXT PRIMARY KEY REFERENCES cv_intelligence(anonymized_id),
+    original_filename TEXT NOT NULL,
+    anonymized_filename TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_mapping_anonymized ON cv_filename_mapping(anonymized_id);
@@ -203,7 +201,14 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
     
     def store_intelligence(self, intelligence_data: Dict) -> Dict:
         """
-        Store CV intelligence in Supabase with new schema
+        Store CV intelligence in Supabase, mapped to existing table schema.
+        
+        Existing table columns:
+            anonymized_id, career_level, confidence_score, created_at,
+            domain_expertise (text[]), evidence_based_reasoning, key_skills (text[]),
+            llm_prompt_used, llm_raw_response, original_cv_hash, overall_summary,
+            recruiter_override, reviewed_at, reviewer_id, reviewer_notes,
+            updated_at, verdict, years_of_experience
         
         Args:
             intelligence_data: Dictionary from CVIntelligenceExtractor
@@ -212,68 +217,53 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             Response from Supabase
         """
         try:
-            # Flatten the nested structure for storage
+            # CRITICAL: Verify data has an anonymized_id
+            anon_id = intelligence_data.get("anonymized_id")
+            if not anon_id:
+                raise ValueError("Cannot store intelligence without anonymized_id")
+            
+            # CRITICAL: Check for error indicating CV was not anonymized
+            if intelligence_data.get("error") == "CV_NOT_ANONYMIZED":
+                raise ValueError(
+                    "CV is not anonymized. Please run through redaction pipeline first. "
+                    "Only anonymized CVs can be stored in the database."
+                )
+            
+            # Build domain expertise array: primary + secondary domains
+            domains = []
+            if intelligence_data.get("primary_domain"):
+                domains.append(intelligence_data["primary_domain"])
+            domains.extend(intelligence_data.get("secondary_domains", []))
+            
+            # Build accurate overall_summary from the LLM's actual analysis
+            # Priority: use the LLM-generated cleaned_narrative (executive summary)
+            # NOT raw CV text — this should be the analyst's own summary
+            overall_summary = self._build_accurate_summary(intelligence_data)
+            
+            # Strip any PII from the JSON backup before storing
+            # Remove original_filename_raw (contains real names) from DB copy
+            safe_data = {k: v for k, v in intelligence_data.items() 
+                        if k != "original_filename_raw" and k != "llm_prompt_used"}
+            full_json_backup = json.dumps(safe_data, default=str)
+            
+            # Map to existing table columns  
             flat_data = {
-                # Identifiers
-                "anonymized_id": intelligence_data.get("anonymized_id"),
-                "original_filename": intelligence_data.get("original_filename"),
-                "analysis_date": intelligence_data.get("analysis_date"),
-                
-                # Cleaned Content
-                "cleaned_text": intelligence_data.get("cleaned_text"),
-                "cleaned_narrative": intelligence_data.get("cleaned_narrative"),
-                
-                # Core Metadata
-                "years_experience": intelligence_data.get("years_experience"),
-                "years_experience_range": intelligence_data.get("years_experience_range"),
-                "seniority_level": intelligence_data.get("seniority_level"),
-                
-                # Skills
-                "core_technical_skills": intelligence_data.get("core_technical_skills", []),
-                "secondary_technical_skills": intelligence_data.get("secondary_technical_skills", []),
-                "frameworks_tools": intelligence_data.get("frameworks_tools", []),
-                "soft_skills": intelligence_data.get("soft_skills", []),
-                "certifications": intelligence_data.get("certifications", []),
-                
-                # Domain & Experience
-                "primary_domain": intelligence_data.get("primary_domain"),
-                "secondary_domains": intelligence_data.get("secondary_domains", []),
-                "role_types": intelligence_data.get("role_types", []),
-                "leadership_indicators": intelligence_data.get("leadership_indicators", []),
-                
-                # Education
-                "highest_degree": intelligence_data.get("highest_degree"),
-                "field_of_study": intelligence_data.get("field_of_study"),
-                "education_level": intelligence_data.get("education_level"),
-                
-                # JD Fitment
-                "verdict": intelligence_data.get("verdict"),
-                "confidence_score": intelligence_data.get("confidence_score"),
-                "match_score": intelligence_data.get("match_score"),
-                "verdict_reason": intelligence_data.get("verdict_reason"),
-                "requires_human_review": intelligence_data.get("requires_human_review", False),
-                
-                # Detailed Analysis
-                "matched_requirements": intelligence_data.get("matched_requirements", []),
-                "missing_requirements": intelligence_data.get("missing_requirements", []),
-                "key_strengths": intelligence_data.get("key_strengths", []),
-                "potential_concerns": intelligence_data.get("potential_concerns", []),
-                
-                # Search Optimization
-                "search_keywords": intelligence_data.get("search_keywords", []),
-                "highlight_achievements": intelligence_data.get("highlight_achievements", []),
-                
-                # Metadata
-                "llm_provider": intelligence_data.get("llm_provider"),
-                "llm_model": intelligence_data.get("llm_model"),
-                "extraction_timestamp": intelligence_data.get("extraction_timestamp"),
-                "job_description_hash": intelligence_data.get("job_description_hash"),
-                
-                # Audit Trail
-                "original_cv_hash": intelligence_data.get("original_cv_hash"),
-                "llm_prompt_used": intelligence_data.get("llm_prompt_used"),
-                "llm_raw_response": intelligence_data.get("llm_raw_response"),
+                "anonymized_id": anon_id,
+                "verdict": intelligence_data.get("verdict", "REVIEW"),
+                "confidence_score": intelligence_data.get("confidence_score", 0),
+                "years_of_experience": intelligence_data.get("years_experience", 0),
+                "career_level": intelligence_data.get("seniority_level", "N/A"),
+                "key_skills": intelligence_data.get("core_technical_skills", []),
+                "domain_expertise": domains if domains else [],
+                "evidence_based_reasoning": intelligence_data.get("verdict_reason", ""),
+                "overall_summary": overall_summary,
+                "original_cv_hash": intelligence_data.get("original_cv_hash", ""),
+                "llm_prompt_used": f"{intelligence_data.get('llm_provider', 'unknown')}:{intelligence_data.get('llm_model', 'unknown')}",
+                "llm_raw_response": full_json_backup,
             }
+            
+            # Remove None values (Supabase doesn't like explicit nulls for some columns)
+            flat_data = {k: v for k, v in flat_data.items() if v is not None}
             
             # Insert or upsert
             response = self.client.table(self.table_name).upsert(
@@ -287,6 +277,138 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
         except Exception as e:
             logger.error(f"Error storing intelligence: {e}")
             raise
+    
+    def _build_accurate_summary(self, intelligence_data: Dict) -> str:
+        """
+        Build an accurate overall_summary for the database from the LLM's analysis.
+        
+        Priority order:
+        1. LLM-generated cleaned_narrative (Section 1 executive summary) — if it looks
+           like an original analysis (not copy-pasted CV text)
+        2. Verdict reason + key metadata (years, skills, domain) — always accurate
+        3. Fallback: construct from structured fields
+        
+        The summary stored in DB should be a professional recruiter-style assessment,
+        NOT raw text copied from the CV.
+        """
+        import re as _re
+        
+        narrative = (intelligence_data.get("cleaned_narrative") or "").strip()
+        verdict_reason = (intelligence_data.get("verdict_reason") or "").strip()
+        years = intelligence_data.get("years_experience", 0)
+        seniority = intelligence_data.get("seniority_level", "N/A")
+        skills = intelligence_data.get("core_technical_skills", [])
+        domain = intelligence_data.get("primary_domain", "")
+        verdict = intelligence_data.get("verdict", "REVIEW")
+        confidence = intelligence_data.get("confidence_score", 0)
+        match_score = intelligence_data.get("match_score", 0)
+        
+        # Detect if cleaned_narrative is just copy-pasted CV text (common LLM issue)
+        # We check multiple patterns and flag if ANY pattern matches
+        is_raw_cv_text = False
+        if narrative:
+            # 1. Keyword-based indicators: CV-style section headers, bullets, redaction markers
+            cv_indicators = [
+                "OBJECTIVE :", "OBJECTIVE:", "SUMMARY\n", "SKILLS\n", "WORK EXPERIENCE",
+                "➢", "●", "✓", "Currently Working as", "was working",
+                "[REDACTED", "[NAME]", "Profile:", "Functional:",
+                "Github", "LinkedIn", "Linked In", "EDUCATION", "CERTIF",
+            ]
+            indicator_count = sum(1 for ind in cv_indicators if ind in narrative)
+            
+            # 2. Company name in parentheses like (Capgemini), (TCS), (Infosys)
+            has_company_parens = bool(_re.search(r'\([A-Z][a-zA-Z]{2,}\)', narrative))
+            
+            # 3. Date patterns like "August 2021 -" or "January 2020"
+            months = "January|February|March|April|May|June|July|August|September|October|November|December"
+            has_date_pattern = bool(_re.search(rf'\b({months})\s+\d{{4}}\b', narrative))
+            
+            # 4. Repeated job title at start (e.g., "Senior Developer Senior Developer")
+            words = narrative.split()
+            has_title_repeat = False
+            if len(words) >= 4:
+                for n in range(2, min(5, len(words) // 2 + 1)):
+                    if ' '.join(words[:n]).lower() == ' '.join(words[n:2*n]).lower():
+                        has_title_repeat = True
+                        break
+            
+            # 5. Bullet character "•" (common in CVs)
+            has_bullets = '•' in narrative
+            
+            # Flag as raw CV text if ANY strong signal is present
+            if (indicator_count >= 1 or has_company_parens or has_date_pattern
+                    or has_title_repeat or has_bullets or len(narrative) > 1000):
+                is_raw_cv_text = True
+        
+        # Build the summary
+        parts = []
+        
+        if narrative and not is_raw_cv_text and len(narrative) >= 30:
+            # The LLM generated a proper analytical summary — use it
+            # Truncate to reasonable length for DB field
+            parts.append(narrative[:500])
+        else:
+            # Build a structured summary from metadata
+            experience_str = f"{years} years" if years else "unspecified experience"
+            skills_str = ", ".join(skills[:6]) if skills else "not specified"
+            domain_str = domain if domain else "Software Development"
+            
+            parts.append(
+                f"{seniority.title() if seniority != 'N/A' else 'Mid'}-level professional "
+                f"with {experience_str} in {domain_str}. "
+                f"Core skills: {skills_str}."
+            )
+        
+        # Always append the assessment verdict
+        if verdict_reason:
+            parts.append(f"Assessment: {verdict_reason}")
+        else:
+            parts.append(f"Verdict: {verdict} (Confidence: {confidence}%, Match: {match_score}%)")
+        
+        # Add education if available
+        if intelligence_data.get("highest_degree"):
+            edu = intelligence_data["highest_degree"]
+            if intelligence_data.get("field_of_study"):
+                edu += f" in {intelligence_data['field_of_study']}"
+            parts.append(f"Education: {edu}")
+        
+        return " | ".join(parts)
+    
+    def _db_record_to_app_format(self, record: Dict) -> Dict:
+        """
+        Convert a Supabase DB record back to the app's expected format.
+        First tries to restore from the full JSON backup in llm_raw_response,
+        then falls back to mapping from the 18 DB columns.
+        """
+        # Try to restore full data from JSON backup
+        raw = record.get("llm_raw_response", "")
+        if raw and raw.startswith("{"):
+            try:
+                full_data = json.loads(raw)
+                full_data["_source"] = "supabase"
+                return full_data
+            except (json.JSONDecodeError, TypeError):
+                pass
+        
+        # Fallback: map DB columns back to app format
+        domains = record.get("domain_expertise", []) or []
+        return {
+            "anonymized_id": record.get("anonymized_id", "UNKNOWN"),
+            "verdict": record.get("verdict", "REVIEW"),
+            "confidence_score": record.get("confidence_score", 0),
+            "match_score": 0,  # Not stored in simple schema
+            "years_experience": record.get("years_of_experience", 0),
+            "seniority_level": record.get("career_level", "N/A"),
+            "core_technical_skills": record.get("key_skills", []) or [],
+            "primary_domain": domains[0] if domains else "",
+            "secondary_domains": domains[1:] if len(domains) > 1 else [],
+            "cleaned_narrative": record.get("overall_summary", ""),
+            "verdict_reason": record.get("evidence_based_reasoning", ""),
+            "original_cv_hash": record.get("original_cv_hash", ""),
+            "recruiter_override": record.get("recruiter_override"),
+            "requires_human_review": False,
+            "_source": "supabase",
+        }
     
     def batch_store(self, intelligence_list: List[Dict]) -> List[Dict]:
         """
@@ -313,8 +435,7 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
         self,
         anonymized_id: str,
         original_filename: str,
-        redacted_filename: str = None,
-        uploaded_by: str = "system"
+        anonymized_filename: str = None
     ) -> Dict:
         """
         Store filename mapping in secure backend table
@@ -322,8 +443,7 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
         Args:
             anonymized_id: The anonymized candidate ID (e.g., "CAND_882")
             original_filename: Original uploaded filename
-            redacted_filename: Redacted/anonymized filename (optional)
-            uploaded_by: User identifier (for multi-user systems)
+            anonymized_filename: Anonymized/redacted filename (optional)
             
         Returns:
             Mapping record
@@ -332,8 +452,7 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             mapping_data = {
                 "anonymized_id": anonymized_id,
                 "original_filename": original_filename,
-                "redacted_filename": redacted_filename,
-                "uploaded_by": uploaded_by
+                "anonymized_filename": anonymized_filename or original_filename
             }
             
             response = self.client.table("cv_filename_mapping").upsert(
@@ -409,38 +528,92 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             query = query.eq("verdict", verdict)
         
         if seniority_level:
-            query = query.eq("seniority_level", seniority_level)
+            query = query.eq("career_level", seniority_level.upper())
         
         if min_match_score is not None:
-            query = query.gte("match_score", min_match_score)
+            query = query.gte("confidence_score", min_match_score)
         
         if min_confidence_score is not None:
             query = query.gte("confidence_score", min_confidence_score)
         
         if required_skills:
-            # Check if core_technical_skills contains all required skills
-            for skill in required_skills:
-                query = query.contains("core_technical_skills", [skill])
+            # Check if key_skills contains all required skills (case-insensitive via client-side filter)
+            # PostgREST array contains is case-sensitive, so we filter after fetch
+            pass  # Will filter client-side below
         
         if primary_domain:
-            query = query.eq("primary_domain", primary_domain)
+            # domain_expertise is text[] - PostgREST contains is case-sensitive
+            # so we filter client-side for better UX
+            pass  # Will filter client-side below
         
         if domains:
-            # Check if secondary_domains overlaps with requested domains
-            for domain in domains:
-                query = query.contains("secondary_domains", [domain])
+            # Check if domain_expertise overlaps with requested domains
+            pass  # Will filter client-side below
         
         if min_years_experience is not None:
-            query = query.gte("years_experience", min_years_experience)
+            query = query.gte("years_of_experience", min_years_experience)
         
         if max_years_experience is not None:
-            query = query.lte("years_experience", max_years_experience)
+            query = query.lte("years_of_experience", max_years_experience)
         
-        # Order by match score descending, then confidence descending
-        query = query.order("match_score", desc=True).order("confidence_score", desc=True).limit(limit)
+        # Order by confidence descending
+        query = query.order("confidence_score", desc=True).limit(limit)
         
         response = query.execute()
-        return response.data
+        results = response.data
+        
+        # Client-side filters for case-insensitive text/array matching
+        if required_skills:
+            def has_all_skills(record):
+                rec_skills = [s.lower() for s in (record.get("key_skills") or [])]
+                # Also check llm_raw_response backup for core_technical_skills
+                raw = record.get("llm_raw_response", "")
+                if raw and raw.startswith("{"):
+                    try:
+                        full = json.loads(raw)
+                        rec_skills += [s.lower() for s in (full.get("core_technical_skills") or [])]
+                        rec_skills += [s.lower() for s in (full.get("secondary_technical_skills") or [])]
+                    except Exception:
+                        pass
+                return all(
+                    any(skill.lower() in rs for rs in rec_skills)
+                    for skill in required_skills
+                )
+            results = [r for r in results if has_all_skills(r)]
+        
+        if primary_domain:
+            pd_lower = primary_domain.lower()
+            def matches_domain(record):
+                domains_list = record.get("domain_expertise") or []
+                if any(pd_lower in d.lower() for d in domains_list):
+                    return True
+                # Check in llm_raw_response backup
+                raw = record.get("llm_raw_response", "")
+                if raw and raw.startswith("{"):
+                    try:
+                        full = json.loads(raw)
+                        p = (full.get("primary_domain") or "").lower()
+                        s = [d.lower() for d in (full.get("secondary_domains") or [])]
+                        skills = [sk.lower() for sk in (full.get("core_technical_skills") or [])]
+                        narrative = (full.get("cleaned_narrative") or "").lower()
+                        if pd_lower in p or any(pd_lower in d for d in s) or any(pd_lower in sk for sk in skills) or pd_lower in narrative:
+                            return True
+                    except Exception:
+                        pass
+                summary = (record.get("overall_summary") or "").lower()
+                return pd_lower in summary
+            results = [r for r in results if matches_domain(r)]
+        
+        if domains:
+            def matches_any_domain(record):
+                domains_list = [d.lower() for d in (record.get("domain_expertise") or [])]
+                return any(
+                    any(d.lower() in dl for dl in domains_list)
+                    for d in domains
+                )
+            results = [r for r in results if matches_any_domain(r)]
+        
+        return results
     
     def semantic_search(
         self,
@@ -520,7 +693,6 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             requires_human = len([r for r in all_records if r.get("requires_human_review") == True])
             recruiter_reviewed = len([r for r in all_records if r.get("recruiter_override") is not None])
             
-            avg_match_score = sum(r.get("match_score", 0) for r in all_records) / total if total > 0 else 0
             avg_confidence_score = sum(r.get("confidence_score", 0) for r in all_records) / total if total > 0 else 0
             
             return {
@@ -530,8 +702,9 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
                 "review_needed": review_needed,
                 "requires_human_review": requires_human,
                 "recruiter_reviewed": recruiter_reviewed,
-                "average_match_score": round(avg_match_score, 2),
-                "average_confidence_score": round(avg_confidence_score, 2)
+                "average_match_score": round(avg_confidence_score, 2),
+                "average_confidence_score": round(avg_confidence_score, 2),
+                "data_source": "supabase"
             }
         except Exception as e:
             logger.error(f"Error getting statistics: {e}")
