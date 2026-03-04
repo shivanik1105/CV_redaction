@@ -1,0 +1,113 @@
+[REDACTED_NAME]
+
+[REDACTED_PHONE]
+
+[REDACTED_EMAIL]
+
+linkedin.com/jagdeep
+
+SUMMARY
+
+
+10+ years of expertise in Android development with a strong foundation in OOP, advanced design patterns, and Android internals.
+
+Proficient in modern Android technologies including Kotlin, [NAME], Coroutines, and MVVM architecture for
+building scalable, maintainable applications.
+
+Experienced with libraries like Hilt, Room, creating user-centric interfaces with Material Design while ensuring
+seamless integration with RESTful services.
+
+Strong background in performance optimization , modularization, and Dependency Injection, leading to testable and
+high-performance codebases.
+
+Proven leadership and communication skills , successfully leading and mentoring a team of 4-5 developers, driving
+project success through effective collaboration and technical guidance.
+
+
+SKILLS
+
+
+Technical tools : Android, CI/CD, Gradle
+Languages : Java, Kotlin, Javascript(Basic)
+Database : SQLite, Room, My SQL
+Designing Tools: XML, Jetpack Compose, HTML
+Version Control: Git, SVN, TFS
+Other Skills : Jetpack Compose, Hilt, Dagger, Coroutines, MVVM, MVP, OOP, Design Patterns
+Experience/Projects
+Paytm
+Feb 2021 – Present
+Senior Technical Lead
+()
+• Paytm App - Official Paytm app which offers a range of services including payments, banking, insurance, and
+
+e-commerce.
+• Worked on the scanner and improved the overall scanning performance and time.
+• Worked on UPI onboarding vertical & developed features like Aadhaar-based pin Setup, Revamped Bank linking
+
+page on Jetpack Compose, multi bank linking solely.
+• Lead the Android team of Onboarding Vertical
+• Played a key role in the recent migration of Paytm to the TPAP (Third Party Application Provider) model.
+
+Senior Software Engg.
+Feb 2019 – Jan 2021
+Yatra.com
+• Yatra – B2C Application - : Yatra online offers a booking service that enables individuals to find and book flights,
+
+hotels, cabs, buses, etc.
+• Redesigned the Flight UI according to the new material design.
+• Implemented Multicity flow for flight module.
+• Improved overall architecture of the project
+• Yatra Corporate Application - : This application is made for the client's specifications. There is also a hierarchical
+
+approval flow and the whole application runs on a configuration-based architecture.
+• Introduced Online Bus booking flow.
+• Refracted the old code with new Kotlin code and MVVM standards.
+• Migration of SDKs like Firebase crashlytics, analytics, and Andorid X.
+
+Consultant
+Dec 2015 – Jan 2019
+Infogain Pvt. Ltd.
+• Samsung Smartdost – HHP - : Samsung Smartdost app is a role-based app that exposes a different set of features
+
+based on user login.
+• Improved the base architecture with MVVM model.
+• Reduced database insertion time and improved user experience during offline.
+• Developed multiple dynamic modules which can be configured dynamically via console.
+• Samsung Retail Management System - : SRMS is an android application that serves the purpose of automating the
+
+maintenance process of the fixtures deployed at the Dealer's store.
+• Requirement gathering and documentation.
+• Designing UI and implementing functionality of multiple modules.
+• To implement the network layer and database layer with the help of Retrofit2, Dagger2 and Rx Java2.
+• Samsung Partner Portal - : SPP is an application for the Samsung internal employees and partners. User gets
+
+product information, updated price and new schemes on the handheld devices like mobile, tabs or wearable.
+• Improved UI with updated Material Design.
+• Handled features exposure based on multiple roles.
+
+Software Engineer
+May 2014 – Dec 2015
+Iprof Learning Solution Pvt. Ltd.
+
+[REDACTED_CONTACT_LINE]
+
+videos. It also enables users to give practice tests based on various subjects and courses. Users can also download
+the courses and test for studying even when the app is offline.
+• Worked in an Agile environment and participated in different phases of the project cycle like design and
+
+development.
+• Implement various app requirements like questionnaires and course description modules.
+• Developed offline download of the content such as PDF and videos.
+
+that the user has purchased. This application reads the encrypted content from the SD card after decryption.
+• Designing UI for different tablet resolutions.
+• Maintenance of Applications for Tablet and webpage rendering with Math Jax for rendering formulas
+
+
+[REMOVED_SECTION_EDUCATION]
+
+
+Java
+Oracle Certified Professional, Java SE 6 Programmer (1Z0-851)
+
+[REMOVED_SECTION_EDUCATION]

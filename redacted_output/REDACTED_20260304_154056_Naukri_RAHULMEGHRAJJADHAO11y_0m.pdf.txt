@@ -1,0 +1,109 @@
+[NAME]
+
+[REDACTED_CONTACT_LINE]
+
+[NAME] Rahatani, - .
+
+[REDACTED_NAME]
+
+ Over 11 years of IT experience specializing in Java-based application development .
+ Currently working as Lead Engineer at Hitachi Digital Services for 3 years, overseeing HCAP Operate projects, driving strategic
+improvements, and ensuring successful project outcomes.
+ Previously Lead Engineer at Quest Global for 3.1 years, focused on implementing a mobile device management system.
+ Served as Consultant ( Module Lead ) at Mahindra & Mahindra Group (Bristlecone Ltd.) for 2.5 years, developed solutions to
+manage product sales activities.
+ Gained experience as a Software Engineer at Sterlite Technologies Ltd ., worked on a BSS product for 10 months.
+ Received a CEO award for exceptional innovation and contributions to project work.
+ Proficient in Agile methodologies with experience in tools such as Bitbucket, Jira, and Confluence
+ Acted as Scrum Master , responsible for sprint planning, task creation, team delegation, organizing scrum and retrospective meetings.
+
+TECHNICALSKILLS
+
+Skills Core Java , J2EE, Microservices , Spring boot , Rest API , Elasticsearch, AWS
+Frameworks Spring, Hibernate, JPA
+Development Tools Docker, Kubernetes, Spinnaker, IntelliJ , Postman, Jenkin , Grafana
+Scheduler Tools (Opsgenie, PagerDuty), Jacoco. ITSM tools (ServiceNow, Cloud Aware),
+Database Technologies MySQL, PostgreSQL, Elasticsearch , and SQL server
+Management tools Git , Jira , and Confluence
+Script Languages HTML, JavaScript, jQuery
+
+WORKEXPERIENCE
+
+Hitachi Digital Services (formerly Hitachi Vantara) – (Dec 2021 to Present)
+Project Name : HCAP Operate
+Description : HCAP Operate is an orchestration tool for managing incidents. It automates capturing and responding to incidents,
+allowing support teams to work more quickly and efficiently. It helps reduce resolution time by using machine learning to provide the root
+causes and runbooks with specific instructions for incident. HCAP integrates with ITSM tools such as
+pulls team details from scheduling tools like PagerDuty and OpsGenie.
+Key Responsibilities :
+ As the Lead Engineer for the HCAP Operate Accelerator project, I develop and architect solutions using Spring Boot,
+microservices with data management via JPA .
+ Collaborate with service teams to understand and analyze their requirements for effective
+resolution.
+ Managing containerizes applications using Docker and orchestrated deployments with
+ Implement Redis caching to enhance application performance and use Kafka for real-time messaging and data processing
+ Create and manage RESTful web services (APIs) using annotation-based approaches for integration with external systems.
+ Work with Conjur APIs for secure information management and integrate with third-party tools such as
+systems.
+ Utilize AWS cloud platforms for application hosting, scaling, and infrastructure management, ensuring high availability and
+performance.
+ Monitor, respond to, and resolve incidents within the platform, coordinating with appropriate teams for
+ Maintain detailed documentation of development processes and provide regular performance and Quest Global Technologies – (Nov 2019- Dec-2021)
+Project Name : MDM (Mobile Device Management)
+Description : Mobile Device Management (MDM) service to manage the devices, which are secure smart phones developed by
+client that uses Android platform. The devices will be given to employees of the government or commercial organizations, and they will be
+managed using Corporate Owned Personally Enabled (COPE) process. Policy Enforcing: There are multiple types of policies that can be
+enforced on MDM users, VPN configuration, Application Catalogue, Firmware update, Pre-defined Wi-Fi and Hotspot settings,
+Wipe device and Device locking
+.
+, Azure, Kafka , Redis, Conjur
+, SonarQube , OWSAP Dependency,
+JMeter
+ServiceNow and CloudAware and
+incident management and Kubernetes
+ITSM and scheduling
+swift issue resolution .
+progress report
+Key Responsibilities :
+ Developed a mobile device management system to push policies to mobile devices.
+ Built applications using Spring Boot, Hibernate, JPA, and JPQL for robust and scalable solutions.
+ Addressed performance issues through query optimization and conducted performance testing with
+ Utilized SonarQube , OWSAP Dependency , and Jacoco for code quality analysis and reporting.
+ Implemented and enforced various MDM policies, including VPN configuration, firmware updates, and device
+management.
+Mahindra And Mahindra group (Bristlecone Ltd.) - (Sep 2016- Nov-2019)
+Project Name : DMS (Dealer Management System)
+Description : It is essential for Auto OEMs to keep in close contact with the end consumers, build brand loyalty and provide total
+customer experience. Implementation of centrally hosted Mahindra Dealer Management System (DMS) covers - Marketing, Pre-sales,
+Sales, Services, Spares, Warranty, Dealer Financials, Analytics, CRM and Business Intelligence.
+Key Responsibilities:
+ Developed solutions to manage product sale s activities.
+ Developed Online-Offline , SMS Manager, Tally software, and Spare Module.
+ Utilized Spring, Hibernate, and JPA for development.
+ Led module development, providing technical guidance and oversight.
+ Designed and implemented backend services and system architecture
+Sterlite Technologies Ltd - ( Nov 2015- Sep-2016 )
+Project Name : CATMVNE (Communication Authority of Thailand mobile virtual network enabler)
+Description : A Communication Authority of Thailand mobile virtual network enabler (CATMVNE) is a company that provides
+network infrastructure and related services, such as network subsystems, business support systems (BSS), provisioning, administration and
+operations support systems (OSS) to mobile virtual network operators (MVNOs).
+Key Responsibilities:
+ Designed and developed BSS (Business Support Systems) modules for mobile virtual network operators (MVNOs).
+ Configured and developed applications using Spring Framework, including Spring MVC and JPA
+ Worked on Hibernate configurations and designed database schemas.
+ Developed and integrated RESTful APIs for system functionalities.
+ExtrimityIndia Technologies - (Sep 2013- Nov-2015)
+Project Name : Karlstone Inventory Management System
+Description : Karlstone inventory management system extends beyond the traditional CRM functions and enable complete sales
+cycle management features by integrating online inventory management. The main objective of the application is to automate the existing
+system of manually maintain the records of the sales, purchases, recorder levels, Supplier, Customer monetary positions and other related
+transaction made at the company.
+Key Responsibilities :
+ Developed applications using Java, J2EE, Spring, Hibernate, and JPA .
+ Designed and implemented backend services.
+ Conducted code reviews, debugging, and testing to ensure high-quality software.
+ Integrated databases and optimized queries for performance
+
+[REMOVED_SECTION_EDUCATION]
+
+[REMOVED_SECTION_PERSONAL]

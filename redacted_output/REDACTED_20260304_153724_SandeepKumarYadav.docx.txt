@@ -1,0 +1,52 @@
+[REDACTED_NAME]
+
+[REDACTED_CONTACT_LINE]
+
+EXPERIENCE Summary
+Currently working as a Senior Software Engineer at IBM.
+Having 6 years of experience.
+Developed software using C++ , C, Design pattern , C , Data Structure and Algorithm, Linux internal, Python, Bash and Shell scripting and Assembly, XML, JSON.
+Hands on experience in standards like SDADC, I2C , SPI and RTC
+Domain expertise in Digital I/O’clock generation module, Timers , ADC , SDADC, GPIO , LVD(low voltage detector), comparator , temperature sensor and RTC.
+Develop Device Drivers for interface to the various peripheral hardware resources such as serial- E2PROM and RTC on the I2C bus.
+Hands on experience in GDB, Valgrind gcc, Trace 32, Crashman, crashscope.
+
+WORKED ON PROJECT`S
+
+1#Current Project Name : Power processor (self boot engine) Project Description	: working on self boot engine Company	: IBM
+Team size	12
+Duration	: July 2022 to till date
+Language used	: C++, Design pattern , Linux Internal, Data
+Structure , Python, Bash Script, meson build , Embedded c++ , XML, JSON.
+Description of Roles	:	I am working on self boot engine , worked on
+Booting portion .
+Project Description: Here works across the entire stack from processor design, firmware, operating system, systems software, performance engineering to software defined storage.
+Also providing interface to communicate b/w different process . Also worked on syncing the booting side , etc..
+Responsibilities:
+I work on design, development, test and support of the Firmware for IBM Power Servers using c++, embedded c++, data structure and algorithm , python, scripting such as python and bash/shell , XML, JSON, meson build etc..
+I work in design and develop of embedded firmware for a PPE42 based 32-bit microprocessor
+2#Project Name : Audio driver
+Project Description : Working on Octa core Mobile Primary chipset high level version
+Role	:	Engineer
+Client	:	Qualcomm
+Team Size	:	10
+Duration	:	February 2021 to June 2022
+Language used	: C, C++, Python , Linux, Linux internal , Embedded C, Embedded C++, ASSEMBLY , DATA STRUCTURE .
+Project Description: Working on Octa core Mobile Primary chipset high level version
+Description of Roles: I am part of the STABILIT team, and worked on Triaging the issues and debugging on the ADSP/CDSP stability Using Crash Man , Crash scope , Trace 32 , Putty ,
+Responsibilities:
+Developed automation tools using python
+Debugging of test failures using crash scope and trace 32
+Ran code coverage runs and added directed testcases for coverage closure
+3#Project: Firmware Development of 1-phase smart Energy meter using MSP430i20xxx (Texas instruments) , Renesas (RL78I1B/RL78I1C) and Free scale ( MK M34Z256/MKM33Z128 )
+Role	: Handling measurement modules, communication proto.
+Software/Tools	: Source Insight, IDE, CS+.
+Language	: C++ , C, Data Structure, Assembly.
+Protocols	: I2C, SPI.
+Hardware	: MSP430i20xxx , RL78I1B/RL78I1C and MKM34Z256/128
+Responsibilities:
+• Designing and implementation of Measurement modules..
+
+[REMOVED_SECTION_EDUCATION]
+
+[REMOVED_SECTION_DECLARATION]

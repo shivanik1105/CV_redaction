@@ -1,0 +1,108 @@
+Senior Management Professional
+Cell: [REDACTED_PHONE]
+
+[REDACTED_CONTACT_LINE]
+
+[REMOVED_SECTION_EDUCATION]
+
+KEYSKILLS
+
+Reliability Engineering
+Risk analysis & Management
+Enterprise asset management
+Control Resource Optimization
+Audit & Inspection
+Erection/Installation
+Quality Management
+Materials Management
+
+
+[REMOVED_SECTION_EDUCATION]
+
+
+Vibration Analyst I,
+
+[NAME], 2019.
+
+[NAME] & [NAME] (CMRP),
+
+SMRPCO, 2019.
+
+[NAME] & Pneumatics, IIPM, 2012
+
+PASTEXPERIENCE
+
+Assistant Engineer– Mechanical / Maintenance Engineer
+Bhushan Steel Limited,
+Angul,
+Oct 2008 – Aug 2010 | Ravi Kant Pandey
+
+
+SUMMARY
+
+
+A Reliability Professional offering 16+ years of experience in Maintenance, Reliability and Enterprise Asset Management.
+seeking challenging assignments in Reliability field across the industry to deliver effective solutions to drive
+plant availability and improve companies’ business by utilizing Reliability best practices like RCM analysis,
+RCA analysis, Criticality analysis, and developing Maintenance Strategies for assets.
+Understanding of all aspects of the latest technological advancements, regulations/ guidelines & statutory compliances in the industry. Excellent man-management, time management, leadership skills.
+
+PROFESSIONALEXPERIENCE
+
+Maintenance and Reliability Manager: Carbon Plant Korba Chhattisgarh .
+Nov 2022
+Looking after maintenance activities of Green Anode Plant to enhance the availability of equipment’s.
+Implantation of best industry practices across the globe to improve the day-to-day activities.
+Implementation of Asset Optimization frame work which includes 15 modules including Result section.
+Team engagement to enhance the asset reliability by applying AO modules at shop floor.
+Conducting FMEA and RCM analysis to improve the reliability of the plant.
+Phase wise action plan development for each and every critical equipment to increase the availability and reduce the down time of Assets.
+Preparing the detailed investigation, bad actor study cause analysis.
+Reward and recognition scheme started to boost the confidence and moral level of engineers and technicians crew.
+Consultant- APM (Asset Performance Management)
+Wipro Limited,
+June 2021 – Oct 2022
+Conducting RBI Module Testing and Analysis through Meridium software.
+Carry out quantitative Risk 581 assessment in line with Meridium software.
+Preparing RBI reports and summery mentioning key outcomes of assessment.
+Working As functional consultant for RBI module for British Petroleum (BP) on Behalf of Wipro.
+Managing the Teams capacity and performance tracking for each and individual.
+Azure Dev-ops Dashboard management.
+RCM analysis through Relia soft for BP.
+Maintenance & Reliability Engineer
+Ma’aden underJAL, Ras Al Khair, Kingdom of Saudi Arabia
+Oct 2018 – April 2021
+Conducting RCM, RCA, FMEA, Asset optimization to develop maintenance plan for the assets.
+Conducting RCM workshops with cross functional teams as RCM Facilitator for finalizing PM, CBM Inspection in Maintenance Strategies through FMEA of critical plant assets for reliability improvement.
+Bad Actor identification through MTBF, Availability analysis & Conduct Bad Actor Investigation Studies.
+Development of the Asset Failure Codes.
+Implementing planned, preventive & predictive maintenance practices to optimize machine availability & OEE with constant endeavors to realize ZERO downtime.
+Scenario based risk assessment & root cause failure analysis.
+Evaluating the areas of improvements and accordingly implementing process modifications to achieve design excellence.
+Preparing SWI, Scope of work for any fabrication, new development, and Management of change for any new improvement or kaizen activities.
+Major Achievements
+Enhancement of Reliability strategy to effective utilization of resources.
+Implementation/evaluation of equipment strategies/ maintenance plans in Computerized Maintenance Management Systems (CMMS).
+Contributed in trouble shooting of major breakdowns to increase the plant reliability.
+Engineering solution for frequent problems in smelter.
+Manager / Maintenance Engineer (IPM)
+Vedanta Limited on behalf of Siemens limited,
+Sep 2010 – Sep 2018
+Observed facilities operations on Mechanical Maintenance in Green Anode Plant & Anod Baking furnace, ensuring the Plant manufacturing cost within the approved limit.
+Conducting RCA workshop for team members and Perform the RCA for critical equipment to identify the causes of failure and took action to mitigate it.
+Tracing Asset Reliability KPI’s like FMEA, PM/BD ratio, Availability, OEE etc.
+Conducting FMEA for all equipment’s to ensure all the possible failure modes are covered and their mitigation actions are mentioned.
+“Asset Optimization (AO)” all 15 modules implemented for each and individual unit level (like GAP, BO, rodding plant etc.) and gone through third party Audit of it by Pwc and KPMG and Scored highest score for GAP.
+Asset Strategy mapping done for all equipment’s through PM optimization.
+Monitoring of all assets Vibration level to ensure proper health condition. Like Vibration analysis, NDT, Oil analysis, thermography etc.
+Significant Improvement of asset performance observed by using Condition monitoring
+Administered daily, shutdown maintenance activities and identifying areas of bottlenecks & breakdown and taking steps to rectify the equipment through the application of troubleshooting tools like root cause analysis.
+Executed operational methods for cycle time reduction & identification of opportunities; implementing cost saving techniques to achieve reduction in O & M expenditures.
+Administered the 5S Activities of Departmental stores with a verifiable record of success in achieving reduction in downtime of equipment and achieving the Machine design capacity throughput 36 Anodes production/Hour.
+Major Achievements
+Implemented the following at Vedanta Limited:
+Bestowed as active member for successful replacement of Anode paste plant all preheater screws in record time safely.
+Achieved the Proactive Maintenance for all critical asset with the help of Condition Monitoring technique.
+Improvement of MTBF for Critical assets by 20% in initial 2 years duration which is the one of the key indicators of reliability improvement.
+Instrumental in reducing the breakdown duration from 300 hrs./month to 60 hrs./month of Green anode plant.
+Instrumental in Developing & implementing the new maintenance strategy & planning of Green anode Plant for effective utilization of resources and availability improvement.

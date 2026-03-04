@@ -12,6 +12,11 @@ from typing import Optional, Dict, Any
 import argparse
 
 
+class QuotaExhaustedException(Exception):
+    """Raised when the daily free-tier quota is exhausted (429 after all retries)"""
+    pass
+
+
 class LLMBatchProcessor:
     """Process multiple CVs through LLM for metadata extraction and JD matching"""
     
@@ -204,20 +209,59 @@ class LLMBatchProcessor:
         return response.content[0].text
     
     def _call_gemini(self, prompt: str) -> str:
-        """Call Google Gemini API"""
+        """Call Google Gemini API with retry + exponential backoff for rate limits.
+        Raises QuotaExhaustedException immediately if daily quota or limit: 0 detected."""
         from google.genai import types
+        import logging
+        _log = logging.getLogger(__name__)
         
-        response = self.client.models.generate_content(
-            model=self.model,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.3,
-                top_p=0.95,
-                top_k=40,
-                max_output_tokens=8192
-            )
+        max_retries = 3
+        base_delay = 5  # seconds
+        
+        for attempt in range(max_retries):
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.3,
+                        top_p=0.95,
+                        top_k=40,
+                        max_output_tokens=8192
+                    )
+                )
+                return response.text
+            except Exception as e:
+                error_str = str(e)
+                if '429' in error_str or 'RESOURCE_EXHAUSTED' in error_str:
+                    # Abort IMMEDIATELY if limit is 0 (account-level block)
+                    if 'limit: 0' in error_str:
+                        _log.error("API quota limit is 0 — account fully throttled. Aborting immediately.")
+                        raise QuotaExhaustedException(
+                            "API quota is 0. Your Google account is fully throttled. "
+                            "Wait until midnight PT for reset, enable billing, or use a different Google account."
+                        )
+                    # Abort after 1 retry if daily quota hit
+                    is_daily = 'PerDay' in error_str or 'per day' in error_str.lower()
+                    if is_daily:
+                        _log.error("Daily free-tier quota exhausted. Aborting.")
+                        raise QuotaExhaustedException(
+                            "Daily free-tier quota exhausted for this API key. "
+                            "Wait until quota resets (midnight PT) or upgrade to a paid plan."
+                        )
+                    # Transient rate limit — retry with backoff
+                    delay = base_delay * (2 ** attempt)  # 5, 10, 20 seconds
+                    _log.warning(
+                        f"Rate limited (429). Retry {attempt+1}/{max_retries} in {delay}s..."
+                    )
+                    time.sleep(delay)
+                else:
+                    raise
+        
+        raise QuotaExhaustedException(
+            f"Gemini API rate limit exceeded after {max_retries} retries. "
+            f"Your free-tier quota may be exhausted. Wait for reset or upgrade plan."
         )
-        return response.text
     
     def _call_ollama(self, prompt: str) -> str:
         """Call Ollama (local LLM)"""

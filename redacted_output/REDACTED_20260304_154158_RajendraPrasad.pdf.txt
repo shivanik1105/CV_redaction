@@ -1,0 +1,199 @@
+[REDACTED_NAME] Taidala
+
+[REDACTED_CONTACT_LINE]
+
+[NAME] : www.[REDACTED_SOCIAL]/
+
+SUMMARY
+
+To be associated with a progressive organization that gives scope to apply my Knowledge and skills, and to be a part of a team
+that dynamically works towards growth of the organization.
+
+[NAME]:
+
+
+Acquired 4.9 years experience as a Software Engineer-II and Dev Ops Engineer, I specialize in designing and
+developing asynchronous APIs using Django and DRF CICD pipeline creations, and crafting efficient database
+schemas with Postgre SQL also maintaining the productions servers effectively.
+
+Completed the certifications such as Dev Ops Engineer course at heydevops and AWS with Terraform , Kubernetes ,
+Ansible Automations in Udemy.
+
+I have received the appreciation awards in the field of development and [NAME] tools and support in production
+servers’ maintenance.
+
+Experience in AWS to create, manage and configure the services like ALB, ASG, EC2, IAM, S3, Redis, EBS,
+Route53, RDS, Security Groups and VPC along with automating the AWS cloud deployments.
+
+Hands on experience in automating CI & CD pipeline using Jenkins tools. Worked on installing/upgrading Jenkins
+
+Responsible for Dockerizing the applications. Hands-on experience in creating Dockerfiles and then building image
+and deploying it to various environments. Created the manifests for Kubernetes deployments for some mission critical
+applications.
+
+Integrated Grafana with Postgresql Database and Docker containers as well as all linux servers to monitor and set an
+alert rules.
+
+Hands on experience in Ansible to automations configurations and deployments.
+
+Hands on experience in Python programming and Dajngo . Have good experience on API creations using the DRF and Flask Rest Framework and Fast API .
+
+Good knowledge in checking the code quality and application security using the Sonar Qube , Bandit , Licenses checks.
+
+Experience on API Designs and Database schema design for applications.
+
+
+SKILLS
+
+
+Working as Software Engineer-II Python Dev Ops Engineer in ATAI (Permanent Employee) from May 2021 – present,
+.
+
+Worked as Software Engineer in Next Row Digital Pvt (Permanent Employee) from May 2019 – Jul 2020, .
+
+
+WORK EXPERIENCE
+
+
+Project#1
+Project Name
+Warehouse Automations
+Client
+
+TKD
+
+Role
+Engineer-II
+Duration
+
+
+2021-22 POC, 2023-2024 client
+Environment
+Python, Django, DRF, ORM, Postgre Sql, Docker, Git, API Gateway
+Roles and Responsibilities:
+
+Key member in the team to supporting for end to end delivering product and also have experience in the area of API
+design and implementation using Django, Flask and Fast API . Key player to integrations with UI frameworks like
+React, Angular .
+
+Worked on micro service architecture with API gateway integrations using APISIX .
+
+Introduced the modern deployment strategies and fully manages the deployment environment in all stages of
+application.
+
+Database performance issue fixes in production like storage and Postgres connections enabled the Postgres
+monitoring to Postgres metrics.
+
+Enabled the ELK for logging to the applications it was helped us the debug the productions issues quickly.
+
+Introduced the modern deployment process by using Docker and K8’s for deployment so that team has achieved the
+speed deliverables.
+
+Worked Web Sockets for real time updates in the application. And Integrations with ML pipeline and scaling the
+applications.
+
+In order to increase the application's responsiveness, performance I have profiled it and optimized using (Django
+ORM ). And database techniques Indexing, Table Partitioning.
+
+Hands experience in creating the Docker files Docker Compose files for all the micro services and applications.
+
+I am the responsible person to manage the production server effectively . I was trained team members and juniors in
+the area of Docker.
+
+Written Unit Test cases and load testing on applications and API’s.
+
+Integrations with Embedded Systems .
+
+
+Wonderful experience integrating warehouse and ML Pipeline using Rabbit MQ message broker, and continuously
+monitoring camera feeds to show real-time stream on the dashboard.
+
+Improved the security capabilities to the applications by using the CORS (CSP).
+
+Enabled the NGINX web server to supporting the reverse proxy and load balancing.
+
+Every day, the warehouse analytics data is saved by implementing Celery , Celery Beat scheduler.
+Project#2
+Project Name
+Rack Warehouse Automations, Yard Automations
+Client
+
+Role
+Engineer-II
+Duration
+2023-2024 client
+Environment
+Python, Django, DRF, ORM, Mongodb, Docker, Git, Postgre SQL
+Roles and Responsibilities:
+
+Created the database schema for Rack Warehouse, finalizing the API designs, developing the APIs using and DRF .
+
+Performed the code review sessions for juniors before going to branch merge and release .
+
+Clearealy communicate with frontend developer to perform smooth integrations and testing of an application.
+
+Write’s API Unit testing to the both applications. Educated the team to be make hobby to write unit test cases.
+
+Dockerization of Rack and Yard applications. Created the Dockerfile and Docker compose file
+
+Wrriten crone jobs for background tasks running in the Linux applications .
+
+Performed load testing on application by writing a Python scripts, worked on Barman to take Postgres incremental
+backups.
+
+Added application to concurrence by using the Uwsgi and Gunicorn to improve the application performance.
+
+Written complex ORM queries to improve the applications query performance.
+
+Working on equipment live tracing system in the Yard by ingrated with the Web Sockets and GPS tracking.
+
+Working the Rack warehouse Real time updates feeding into dashboard by using the Web Sockets .
+
+Enabled the NGINX web server to supporting the reverse proxy and load balancing.
+
+Implemented the Authentication and Authorization by using Django Admin , JWT, and API Key. Added Redis caching
+Project#3
+Project Name
+Warehouse Automations, Gate Automations, Yard Automations
+Client
+
+Role
+Dev Ops Engineer
+Duration
+2022-2024 client
+Environment
+Jenkins, Shared Library K8’s, Grafana, ELK, Docker, Postgre Sql, AWS, Git
+Roles and Responsibilities:
+
+Key member in Dev Sec Ops Team and supporting more than 8+ application team across multiple domains.
+
+Primary responsibility to onboard and setting up CICD pipeline for multiple frontend and backend applications in both
+Wireline & Wireless domain. Integrated the shared library to modularizing the goovy for pipe line scripts.
+
+Working with QA team for integration of QA jobs with Jenkins pipeline to have complete CICD setup .
+
+Setting up Ansible playbooks to perform deployment in servers and shell scripts to monitor the services.
+
+Configuring sonarqube dashboard and help application team in publishing unit test and coverage reports in Sonarqube
+cloud for static code analysi s. Setting up Sonarqube portfolio for multiple microservice and UI applications.
+
+Enhancement of pipeline by implementing multiple Quality Gates in pipeline and automation.
+
+Automation of new Git branch creation, Merge approval and approvers’ setup, merge request creation and version
+increment in build scripts at start of every program increment. Upgrading Jenkins Master/Slave on multiple servers.
+
+Setting up groovy scripts to accommodate multiple applications in a single Jenkins pipeline which carries various
+stages. Prebuild stage Sonarqube, Compiling code and packaging deployable artifacts and publishing them to Artifactory, performing deployment in servers along with respective QA testing. Administrative part of Jenkins was
+taken care. Elastic search, Logstash and Kibana was installed in the AWS server.
+
+Integrated the applications performance monitoring tool such as Grafana and Prometheus . CAdvisor for Docker
+monitoring, ELK for production application logs monitoring. And created the alerts rules for varies applications.
+
+Working in code security vulnerabilities checks such as SAST , Docker image scanning by Trivy , packages license
+check. Reports will get notified to team in the Slack and Gmail.
+
+[REMOVED_SECTION_EDUCATION]
+
+[REMOVED_SECTION_PERSONAL]
+
+[REMOVED_SECTION_DECLARATION]

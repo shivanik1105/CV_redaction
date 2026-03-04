@@ -1,0 +1,72 @@
+[NAME]
+
+| [REDACTED_PHONE]
+
+[REDACTED_EMAIL]
+
+variety of IT skills.
+and customers.
+
+
+WORK EXPERIENCE
+
+
+Synechron
+complaints.
+concerns.
+(futures, options) and fixed income .
+valuation releases.
+module and Algorithms for control systems.
+parasoft .
+• C++ developer focused mainly to work in fintech (investment & financial area) with
+• Experienced in derivatives and fixed income domain.
+• Demonstrated ability to communicate and work with senior management, associates,
+
+Senior Associate
+Jul 2021 - Present
+• Trained and supported new team members, maintaining culture of collaboration.
+• Improved customer satisfaction by quickly and effectively addressing inquiries and
+• Approached each problem with fresh mind and analytical strategies to quickly resolve
+• Working in Investment banking - HSBC ( as client) Understanding requirement from
+
+users ( traders , product managers ) to discuss various aspects of development.
+• Part of development team to support and redevelop applications for derivatives
+• Developed applications in C++ and C# for Computation of risk numbers required for
+• Having exposure on SQL and batch scripting used for production support.
+• CI/CD, Jenkins used for smooth operations of production support.
+• Used GIT for version control.
+
+I. T Analyst
+Jan 2016 - Jun 2021
+• Detailed designing and implementation of GUI of Control system using Tilcon
+
+Interface development tool (Conducted trainings for the same on-site location).
+• Application development (5.4 Years experience) in Embedded C++, RTOS and Vx Works changes as requested by client in Product development along with defined
+
+characteristics and classes.
+• Used IPC for communication among various tasks.
+• Well versed with SOLID principles.
+• Module lead for development of Control system.
+• Used Tortoise SVN for Configuration Management .
+• Owned up critical tasks for designing and implementation of Central database
+• Responsible for Static analysis of all the modules and code optimization using
+• Involved in development of OS having linux administration and configuration .
+• Effectively managed change requests , reducing backlog by 50% over a year.
+• Researched and adopted new technologies to add value to existing offerings.
+• Assessed business requirements to create focused solutions.
+
+[REMOVED_SECTION_EDUCATION]
+
+Bachelor of Engineering
+Jun 2015
+
+J. N. E. C
+
+
+SKILLS
+
+
+Expert in: C++, GIT
+Intermediate in: Jenkins, Linux, SQL
+Basic in: C#, Python
+Basic in: Io T : Developed IOT based model using Zigbee for home automation.

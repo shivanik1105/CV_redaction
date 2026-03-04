@@ -355,6 +355,18 @@ def health():
     """Health check endpoint with connection status"""
     supabase_configured = is_supabase_configured()
     supabase_status = 'configured' if supabase_configured else 'not configured'
+
+    # Proactively probe Supabase if not yet checked
+    if _supabase_reachable is None and supabase_configured:
+        try:
+            storage = get_supabase_storage()
+            if storage:
+                def _ping():
+                    return storage.client.table('cv_intelligence').select('anonymized_id').limit(1).execute()
+                try_supabase_operation(_ping, fallback_result=None, timeout_seconds=5)
+        except Exception:
+            pass
+
     if _supabase_reachable is True:
         supabase_status = 'connected'
     elif _supabase_reachable is False:
@@ -491,6 +503,204 @@ def extract_intelligence():
         logger.error(f"Error extracting intelligence: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/process-samples', methods=['POST'])
+def process_samples():
+    """
+    Full pipeline: Read original CVs from samples/ → Redact PII → Extract Intelligence → Store in DB.
+    JD is provided dynamically from the request body (NOT hardcoded).
+    
+    Request body: {
+        "job_description": "Senior Java Developer...",
+        "force_reprocess": false  // optional: re-process even if cached results exist
+    }
+    """
+    try:
+        data = request.get_json()
+        job_description = data.get('job_description')
+        force_reprocess = data.get('force_reprocess', False)
+        
+        if not job_description:
+            return jsonify({'error': 'job_description is required. Paste the JD in the text area.'}), 400
+        
+        # Collect all original CVs from samples/ and samples/more/
+        sample_dirs = [Path('samples'), Path('samples/more')]
+        allowed_ext = {'.pdf', '.docx', '.doc'}
+        original_cvs = []
+        for sample_dir in sample_dirs:
+            if sample_dir.exists():
+                for f in sorted(sample_dir.iterdir()):
+                    if f.is_file() and f.suffix.lower() in allowed_ext:
+                        original_cvs.append(f)
+        
+        if not original_cvs:
+            return jsonify({'error': 'No original CVs found in samples/ directory'}), 404
+        
+        logger.info(f"Processing {len(original_cvs)} original CVs with dynamic JD")
+        
+        # Initialize pipeline components
+        orchestrator = PipelineOrchestrator(config_dir='config')
+        extractor = get_intelligence_extractor()
+        from cv_intelligence_extractor import is_cv_anonymized
+        
+        results = []
+        redacted_count = 0
+        intelligence_count = 0
+        quota_exhausted = False  # Track if daily quota is hit
+        consecutive_429 = 0  # Track consecutive rate-limit failures
+        
+        for idx, cv_path in enumerate(original_cvs):
+            cv_name = cv_path.name
+            
+            # If quota is exhausted, skip LLM calls for remaining CVs
+            if quota_exhausted:
+                results.append({
+                    'file': cv_name, 'status': 'skipped',
+                    'error': 'Skipped — daily API quota exhausted. Already-processed CVs are saved. Re-run later without force_reprocess to continue.'
+                })
+                continue
+            
+            try:
+                # Rate limit: pause between LLM calls to avoid 429
+                if idx > 0:
+                    import time
+                    time.sleep(6)  # 6s gap = 10 RPM safe for free tier
+                # STEP 1: Redact PII
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                safe_name = secure_filename(cv_name)
+                redacted_filename = f"REDACTED_{timestamp}_{safe_name}.txt"
+                redacted_path = Path(app.config['OUTPUT_FOLDER']) / redacted_filename
+                
+                # Check if already redacted (skip if not force_reprocess)
+                existing_redacted = list(Path(app.config['OUTPUT_FOLDER']).glob(f'REDACTED_*_{safe_name}*'))
+                if existing_redacted and not force_reprocess:
+                    redacted_path = existing_redacted[0]
+                    redacted_filename = existing_redacted[0].name
+                    logger.info(f"  Using cached redacted: {redacted_filename}")
+                else:
+                    logger.info(f"  Redacting: {cv_name}")
+                    redacted_text, profile = orchestrator.process_cv(str(cv_path))
+                    with open(redacted_path, 'w', encoding='utf-8') as f:
+                        f.write(redacted_text)
+                    redacted_count += 1
+                
+                # Read redacted text
+                with open(redacted_path, 'r', encoding='utf-8') as f:
+                    cv_text = f.read()
+                
+                # Verify anonymization
+                if not is_cv_anonymized(cv_text):
+                    results.append({
+                        'file': cv_name, 'status': 'error',
+                        'error': 'Redaction did not produce anonymized output (possibly scanned/image CV)'
+                    })
+                    continue
+                
+                # STEP 2: Check cached intelligence (skip if not force_reprocess)
+                if not force_reprocess:
+                    existing_intel = list(Path(app.config['INTELLIGENCE_FOLDER']).glob(
+                        f'{Path(redacted_filename).stem}_intelligence.json'
+                    ))
+                    if existing_intel:
+                        try:
+                            with open(existing_intel[0], 'r', encoding='utf-8') as f:
+                                intelligence = json.load(f)
+                            if 'error' not in intelligence:
+                                results.append({
+                                    'file': cv_name, 'status': 'success',
+                                    'intelligence': intelligence, 'cached': True
+                                })
+                                continue
+                        except Exception:
+                            pass
+                
+                # STEP 3: Extract intelligence with the dynamic JD
+                logger.info(f"  Analyzing with LLM: {cv_name}")
+                intelligence = extractor.extract_intelligence(
+                    cv_text, job_description, redacted_filename
+                )
+                
+                if intelligence.get("error") == "CV_NOT_ANONYMIZED":
+                    results.append({
+                        'file': cv_name, 'status': 'error',
+                        'error': 'CV not properly anonymized'
+                    })
+                    continue
+                
+                # Save intelligence JSON
+                intel_filename = f"{Path(redacted_filename).stem}_intelligence.json"
+                intel_path = Path(app.config['INTELLIGENCE_FOLDER']) / intel_filename
+                with open(intel_path, 'w', encoding='utf-8') as f:
+                    json.dump(intelligence, f, indent=2, ensure_ascii=False)
+                intelligence_count += 1
+                
+                # Store in Supabase
+                if SUPABASE_AVAILABLE and 'error' not in intelligence:
+                    storage = get_supabase_storage()
+                    if storage:
+                        try:
+                            storage.store_intelligence(intelligence)
+                            anon_id = intelligence.get('anonymized_id')
+                            if anon_id:
+                                storage.store_filename_mapping(
+                                    anonymized_id=anon_id,
+                                    original_filename=redacted_filename,
+                                    anonymized_filename=redacted_filename
+                                )
+                        except Exception as se:
+                            logger.warning(f"Supabase store failed for {cv_name}: {se}")
+                
+                results.append({
+                    'file': cv_name, 'status': 'success',
+                    'intelligence': {
+                        'anonymized_id': intelligence.get('anonymized_id'),
+                        'verdict': intelligence.get('verdict'),
+                        'confidence_score': intelligence.get('confidence_score'),
+                        'match_score': intelligence.get('match_score'),
+                        'years_experience': intelligence.get('years_experience'),
+                        'seniority_level': intelligence.get('seniority_level'),
+                        'core_technical_skills': intelligence.get('core_technical_skills', []),
+                        'primary_domain': intelligence.get('primary_domain', ''),
+                        'verdict_reason': intelligence.get('verdict_reason', '')
+                    }
+                })
+                
+            except Exception as e:
+                error_msg = str(e)
+                logger.error(f"Error processing {cv_name}: {error_msg}")
+                
+                # Detect quota exhaustion and abort remaining CVs
+                if 'quota' in error_msg.lower() or 'rate limit exceeded' in error_msg.lower() or '429' in error_msg:
+                    consecutive_429 += 1
+                    if consecutive_429 >= 2:
+                        quota_exhausted = True
+                        logger.error(f"Quota exhausted after {consecutive_429} consecutive failures. Stopping LLM calls.")
+                        results.append({'file': cv_name, 'status': 'error', 'error': 'API quota exhausted — stopping. Re-run later to continue.'})
+                        continue
+                else:
+                    consecutive_429 = 0  # Reset on non-quota error
+                
+                results.append({'file': cv_name, 'status': 'error', 'error': error_msg})
+        
+        successful = len([r for r in results if r.get('status') == 'success'])
+        skipped = len([r for r in results if r.get('status') == 'skipped'])
+        
+        return jsonify({
+            'success': True,
+            'total_originals': len(original_cvs),
+            'redacted': redacted_count,
+            'intelligence_extracted': intelligence_count,
+            'successful': successful,
+            'failed': len(original_cvs) - successful - skipped,
+            'skipped': skipped,
+            'quota_exhausted': quota_exhausted,
+            'results': results
+        })
+        
+    except Exception as e:
+        logger.error(f"Error processing samples: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/batch-extract', methods=['POST'])
 def batch_extract_intelligence():
     """Batch extract intelligence from all redacted CVs.
@@ -499,6 +709,7 @@ def batch_extract_intelligence():
     try:
         data = request.get_json()
         job_description = data.get('job_description')
+        force_reprocess = data.get('force_reprocess', False)
         
         if not job_description:
             return jsonify({'error': 'job_description required'}), 400
@@ -508,22 +719,32 @@ def batch_extract_intelligence():
         cv_files = list(output_dir.glob('REDACTED_*.txt'))
         
         if not cv_files:
-            return jsonify({'error': 'No redacted CVs found'}), 404
+            return jsonify({'error': 'No redacted CVs found. Process sample CVs first.'}), 404
         
         from cv_intelligence_extractor import is_cv_anonymized
+        from llm_batch_processor import QuotaExhaustedException
         
         # Process in batch
         extractor = get_intelligence_extractor()
         results = []
         skipped_not_anonymized = 0
+        quota_exhausted = False
         
         for cv_file in cv_files:
+            # If quota exhausted, skip remaining immediately
+            if quota_exhausted:
+                results.append({
+                    'file': cv_file.name,
+                    'status': 'skipped',
+                    'error': 'Skipped — API quota exhausted'
+                })
+                continue
             try:
-                # Check if intelligence already exists
+                # Check if intelligence already exists (skip unless force_reprocess)
                 intelligence_file = f"{cv_file.stem}_intelligence.json"
                 intelligence_path = os.path.join(app.config['INTELLIGENCE_FOLDER'], intelligence_file)
                 
-                if os.path.exists(intelligence_path):
+                if os.path.exists(intelligence_path) and not force_reprocess:
                     try:
                         with open(intelligence_path, 'r', encoding='utf-8') as f:
                             intelligence = json.load(f)
@@ -588,6 +809,15 @@ def batch_extract_intelligence():
                         except Exception as e:
                             logger.warning(f"Could not store {cv_file.name} in Supabase: {e}")
                 
+            except QuotaExhaustedException as qe:
+                logger.error(f"Quota exhausted during batch extract: {qe}")
+                quota_exhausted = True
+                results.append({
+                    'file': cv_file.name,
+                    'status': 'error',
+                    'error': str(qe)
+                })
+                continue
             except Exception as e:
                 logger.error(f"Error processing {cv_file}: {e}")
                 results.append({
@@ -597,12 +827,15 @@ def batch_extract_intelligence():
                 })
         
         successful = len([r for r in results if r.get('status') == 'success'])
+        skipped = len([r for r in results if r.get('status') == 'skipped'])
         
         response_data = {
             'success': True,
             'total': len(cv_files),
             'successful': successful,
-            'failed': len(cv_files) - successful,
+            'failed': len(cv_files) - successful - skipped,
+            'skipped': skipped,
+            'quota_exhausted': quota_exhausted,
             'results': results
         }
         if skipped_not_anonymized > 0:
