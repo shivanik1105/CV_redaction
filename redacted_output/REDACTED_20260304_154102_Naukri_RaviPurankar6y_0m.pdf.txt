@@ -1,0 +1,117 @@
+[REDACTED_NAME]
+
+[REDACTED_EMAIL]
+
+(Mob-[REDACTED_PHONE])
+Title: Sr. Consultant
+Location:
+Languages: English, Marathi, Hindi
+Experience Summary
+I am Senior Consultant with overall 6.8 years of IT experience in software design, development and maintenance
+of Enterprise Integrations and Enterprise web applications.
+I have worked in all the phases of Software Development Life Cycle like requirement gathering, design,
+development, testing, implementation, and support thereby gaining extensive functional cum technical
+knowledge
+Expert on MuleSoft Anypoint Platform and Integration technologies , Mulesoft being the major part of the
+journey. Skilled in MuleSoft , Oracle SOA Suite, Oracle Service Bus, and Agile Methodologies. Currently playing a
+role of Software Engineer exhibiting skills and ability to handle multiple concurrent priorities/tasks in fast-paced
+environment. I have acquired good exposure to Continuous Integration and Delivery tools surrounding Anypoint
+Platform. Additionally, MySQL, Postman and CI/CD tools such as Jenkins, and Bitbucket are the areas which I
+have worked upon as part of the project delivery.
+
+
+SKILLS
+
+
+ Functional:
+ Technical:
+Bitbucket, Gitlab , sql
+
+WORK EXPERIENCE
+
+01 Type of Industry:
+
+PROJECTS
+
+Description:
+Role/Title:
+Project Duration:
+Responsibilities:
+Resume |
+.
+Sprint Planning
+MuleSoft , Anypoint Platform, Anypoint Studio, Mule ESB , Postman , Jenkins ,
+Capgemini (Nov 2023 till date)
+Retail
+
+PVH CORP
+
+Consultant
+Nov 2022 till date
+ Implemented integration flows using Mule Anypoint Studio to connect to REST, SOAP service, Oracle Database.
+ Developing flows / orchestrations for integrating the components written on
+top of different internal platforms using Mule ESB and ActiveMQ.
+ Experience in integrating Cloud applications like SFDC, Kafka & Intact using
+MuleSoft ESB.
+
+Operating Systems:
+Software /
+Languages:
+01 Type of Industry:
+
+
+Description:
+Role/Title:
+Project Duration:
+Responsibilities:
+Operating Systems:
+Software /
+Languages:
+Type of Industry
+
+Resume |
+ Experience in integrating of different systems that includes Data Base, JMS.
+ Involved in Transformations using Data Weave to transform data from one
+format to another format using Mule ESB.
+ Involved in creating http inbound & outbound flows and orchestration using
+Mule ESB.
+ Worked with MuleSoft AnypointAPI Platform on designing the RAML for
+implementing REST API's
+ Implemented RAML files for different entity creations and respective
+associations.
+ Implemented and used Web Services with the help of WSDL and SOAP to get
+updates from the third parties.
+ Used Mule soft logger for logging and debugging of the application.
+ Business requirements analysis by interacting with the Lead/Architect.
+Windows
+MuleSoft, Anypoint Studio, Anypoint Platform, Bitbucket, Jenkins , Postman, Azure
+explorer, Goanywhere.
+
+WIPRO
+
+Utility and Resources
+National Grid
+Jun 2021 to Nov 2021
+ I have worked as a Mulesoft tech lead where I have developed the rest apis for
+the client consisting of the system layer , process layer and experience layer.
+Followed the coding standardards as ler the C4E guidelines.
+Windows
+MuleSoft, Anypoint Studio, Anypoint Platform, Bitbucket, Jenkins , Postman, Azure
+explorer, Go anywhere
+Accenture
+Production
+
+
+
+Description:
+Role/Title:
+Project Duration:
+Responsibilities:
+Training, Certifications & Affiliations
+ Mulesoft Certified Developer - Level 1 (MULE 4)
+ Azure Fundamentals Certification - AZ-900
+ OIC Application Integration Associate 2019 (1Z0-1042)
+ Awarded with the SPOT Award for outstanding performance and lasting contributionin Quarterly Rewards
+and Recognition.
+ Agilist safe 5
+ Certified Connected Manager

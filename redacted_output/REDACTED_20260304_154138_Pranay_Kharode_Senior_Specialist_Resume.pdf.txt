@@ -1,0 +1,89 @@
+SENIORSPECIALIST
+
+[REDACTED_NAME]
+
+[NAME] (EDI)
+
+EDIFACT
+
+Order to Cash (O2C)
+
+AS2
+
+PROFESSIONALEXPERIENCE
+
+Bristlecone Limited,
+Senior Specialist
+Sun Beam Institute of Information Technology,
+(2018-19)
+Centre For Development of Advanced Computing
+
+(CDAC)
+
+International Institute of Information Technology,
+(2014-18)
+Sri Chaitanya Junior College,
+(2012-14)
+Higher Secondary Certificate (HSC)
+
+[REDACTED_PHONE] · [REDACTED_EMAIL] · [REDACTED_URL]
+
+Balewadi,
+
+PRANAYKHARODE
+
+Net Suite EDI Integration Professional with over 5 years of techno-functional experience who is wellorganized and thorough throughout the project development cycle.
+Good knowledge on handling transaction and transmission errors. Ability to deal with complexity and
+thrive in a rapidly changing business environment.
+Proven commitment to customer service, excellent analytical abilities, likes taking initiative and
+responsibility, and adapts to challenging business environments effectively.
+Procure to Pay (P2P)
+Net Suite
+Xpath
+
+FTP
+
+Third Party Logistics (3PL)
+Vendor Management
+
+SFTP
+
+April 2019 - Present
+Experience on-boarding trading partners, such as suppliers, retailers and other 3rd party (logistics)
+business applications using SPS Commerce Middleware platform and Net Suite ERP.
+Experience Order to Cash (O2C) automation process with Net Suite ERP and strong knowledge of Procure to Pay (P2P) process.
+Experience implementing standard EDI X12 documents including 850, 875, 860, 855, 856, 810, 880, 846,
+997, 753, 754, etc.
+Experience implementing warehouse EDI documents, including 940, 945, 943, and 944.
+Good Understanding of ANSI X12 standards, EDIFACT, Oracle Net Suite ERP and Supply Chain
+Management.
+Expertise in identify trading partner and logistics specific requirements with respect to customer specific
+business processes, front end trading partner setup, file protocols (AS2, VAN, FTP, SFTP).
+Handled multiple Net Suite customers at a time and delivered outstanding output to the retailers.
+Working with clients to configure Net Suite software to support their business requirements.
+Worked on retail partner such as Amazon, Wayfair, Walmart, Home Depot, etc.
+Worked on logistics partner such as XPO Logistics, Patterson Warehouses, etc.
+
+[REMOVED_SECTION_EDUCATION]
+
+ACHIEVEMENTS
+
+Awarded by Bristlecone for demonstrating
+outstanding performance above and beyond
+regular scope of work.
+Recommendations
+Four recommendations for supporting EDI
+connectivity with Netsuite and their numerous
+business partners were received from the suppliers
+on Linked In.
+
+CERTIFICATES
+
+LANGUAGES
+
+Supply Chain Logistics (Coursera), Rutgers
+Careers in Supply Chain and Operations, Linked In Learning
+SQL (Basic), Hacker Rank
+Dance
+
+[REMOVED_SECTION_PERSONAL]

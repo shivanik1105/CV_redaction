@@ -1,0 +1,161 @@
+SKILLS
+
+
+Powershell
+Senior Technical Lead and Team Lead
+Dev Ops
+Brose Automotive Systems
+
+WORK EXPERIENCE
+
+11/2021 - Present
+API Testing
+Automation Testing
+• Leading team Dev Ops (IN/ELECTRONICSSW dept) of 11 people for throughout
+
+experience. -Building CICD competency,
+responsible for development and growth for
+the team. -Experience working onsite in Germany, Bamberg for team formation and
+technical -knowhow Responsible for teams -
+ALM, Python Auto-Frameworks, CICD,
+Application packaging teams -Responsible for
+gathering requirements, developing
+frameworks, cli tools and web based
+applications/static code analysis report
+generation tools based on customer projects.
+Working on New technology introduction,
+process maturity, responsible for hiring talents
+and training the mass users. Level 2 support
+for technical issues faced by end users which
+Selenium
+Software Testing
+SOA Testing
+Test Lead
+Team Leading
+
+GIT
+
+
+[REMOVED_SECTION_EDUCATION]
+
+
+PG- DESD ( Embedded
+Systems)
+Systems)
+
+[NAME]
+
+Senior Software Engineer
+Atlas Copco
+03/2017 - 11/2021
+Engineer
+Einfochips
+08/2015 - 08/2015
+uses below mentioned tools Tools--
+Embedded SW Development Toolchains
+expert, Tool Qualification and Classification,
+SCA tools like Axivion etc, Python Automation
+Development, Web automation frameoworks
+like flask, Tosca Testing for ALM applications
+and rollout, and application packaging. Git,
+Pytest, Gitlab, Codebeamer, Jenkins, different
+IDEs etc
+• 2+ years of onsite experience in United
+
+Kingdom, England. -Setup off-shore team and Leading PCB/PCA competency development
+activities -Developing test frameworks in Agile/Scrum Team over past 4 years with
+CI/CD pipeline creation. -Automated testing
+for RESTFul APIs for Windows Micro-service
+Arch. (APIs) and User Interface -Member staff
+of hiring people in Embedded Systems Team. -
+Part of Skill-Matrix Project to create skill
+management framework-web tool for
+innovation, automated skill-gap management
+framework to address customer support. -
+Received Runner up award in Innovative
+Challenges. -Working with PO to define
+automation tasks in Agile/SCRUM environment
+• Verification and validation of POSIX C and Math libraries for Lynx OS's first hard real time
+
+OS API's. -Deputy responsible for client
+deliverables for work packages and
+status/review meetings. -Also tested and
+verified Kernel API's and ARINC's(Avionics
+Application Standard Software Interface) APIs
+which are software specification for space and
+time partitioning in safety-critical avionics realtime operating systems (RTOS). Using Vector
+Cast tool to generate code coverage results
+based on HLRD/LLRD Developing test codes
+for the API/s and executing it on target
+hardware. Strong knowldege analysing of
+high/low level requirements of above
+mentioned APIs and writings its TC/TP. Trained
+in DO-178C which are Software
+Considerations in Airborne Systems and Equipment Certification. Have Good
+knowledge of SVN, CVS. Linux,
+Embedded Engineer
+Mechatronics Systems Pvt. Ltd
+05/2013 - 08/2015
+I have worked verification and validation of
+most of the Math and C library API's supported
+for Lynx Software Technologies. Also, currently
+working on Kernel API's and ARINC's(Avionics
+Application Standard Software Interface) APIs
+which are software specification for space and
+time partitioning in safety-critical avionics realtime operating systems (RTOS). Developing
+testcodes for the API/s and executing it on
+target hardware. Strong knowldege analysing
+of high/low level requirements of above
+mentioned APIs and writings its TC/TP. Trained
+in DO-178C which are Software
+Considerations in Airborne Systems and Equipment Certification. Have Good
+knowledge of SVN, CVS..
+
+[REMOVED_SECTION_EDUCATION]
+
+
+PROJECTS
+
+S3- Software Dev And Automation Testing
+Create python and powershell scripts
+automation for windows services,
+configurations and deployment using Restful
+APIs CI/CD Team City, Postman, Swagger,
+Selenium Webdriver UI Automations tests
+using selenium web driver in python
+Verification and Validation of Lynxos-178
+
+RTOS
+
+I am working on ARINC libraries, kernel , libc
+and libm libraries for RTOS named Lynx178
+which is the 1st RTOS having DO-178C
+certification in aerospace domain.
+Rain Gauge-Real Data Acquisition Systems
+To design a robust and battery operated
+control system which can automatically
+measure rainfall , collect the data samples,
+process them, generates its log file and send
+to base station as per station id .
+Water Tank Level Monitor using GSM
+Scope of the project was to record water tank
+levels using Radar/ Ultrasonic sensor with
+controller and their communication using
+GSM and store all data in software data base .
+Worked on testing and code optimization for
+controllers.
+
+ARMBASEDSOLDIERTRACKINGSYSTEM
+
+USINGGPSANDGSM
+
+Design soldier tracking system using GSM &
+GPS module which will remotely monitor the
+health status of soldier and to report his
+location to the base station. This ensures
+proper medical help and provide guidance
+mechanism and his position is displayed on
+the map at base camp acquiring soldier???s
+latitude, longitude, temperature Facility of
+emergency messages are provided for proper
+guidance to soldier.

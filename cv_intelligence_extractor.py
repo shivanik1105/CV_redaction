@@ -15,7 +15,7 @@ import logging
 from datetime import datetime
 
 # Import LLM batch processor for API calls
-from llm_batch_processor import LLMBatchProcessor
+from llm_batch_processor import LLMBatchProcessor, QuotaExhaustedException
 
 logger = logging.getLogger(__name__)
 
@@ -497,6 +497,9 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                     "llm_raw_response": raw_llm_response
                 }
                 
+        except QuotaExhaustedException:
+            # Re-raise quota errors so the pipeline can abort early
+            raise
         except Exception as e:
             logger.error(f"Error extracting intelligence: {e}")
             return {

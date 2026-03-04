@@ -1,0 +1,64 @@
+[REDACTED_CONTACT_LINE]
+
+7+ years of experience in MuleSoft Anypoint Platform while working in Agile projects. Built and designed on-premise and
+cloudHub applications in Anypoint Studio with Migration, Bi-directional sync, Correlation and Reliability integration patterns.
+Experienced in HTTP, SOAP, SFTP, MQ, SalesForce, Object Store, Azure Blob Storage etc connectors and complex DataWeave
+transformations. Built API speciﬁcations using RAML. Expertise in managing applications using API Manager, API monitoring
+and Anypoint Runtime Manager. Led end-to-end resolution of production incidents. Published reusable libraries and templates
+for API development, error handling and logging. Ensured code quality and integration best practices.
+
+
+WORK EXPERIENCE
+
+
+COGNIZANT, — 2022–PRESENT
+
+• MuleSoft Development Lead, Retail/ Manufacturing Client (), 2022-Present
+• Led end-to-end functionality for order fulﬁlment APIs
+• Delivered contact & consent management for diﬀerent client systems using SalesForce
+• Delivered multiple migration processes between SFTPs and Azure Blob Storage for various customer data.
+• Enabled synchronisation for customer quotes and orders for SalesForce.
+
+ACCENTURE, — 2017-2022
+
+• Senior MuleSoft Developer, TeleComm. Client (), 2021-2022
+• Built ETL solutions using batch processing
+• Integrated with workday, Sharepoint, GCP and Databases
+• MuleSoft Developer, Banking Client (Ireland), 2020-2021
+• Built REST APIs using JSON for credit card management in a mobile banking application.
+• MuleSoft Developer, Retail/TeleComm. Client (), 2018-2020
+• Worked in SOA, consuming various 3rd party SOAP(XML) services.
+• Built 3.x Mulesoft applications by exposing JSON endpoint to frontend.
+• Java Developer, Retail Client (), 2017-2018
+• Developed automation utilities to query databases in JAVA for a supply chain web application
+
+[REMOVED_SECTION_EDUCATION]
+
+University, — Bachelor of Computer Engineering, 2017
+
+
+SKILLS
+
+
+• MuleSoft Anypoint Platform, Mule Runtimes 3.x & 4.x
+• Proﬁciency in Agile tools - Jira, Conﬂuence, Rally, Jenkins
+• Code Versioning - Bitbucket, GitHub etc.
+• API Testing and automation tools - soapUI, Postman
+• Logging tools - Logentries, Splunk & Elk
+
+
+[REMOVED_SECTION_EDUCATION]
+
+
+• Certiﬁed MuleSoft Developer Level 1 (Valid till April 2025)
+• Certiﬁed MuleSoft Developer Level 2 (Valid till August 2025)
+• MuleSoft Certiﬁed Integration Architect (Valid till April 2026)
+
+AWARDS
+
+• ACE, Day-1-Star, Set-Change-Into-Motion (in Accenture)
+• Champion Crew (Received twice in Cognizant)
+
+MULESOFTDEVELOPMENTLEAD
+
+Aditi Nene

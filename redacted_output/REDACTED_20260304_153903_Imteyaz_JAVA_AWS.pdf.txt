@@ -1,0 +1,178 @@
+[REDACTED_NAME]
+
+
+SUMMARY
+
+
+To secure a responsible and growth-oriented position in an organization
+where there is a scope of contributing and updating knowledge and skills
+for the development of self and organization.
+
+PROFESSIONAL SUMMARY:
+
+ 10 yrs. of experience in developing Web based applications using Java,
+Camunda BPMN, DMN and Spring Boot
+ Having good knowledge of developing workflow using Camunda BPMN and Camunda Modeler.
+ Having good knowledge of rule engine using DMN Decision Engine,
+preparation of DMN
+ Having good knowledge of Microservices architecture like Orchestration,
+Choreography, API Gateway, Load Balancing, Circuit Breaker, Distributed
+Tracing using Zipkin and Spring Cloud architecture.
+ Having good knowledge of developing serverless architecture using AWS
+components like S3, Lambda, SQS, SNS, Dynamo DB, API Gateway,
+Cloud Watch and App Sync.
+ Having good knowledge of ORM tool like Hibernate and JPA
+ Having good knowledge in Restful Web Services, Spring Data JPA, Spring
+Data Mongo, My SQL, Mongo DB, Hibernate, Mockito and Easy Mock.
+ Very well versed with SVN and GIT versioning tools.
+ Good communication, analytical skills and flexible to learn new
+technologies.
+ Hands on experience in working on agile methodology.
+ Strong team player with excellent working skills as individual contributor as
+well as experience in managing the team
+
+
+WORK EXPERIENCE
+
+
+ Working as Senior Principal Software Engineer in Operative INDA PVT LYT,
+since March 2018.
+ Worked as Software Engineer in Aris Global, September 2017 to March 2018
+ Worked as Software Engineer in ABK Software, from September
+2014 to September 2017.
+
+[REMOVED_SECTION_EDUCATION]
+
+
+SKILLS
+
+
+ Programming Language: Java
+ Database: My SQL, Dynamo DB, Mongo DB
+ Framework/Technologies/Tools: Spring Boot, Camunda BPMN, DMN, AWS
+ Web Technologies: Java Script
+ Code Management Tools: SVN, GIT, Bitbucket, Stash.
+ Project Tracking Software: JIRA
+ Testing Tools: Junit, Ja Co Co, Sonar Qube
+
+PROJECT DETAILS:
+
+Project 1
+Title
+:
+
+AOS
+
+Role
+:
+Lead
+Team Size
+:
+
+Duration
+:
+Mar 2018 – till date
+Technologies
+:
+Spring Boot, Restful Web Services, Spring Data
+JPA, Spring Data Mongo, Mongo DB, AWS S3, AWS Lambda, AWS Cloud Watch,
+AWS SNS, AWS SQS, AWS Dynamo DB, AWS API Gateway, My SQL, Mockito,
+Easy Mock
+Description: AOS (Advertising Operating System) helps to maintain the
+advertisers to advertise on the digital as well as linear/local stations. Its datadriven and highly configurable architecture that works across all linear, digital, and
+cross media and con- verged deals. It is helpful to schedule advertisements to be
+telecasted and provides a reliable platform from order to payment. Camunda
+highly configurable workflow architecture pro- vides the feature to maintain the
+linear, digital and converged deals workflow status dynamic, highly configurable
+and easy maintainable.
+Responsibilities:
+ Requirement gathering with product.
+ Architecture design
+ Team handling
+ Meeting with multiple teams to fix dependencies.
+ Follow scrum methodology.
+ Agile methodology.
+ Peer-to-peer code review
+ Used Camunda BPMN to design customizable workflow.
+ Used Camunda DMN to design customizable Approval rules (applicable in
+incremental fashion) and integrated it with customizable workflows
+ Created automatic customizable syncing process to downstream systems
+ Created multiple container and lambda to facilitate flow between AOS to ad
+server and reverse flow of ad server to AOS
+ Development, Bug Fixing and Writing Junit test cases.
+ Involved in Code Review using Sonar Qube.
+Project 2
+Title
+:
+i SEHATI (Personal Health Record)
+Role
+:
+Developer
+Team Size
+:
+Duration
+:
+Mar 2017 – Sep 2017
+Framework
+:
+Spring MVC, Spring JDBC
+Server
+:
+JBoss 7.1
+Description: i SEHATI provides Patients and/or their authorized persons with
+instant and easy access to their personal health information, in a secure
+environment, across the network of participating Care Providers. i SEHATI also
+helps patients to search for physicians across the participating Care Providers
+network, access their schedule avail- ability, book instantly for appointment,
+manage their future booking and share their feedback their experience with a
+particular Care provider.
+Responsibilities:
+ Involving in Designed and implemented user interface.
+ Doing Server side and client-side validation
+ Involving in writing business logic, JDBC query.
+Project 3
+Title
+:
+Healthcare
+Information
+Management
+and Monitoring application (HIMMA)
+Client
+:
+ATK Services and Marketing
+Role
+:
+Developer
+Team Size
+:
+Duration
+:
+Sep 2014 to Sep 2017
+Technology
+:
+Java, Struts 2, Web services using SOAP, JQuery,
+My SQL
+Framework
+:
+Struts 2, Hibernante, Spring Core Scripting
+
+[NAME]
+
+:
+Java Script & JQuery
+Server
+:
+JBoss 7.1
+Description: HIMMA is aimed at automating the daily activities of any healthcare
+pro- vider, and managing the complexity and issues associated with providing care
+to pa- tients to ensure a positive experience for all parties engaged.
+HIMMA seamlessly integrates healthcare solutions covering Hospital, Clinical,
+Laboratory, Research, Payment, Insurance, Inventory, Pharmacy and much more
+in ad- herence to the prevailing healthcare compliances and standards.
+Responsibilities:
+Involved in the development of various modules like System Administration, MBU
+Administration, Nursing and Doctor Workbench.
+ Designed model classes and Tables.
+ Development, Bug Fixing and Unit Testing.
+ Doing Server side and client-side validation
+ Involved in Code Review using Sonar Qube

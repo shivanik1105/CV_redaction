@@ -1,0 +1,447 @@
+[REDACTED_NAME]
+
+[REDACTED_PHONE]
+
+[REDACTED_EMAIL]
+
+Career Objective
+To be associated with an organization where I can effectively contribute my skills as Software
+Professional, possessing competent technical skills so as to deliver my best towards successful and
+profitable operation of the firm and ensuring a high-level job satisfaction.
+
+Senior Full Stack Engineer at Cognizant.
+
+8.3 years of experience in Automation, Development , Data Engineering and Data Analytics .
+
+Sound knowledge and hands on experience on technologies like Python , SQL/No SQL, Azure
+Resources , GCP Cloud, AWS Cloud, Shell, Power Shell, Power BI.
+
+Around 7 years of experience in Python framework development and scripting.
+
+Developed comprehensive database designs , schemas and optimized views .
+
+Hands on experience on creating one time & delta data transformation pipelines.
+
+Hands on experience on creating validation framework in python for Data
+validation post migration.
+
+Sound knowledge on ETL (Extract – Transform – Load) pipeline development for different
+data sources like Azure Synapse Datawarehouse , Azure SQL Servers , MS-SQL Servers ,
+Snowflake & Rest API’s etc.
+
+Good knowledge on SQL scripting used for data transformations & validations in various data
+sources.
+
+Acquiring knowledge on Py Spark, Azure Databricks and Azure Data Factory.
+
+Hands on experience on CI/CD tools like Jenkins , Airflow and Azure Dev Ops .
+
+Good understanding on Azure resources like Azure Data Lake (ADLS)/ Azure Blob storages, Azure
+Functions , Azure Key Vaults , Azure Managed Identities , Azure Source Control , Azure Storage
+Explorer & Azure File share .
+
+Successfully initiated and executed Proof of Concept ( POC ) by co-ordination with multiple
+teams within organization and with Microsoft Support team for project.
+
+Actively involved in versioning control activities using bit bucket and CI/CD pipelines for the
+whole project.
+
+Good knowledge on tools like Postman, Lens (Kubernetes cluster), Moba Xterm, SQL-DBM, Trello,
+JIRA, Service Now, Confluence & Share Point.
+
+Experience in REST API & UI Automation using Behave ( BDD framework ), Selenium .
+
+Expertise on Web Scraping technologies with Data cleaning , Data wrangling and visualization
+knowledge using python modules like Request, Beautiful Soup, Pandas etc.
+
+Able to handle technical team and project flow for development purpose.
+
+Good experience on working and troubleshooting in both Windows and Linux based platforms.
+
+Have experience in developing and maintaining the modules of automation framework.
+
+Expertise in understanding, tracking changes, stabilizing and maintenance of code.
+
+Good analytical, debugging and problem-solving skills.
+
+Good knowledge in Agile process model and Scrum methodology.
+
+Versatile team player with good communication and interpersonal skills.
+
+
+SKILLS
+
+
+[NAME]
+
+: Python , SQL/No SQL, Node JS, Azure Resources , Shell,
+Power Shell, Power BI, JSON
+Operating System
+: Linux, Windows
+Tools
+: SQL Server Management Studio (SSMS), Visual Studio Code IDE,
+Py Charm IDE, MS Power BI Desktop, Git Hub Desktop, Azure
+Cloud, Azure storage explorer, Azure-Dev Ops, Putty, Moba Xterm,
+Visio, SQL-DBM, Airflow, Jenkins, Splunk, DB Artisan, Jira.
+
+Project Experience
+Project 1:
+Organization
+Cognizant
+Project Name
+Duration
+March 2024 to till
+date
+Team Size
+
+Domain
+Insurance
+The Purpose of this project is to create an intelligent chatbot to provide
+roadside assistance services. The chatbot will help users with emergency
+support, troubleshooting common vehicle issues, and connecting them with
+live assistance if needed. The project leverages several technologies for a
+seamless user experience and robust backend management.
+Description
+Role
+Senior Full Stack Developer
+Technologies
+Dialogflow, Node.js, Git Hub Actions, Google Cloud Platform (GCP), Firestore
+1. Dialogflow Setup:
+
+Create intents for various roadside assistance scenarios (e.g., "flat
+tire", "dead battery").
+
+Define entities and parameters to capture specific details from the
+user (e.g., location, type of vehicle issue).
+
+Configure fulfillment to call the Node.js webhook.
+2. Node.js Webhook:
+
+Develop the webhook to handle Dialogflow's JSON requests.
+Responsibilities:
+
+Implement logic to process user inputs and interact with Firestore for
+storing and retrieving data.
+
+Integrate with external APIs if needed (e.g., location services,
+emergency contact services).
+
+Ensure that responses are formatted correctly and sent back to Dialogflow.
+3. Git Hub Actions:
+
+Create workflows for automated testing and deployment.
+
+Set up environment variables and secrets securely.
+4. Google Cloud Logging:
+
+Configure logging for the Node.js application to capture detailed logs.
+
+Set up alerts and dashboards to monitor chatbot performance and
+user interactions.
+
+Use Cloud Logging and Cloud Monitoring to analyze trends and identify
+issues.
+5. Firestore Integration:
+
+Design Firestore database schema for storing chat history and user
+data.
+
+Implement CRUD operations to manage chat sessions and user data.
+
+Ensure data privacy and security, following best practices for handling
+user information.
+Tools
+Visual Studio Code IDE, Firestore DB, GCP, Dialogflow
+
+Project 2 :
+Organization
+Cognizant
+Domain
+Life Science
+Description
+Responsibilities:
+Project Name
+Data Ops CI Account Monitoring Dashboard
+Duration
+August 2023 to March 2024
+Team Size
+The purpose of the Data Ops Account Monitoring Dashboard is used to track
+and monitor Azure Service Principals and Azure Functional Accounts within
+GSK. In the process an operational activity of the Products, Azure Service
+Principals and Functional Accounts information including expiry details are
+tracked on Power BI Dashboard and Expiry Alert notifications are being sent
+to the respective Product Owners and Support product managers to maintain
+the health of the respective accounts.
+Role
+Data Engineer (Python, SQL, MS Graph API’s, Azure Resources)
+
+Initiated and executed Proof of Concept ( POC ) by co-ordination with
+multiple teams within organization and with Microsoft Support team.
+
+Created Architecture Diagram for Data flow of Service Principals &
+Functional Accounts.
+
+Designed databases , formulated schemas and constructed views to
+optimized data organization & retrieval.
+
+Developed One time & Delta Transformation pipelines for data
+extraction from Service Now API , MS Azure Graph API , and Account
+Management and Reporting Services Database (AMARS) View using
+Python request library and stored them in Azure SQL DB .
+
+Developed a code to send expiry email alerts to respective Product
+Owners & Escalation support managers using Email API .
+
+Performed GET/POST methods using request library and manipulated
+data using pandas in python.
+
+Maintained code in Azure Dev Ops source versioning control tool and
+scheduled jobs for transformation pipelines in Azure Functions .
+
+Data stored in Azure SQL DB will be used as a source to generate the
+reports on Power BI Dashboards to monitor the health of respective
+accounts.
+
+User interaction pages for mapping of Product IDs with respective
+Service Principals, Functional Accounts, and configuring Product IDs
+and Email Addresses point of contacts (Primary and Escalation Product
+Owners) for Email Alerts are developed using Power Apps .
+Technologies
+Python, SQL, JSON, Azure Cloud, Service Now API, MS Azure Graph API, Pandas,
+Request, Power BI, Power Apps
+Tools
+Visual Studio Code IDE, Py Charm IDE, SQL Server Management Studio ( SSMS ), MS
+Power BI, MS Power Apps, Jira, Git Hub Desktop, Azure Cloud (Subscriptions,
+Resource Groups, Key Vaults, Managed Identities, Function Apps, BLOB Storage
+Accounts, Azure MS SQL, Azure Dev Ops, Azure Source Control).
+
+Project 3:
+Organization
+Cognizant
+Project Name
+PAS (Pickles Auction Services) – Data Migration
+Domain
+Digital
+Develop Synapse Data Warehouse on Azure Cloud due to cost efficiency and
+perform migration from multiple data source like MS-SQL Data Warehouse,
+Snowflake Data Warehouse, Azure Data Lake Storage.
+Description
+Role
+Python Framework Developer/Data Engineer/Data Analyst (ETL)
+Responsibilities:
+
+Worked on creating one time & delta transformation and validation
+pipelines using Python, Airflow, SQL.
+
+Executing CI/CD pipelines in airflow and publishing the data.
+
+Performed Data Analysis post transformation executions and maintaining
+reports in Power BI.
+
+Worked on Data Modelling & Mappingof tables coming from various data
+sources like MSSQL, Snowflake, Azure Synapse in SQL DBM.
+Technologies
+Azure Synapse, Python, MS-SQL, Airflow, Azure Cloud, Git Hub, Snowflake.
+Tools
+Py Charm IDE, Visual Studio Code, MS-SQL server, Azure Storage Explorer, Azure File
+Share, Lens (Kubernetes cluster), Moba Xterm, Bitbucket, SQL -DBM, Snowflake,
+Trello, JIRA, Service Now, Confluence, Share Point.
+Project 4:
+Organization
+Capgemini
+Project Name
+Exchange Traded Products – (ETP)
+Duration
+October 2019 to July 2021
+Domain
+Investment Banking
+ETP is an application for traders and sales in OTC market. It is used mainly in New
+York, London, Hong Kong and Tokyo regions.
+The purpose of this project was to develop framework to automate regression test
+cases of multiple applications that are used to trade on German & Swedish
+products using REST API & UI Automation .
+Description
+Role
+Python Framework Developer (Selenium, BDD framework, Jenkins)
+
+Developed a framework to automate daily regression test cases for UI
+Applications using Python Selenium and Behavior Driven Development
+(BDD) framework from scratch.
+
+Build pipelines on Jenkins to run automated test cases on daily basis, which
+would get triggered on timely basis and generate passed/failure results of
+automated test cases and would send email trigger to respective
+monitoring team.
+Responsibilities:
+
+Code check-in to Bitbucket on regular basis and code reviews with
+development team.
+
+Posting development as well as automation related bugs on Jira on
+Duration
+July 2021 to July
+
+Team Size
+Team Size
+
+timely basis.
+
+Worked as a hybridresource responsible for Quality Assurance of trading
+applications which manages entire life cycle of equity derivatives from
+inception throughmaturity/expiry including any amendments in NASDAQ
+exchange and managing environment as well.
+Technologies
+Python, Selenium, BDD, Exchange Traded Products.
+Tools
+Py Charm IDE, Git Hub, Jenkins, Splunk, DB Artisan, Squirrel, Krang, ETP, Robo
+Trader, Risk Viewer, Sockeye. JIRA, Service Now.
+Project 5:
+Organization
+Eclerx
+Project Name
+Data Analytics & Automation
+Duration
+August 2019 to October 2019
+Team Size
+Domain
+E-Commerce
+The purpose of this project was to scrape data from E-commerce, Shopping &
+Restaurants websites for analysis. Post scraping the data and making it structured
+and meaningful power BI team use to generate reports and share the same with
+clients.
+Description
+Role
+Data Analyst
+
+Web Scrapping -
+Developed scripts for scrapping data by using selenium, xpath,
+beautiful soup, request python modules.
+
+Performed analysis of scraped data by using pandas in python.
+
+Data Wrangling -
+Transformed unstructured data to structured data for data analysis.
+Responsibilities:
+
+Used multi-threading to capture large amount of data.
+Technologies
+Python Scripting, Pandas, Rest API.
+Tools
+Py Charm IDE, Spider IDE, SVN.
+
+Project 6:
+Organization
+Atos-Syntel
+Project Name
+Moody’s Investor Services - Service Now
+(Office 365) Automation
+Domain
+Banking and Financial Services
+Description
+Role
+Automation Analyst
+Responsibilities:
+Technologies
+Power Shell Scripting.
+Tools
+Windows ISE, Visio, JIRA, Service Now.
+Project 7:
+Organization
+Atos-Syntel
+Domain
+Banking and Financial Services
+Description
+Role
+Automation Analyst
+Duration
+December 2018 to June 2019
+Team Size
+The purpose of this project was to automate Service Now requests those are
+created for migration of On-Premises mailboxes to Office-365 mailboxes .
+
+Creation and deletionof Mailbox, Distribution lists, Mail Contacts, Office
+365 Groups by using Power Shell Scripts at Service Now end.
+
+Develop scripts for automating creation and deletion of Office 365 and On-Premises Mailbox, Distribution lists, Shared Mailbox, User Mailbox,
+Office 365Groups.
+
+Modify Ownership, Primary SMTP Address, Display Name, and Alias by
+writing automation scripts.
+
+Testing scripts in DEV, STG and QA environment with all Possible test
+cases and deploying scripts to Productionenvironments. Daily check and
+updates of Visio diagrams in JIRA tracking Tool.
+
+Working in Agile Methodology for completing Automation tasks.
+Project Name
+Moody’s Investor Services - CMS Automation
+Duration
+December 2017 to November 2018
+Team Size
+CMS is control management system including various technologies such as
+ECM, File Net etc. Purpose of this project was to automate daily routine
+mundane tasks performed by ECM & File Net teams.
+
+Responsibilities:
+Technologies
+Python, Unix Shell Scripting.
+Tools
+Putty, SVN, JIRA, Service Now.
+Project 8:
+Organization
+Atos-Syntel
+Project Name
+Moody’s Investor Services -
+
+(CAS)
+
+Domain
+Banking and Financial Services
+Description
+Role
+Automation Analyst
+Responsibilities:
+Technologies
+Python, Unix Shell Scripting, SQL.
+Tools
+Putty, SVN, JIRA.
+
+Automating mundane tasks and various features of CMS technologies
+using UNIX shell scripting, Python and REST API.
+
+Bug fixing in Automation scripts.
+
+Working in Sprints to complete Automation tasks.
+Duration
+December 2016 to November 2017
+Team Size
+Centralized Automation Service is a tool used to automate all the daily
+routine tasks such as start and stop of servers, Health checks of servers, all the
+daily basis activities performed on both windows and Linux servers for certain
+technologies & Databases like Oracle, Sybase, MSSQL, DB2, Jboss.
+
+Developing Automation scripts of various access standardization tasks
+for applications like Oracle, Sybase, MSSQL, DB2, Jboss in Unix shell
+scripting and Python. Spearheading the automation of various
+repetitive manual task which resulted in reduction of service now
+incidents by 50% and requests by 30%.
+
+
+Father’s Name:
+Mr. Narayanrao Bisane
+
+Mother’s Name:
+Mrs. Surekha Bisane
+
+
+[REDACTED_DOB]
+
+
+
+[REDACTED_GENDER]
+
+[REDACTED_NATIONALITY]
+
+[REMOVED_SECTION_PERSONAL]
+
+[REMOVED_SECTION_DECLARATION]

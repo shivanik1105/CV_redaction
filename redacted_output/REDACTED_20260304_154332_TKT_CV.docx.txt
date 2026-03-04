@@ -1,0 +1,111 @@
+[NAME]
+
+B-204, [NAME], [NAME], Dhanori,
+
+[REDACTED_CONTACT_LINE]
+
+[REDACTED_PHONE]
+
+[REDACTED_EMAIL]
+
+[REDACTED_URL]
+
+JAVA, SPRINGBOOT, SPRING CLOUD, SECURITY, , KAFKA, ACTIVEMQ, JMS SPRING BATCH, JSF, HIBERNATE, DROPWIZRD, CAF(WebMethods)
+ANGULAR, REACT, NODEJS, j PRIMEFACES
+
+AWS, KUBERNETES, SPRING CLOUD, TERRAFORM, APIGEE
+
+MONGODB, POSTGRES, MYSQL ORACLE, DB2 ETC
+
+JUNIT, JBEHAVE JMETER, SONAR, SYNK, CRUCIBLE (FISH EYE)
+
+GIT, BITBUCKET, JIRA, JENKINS, DOCKER, KRAKEN,
+
+11+ years of hands-on experience in AWS, Java Backend/full-stack development with strong software engineering background principle: writing modular clean code, clearing analytical and logical thinking
+Experience in the full life cycle of software development or methodology using Agile Scrum/Kanban etc.; requirements analysis, designs, codes, tests, debugs, and document
+Experience in OOP, design patterns, AWS containers, microservices, serverless implementation, Jenkins
+Experience with RDBMS including OSS(Open source Software) (PostgreSQL, MySQL, etc.) and NoSQL Databases including OSS (MongoDB, etc.)
+Experience with Java, AWS technologies such as Spring, Hibernate, Kafka, Docker, Kubernetes, S3, Lambda, Kinesis, DynamoDB, CloudFront, IAM, SNS, SQS, CloudWatch, Python, NodeJS, Terraform, apigee, etc
+Experience web front-end technologies: HTML5, CSS3, JavaScript, REST APIs, and familiar with React or Angular development
+Experience in developing mobile applications both native and hybrid.
+Software industry experience with exposure in multiple domains – BFSI, Education, e-Learning, and B2B (eCommerce).
+
+WORK EXPERIENCE
+
+Capgemini, Lead Engineer - Jun/2022 – Aug/2023
+I had worked on TCL (SDWAN (software-defined wide area network)) sales module and this module help customer to prepare infrastructure related quotation and after quotation finalization, helping to customer for placing the final order as well as infrastructure setup.
+Migrating legacy services into microservices
+Automates the multiples services which help to prepare the quotation
+While download the excel file, we stored the static data for different
+hardware vendor’s in excel file and used it while preparing the
+quotation.
+Hitachi Vantara, Senior Consultant - Sept/2019 - July/2022 Worked for NWEA(Map Growth) organization that supports students and educators worldwide by creating assessment solutions that precisely measure growth and proficiency—and provide insights to help tailor instruction.
+Implemented new algorithm (ARLIS) to improve the assessment of the
+Students and implemented new features and API’s as well as
+worked on performance improvements.
+Client onboarding automation, pre-activation setup with API validation
+tool by using Postman
+Automating Jira tickets email notification
+Jenkins hardening by implementing Dockerize container
+ETL implementation from extracting millions of records and loading them
+into AWS
+Developed a dashboard using the ETL integration tool.
+Cross-browser compatibility web page enhancement thus reduces the
+page load time by 40%.
+Worked on Synk, SonarQube, Karma, Grunt, and Junit.
+Benchmarked both Postgres RDS and MongoDB by loading 50 million
+
+CRUISE CONTROL, KINABA, NEW RELIC, DROOLS,
+
+RULE BUILDER, SHELL SCRIPT
+
+records into each database and optimizing for read operations.
+Implemented APIGEE API proxy with API Gateway.
+Implemented New Relic for log and trace, integrated with Kraken.
+ITC Software, Lead/Senior Software Engineer - Nov/2018 - Jul/2019
+I had worked on EDW(Emirates Digital Wallet) for Emirates bank. EDW will
+help online service that allows an individual to make electronic transactions.
+This can include purchasing items online with a computer or using a
+smartphone to purchase something at a store.
+I was part of Integration Team and support to multiple modules.
+Pyramid Consultancy, Module Lead - Mar/2017 - Apr/2018
+I had worked on Llyods Bank for online Security and Fraud to prevent the user from online fraud and proving the safe online banking. When customer login/doing specific journey, on the same time BioCatch script will load and capture the customer activity and pass customer activity details to BioCatch (Third party system) and BioCatch generate score based on your own algorithm and score will send back to Llyods system and current journey validate the score and if score will more than 800, then we stop the current journey and customer Logout from the system.
+Getting the initial hand over from the client and setup the team in Offshore
+Integrated BioCatch Script in user journey
+Worked on multiple services as well as fix and optimized the cache
+Variable, which are used in user journey for data encryption.
+.
+Opus Software, Senior Software Engineer - Jun/2014 - Sep/2016
+I had worked in Western Union for Channel Services and RTRA, where front end request come to channel services then based on the request invoke to specific services and call to wallet system (business logic) as well as invoke to different backed system (Blaze, UCD, Unisys, RTRA, TENDUM etc.)
+Worked on Real Time Risk Assessment (RTRA) for all the transaction
+and prepare the rule for data Normalization, Aggregation, Data
+Integrity, Business Logic, Risk Assessment etc.
+Written shell script for DMF (Death Master file) and USPS (United
+stare postal services)
+Worked in WEBUI for Precision (Fraud Transaction detection or Dynamic Rule Creation).
+Quinnox Consultncy, Senior Software Engineer - Feb/2013 - Jun/2013
+Standard Charted, Singapore whole sell Banking is a business unit of Standard Charted. They are serving business customers for mortgages, insurance, loans and investment products etc. Foreign Account Tax Compliance Act (FATCA) is applicable to U. S. taxpayers using foreign accounts. FATCA requires foreign financial institutions (FFIs) to report to the IRS information about financial accounts held by U. S. Taxpayers.
+Worked on Off Boarding, where client want to exit from the bank or Client wants to exit from some products like loan, demat account,
+Mortgage, Insurance etc. In above both the scenario Off Boarding
+process help to client for easy off board from the bank or products
+Worked on CAF Implementation in FATCA.
+Quinnox Consultncy, Senior Software Engineer - Jun/2012 - Oct/2012
+Barclays Retail Banking (UKRB) is a business unit within Barclays Global Retail Banking. They are serving individual and business customers with current and savings accounts, mortgages, insurance, loans, credit cards and investment products etc. UKRB also offer Mobile Application for mobile users with required functionality, so that the users can used effectively this application.
+Worked on implementation of “Debit Card Aboard” services
+Worked on JBehave stories for different services.
+Wesley Clover Communication Solution, Software Engineer - Dec/2010 - Mar/2012
+EPM(Employee Performance Measurement) has number of modules like eAppraisal, eSuccession, eCompansation, eLearning Manager and eRecruitment. Talent management refers to the process of attracting, selecting, and training, developing and promoting employees through an organization. Managers who focus on developing talent in-house ensure their employees have the tools and resources they need to perform well, receive proper compensation and transition to leadership roles.
+Worked on all the modules enhancements
+Fixed major bugs in eCompansation and other modules
+SiddhiVinayak Astrology Services, Software Engineer - Dec/2009 - Nov/2010
+Worked on GSV3, content application, which holds Moon & Sun sign content for some languages. For each media, we have different content repository (May be replicated content). When content is required, users download it from some interface, and provide to Print media. Content will have many versions for same key. User can add more versions of content for same Key. Version number creation will be automated. For new content new version number will be provided. Same content can be used for different type, like WEB, PRINT, REPORT etc.
+I have worked on GSV3 development of Ecommerce application where we can sell and the Astrology related products
+I have developed Reporting tools for EPBx system, where we can get the call details for Astrologers
+Also fixed the bugs in EPBx and installed EPBx system in different cities in .
+SiddhiVinayak Astrology Services, Software Engineer - Dec/2009 - Nov/2010
+Worked online Astrology FM radio - Centova Cast support all the radio related operations. It will display program schedule for a week as well as Admin user should be able to upload the schedule. Allows the user to comment on current show by providing name & valid email id. It will display all the comments related to current show only Admin user should be able to see the questions, reply, schedule answers for a show and generate MIS. They are also providing a Space for Advertise on site. Public User posts a comment, read current show's comment, post a question. Admin See the comments, Questions, Answer, manage (Delete) them, Generate MIS. Show host has shown specific rights, can see his/her show's comments & questions..
+I have implemented Comment and question module for Astrology FM.
+
+[REMOVED_SECTION_EDUCATION]
+
+AWS Certified Solution Architect – Associate

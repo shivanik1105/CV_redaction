@@ -1,0 +1,222 @@
+RESUME
+
+[NAME]
+
+[REDACTED_CONTACT_LINE]
+
+Career Objective:
+To gain an esteemed position in a prestigious organization so that I can build an innovative career by
+applying and continuously improving my skills and other significant talents.
+Experience Summary
+• Total IT-Finance experience of 7 years
+• Presently working with HCL Tech .
+• Previously worked with Bank of new York mellon technologies and Infosys technologies, TCS.
+• Quick learner and an excellent team player, with good communication and problem solving skills
+• Have good understanding of financial services domain
+
+Key Competencies & Skills
+• IBM Sterling Integrator, IBM Sterling File Gateway, Connect: Direct, Gix Bizlink, Bizlink
+
+Manager, Database, SQL.
+• Packages : MS- Office, Ms-Excel
+• Operating System : Windows 8/Windows Vista/Windows 7/WinXP/NT/2000
+
+[REMOVED_SECTION_EDUCATION]
+
+Project Summary
+HCL Technologies
+Description
+Role
+Responsibilities
+Technology
+Tools
+Jan 2022– Till Date
+Migration Project
+This Project is designed for the Migration activity, where the key
+expectation is to Design Architecture of Sterling File Gateway , Install
+it on the Azure Kubenates Services and Migrate all the flows of Data
+Power to SFG. Added with Provide Functionality Such as Logging and Monitoring using Kibana, Elastic Search & IBM Control Center
+Technical Lead
+• Architectural Role- Designing the Architecture of Sterling File
+Gateway specifically to Install it on the Azure Kubenetes Services.
+• Installation of SFG - Installing the SFG on AKS Services using
+Helm Charts and Configuring the Adatapers, Services to enable the
+Protocals such as SFTP, FTPS, MQ etc,
+• Cutomization - Customizing SFG According to the need of Client sucb as, creation fo Business process to read the headers from
+MQ, removal of proxy services and introducing protocals etc.
+• Migration Activity- Planning for the Migration activity,
+gathering information from source and destination, deployment of all
+the flows and making them live.
+• Monitoring- Enablement of Loging and Monitoring
+functionality such as kibana, Elastic serach, My File Gateway & ICC
+• Installation of ICC- Installation of IBM Control Center on
+the Azure Kubenetes services and configurating the same with SFG.
+Unix, IBM Connect direct , Basic of mainframe, Trouble shooting
+Skills, FTPS, HTTP, FTPS, SFTP, Connect Express
+IBM Sterling integrator , IBM Connect: Direct, SFG, Secure+, Bizlink,
+Splunk, HIP Monitoring tool, Slack, SNOW
+Description
+Role
+Responsibilities
+Technology
+Tools
+Infosy Technology
+Description
+Role
+Responsibilities
+March 2021– Jan 2022
+Society Generale Bank, Manage File transfe
+The project is Managed File Transfer system admin and integration
+development with support. The activity includes designing and
+building the solution with tools like Connect: Direct, IBM Sterling
+Integrator, SFG using various protocols like SFTP, FTP, HTTPS and Connect: Direct.
+System Specialist Engineer
+• System Engineer With Complete File transmission wotk
+• Lead: - Handling EUROPE and Paris Region and Assigning task
+to Peers
+• Build : Building the Infrastructure based upon the agreed
+solution.
+• Solving incidents related to file transfer related to Sterling
+File Gateway and Sterling Integrator. Added with Connect Express
+• Planning and Implementing the Changes via proper channels
+• Audit : Remediation of Non-compliant node as per the Audit
+requirements laid down by Client.
+• DB and OS patching for SI and SFG
+• Maintenance : Maintain complete SFG environment using
+Python script
+• Monitor Role:- Monitor the new juniors with tools well
+providing the required guidance
+Unix, IBM Connect direct , Basic of mainframe, Trouble shooting
+Connect Exress , IBM Connect: Direct, Sterling integrator, SFG,
+Secure+, Bizlink, Splunk, HIP Monitoring tool, Slack, SNOW
+March 2019 – March 2021
+Loreal HIP Operation Team , ASIA Pacific Region
+The project is Managed File Transfer system admin and integration
+development with support. The activity includes designing and
+building the solution with tools like Connect: Direct, IBM Sterling
+Integrator, SFG using various protocols like SFTP, FTP, HTTPS and Connect: Direct.
+Associate Consultant
+• Design : Requirement Analysis & gathering.
+Technology
+Tools
+Bank of New York Mellon Technology
+Description
+Role
+• SME: Acting as SME in case of P1 and P2 issue
+• Lead: - Handling ASIA Pacific Region and Assigning task to Peers
+• Build : Building the Infrastructure based upon the agreed
+solution.
+• Solving incidents related to file transfer related to Sterling
+File Gateway
+• Planning and Implementing the Changes via proper channels
+• Audit : Remediation of Non-compliant node as per the Audit
+requirements laid down by Client.
+• DB and OS patching for SI and SFG
+• Maintenance : Maintain complete SFG environment
+• Monitor Role:- Monitor the new juniors with tools well
+providing the required guidance
+Unix, IBM Connect direct , Basic of mainframe, Trouble shooting
+Skills, Basics of EDI and Mapping. protocols – Connect: Direct, SFTP,
+FTPS, HTTPS, Database SQL
+IBM Connect: Direct, Sterling integrator, SFG, Secure+, Bizlink,
+Splunk, HIP Monitoring tool, Slack, SNOW
+May 2016 – March 2019
+BNY Mellon which is financial major has large-scale global financial
+operations which are spread across EU and APAC region.
+Project is responsible for researching and gathering the
+current/existing transmission information and migrating the existing
+transmission protocol like FTP/FTPS to more secure protocol like
+SFTP (Widely used), connect direct, HTTP.
+Our team is responsible to develop new transmission setup which
+include researching on current transmission, account build/Partner on
+boarding peer process, testing, deploy in production and monitoring
+the transmission. We used to often work on critical application like
+accounts of treasury services, which have direct impact on BNY
+Mellon financial businesses with clients.
+We are currently using tools like SFG, Sterling Integrator, Sterling
+Secure proxy , Bizlink Manager to provide connectivity and
+monitoring the Jobs / Process which includes process includes
+building SFTP setups & connect direct scripts for different OS like
+unix, mainframe, windows.
+Business Liaison and Migration Developer
+Responsibilities
+Technology
+Tools
+
+
+[REMOVED_SECTION_EDUCATION]
+
+
+• Registered for
+• Registered for
+• Underatanding of Financial business BNYM Tech.
+• Certified Capital market dealers module NCFM
+• Certified Capital market and Tressury Services
+• Certified NSE Academy Certified Equity Fundamental Analysis
+• Indroduction to Option Trading
+• Introduction to Capital and derivative markets
+• Attended full cource on Financil Modeling
+
+Achievements and Co-curricular Activities:
+� Participated in “
+� Awarded with “
+2009.
+� Presented a technical paper in
+(Kanyakumari).
+� Performed one month Internship on “
+� Received training at “Electric Locoshed, Ajni”, .
+� Acted as
+
+(SOFEE), YCCE.
+
+� Represented Wardha district in scout and guide event at state level (),
+2004.
+� Conducted and presented a Department level workshop on “
+of third year Electrical Engineering (2015-16).
+� Active member of NGO,
+� Founder member of departmental library, “
+� Compiler for the Departmental Magazine, “
+• File Transfer activity.
+• Understanding and gather Business lerated information from Client.
+• Building setups, testing & implementation in live transmission.
+• To act according to the progress of the setups / Jobs.
+• Trouble shooting all the failures.
+• Act immediately on client concerns / comments.
+• Participating in production call to give updates to the client.
+• Managing shifts within the team to provide support.
+
+Unix, IBM Connect direct , Basic of mainframe, Trouble shooting
+
+FTPS, HTTPS.
+
+IBM Connect: Direct, Sterling integrator, SFG, Secure+, Bizlink
+CFA level 1 (Dec 2020)
+FRM Part 1 (Nov 2020)
+REPUBLIC DAY PARADE” at 2009
+BEST PARADE COMMANDER” from directorate,
+IEEE Conference at “ ICEETS 2016”, Nagarcoil
+Design of Boost Converter ” at IIT .
+“STUDENT COORDINATOR” in Society of Future Electrical Engineers
+PCB Designing ” for students
+
+“WINGS”.
+
+H. O. P. E” .
+
+GNISTA”.
+
+• Certified Professional actor from Prasant Damle theater School 2017.
+• Founder Member of Manch theater society at BNY Mellon technology 2016
+• 2 nd Best actor in Inter Corporate Project management Competetion 2017
+• Best Director in Inter Corporate Project management Competetion 2018
+• 2 nd winner in National one act play Akola 2017.
+• Participated in Indian Film Festival in 2019
+• Participated in Indian Film Festival in 2020
+• Worked as Actor and Backgrourd roles on various short films (Youtube channel- Ref :- Running wheel
+
+Motion Pictures)
+• Best film award to recent short film “Laal Pani”
+
+[REMOVED_SECTION_PERSONAL]
+
+[REMOVED_SECTION_DECLARATION]

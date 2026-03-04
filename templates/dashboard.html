@@ -425,26 +425,46 @@
             </div>
         </div>
 
-        <!-- Job Description & Extraction -->
+        <!-- Job Description & Full Pipeline Processing -->
         <div class="main-panel">
-            <h2 class="section-title">📝 Batch Extract Intelligence</h2>
+            <h2 class="section-title">📝 Process CVs with Job Description</h2>
             
             <div class="job-description-section">
                 <label for="jobDescription" style="font-weight: 600; display: block; margin-bottom: 10px;">
-                    Job Description:
+                    Job Description (Dynamic — paste any JD to analyze all CVs against it):
                 </label>
                 <textarea 
                     id="jobDescription" 
-                    placeholder="Paste the job description here to analyze all CVs against it..."></textarea>
+                    placeholder="Paste the complete Job Description here...&#10;&#10;Example:&#10;Role: Senior Java Developer&#10;Experience: 5+ years&#10;Required Skills: Java, Spring Boot, Microservices, AWS&#10;Nice to have: Kubernetes, Docker, CI/CD&#10;..."></textarea>
             </div>
 
-            <button class="button" onclick="batchExtract()">
-                🚀 Extract Intelligence from All CVs
-            </button>
+            <div style="margin: 15px 0; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="forceReprocess" style="width:18px; height:18px;">
+                    <span style="font-weight: 500;">Force re-process (ignore cached results, re-analyze with new JD)</span>
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="button" onclick="processSamples()" id="btnProcessSamples">
+                    📂 Process All Sample CVs (Full Pipeline)
+                </button>
+                
+                <button class="button" onclick="batchExtract()" id="btnBatchExtract" style="background: #6366f1;">
+                    🚀 Re-analyze Already Redacted CVs
+                </button>
+                
+                <button class="button button-secondary" onclick="loadCandidates()">
+                    🔄 Refresh Data
+                </button>
+            </div>
             
-            <button class="button button-secondary" onclick="loadCandidates()">
-                🔄 Refresh Data
-            </button>
+            <div id="processingProgress" style="display:none; margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 10px; border: 1px solid #bfdbfe;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="spinner" style="width: 24px; height: 24px; border-width: 3px;"></div>
+                    <span id="progressMessage" style="font-weight: 500;">Processing...</span>
+                </div>
+            </div>
         </div>
 
         <!-- Human Review Queue (Priority Section) -->
@@ -648,6 +668,80 @@
             }
         }
 
+        async function processSamples() {
+            const jobDescription = document.getElementById('jobDescription').value.trim();
+            
+            if (!jobDescription) {
+                alert('Please paste a Job Description first — the analysis is done against this JD.');
+                return;
+            }
+
+            const forceReprocess = document.getElementById('forceReprocess').checked;
+            const btn = document.getElementById('btnProcessSamples');
+            const progress = document.getElementById('processingProgress');
+            const progressMsg = document.getElementById('progressMessage');
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ Processing...';
+            progress.style.display = 'block';
+            progressMsg.textContent = 'Reading original CVs → Redacting PII → Sending to LLM... This may take several minutes.';
+
+            try {
+                const response = await fetch('/api/process-samples', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        job_description: jobDescription,
+                        force_reprocess: forceReprocess
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    let msg = `✅ Done! ${data.successful}/${data.total_originals} CVs processed. ${data.redacted} redacted, ${data.intelligence_extracted} analyzed.`;
+                    
+                    if (data.skipped > 0) {
+                        msg += ` ⚠️ ${data.skipped} skipped (API quota exhausted).`;
+                    }
+                    if (data.failed > 0) {
+                        msg += ` (${data.failed} failed)`;
+                    }
+                    
+                    progressMsg.textContent = msg;
+                    
+                    if (data.quota_exhausted) {
+                        progress.style.background = '#fef3c7';
+                        progress.style.borderColor = '#fbbf24';
+                        progressMsg.textContent += '\n💡 Tip: Re-run WITHOUT "Force Reprocess" to continue from where it stopped (cached results will be reused).';
+                    } else {
+                        progress.style.background = '#d1fae5';
+                        progress.style.borderColor = '#6ee7b7';
+                    }
+                    
+                    // Show details
+                    if (data.failed > 0) {
+                        const failedFiles = data.results.filter(r => r.status === 'error').map(r => `${r.file}: ${r.error}`).join('\n');
+                        console.warn('Failed CVs:', failedFiles);
+                    }
+                    
+                    loadStatistics();
+                    loadCandidates();
+                } else {
+                    progressMsg.textContent = '❌ Error: ' + (data.error || 'Unknown error');
+                    progress.style.background = '#fee2e2';
+                    progress.style.borderColor = '#fca5a5';
+                }
+            } catch (error) {
+                progressMsg.textContent = '❌ Network error: ' + error.message;
+                progress.style.background = '#fee2e2';
+                progress.style.borderColor = '#fca5a5';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📂 Process All Sample CVs (Full Pipeline)';
+            }
+        }
+
         async function batchExtract() {
             const jobDescription = document.getElementById('jobDescription').value.trim();
             
@@ -656,31 +750,46 @@
                 return;
             }
 
-            const button = event.target;
-            button.disabled = true;
-            button.textContent = '⏳ Extracting...';
+            const forceReprocess = document.getElementById('forceReprocess').checked;
+            const btn = document.getElementById('btnBatchExtract');
+            const progress = document.getElementById('processingProgress');
+            const progressMsg = document.getElementById('progressMessage');
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ Re-analyzing...';
+            progress.style.display = 'block';
+            progressMsg.textContent = 'Re-analyzing redacted CVs against the new JD...';
 
             try {
                 const response = await fetch('/api/batch-extract', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ job_description: jobDescription })
+                    body: JSON.stringify({ 
+                        job_description: jobDescription,
+                        force_reprocess: forceReprocess
+                    })
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    alert(`✓ Extracted intelligence from ${data.successful}/${data.total} CVs`);
+                    progressMsg.textContent = `✅ Re-analyzed ${data.successful}/${data.total} CVs against new JD.`;
+                    progress.style.background = '#d1fae5';
+                    progress.style.borderColor = '#6ee7b7';
                     loadStatistics();
                     loadCandidates();
                 } else {
-                    alert('Error: ' + (data.error || 'Unknown error'));
+                    progressMsg.textContent = '❌ Error: ' + (data.error || 'Unknown error');
+                    progress.style.background = '#fee2e2';
+                    progress.style.borderColor = '#fca5a5';
                 }
             } catch (error) {
-                alert('Error extracting intelligence: ' + error.message);
+                progressMsg.textContent = '❌ Error: ' + error.message;
+                progress.style.background = '#fee2e2';
+                progress.style.borderColor = '#fca5a5';
             } finally {
-                button.disabled = false;
-                button.textContent = '🚀 Extract Intelligence from All CVs';
+                btn.disabled = false;
+                btn.textContent = '🚀 Re-analyze Already Redacted CVs';
             }
         }
 
