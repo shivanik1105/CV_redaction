@@ -1,0 +1,69 @@
+[REDACTED_NAME]
+
+[REDACTED_CONTACT_LINE]
+
+- [REDACTED_URL] - [REDACTED_URL]
+
+
+SUMMARY
+
+
+Third-year CSE (AI) Engineering student with hands-on experience in Generative AI, Machine Learning, and full-stack
+software development, focused on building end-to-end, production-ready academic and project-based applications.
+Experience developing LLM-powered features, intelligent APIs, and scalable backend components through practical
+implementations. Strong foundation in NLP, data processing, and algorithms with the ability to apply AI-driven
+automation to real-world problem statements.
+
+[REMOVED_SECTION_EDUCATION]
+
+Computer Science and Engineering (Artificial Intelligence)
+Muktangan English School and Jr. college,
+
+HSC
+
+Muktangan English School and Jr. college,
+
+SSC
+
+TECHNICALSKILLS
+
+Programming Languages : Java, Python
+Skills : Generative AI, NLP, Machine Learning (ML), Deep Learning (DL), RAG, Scikit-learn, Num Py, Pandas,
+Matplotlib, Seaborn, Lang Chain
+Web Development : React, Tailwind CSS, Node.js, Express.js, Flask, Fast API, Django
+Database : SQL, No SQL, Mongo DB, SQLite, Vector Databases ( Pinecone, FAISS, Chroma )
+Tools : Visual Studio, SQL Workbench, Py Charm, Git Hub, MS Excel, MS Word
+Publications
+Medaid: A Safety-First AI Triage System for Rural Healthcare — IEEE International Conference, 2025
+
+
+PROJECTS
+
+
+Medaid: A Safety ‑ First AI Triage System for Rural Healthcare
+Tech Stack – Python, Django, Postgre SQL, Generative AI, NLP, Lang Chain, Lang Graph, React, Type Script, Tailwind
+CSS, JWT Authentication, PDF Processing
+Description – Developed an AI-powered medical triage system to assist rural patients with early risk assessment and
+care guidance. Collected patient history and current symptoms to predict possible diseases and classify risk levels
+(Emergency, High, Medium, Low). Implemented AI-driven medical report analysis to explain diagnostic reports in
+simplified language and identify potential health abnormalities. Integrated location-based hospital
+recommendations using pincode data and generated downloadable health summaries, enabling clinicians to
+monitor patient cases through a dedicated dashboard.
+Tutorix – AI-Powered Intelligent Learning Tutor
+Techstack – Python, Flask, Generative AI, NLP, Retrieval-Augmented Generation (RAG), Pinecone (Vector
+Database), Network X, Sentence Transformers, React, Tailwind CSS
+Description – Built an AI tutoring system for Machine Learning and Data Science concepts using graph-augmented
+RAG. Designed a prerequisite-aware learning pipeline that identifies missing concepts before answering user
+queries. Implemented semantic search using vector embeddings and knowledge graphs to retrieve textbookgrounded explanations with confidence scoring. Supported multiple learning modes (Beginner, Math, Engineer) and
+provided source-attributed, adaptive explanations through a responsive web interface.
+
+
+[REMOVED_SECTION_EDUCATION]
+
+
+AWS Academy Graduate: Generative AI Foundations — AWS Academy, Oct 2025 (12 hours)
+CCNAv7: Introduction to Networks – Cisco Networking Academy
+Getting Started with Artificial Intelligence — IBM Skills Build, Sep 2025
+June, 2027
+June, 2023
+June, 2021

@@ -11,11 +11,13 @@
         <header>
             <h1>🔒 CV Redaction Pipeline</h1>
             <p class="subtitle">Upload your CV and get a privacy-protected version with all PII removed</p>
+            {% if not hide_dashboard %}
             <div style="margin-top: 15px;">
                 <a href="/dashboard" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; display: inline-block; font-weight: 600;">
                     🎯 Go to Recruiter Dashboard
                 </a>
             </div>
+            {% endif %}
         </header>
 
         <div class="upload-section">
@@ -72,19 +74,7 @@
             </button>
         </div>
 
-        <footer>
-            <div class="info-box">
-                <h3>What gets redacted?</h3>
-                <ul>
-                    <li>✓ Names, email addresses, phone numbers</li>
-                    <li>✓ Personal identifiers (DOB, addresses)</li>
-                    <li>✓ Company names (replaced with generic industry terms)</li>
-                    <li>✓ Specific locations and cities</li>
-                    <li>✓ Monetary values and awards</li>
-                    <li><strong>✗ Skills and work experience content (preserved)</strong></li>
-                </ul>
-            </div>
-        </footer>
+        
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
