@@ -1,32 +1,12 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Virtual Environment
 resume/
-venv/
-env/
-
-# Output folders
-debug_output/
-
-# Secrets - NEVER commit these
-.env
+__pycache__/
+uploads/
+redacted_output/
+llm_analysis/
+*.log
 *.env
-!.env.example
-
-# Test scripts with API keys
-test_new_key.py
-test_api_key.py
-test_openai_key.py
-test_ollama_integration.py
-debug_500.py
-verify_supabase.py
-
-# IDE
-.vscode/
-.idea/
-
-# Ignore vscode AI rules
-.github/instructions/codacy.instructions.md
+.env
+test_docx_output/
+debug_output/
+samples/
+*.pyc
