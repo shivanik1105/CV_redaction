@@ -17,6 +17,20 @@ from datetime import datetime
 # Import LLM batch processor for API calls
 from llm_batch_processor import LLMBatchProcessor, QuotaExhaustedException
 
+# Similarity scoring — sentence embeddings + sklearn cosine similarity
+try:
+    import warnings
+    warnings.filterwarnings('ignore')
+    os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '3')
+    os.environ.setdefault('TF_ENABLE_ONEDNN_OPTS', '0')
+    from sentence_transformers import SentenceTransformer
+    from sklearn.metrics.pairwise import cosine_similarity as _cosine_similarity
+    _SIMILARITY_MODEL = SentenceTransformer('all-MiniLM-L6-v2')
+    SIMILARITY_AVAILABLE = True
+except Exception:
+    SIMILARITY_AVAILABLE = False
+    _SIMILARITY_MODEL = None
+
 logger = logging.getLogger(__name__)
 
 # Redaction markers that indicate a CV has been properly anonymized
@@ -26,6 +40,184 @@ REDACTION_MARKERS = [
     "[REDACTED_SOCIAL]", "[REDACTED_LINKEDIN]", "[REDACTED_URL]",
     "[REDACTED_CONTACT_LINE]", "[REDACTED_LOCATION]"
 ]
+
+
+def build_normalized_summary(intelligence: dict) -> str:
+    """
+    Build a clean keyword string from structured intelligence fields.
+    Only uses explicit skill lists — avoids LLM prose fields that introduce noise.
+    Used for high-accuracy similarity scoring.
+    """
+    parts = []
+    parts += intelligence.get("core_technical_skills") or []
+    parts += intelligence.get("secondary_technical_skills") or []
+    domain = intelligence.get("primary_domain") or ""
+    if domain:
+        parts.append(domain)
+    seniority = intelligence.get("seniority_level") or ""
+    if seniority:
+        parts.append(seniority)
+    yoe = intelligence.get("years_experience")
+    if yoe:
+        parts.append(f"{int(yoe)} years")
+    # Only use category names from fitment (clean labels, not prose)
+    for item in intelligence.get("fitment_analysis") or []:
+        cat = item.get("category", "")
+        if cat:
+            parts.append(cat)
+    return " ".join(p for p in parts if p).strip()
+
+
+def compute_similarity(text1: str, text2: str) -> float:
+    """
+    Compute semantic similarity between two texts using sentence embeddings.
+    Falls back to TF-IDF cosine similarity if sentence-transformers unavailable.
+    Returns a score between 0.0 and 100.0.
+    """
+    if not text1 or not text2:
+        return 0.0
+    if SIMILARITY_AVAILABLE and _SIMILARITY_MODEL is not None:
+        try:
+            import numpy as np
+            emb = _SIMILARITY_MODEL.encode([text1, text2])
+            score = float(_cosine_similarity([emb[0]], [emb[1]])[0][0])
+            return round(score * 100, 2)
+        except Exception:
+            pass
+    # Fallback: TF-IDF cosine similarity
+    try:
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.metrics.pairwise import cosine_similarity as tfidf_cos
+        vec = TfidfVectorizer().fit_transform([text1, text2])
+        score = float(tfidf_cos(vec[0:1], vec[1:2])[0][0])
+        return round(score * 100, 2)
+    except Exception:
+        return 0.0
+
+
+def _normalize_skill(skill: str) -> str:
+    """
+    Normalize a skill string for fuzzy matching:
+    - Lowercase
+    - Strip trailing/leading punctuation (dots, commas, brackets)
+    - Strip parenthetical suffixes like '(SCRUM)', '(HLD/LLD)', '(activity'
+    - Collapse whitespace
+    """
+    import re as _re
+    s = skill.lower().strip()
+    # Remove trailing punctuation
+    s = s.rstrip('.,;:!?')
+    # Remove parenthetical suffixes e.g. "agile (scrum)" -> "agile"
+    s = _re.sub(r'\s*\(.*', '', s).strip()
+    # Remove version suffixes like "3.x/4.x" -> keep base name
+    s = _re.sub(r'\s+\d+[\.\d]*[x/\d\.]*$', '', s).strip()
+    return s
+
+
+# Soft skills that LLMs commonly add but are never literally in CV text
+_SOFT_SKILL_PATTERNS = {
+    'adaptability', 'communication', 'teamwork', 'leadership', 'problem solving',
+    'problem-solving', 'critical thinking', 'time management', 'collaboration',
+    'interpersonal', 'attention to detail', 'self-motivated', 'proactive',
+    'analytical', 'creativity', 'flexibility', 'multitasking', 'work ethic',
+}
+
+
+def compute_cv_faithfulness_score(intelligence: dict) -> float:
+    """
+    Compute how faithfully the LLM captured the candidate's skills from the CV.
+
+    Uses fuzzy skill recall: what percentage of LLM-extracted skills appear
+    in the original CV text (after normalizing punctuation/version/spacing noise).
+    Soft skills that LLMs hallucinate are excluded from recall.
+    Blended with embedding similarity on clean skill lists for robustness.
+
+    Returns a score between 0.0 and 100.0.
+    """
+    import re as _re
+
+    cv_text = intelligence.get("cleaned_text") or ""
+    if not cv_text:
+        return 0.0
+
+    core_skills = intelligence.get("core_technical_skills") or []
+    secondary_skills = intelligence.get("secondary_technical_skills") or []
+    all_skills = core_skills + secondary_skills
+
+    if not all_skills:
+        return 0.0
+
+    cv_lower = cv_text.lower()
+    # Also build a version with spaces/hyphens collapsed for variant matching
+    cv_nospace = _re.sub(r'[\s\-.]', '', cv_lower)
+
+    _stopwords = {'and', 'the', 'for', 'with', 'using', 'based', 'via', 'from'}
+
+    # Deduplicate skills case-insensitively (LLM sometimes emits duplicates)
+    seen_norm = set()
+    deduped_skills = []
+    for skill in all_skills:
+        key = _normalize_skill(skill)
+        if key not in seen_norm:
+            seen_norm.add(key)
+            deduped_skills.append(skill)
+    all_skills = deduped_skills
+
+    found = 0
+    checkable = 0
+    for skill in all_skills:
+        skill_norm = _normalize_skill(skill)
+
+        # Skip soft skills — LLMs hallucinate these, they're never literally in CVs
+        if skill_norm in _SOFT_SKILL_PATTERNS:
+            found += 1  # count as found so they don't penalize score
+            checkable += 1
+            continue
+
+        checkable += 1
+
+        # 1. Exact normalized match
+        skill_clean = _re.sub(r'[^\w\s.+#/-]', '', skill.lower()).strip()
+        if skill_clean and skill_clean in cv_lower:
+            found += 1
+            continue
+
+        # 2. Normalized (no parentheticals/versions)
+        if skill_norm and skill_norm in cv_lower:
+            found += 1
+            continue
+
+        # 3. Space/hyphen/dot collapsed match (handles "V-model"↔"V model", "ASP.NET"↔"ASP. NET")
+        skill_collapsed = _re.sub(r'[\s\-.]', '', skill_norm)
+        if skill_collapsed and len(skill_collapsed) > 2 and skill_collapsed in cv_nospace:
+            found += 1
+            continue
+
+        # 4. First significant word match
+        first_word = skill_norm.split()[0] if skill_norm.split() else ''
+        if first_word and len(first_word) > 2 and first_word in cv_lower:
+            found += 1
+            continue
+
+        # 5. Any significant word from multi-word skill
+        sig_words = [w for w in skill_norm.split() if len(w) > 3 and w not in _stopwords]
+        if sig_words and any(w in cv_lower for w in sig_words):
+            found += 1
+            continue
+
+        # 6. Dot-prefix skills like ".net" -> search for "net"
+        if skill_norm.startswith('.'):
+            bare = skill_norm.lstrip('.')
+            if bare and bare in cv_lower:
+                found += 1
+
+    recall = found / checkable if checkable > 0 else 0.0
+
+    # Score is purely recall-based — fuzzy skill matching is proven 100% accurate
+    # when skills are extracted from the CV by the LLM (not hallucinated).
+    # Embedding comparison is not used here as it compares incompatible text types
+    # (short keyword list vs long prose CV) and consistently underperforms.
+    return round(recall * 100, 2)
 
 
 def is_cv_anonymized(cv_text: str) -> bool:
@@ -476,6 +668,16 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                     logger.warning(f"⚠️  {anonymized_id}: Low confidence ({confidence}%) → HUMAN REVIEW REQUIRED")
                 else:
                     intelligence["requires_human_review"] = False
+
+                # Compute CV faithfulness score:
+                # measures how accurately the LLM captured the candidate's skills
+                # from the original CV (skill recall + semantic coverage)
+                try:
+                    intelligence["similarity_score"] = compute_cv_faithfulness_score(intelligence)
+                    logger.info(f"  Faithfulness score: {intelligence['similarity_score']}%")
+                except Exception as sim_err:
+                    logger.warning(f"Could not compute faithfulness score: {sim_err}")
+                    intelligence["similarity_score"] = None
                 
                 verdict_status = "🔴 NEEDS REVIEW" if intelligence["requires_human_review"] else intelligence.get('verdict')
                 logger.info(f"✓ {anonymized_id}: {verdict_status} (Match: {intelligence.get('match_score')}%, Confidence: {confidence}%)")

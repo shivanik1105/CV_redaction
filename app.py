@@ -496,7 +496,8 @@ def extract_intelligence():
             'success': True,
             'intelligence': intelligence,
             'intelligence_file': intelligence_file,
-            'stored_in_supabase': stored
+            'stored_in_supabase': stored,
+            'similarity_score': intelligence.get('similarity_score')
         })
         
     except Exception as e:
@@ -1248,7 +1249,16 @@ def jd_compare():
             'success': True,
             'job_description': job_description[:200] + '...' if len(job_description) > 200 else job_description,
             'total_compared': len(results),
-            'results': results
+            'results': results,
+            'similarity_scores': [
+                {
+                    'anonymized_id': r.get('anonymized_id'),
+                    'similarity_score': r.get('similarity_score'),
+                    'match_score': r.get('match_score'),
+                    'verdict': r.get('verdict')
+                }
+                for r in results if 'similarity_score' in r
+            ]
         })
         
     except Exception as e:
