@@ -9,6 +9,7 @@ import hashlib
 import random
 import string
 import re
+import concurrent.futures
 from typing import Dict, List, Optional
 from pathlib import Path
 import logging
@@ -627,6 +628,47 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                     "original_filename": sanitize_filename_for_db(original_filename) if original_filename else "unknown"
                 }
             
+            # Local Checkpoint: Keyword / Requirement Filter
+            # Check if CV is totally irrelevant before making expensive LLM calls
+            cv_lower = cv_text.lower()
+            jd_lower = job_description.lower()
+            
+            # Simple check: reject if CV size is absurdly short
+            if len(cv_text.split()) < 50:
+                logger.warning(f"CV too short. Rejected locally without LLM API.")
+                return {
+                    "anonymized_id": self._generate_anonymized_id(),
+                    "analysis_date": datetime.now().isoformat(),
+                    "verdict": "REJECT",
+                    "confidence_score": 100,
+                    "match_score": 0,
+                    "verdict_reason": "LOCAL CHECKPOINT FILTER: Resume is too short to be viable (< 50 words).",
+                    "original_filename": original_filename or "unknown",
+                    "requires_human_review": False
+                }
+                
+            jd_words = set(re.findall(r'\b[a-z]{5,}\b', jd_lower))
+            stop_words = {'about', 'their', 'there', 'which', 'would', 'these', 'other', 'could', 'should', 'experience', 'years', 'working', 'skills', 'knowledge', 'understanding', 'strong'}
+            jd_keywords = jd_words - stop_words
+            
+            if jd_keywords:
+                cv_words = set(re.findall(r'\b[a-z]{5,}\b', cv_lower))
+                overlap = jd_keywords.intersection(cv_words)
+                overlap_ratio = len(overlap) / len(jd_keywords)
+                # If overlap is extremely poor (e.g. < 5%), reject it instantly
+                if overlap_ratio < 0.05:
+                    logger.warning(f"Failed local keyword checkpoint (Overlap: {overlap_ratio:.1%}). Rejected locally without LLM API.")
+                    return {
+                        "anonymized_id": self._generate_anonymized_id(),
+                        "analysis_date": datetime.now().isoformat(),
+                        "verdict": "REJECT",
+                        "confidence_score": 95,
+                        "match_score": int(overlap_ratio * 100),
+                        "verdict_reason": f"LOCAL CHECKPOINT FILTER: Extreme mismatch detected. Auto-rejected to save API quota.",
+                        "original_filename": original_filename or "unknown",
+                        "requires_human_review": False
+                    }
+
             # Generate anonymized ID
             anonymized_id = self._generate_anonymized_id()
             
@@ -743,7 +785,7 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
             except Exception as e:
                 logger.warning(f"⚠ Supabase not available: {e}. Saving to JSON only.")
         
-        for cv_file in cv_files:
+        def process_single_cv(cv_file: str) -> Dict:
             try:
                 # Read CV content
                 with open(cv_file, 'r', encoding='utf-8') as f:
@@ -755,8 +797,6 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                     job_description,
                     Path(cv_file).name
                 )
-                
-                results.append(intelligence)
                 
                 # Save individual JSON
                 if "error" not in intelligence:
@@ -782,13 +822,24 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                 else:
                     logger.warning(f"✗ Error processing {cv_file}: {intelligence.get('error')}")
                     
+                return intelligence
+                    
             except Exception as e:
                 logger.error(f"Error processing {cv_file}: {e}")
-                results.append({
+                return {
                     "error": str(e),
                     "anonymized_id": self._generate_anonymized_id(),
                     "original_filename": Path(cv_file).name
-                })
+                }
+                
+        # Use ThreadPoolExecutor for concurrent batch processing
+        max_workers = min(20, len(cv_files))
+        if max_workers > 0:
+            logger.info(f"🚀 Starting async batch processing with {max_workers} concurrent workers...")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+                results = list(executor.map(process_single_cv, cv_files))
+        else:
+            results = []
         
         # Save batch summary
         summary_file = output_path / f"batch_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"

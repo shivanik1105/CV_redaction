@@ -37,6 +37,17 @@ except ImportError:
     SUPABASE_AVAILABLE = False
     logging.warning("Supabase not available. Install with: pip install supabase")
 
+# Import Queue System (optional)
+try:
+    from queue_manager import QueueManager
+    from rate_limiter import RateLimiter
+    from celery_worker import process_cv_task
+    from redis import Redis
+    QUEUE_AVAILABLE = True
+except ImportError:
+    QUEUE_AVAILABLE = False
+    logging.warning("Queue system not available. Install with: pip install redis celery")
+
 # Configure Flask app
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -58,6 +69,8 @@ Path(app.config['INTELLIGENCE_FOLDER']).mkdir(exist_ok=True)
 _intelligence_extractor = None
 _supabase_storage = None
 _supabase_reachable = None  # Track if Supabase is actually reachable
+_queue_manager = None
+_rate_limiter = None
 
 def get_intelligence_extractor():
     """Get or create intelligence extractor"""
@@ -81,6 +94,50 @@ def get_supabase_storage():
             _supabase_storage = None
             _supabase_reachable = False
     return _supabase_storage
+
+def get_queue_manager():
+    """Get or create queue manager"""
+    global _queue_manager
+    if _queue_manager is None and QUEUE_AVAILABLE:
+        try:
+            redis_host = os.getenv('REDIS_HOST', 'localhost')
+            redis_port = int(os.getenv('REDIS_PORT', 6379))
+            redis_db = int(os.getenv('REDIS_DB', 0))
+            redis_password = os.getenv('REDIS_PASSWORD', None)
+            _queue_manager = QueueManager(
+                redis_host=redis_host,
+                redis_port=redis_port,
+                redis_db=redis_db,
+                redis_password=redis_password
+            )
+            logger.info("Queue manager initialized")
+        except Exception as e:
+            logger.warning(f"Queue manager not available: {e}")
+            _queue_manager = None
+    return _queue_manager
+
+def get_rate_limiter():
+    """Get or create rate limiter"""
+    global _rate_limiter
+    if _rate_limiter is None and QUEUE_AVAILABLE:
+        try:
+            redis_host = os.getenv('REDIS_HOST', 'localhost')
+            redis_port = int(os.getenv('REDIS_PORT', 6379))
+            redis_db = int(os.getenv('REDIS_DB', 0))
+            redis_password = os.getenv('REDIS_PASSWORD', None)
+            redis_client = Redis(
+                host=redis_host,
+                port=redis_port,
+                db=redis_db,
+                password=redis_password,
+                decode_responses=True
+            )
+            _rate_limiter = RateLimiter(redis_client)
+            logger.info("Rate limiter initialized")
+        except Exception as e:
+            logger.warning(f"Rate limiter not available: {e}")
+            _rate_limiter = None
+    return _rate_limiter
 
 def try_supabase_operation(operation, fallback_result=None, timeout_seconds=5):
     """
@@ -275,7 +332,7 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    """Handle file upload and process CV"""
+    """Handle file upload and process CV (with optional queue mode)"""
     try:
         # Check if file is present
         if 'cv_file' not in request.files:
@@ -300,7 +357,37 @@ def upload_file():
         
         logger.info(f"File uploaded: {upload_path}")
         
-        # Process the CV
+        # Check if queue mode is enabled and requested
+        use_queue = request.form.get('use_queue', 'false').lower() == 'true'
+        job_description = request.form.get('job_description', '')
+        
+        if use_queue and QUEUE_AVAILABLE and job_description:
+            # Queue mode: enqueue job and return job_id
+            queue_manager = get_queue_manager()
+            if queue_manager:
+                try:
+                    job_id = queue_manager.enqueue_cv_processing(
+                        cv_path=upload_path,
+                        job_description=job_description,
+                        priority=QueueManager.PRIORITY_NORMAL,
+                        metadata={'original_filename': filename}
+                    )
+                    
+                    # Trigger Celery task
+                    process_cv_task.delay(job_id)
+                    
+                    return jsonify({
+                        'success': True,
+                        'mode': 'queued',
+                        'job_id': job_id,
+                        'message': 'CV queued for processing',
+                        'status_url': url_for('get_job_status', job_id=job_id, _external=True)
+                    })
+                except Exception as e:
+                    logger.warning(f"Queue failed, falling back to sync: {e}")
+                    # Fall through to synchronous processing
+        
+        # Synchronous mode: process immediately
         try:
             # Create fresh orchestrator instance with latest code
             orchestrator = PipelineOrchestrator(config_dir='config')
@@ -318,6 +405,7 @@ def upload_file():
             # Return success response with download link
             return jsonify({
                 'success': True,
+                'mode': 'synchronous',
                 'message': 'CV processed successfully',
                 'output_filename': f"REDACTED_{unique_filename}.txt",
                 'preview': redacted_text,  # Full text instead of truncated
@@ -372,6 +460,17 @@ def health():
     elif _supabase_reachable is False:
         supabase_status = 'configured but unreachable (using local fallback)'
     
+    # Check queue system
+    queue_status = 'not configured'
+    if QUEUE_AVAILABLE:
+        queue_manager = get_queue_manager()
+        if queue_manager:
+            try:
+                queue_manager.redis.ping()
+                queue_status = 'connected'
+            except:
+                queue_status = 'configured but unreachable'
+    
     llm_provider = os.getenv('LLM_PROVIDER', 'gemini')
     
     # Count local data
@@ -382,11 +481,125 @@ def health():
         'status': 'healthy',
         'service': 'CV Redaction Pipeline',
         'supabase': supabase_status,
+        'queue_system': queue_status,
         'llm_provider': llm_provider,
         'redacted_cvs': redacted_count,
         'intelligence_files': intelligence_count,
         'api_key_configured': bool(os.getenv('GOOGLE_API_KEY') or os.getenv('OPENAI_API_KEY') or os.getenv('ANTHROPIC_API_KEY'))
     })
+
+
+@app.route('/api/queue/stats')
+def get_queue_stats():
+    """Get queue statistics"""
+    if not QUEUE_AVAILABLE:
+        return jsonify({'error': 'Queue system not available. Install redis and celery.'}), 503
+    
+    queue_manager = get_queue_manager()
+    if not queue_manager:
+        return jsonify({'error': 'Queue manager not initialized'}), 503
+    
+    try:
+        stats = queue_manager.get_queue_stats()
+        return jsonify({
+            'success': True,
+            'stats': stats
+        })
+    except Exception as e:
+        logger.error(f"Error getting queue stats: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/queue/jobs', methods=['GET'])
+def get_queued_jobs():
+    """Get list of queued jobs"""
+    if not QUEUE_AVAILABLE:
+        return jsonify({'error': 'Queue system not available'}), 503
+    
+    queue_manager = get_queue_manager()
+    if not queue_manager:
+        return jsonify({'error': 'Queue manager not initialized'}), 503
+    
+    try:
+        limit = request.args.get('limit', 100, type=int)
+        jobs = queue_manager.get_queued_jobs(limit=limit)
+        return jsonify({
+            'success': True,
+            'count': len(jobs),
+            'jobs': jobs
+        })
+    except Exception as e:
+        logger.error(f"Error getting queued jobs: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/jobs/<job_id>/status', methods=['GET'])
+def get_job_status(job_id: str):
+    """Get job status by ID"""
+    if not QUEUE_AVAILABLE:
+        return jsonify({'error': 'Queue system not available'}), 503
+    
+    queue_manager = get_queue_manager()
+    if not queue_manager:
+        return jsonify({'error': 'Queue manager not initialized'}), 503
+    
+    try:
+        job_data = queue_manager.get_job_status(job_id)
+        if not job_data:
+            return jsonify({'error': 'Job not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'job': job_data
+        })
+    except Exception as e:
+        logger.error(f"Error getting job status: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/jobs/<job_id>/cancel', methods=['POST'])
+def cancel_job(job_id: str):
+    """Cancel a queued job"""
+    if not QUEUE_AVAILABLE:
+        return jsonify({'error': 'Queue system not available'}), 503
+    
+    queue_manager = get_queue_manager()
+    if not queue_manager:
+        return jsonify({'error': 'Queue manager not initialized'}), 503
+    
+    try:
+        success = queue_manager.cancel_job(job_id)
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Job {job_id} cancelled'
+            })
+        else:
+            return jsonify({'error': 'Failed to cancel job'}), 400
+    except Exception as e:
+        logger.error(f"Error cancelling job: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/rate-limit/stats', methods=['GET'])
+def get_rate_limit_stats():
+    """Get rate limit statistics for all LLM providers"""
+    if not QUEUE_AVAILABLE:
+        return jsonify({'error': 'Queue system not available'}), 503
+    
+    rate_limiter = get_rate_limiter()
+    if not rate_limiter:
+        return jsonify({'error': 'Rate limiter not initialized'}), 503
+    
+    try:
+        stats = rate_limiter.get_all_stats()
+        return jsonify({
+            'success': True,
+            'stats': stats
+        })
+    except Exception as e:
+        logger.error(f"Error getting rate limit stats: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/redacted-files')
 def list_redacted_files():

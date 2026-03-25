@@ -33,3 +33,12 @@ python-dotenv>=1.0.0  # Load secrets from .env file
 
 # Supabase Integration (Optional - for database storage and vector search)
 supabase>=2.0.0
+
+# Queue System (Redis + Celery for async processing)
+redis>=5.0.0
+celery>=5.3.0
+flower>=2.0.0  # Celery monitoring dashboard
+
+# Vector Search (for semantic candidate search)
+sentence-transformers>=2.2.0
+pgvector>=0.2.0
