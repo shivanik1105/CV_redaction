@@ -1,0 +1,47 @@
+{
+  "timestamp": "2026-03-26 10:38:24",
+  "total_cvs": 31,
+  "results": [
+    {
+      "scenario": "Java Developer",
+      "status": "PASSED",
+      "top_match": "CAND_320",
+      "match_pct": 71.42857142857143,
+      "search_time": 0.054435014724731445
+    },
+    {
+      "scenario": "Python Developer",
+      "status": "PASSED",
+      "top_match": "CAND_320",
+      "match_pct": 62.5,
+      "search_time": 0.02988290786743164
+    },
+    {
+      "scenario": "Frontend Developer",
+      "status": "PASSED",
+      "top_match": "CAND_320",
+      "match_pct": 22.22222222222222,
+      "search_time": 0.02689981460571289
+    },
+    {
+      "scenario": "DevOps Engineer",
+      "status": "PASSED",
+      "top_match": "CAND_396",
+      "match_pct": 54.54545454545454,
+      "search_time": 0.02785038948059082
+    },
+    {
+      "scenario": "Data Scientist",
+      "status": "PASSED",
+      "top_match": "CAND_396",
+      "match_pct": 33.33333333333333,
+      "search_time": 0.024894237518310547
+    }
+  ],
+  "performance": {
+    "avg_search_time": 0.026914072036743165,
+    "min_search_time": 0.020191431045532227,
+    "max_search_time": 0.03304147720336914
+  },
+  "overall_status": "PASSED"
+}

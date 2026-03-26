@@ -386,27 +386,43 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             try:
                 full_data = json.loads(raw)
                 full_data["_source"] = "supabase"
+                # Ensure critical fields are present
+                full_data["anonymized_id"] = record.get("anonymized_id", full_data.get("anonymized_id", "UNKNOWN"))
+                full_data["verdict"] = record.get("verdict", full_data.get("verdict", "REVIEW"))
+                full_data["confidence_score"] = record.get("confidence_score", full_data.get("confidence_score", 0))
+                full_data["years_experience"] = record.get("years_of_experience", full_data.get("years_experience", 0))
+                full_data["seniority_level"] = record.get("career_level", full_data.get("seniority_level", "N/A"))
                 return full_data
             except (json.JSONDecodeError, TypeError):
                 pass
         
         # Fallback: map DB columns back to app format
         domains = record.get("domain_expertise", []) or []
+        skills = record.get("key_skills", []) or []
+        
         return {
             "anonymized_id": record.get("anonymized_id", "UNKNOWN"),
             "verdict": record.get("verdict", "REVIEW"),
             "confidence_score": record.get("confidence_score", 0),
-            "match_score": 0,  # Not stored in simple schema
+            "match_score": record.get("confidence_score", 0),  # Use confidence as match score
             "years_experience": record.get("years_of_experience", 0),
+            "years_of_experience": record.get("years_of_experience", 0),  # Both formats
             "seniority_level": record.get("career_level", "N/A"),
-            "core_technical_skills": record.get("key_skills", []) or [],
+            "career_level": record.get("career_level", "N/A"),  # Both formats
+            "core_technical_skills": skills,
+            "key_skills": skills,  # Both formats
             "primary_domain": domains[0] if domains else "",
+            "domain_expertise": domains,  # Both formats
             "secondary_domains": domains[1:] if len(domains) > 1 else [],
             "cleaned_narrative": record.get("overall_summary", ""),
+            "overall_summary": record.get("overall_summary", ""),  # Both formats
             "verdict_reason": record.get("evidence_based_reasoning", ""),
+            "evidence_based_reasoning": record.get("evidence_based_reasoning", ""),  # Both formats
             "original_cv_hash": record.get("original_cv_hash", ""),
             "recruiter_override": record.get("recruiter_override"),
             "requires_human_review": False,
+            "created_at": record.get("created_at", ""),
+            "updated_at": record.get("updated_at", ""),
             "_source": "supabase",
         }
     
@@ -796,70 +812,36 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
         
         Args:
             anonymized_id: Candidate ID
-            embedding: Embedding vector
-            embedding_model: Model used to generate embedding
+            embedding: Embedding vector (list of floats)
+            embedding_model: Model used to generate embedding (ignored if column doesn't exist)
             
         Returns:
             True if stored successfully
         """
         try:
-            from vector_search import get_vector_search_engine
+            # pgvector expects the embedding as a list, not JSON string
+            # Supabase Python client handles the conversion automatically
             
-            engine = get_vector_search_engine()
+            update_data = {
+                'embedding': embedding,  # Pass as list, client converts to vector
+                'updated_at': datetime.now().isoformat()
+            }
             
-            # Validate embedding
-            if not engine.validate_embedding(embedding):
-                logger.error(f"Invalid embedding for {anonymized_id}")
-                return False
-            
-            # Convert to JSON string for storage
-            import json
-            embedding_json = json.dumps(embedding)
+            # Note: embedding_model column may not exist in simplified schema
+            # We only update the embedding vector itself
             
             # Update record with embedding
-            response = self.client.table('cv_intelligence').update({
-                'embedding': embedding_json,
-                'embedding_model': embedding_model or engine.model_name,
-                'embedding_dimensions': engine.dimensions
-            }).eq('anonymized_id', anonymized_id).execute()
+            response = self.client.table('cv_intelligence').update(
+                update_data
+            ).eq('anonymized_id', anonymized_id).execute()
             
             if response.data:
-                logger.info(f"Stored embedding for {anonymized_id}")
+                logger.info(f"✓ Stored embedding for {anonymized_id}")
                 return True
             else:
                 logger.warning(f"No record found for {anonymized_id}")
                 return False
                 
-        except Exception as e:
-            logger.error(f"Failed to store embedding: {e}")
-            return False
-    
-    def store_embedding(
-        self,
-        anonymized_id: str,
-        embedding: List[float]
-    ) -> bool:
-        """
-        Store embedding vector for a candidate
-        
-        Args:
-            anonymized_id: Candidate ID
-            embedding: Embedding vector
-        
-        Returns:
-            True if stored successfully
-        """
-        try:
-            # Update cv_intelligence table with embedding
-            response = self.client.table('cv_intelligence').update({
-                'embedding': embedding,
-                'embedding_model': 'all-MiniLM-L6-v2',  # or get from engine
-                'embedding_updated_at': datetime.now().isoformat()
-            }).eq('anonymized_id', anonymized_id).execute()
-            
-            logger.info(f"Stored embedding for {anonymized_id}")
-            return True
-        
         except Exception as e:
             logger.error(f"Error storing embedding: {e}")
             return False

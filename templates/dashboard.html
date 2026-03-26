@@ -460,6 +460,11 @@
                 </button>
             </div>
             
+            <div style="margin-top: 10px; padding: 12px; background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                <strong>⚠️ Note:</strong> Processing takes 20-30 minutes for 100 CVs (one-time setup). 
+                For instant search (<1 second), use the "Search & Filter" section below after processing.
+            </div>
+            
             <div id="processingProgress" style="display:none; margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 10px; border: 1px solid #bfdbfe;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div class="spinner" style="width: 24px; height: 24px; border-width: 3px;"></div>
@@ -492,7 +497,12 @@
 
         <!-- Search & Filter -->
         <div class="main-panel">
-            <h2 class="section-title">🔍 Search & Filter Candidates</h2>
+            <h2 class="section-title">🔍 Search & Filter Candidates (Instant - <1 second)</h2>
+            
+            <div style="margin-bottom: 15px; padding: 12px; background: #d1fae5; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong>✓ Fast Search:</strong> Searches already-processed CVs in database. 
+                Results in <1 second. Use this for finding candidates, not the "Process" button above.
+            </div>
             
             <div class="filter-section">
                 <div class="filter-group">
@@ -702,6 +712,9 @@
                 if (data.success) {
                     let msg = `✅ Done! ${data.successful}/${data.total_originals} CVs processed. ${data.redacted} redacted, ${data.intelligence_extracted} analyzed.`;
                     
+                    if (data.triage_rejected > 0) {
+                        msg += ` ⚡ ${data.triage_rejected} pre-filtered by triage (${data.api_savings_percent}% API savings).`;
+                    }
                     if (data.skipped > 0) {
                         msg += ` ⚠️ ${data.skipped} skipped (API quota exhausted).`;
                     }
@@ -861,15 +874,39 @@
                 const verdictClass = verdict.toLowerCase();
                 const matchScore = candidate.match_score || 0;
                 const confidenceScore = candidate.confidence_score || 0;
-                const yearsExp = candidate.years_experience || candidate.total_years || 'N/A';
-                const seniorityLevel = candidate.seniority_level || 'N/A';
-                const coreSkills = candidate.core_technical_skills || candidate.technical_skills || [];
+                // Handle years_experience with comprehensive validation
+                let yearsExp = candidate.years_experience || candidate.years_of_experience || candidate.total_years || 0;
+                const seniorityLevel = candidate.seniority_level || candidate.career_level || 'N/A';
+                
+                // Data quality fixes:
+                // 1. If years is 0 but seniority is MID/SENIOR/LEAD/EXECUTIVE, show "N/A"
+                if (yearsExp === 0 && ['MID', 'SENIOR', 'LEAD', 'EXECUTIVE'].includes(seniorityLevel)) {
+                    yearsExp = 'N/A';
+                }
+                // 2. If years is negative, show "N/A"
+                if (yearsExp < 0) {
+                    yearsExp = 'N/A';
+                }
+                // 3. If years is unrealistic (>50), show "N/A"
+                if (yearsExp > 50) {
+                    yearsExp = 'N/A';
+                }
+                
+                // Normalize seniority level (handle UNKNOWN, invalid values)
+                const validSeniority = ['ENTRY', 'MID', 'SENIOR', 'LEAD', 'EXECUTIVE'];
+                const displaySeniority = validSeniority.includes(seniorityLevel) ? seniorityLevel : 'N/A';
+                
+                // Handle skills with multiple fallbacks
+                const coreSkills = candidate.core_technical_skills || candidate.technical_skills || candidate.key_skills || [];
                 const secondarySkills = candidate.secondary_technical_skills || [];
-                const primaryDomain = candidate.primary_domain || '';
-                const secondaryDomains = candidate.secondary_domains || candidate.domains || [];
+                
+                // Handle domain with multiple fallbacks
+                const primaryDomain = candidate.primary_domain || (candidate.domain_expertise && candidate.domain_expertise[0]) || '';
+                const secondaryDomains = candidate.secondary_domains || candidate.domains || (candidate.domain_expertise && candidate.domain_expertise.slice(1)) || [];
+                
                 const leadershipIndicators = candidate.leadership_indicators || [];
-                const narrative = candidate.cleaned_narrative || candidate.narrative_summary || 'No summary available';
-                const verdictReason = candidate.verdict_reason || candidate.reasoning || 'No reasoning provided';
+                const narrative = candidate.cleaned_narrative || candidate.narrative_summary || candidate.overall_summary || 'No summary available';
+                const verdictReason = candidate.verdict_reason || candidate.reasoning || candidate.evidence_based_reasoning || 'No reasoning provided';
                 const requiresReview = candidate.requires_human_review;
                 const recruiterOverride = candidate.recruiter_override;
 
@@ -897,8 +934,8 @@
                     <div class="candidate-details">
                         <div class="detail-section">
                             <h4>Experience</h4>
-                            <p><strong>${yearsExp}</strong> years</p>
-                            <p>${seniorityLevel}</p>
+                            <p><strong>${yearsExp === 'N/A' ? 'N/A' : yearsExp}</strong> ${yearsExp === 'N/A' ? '' : 'years'}</p>
+                            <p>${displaySeniority}</p>
                         </div>
                         
                         <div class="detail-section">
