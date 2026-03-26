@@ -619,28 +619,250 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
         self,
         query_text: str,
         limit: int = 10,
-        similarity_threshold: float = 0.7
+        similarity_threshold: float = 0.7,
+        filters: Dict = None
     ) -> List[Dict]:
         """
-        Perform semantic search using vector embeddings
-        
-        Note: This requires generating embeddings for the query text first
-        You'll need to implement embedding generation using OpenAI or similar
+        Perform semantic search using vector embeddings with pgvector
         
         Args:
             query_text: Natural language query
             limit: Maximum results
             similarity_threshold: Minimum similarity (0-1)
+            filters: Additional SQL filters (verdict, seniority_level, etc.)
             
         Returns:
             List of matching CV records with similarity scores
         """
-        # TODO: Generate embedding for query_text
-        # embedding = generate_embedding(query_text)
+        try:
+            from vector_search import get_vector_search_engine
+            
+            # Generate embedding for query
+            engine = get_vector_search_engine()
+            query_embedding = engine.generate_embedding(query_text)
+            
+            if not engine.validate_embedding(query_embedding):
+                logger.error("Invalid query embedding generated")
+                return []
+            
+            # Use pgvector RPC function for efficient similarity search
+            # This searches only in the database using vector index
+            try:
+                # Call the match_cv_embeddings RPC function
+                # This uses pgvector's <=> operator with index
+                response = self.client.rpc(
+                    'match_cv_embeddings',
+                    {
+                        'query_embedding': query_embedding,
+                        'match_threshold': similarity_threshold,
+                        'match_count': limit
+                    }
+                ).execute()
+                
+                if response.data:
+                    # Apply additional filters in Python if needed
+                    results = response.data
+                    
+                    if filters:
+                        if filters.get('verdict'):
+                            results = [r for r in results if r.get('verdict') == filters['verdict']]
+                        if filters.get('seniority_level'):
+                            results = [r for r in results if r.get('seniority_level') == filters['seniority_level']]
+                        if filters.get('min_match_score'):
+                            results = [r for r in results if r.get('match_score', 0) >= filters['min_match_score']]
+                    
+                    return results[:limit]
+                    
+            except Exception as rpc_error:
+                logger.warning(f"pgvector RPC not available, falling back to local search: {rpc_error}")
+                # Fall back to local computation if RPC function doesn't exist
+                pass
+            
+            # FALLBACK: Local computation (less efficient but works without RPC)
+            # Only fetch records matching filters to reduce data transfer
+            query = self.client.table('cv_intelligence').select('*')
+            
+            # Apply filters BEFORE fetching to reduce data
+            if filters:
+                if filters.get('verdict'):
+                    query = query.eq('verdict', filters['verdict'])
+                if filters.get('seniority_level'):
+                    query = query.eq('seniority_level', filters['seniority_level'])
+                if filters.get('min_match_score'):
+                    query = query.gte('match_score', filters['min_match_score'])
+                if filters.get('min_years_experience'):
+                    query = query.gte('years_experience', filters['min_years_experience'])
+            
+            # Only fetch records that have embeddings
+            query = query.not_.is_('embedding', 'null')
+            
+            # Limit to reasonable number for local computation
+            response = query.limit(min(limit * 10, 100)).execute()
+            
+            if not response.data:
+                return []
+            
+            # Compute similarities locally
+            results = []
+            for record in response.data:
+                # Get embedding from record
+                embedding_data = record.get('embedding')
+                if not embedding_data:
+                    continue
+                
+                # Parse embedding (stored as JSON array)
+                if isinstance(embedding_data, str):
+                    import json
+                    embedding = json.loads(embedding_data)
+                else:
+                    embedding = embedding_data
+                
+                # Compute similarity
+                similarity = engine.cosine_similarity(query_embedding, embedding)
+                
+                if similarity >= similarity_threshold:
+                    record['similarity_score'] = similarity
+                    results.append(record)
+            
+            # Sort by similarity (descending)
+            results.sort(key=lambda x: x['similarity_score'], reverse=True)
+            
+            # Return top K
+            return results[:limit]
+            
+        except ImportError:
+            logger.error("vector_search module not available")
+            return []
+        except Exception as e:
+            logger.error(f"Semantic search failed: {e}")
+            return []
+    
+    def hybrid_search(
+        self,
+        query_text: str,
+        filters: Dict,
+        limit: int = 10,
+        semantic_weight: float = 0.7
+    ) -> List[Dict]:
+        """
+        Hybrid search combining semantic similarity and SQL filters
         
-        # For now, return a placeholder
-        logger.warning("Semantic search requires embedding generation - not implemented yet")
-        return []
+        Args:
+            query_text: Natural language query
+            filters: SQL filters (verdict, skills, etc.)
+            limit: Maximum results
+            semantic_weight: Weight for semantic score (0-1), rest is SQL match score
+            
+        Returns:
+            List of candidates ranked by combined score
+        """
+        try:
+            # Get semantic search results
+            semantic_results = self.semantic_search(
+                query_text,
+                limit=limit * 2,  # Get more for reranking
+                similarity_threshold=0.5,
+                filters=filters
+            )
+            
+            # Combine semantic similarity with match_score
+            for result in semantic_results:
+                semantic_score = result.get('similarity_score', 0)
+                match_score = result.get('match_score', 0) / 100.0  # Normalize to 0-1
+                
+                # Weighted combination
+                combined_score = (semantic_weight * semantic_score) + \
+                                ((1 - semantic_weight) * match_score)
+                
+                result['combined_score'] = combined_score
+            
+            # Sort by combined score
+            semantic_results.sort(key=lambda x: x.get('combined_score', 0), reverse=True)
+            
+            return semantic_results[:limit]
+            
+        except Exception as e:
+            logger.error(f"Hybrid search failed: {e}")
+            return []
+    
+    def store_embedding(
+        self,
+        anonymized_id: str,
+        embedding: List[float],
+        embedding_model: str = None
+    ) -> bool:
+        """
+        Store embedding vector for a candidate
+        
+        Args:
+            anonymized_id: Candidate ID
+            embedding: Embedding vector
+            embedding_model: Model used to generate embedding
+            
+        Returns:
+            True if stored successfully
+        """
+        try:
+            from vector_search import get_vector_search_engine
+            
+            engine = get_vector_search_engine()
+            
+            # Validate embedding
+            if not engine.validate_embedding(embedding):
+                logger.error(f"Invalid embedding for {anonymized_id}")
+                return False
+            
+            # Convert to JSON string for storage
+            import json
+            embedding_json = json.dumps(embedding)
+            
+            # Update record with embedding
+            response = self.client.table('cv_intelligence').update({
+                'embedding': embedding_json,
+                'embedding_model': embedding_model or engine.model_name,
+                'embedding_dimensions': engine.dimensions
+            }).eq('anonymized_id', anonymized_id).execute()
+            
+            if response.data:
+                logger.info(f"Stored embedding for {anonymized_id}")
+                return True
+            else:
+                logger.warning(f"No record found for {anonymized_id}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Failed to store embedding: {e}")
+            return False
+    
+    def store_embedding(
+        self,
+        anonymized_id: str,
+        embedding: List[float]
+    ) -> bool:
+        """
+        Store embedding vector for a candidate
+        
+        Args:
+            anonymized_id: Candidate ID
+            embedding: Embedding vector
+        
+        Returns:
+            True if stored successfully
+        """
+        try:
+            # Update cv_intelligence table with embedding
+            response = self.client.table('cv_intelligence').update({
+                'embedding': embedding,
+                'embedding_model': 'all-MiniLM-L6-v2',  # or get from engine
+                'embedding_updated_at': datetime.now().isoformat()
+            }).eq('anonymized_id', anonymized_id).execute()
+            
+            logger.info(f"Stored embedding for {anonymized_id}")
+            return True
+        
+        except Exception as e:
+            logger.error(f"Error storing embedding: {e}")
+            return False
     
     def get_candidate(self, anonymized_id: str) -> Optional[Dict]:
         """

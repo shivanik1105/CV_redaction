@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semantic Search - CV Pipeline</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .search-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            margin: 0 0 10px 0;
+        }
+        
+        .header p {
+            color: #888;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="search-container">
+        <div class="header">
+            <h1>🔍 Semantic Candidate Search</h1>
+            <p>Find candidates using natural language queries</p>
+            <div style="margin-top: 15px;">
+                <a href="/" class="nav-button">🏠 Home</a>
+                <a href="/dashboard" class="nav-button">🎯 Dashboard</a>
+                <a href="/queue-monitor" class="nav-button">📊 Queue</a>
+            </div>
+        </div>
+        
+        <div class="search-box">
+            <h2 style="color: #667eea; margin-bottom: 20px;">Search Query</h2>
+            <input 
+                type="text" 
+                id="searchQuery" 
+                class="search-input" 
+                placeholder="e.g., Senior Python developer with Django and AWS experience..."
+            >
+            
+            <div class="search-filters">
+                <div class="filter-group">
+                    <label>Verdict</label>
+                    <select id="filterVerdict">
+                        <option value="">All</option>
+                        <option value="SHORTLIST">Shortlist</option>
+                        <option value="BACKUP">Backup</option>
+                        <option value="REVIEW">Review</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Seniority</label>
+                    <select id="filterSeniority">
+                        <option value="">All</option>
+                        <option value="ENTRY">Entry</option>
+                        <option value="MID">Mid</option>
+                        <option value="SENIOR">Senior</option>
+                        <option value="LEAD">Lead</option>
+                        <option value="EXECUTIVE">Executive</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Min Match Score</label>
+                    <input type="number" id="filterMatchScore" min="0" max="100" placeholder="e.g., 70">
+                </div>
+                
+                <div class="filter-group">
+                    <label>Similarity Threshold</label>
+                    <input type="number" id="similarityThreshold" min="0" max="1" step="0.1" value="0.7" placeholder="0.7">
+                </div>
+                
+                <div class="filter-group">
+                    <label>Max Results</label>
+                    <input type="number" id="maxResults" min="1" max="50" value="10" placeholder="10">
+                </div>
+            </div>
+            
+            <button class="search-btn" onclick="performSearch()">🔍 Search Candidates</button>
+        </div>
+        
+        <div id="searchResults" class="search-results" style="display: none;">
+            <h2 style="color: #667eea; margin-bottom: 20px;">Search Results</h2>
+            <div id="resultsContainer"></div>
+        </div>
+        
+        <div id="searchError" class="error-section" style="display: none; background: white; padding: 30px; border-radius: 15px;">
+            <h2>❌ Error</h2>
+            <p id="errorMessage"></p>
+        </div>
+        
+        <div id="searchLoading" class="progress-section" style="display: none; background: white; padding: 30px; border-radius: 15px; text-align: center;">
+            <p>🔍 Searching candidates...</p>
+        </div>
+    </div>
+    
+    <script>
+        // Allow Enter key to trigger search
+        document.getElementById('searchQuery').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+        
+        function performSearch() {
+            const query = document.getElementById('searchQuery').value.trim();
+            
+            if (!query) {
+                alert('Please enter a search query');
+                return;
+            }
+            
+            // Collect filters
+            const filters = {};
+            
+            const verdict = document.getElementById('filterVerdict').value;
+            if (verdict) filters.verdict = verdict;
+            
+            const seniority = document.getElementById('filterSeniority').value;
+            if (seniority) filters.seniority_level = seniority;
+            
+            const matchScore = document.getElementById('filterMatchScore').value;
+            if (matchScore) filters.min_match_score = parseInt(matchScore);
+            
+            const threshold = parseFloat(document.getElementById('similarityThreshold').value) || 0.7;
+            const limit = parseInt(document.getElementById('maxResults').value) || 10;
+            
+            // Show loading
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('searchError').style.display = 'none';
+            document.getElementById('searchLoading').style.display = 'block';
+            
+            // Perform search
+            fetch('/api/search/semantic', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    query_text: query,
+                    limit: limit,
+                    similarity_threshold: threshold,
+                    filters: filters
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('searchLoading').style.display = 'none';
+                
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    showError(data.error || 'Search failed');
+                }
+            })
+            .catch(error => {
+                document.getElementById('searchLoading').style.display = 'none';
+                showError(error.message);
+            });
+        }
+        
+        function displayResults(data) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const searchResults = document.getElementById('searchResults');
+            
+            if (!data.results || data.results.length === 0) {
+                resultsContainer.innerHTML = '<p style="text-align: center; color: #888;">No candidates found matching your query.</p>';
+                searchResults.style.display = 'block';
+                return;
+            }
+            
+            resultsContainer.innerHTML = '';
+            
+            // Add results count
+            const countDiv = document.createElement('div');
+            countDiv.style.marginBottom = '20px';
+            countDiv.style.color = '#888';
+            countDiv.innerHTML = `Found <strong>${data.count}</strong> candidates (Data source: ${data.data_source || 'unknown'})`;
+            resultsContainer.appendChild(countDiv);
+            
+            // Display each result
+            data.results.forEach(result => {
+                const card = document.createElement('div');
+                card.className = 'result-card';
+                
+                const similarity = result.similarity_score || result.similarity || 0;
+                const similarityPercent = (similarity * 100).toFixed(1);
+                
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <h3>${result.anonymized_id}</h3>
+                        <span class="similarity">${similarityPercent}% Match</span>
+                    </div>
+                    
+                    <p><strong>Verdict:</strong> <span class="verdict-${result.verdict.toLowerCase()}">${result.verdict}</span></p>
+                    <p><strong>Match Score:</strong> ${result.match_score}% | <strong>Confidence:</strong> ${result.confidence_score}%</p>
+                    <p><strong>Experience:</strong> ${result.years_experience} years | <strong>Seniority:</strong> ${result.seniority_level}</p>
+                    
+                    ${result.primary_domain ? `<p><strong>Domain:</strong> ${result.primary_domain}</p>` : ''}
+                    
+                    ${result.core_technical_skills && result.core_technical_skills.length > 0 ? `
+                        <div class="skills-list">
+                            ${result.core_technical_skills.slice(0, 10).map(skill => 
+                                `<span class="skill-tag">${skill}</span>`
+                            ).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    ${result.cleaned_narrative ? `
+                        <details style="margin-top: 15px;">
+                            <summary style="cursor: pointer; color: #667eea; font-weight: 600;">View Summary</summary>
+                            <p style="margin-top: 10px; color: #555; line-height: 1.6;">${result.cleaned_narrative.substring(0, 500)}${result.cleaned_narrative.length > 500 ? '...' : ''}</p>
+                        </details>
+                    ` : ''}
+                `;
+                
+                resultsContainer.appendChild(card);
+            });
+            
+            searchResults.style.display = 'block';
+        }
+        
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('searchError').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

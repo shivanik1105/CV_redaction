@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Monitor - CV Pipeline</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .monitor-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            margin: 0;
+        }
+        
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            background: #5568d3;
+        }
+        
+        .panel {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .rate-limit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .rate-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .rate-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .rate-card p {
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+        
+        .quota-bar {
+            background: #e0e0e0;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .quota-fill {
+            background: #667eea;
+            height: 100%;
+            transition: width 0.3s;
+        }
+        
+        .quota-fill.warning {
+            background: #ff9800;
+        }
+        
+        .quota-fill.danger {
+            background: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="monitor-container">
+        <div class="header">
+            <div>
+                <h1>📊 Queue Monitor</h1>
+                <p style="color: #888; margin-top: 5px;">Real-time job queue and rate limit monitoring</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="refresh-btn" onclick="refreshAll()">🔄 Refresh</button>
+                <a href="/" class="nav-button">🏠 Home</a>
+            </div>
+        </div>
+        
+        <!-- Queue Statistics -->
+        <div class="panel">
+            <h2>Queue Statistics</h2>
+            <div class="queue-stats-grid">
+                <div class="stat-card">
+                    <h3>Total Jobs</h3>
+                    <div class="value" id="totalJobs">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Queued</h3>
+                    <div class="value" id="queuedJobs">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Processing</h3>
+                    <div class="value" id="processingJobs">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Completed</h3>
+                    <div class="value" id="completedJobs">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Failed</h3>
+                    <div class="value" id="failedJobs">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Success Rate</h3>
+                    <div class="value" id="successRate">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rate Limit Status -->
+        <div class="panel">
+            <h2>API Rate Limits</h2>
+            <div class="rate-limit-grid" id="rateLimitGrid">
+                <p style="color: #888;">Loading...</p>
+            </div>
+        </div>
+        
+        <!-- Queued Jobs -->
+        <div class="panel">
+            <h2>Queued Jobs</h2>
+            <div class="jobs-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Job ID</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Created</th>
+                            <th>Retries</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jobsTableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #888;">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-refresh every 5 seconds
+        let autoRefreshInterval = setInterval(refreshAll, 5000);
+        
+        // Load data on page load
+        window.addEventListener('load', refreshAll);
+        
+        function refreshAll() {
+            loadQueueStats();
+            loadRateLimits();
+            loadQueuedJobs();
+        }
+        
+        function loadQueueStats() {
+            fetch('/api/queue/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.stats) {
+                        const stats = data.stats;
+                        document.getElementById('totalJobs').textContent = stats.total_jobs || 0;
+                        document.getElementById('queuedJobs').textContent = stats.queued_jobs || 0;
+                        document.getElementById('processingJobs').textContent = stats.processing_jobs || 0;
+                        document.getElementById('completedJobs').textContent = stats.completed_jobs || 0;
+                        document.getElementById('failedJobs').textContent = stats.failed_jobs || 0;
+                        document.getElementById('successRate').textContent = (stats.success_rate || 0) + '%';
+                    }
+                })
+                .catch(error => console.error('Error loading queue stats:', error));
+        }
+        
+        function loadRateLimits() {
+            fetch('/api/rate-limit/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.stats) {
+                        const grid = document.getElementById('rateLimitGrid');
+                        grid.innerHTML = '';
+                        
+                        for (const [provider, stats] of Object.entries(data.stats)) {
+                            const card = document.createElement('div');
+                            card.className = 'rate-card';
+                            
+                            // Parse usage percentage
+                            const minuteMatch = stats.minute_usage.match(/(\d+)%/);
+                            const minutePercent = minuteMatch ? parseInt(minuteMatch[1]) : 0;
+                            
+                            let barClass = '';
+                            if (minutePercent > 80) barClass = 'danger';
+                            else if (minutePercent > 60) barClass = 'warning';
+                            
+                            card.innerHTML = `
+                                <h4>${provider.toUpperCase()}</h4>
+                                <p><strong>Minute:</strong> ${stats.minute_usage}</p>
+                                <div class="quota-bar">
+                                    <div class="quota-fill ${barClass}" style="width: ${minutePercent}%"></div>
+                                </div>
+                                <p><strong>Day:</strong> ${stats.day_usage}</p>
+                                <p><strong>Available:</strong> ${stats.quota_available ? '✅ Yes' : '❌ No'}</p>
+                                ${stats.wait_time_seconds > 0 ? `<p style="color: #f44336;"><strong>Wait:</strong> ${stats.wait_time_seconds}s</p>` : ''}
+                            `;
+                            
+                            grid.appendChild(card);
+                        }
+                    }
+                })
+                .catch(error => console.error('Error loading rate limits:', error));
+        }
+        
+        function loadQueuedJobs() {
+            fetch('/api/queue/jobs?limit=50')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.jobs) {
+                        const tbody = document.getElementById('jobsTableBody');
+                        
+                        if (data.jobs.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #888;">No jobs in queue</td></tr>';
+                            return;
+                        }
+                        
+                        tbody.innerHTML = '';
+                        
+                        data.jobs.forEach(job => {
+                            const row = document.createElement('tr');
+                            
+                            const priorityLabel = {0: 'HIGH', 5: 'NORMAL', 10: 'LOW'}[job.priority] || job.priority;
+                            const createdDate = new Date(job.created_at).toLocaleString();
+                            
+                            row.innerHTML = `
+                                <td><code>${job.job_id.substring(0, 8)}...</code></td>
+                                <td><span class="status-badge status-${job.status}">${job.status.toUpperCase()}</span></td>
+                                <td>${priorityLabel}</td>
+                                <td>${createdDate}</td>
+                                <td>${job.retry_count}/${job.max_retries}</td>
+                                <td>
+                                    <button class="btn-secondary" style="padding: 5px 10px; font-size: 0.9em;" onclick="viewJob('${job.job_id}')">View</button>
+                                    <button class="btn-danger" style="padding: 5px 10px; font-size: 0.9em;" onclick="cancelJobFromMonitor('${job.job_id}')">Cancel</button>
+                                </td>
+                            `;
+                            
+                            tbody.appendChild(row);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error loading queued jobs:', error));
+        }
+        
+        function viewJob(jobId) {
+            window.open(`/api/jobs/${jobId}/status`, '_blank');
+        }
+        
+        function cancelJobFromMonitor(jobId) {
+            if (!confirm('Cancel this job?')) return;
+            
+            fetch(`/api/jobs/${jobId}/cancel`, {method: 'POST'})
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Job cancelled');
+                        refreshAll();
+                    } else {
+                        alert('Failed to cancel: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => alert('Error: ' + error.message));
+        }
+    </script>
+</body>
+</html>

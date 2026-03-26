@@ -11,13 +11,17 @@
         <header>
             <h1>🔒 CV Redaction Pipeline</h1>
             <p class="subtitle">Upload your CV and get a privacy-protected version with all PII removed</p>
-            {% if not hide_dashboard %}
-            <div style="margin-top: 15px;">
-                <a href="/dashboard" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 8px; display: inline-block; font-weight: 600;">
-                    🎯 Go to Recruiter Dashboard
+            <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <a href="/dashboard" class="nav-button">
+                    🎯 Recruiter Dashboard
+                </a>
+                <a href="/queue-monitor" class="nav-button">
+                    📊 Queue Monitor
+                </a>
+                <a href="/semantic-search" class="nav-button">
+                    🔍 Semantic Search
                 </a>
             </div>
-            {% endif %}
         </header>
 
         <div class="upload-section">
@@ -33,6 +37,28 @@
             
             <div id="fileName" class="file-name"></div>
             
+            <!-- Queue Mode Options -->
+            <div id="queueOptions" class="queue-options" style="display: none;">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="useQueueMode" checked>
+                    <span>Use Queue Mode (Async Processing)</span>
+                </label>
+                <div class="info-box">
+                    <strong>Queue Mode Benefits:</strong>
+                    <ul>
+                        <li>✅ Non-blocking - get results later</li>
+                        <li>✅ Automatic rate limiting</li>
+                        <li>✅ Retry on failure</li>
+                        <li>✅ Track job status in real-time</li>
+                    </ul>
+                </div>
+                
+                <div class="jd-input-section">
+                    <label for="jobDescription">Job Description (Required for Queue Mode):</label>
+                    <textarea id="jobDescription" rows="4" placeholder="Paste the job description here..."></textarea>
+                </div>
+            </div>
+            
             <button id="uploadBtn" class="upload-btn" style="display: none;">
                 Process CV
             </button>
@@ -43,6 +69,30 @@
                 <div class="progress-fill" id="progressFill"></div>
             </div>
             <p id="progressText" class="progress-text">Processing your CV...</p>
+        </div>
+
+        <!-- Queue Job Status Section -->
+        <div id="queueJobSection" class="queue-job-section" style="display: none;">
+            <div class="job-status-card">
+                <h2>📋 Job Status</h2>
+                <div class="job-info">
+                    <p><strong>Job ID:</strong> <span id="jobId"></span></p>
+                    <p><strong>Status:</strong> <span id="jobStatus" class="status-badge"></span></p>
+                    <p><strong>Created:</strong> <span id="jobCreated"></span></p>
+                    <p><strong>Progress:</strong> <span id="jobProgress"></span></p>
+                </div>
+                
+                <div class="job-actions">
+                    <button class="btn-secondary" onclick="refreshJobStatus()">🔄 Refresh</button>
+                    <button class="btn-danger" onclick="cancelJob()">❌ Cancel Job</button>
+                    <a href="/queue-monitor" class="btn-secondary">📊 View Queue</a>
+                </div>
+                
+                <div id="jobResult" class="job-result" style="display: none;">
+                    <h3>✅ Job Completed!</h3>
+                    <div id="jobResultContent"></div>
+                </div>
+            </div>
         </div>
 
         <div id="resultSection" class="result-section" style="display: none;">
@@ -73,8 +123,6 @@
                 Try Again
             </button>
         </div>
-
-        
     </div>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>

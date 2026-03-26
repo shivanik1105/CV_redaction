@@ -44,9 +44,12 @@ try:
     from celery_worker import process_cv_task
     from redis import Redis
     QUEUE_AVAILABLE = True
-except ImportError:
+    print(f"DEBUG: QUEUE_AVAILABLE set to True")
+except (ImportError, Exception) as e:
     QUEUE_AVAILABLE = False
-    logging.warning("Queue system not available. Install with: pip install redis celery")
+    print(f"DEBUG: QUEUE_AVAILABLE set to False due to: {e}")
+    logging.warning(f"Queue system not available: {e}")
+
 
 # Configure Flask app
 app = Flask(__name__)
@@ -330,6 +333,16 @@ def index():
     """Render the upload page"""
     return render_template('index.html')
 
+@app.route('/queue-monitor')
+def queue_monitor():
+    """Render the queue monitoring page"""
+    return render_template('queue_monitor.html')
+
+@app.route('/semantic-search')
+def semantic_search_page():
+    """Render the semantic search page"""
+    return render_template('semantic_search.html')
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     """Handle file upload and process CV (with optional queue mode)"""
@@ -599,6 +612,193 @@ def get_rate_limit_stats():
         })
     except Exception as e:
         logger.error(f"Error getting rate limit stats: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/triage/test', methods=['POST'])
+def test_triage():
+    """Test triage engine with CV and JD"""
+    try:
+        from enhanced_triage import get_triage_engine
+        
+        data = request.get_json()
+        cv_text = data.get('cv_text')
+        job_description = data.get('job_description')
+        
+        if not cv_text or not job_description:
+            return jsonify({'error': 'Both cv_text and job_description required'}), 400
+        
+        triage_engine = get_triage_engine()
+        should_process, reason, relevance_score = triage_engine.should_process(
+            cv_text, job_description
+        )
+        
+        # Extract keywords for debugging
+        cv_keywords = triage_engine.extract_keywords(cv_text)
+        jd_keywords = triage_engine.extract_keywords(job_description)
+        intersection = cv_keywords.intersection(jd_keywords)
+        
+        priority = triage_engine.get_priority_from_score(relevance_score)
+        
+        return jsonify({
+            'success': True,
+            'should_process': should_process,
+            'reason': reason,
+            'relevance_score': relevance_score,
+            'relevance_percent': f"{relevance_score * 100:.1f}%",
+            'priority': priority,
+            'priority_label': {0: 'HIGH', 5: 'NORMAL', 10: 'LOW'}.get(priority, 'UNKNOWN'),
+            'cv_keywords_count': len(cv_keywords),
+            'jd_keywords_count': len(jd_keywords),
+            'matched_keywords_count': len(intersection),
+            'matched_keywords': sorted(list(intersection))[:20],  # Show first 20
+            'thresholds': {
+                'extreme_mismatch': triage_engine.extreme_threshold,
+                'poor_match': triage_engine.poor_threshold,
+                'moderate_match': triage_engine.moderate_threshold
+            }
+        })
+    except Exception as e:
+        logger.error(f"Error testing triage: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/search/semantic', methods=['POST'])
+def semantic_search():
+    """Perform semantic search using vector embeddings"""
+    try:
+        data = request.get_json()
+        query_text = data.get('query_text')
+        
+        if not query_text:
+            return jsonify({'error': 'query_text required'}), 400
+        
+        limit = data.get('limit', 10)
+        threshold = data.get('similarity_threshold', 0.7)
+        filters = data.get('filters', {})
+        
+        # Try Supabase first
+        storage = get_supabase_storage()
+        if storage:
+            results = try_supabase_operation(
+                lambda: storage.semantic_search(
+                    query_text=query_text,
+                    limit=limit,
+                    similarity_threshold=threshold,
+                    filters=filters
+                ),
+                fallback_result=[],
+                timeout_seconds=30
+            )
+            
+            if results:
+                return jsonify({
+                    'success': True,
+                    'query': query_text,
+                    'count': len(results),
+                    'results': results,
+                    'data_source': 'supabase_vector'
+                })
+        
+        # Local fallback - load embeddings from JSON files
+        try:
+            from vector_search import get_vector_search_engine
+            
+            engine = get_vector_search_engine()
+            query_embedding = engine.generate_embedding(query_text)
+            
+            # Load local intelligence files with embeddings
+            intelligence_dir = Path(app.config['INTELLIGENCE_FOLDER'])
+            candidate_embeddings = []
+            
+            for json_file in intelligence_dir.glob('*_intelligence.json'):
+                try:
+                    with open(json_file, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    
+                    embedding = data.get('embedding')
+                    if embedding:
+                        candidate_embeddings.append((
+                            data.get('anonymized_id'),
+                            embedding
+                        ))
+                except Exception:
+                    continue
+            
+            # Search locally
+            results = engine.search_local(
+                query_embedding,
+                candidate_embeddings,
+                limit=limit,
+                threshold=threshold
+            )
+            
+            # Load full candidate data
+            full_results = []
+            for result in results:
+                candidates = load_local_intelligence_files()
+                candidate = next((c for c in candidates if c.get('anonymized_id') == result['candidate_id']), None)
+                if candidate:
+                    candidate['similarity_score'] = result['similarity_score']
+                    full_results.append(candidate)
+            
+            return jsonify({
+                'success': True,
+                'query': query_text,
+                'count': len(full_results),
+                'results': full_results,
+                'data_source': 'local_vector'
+            })
+            
+        except Exception as e:
+            logger.error(f"Local semantic search failed: {e}")
+            return jsonify({'error': f'Semantic search not available: {str(e)}'}), 503
+        
+    except Exception as e:
+        logger.error(f"Error in semantic search: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/search/hybrid', methods=['POST'])
+def hybrid_search():
+    """Perform hybrid search (semantic + SQL filters)"""
+    try:
+        data = request.get_json()
+        query_text = data.get('query_text')
+        
+        if not query_text:
+            return jsonify({'error': 'query_text required'}), 400
+        
+        limit = data.get('limit', 10)
+        filters = data.get('filters', {})
+        semantic_weight = data.get('semantic_weight', 0.7)
+        
+        storage = get_supabase_storage()
+        if not storage:
+            return jsonify({'error': 'Supabase not available for hybrid search'}), 503
+        
+        results = try_supabase_operation(
+            lambda: storage.hybrid_search(
+                query_text=query_text,
+                filters=filters,
+                limit=limit,
+                semantic_weight=semantic_weight
+            ),
+            fallback_result=[],
+            timeout_seconds=30
+        )
+        
+        return jsonify({
+            'success': True,
+            'query': query_text,
+            'count': len(results),
+            'results': results,
+            'semantic_weight': semantic_weight,
+            'data_source': 'supabase_hybrid'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in hybrid search: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/redacted-files')
@@ -1330,219 +1530,6 @@ def add_recruiter_override(anonymized_id):
         logger.error(f"Error adding recruiter override: {e}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
-@app.route('/jd-compare')
-def jd_compare_page():
-    """Render the JD Comparison page"""
-    return render_template('jd_compare.html')
-
-@app.route('/api/jd-compare', methods=['POST'])
-def jd_compare():
-    """
-    Compare a single candidate's CV against a new Job Description.
-    Uses the configured LLM to produce detailed fitment analysis.
-    
-    IMPORTANT: Only uses stored anonymized CV text. If no anonymized text 
-    is found for a candidate, returns an error asking to anonymize first.
-    
-    Request body: {
-        "anonymized_id": "CAND_274",  (optional - if omitted, analyzes all)
-        "job_description": "Senior Engineer role..."
-    }
-    """
-    try:
-        data = request.get_json()
-        if not data or not data.get('job_description'):
-            return jsonify({'error': 'job_description is required'}), 400
-        
-        job_description = data['job_description']
-        anonymized_id = data.get('anonymized_id')
-        
-        from cv_intelligence_extractor import is_cv_anonymized
-        
-        # Get the CV text - try Supabase first, then local files
-        cv_texts = {}
-        not_anonymized = []
-        
-        if anonymized_id:
-            # Single candidate comparison
-            cv_text = _get_cv_text(anonymized_id)
-            if not cv_text:
-                return jsonify({'error': f'Anonymized CV text not found for {anonymized_id}. Please ensure this CV has been processed through the redaction pipeline.'}), 404
-            if not is_cv_anonymized(cv_text):
-                return jsonify({
-                    'error': f'CV for {anonymized_id} is not properly anonymized. Please re-process through the redaction pipeline first.',
-                    'action_required': 'anonymize_first'
-                }), 400
-            cv_texts[anonymized_id] = cv_text
-        else:
-            # Compare all candidates (limit to first 10 for performance)
-            candidates = load_local_intelligence_files()
-            for c in candidates[:10]:
-                aid = c.get('anonymized_id')
-                text = _get_cv_text(aid)
-                if text:
-                    if is_cv_anonymized(text):
-                        cv_texts[aid] = text
-                    else:
-                        not_anonymized.append(aid)
-        
-        if not cv_texts:
-            error_msg = 'No anonymized CV texts found to compare.'
-            if not_anonymized:
-                error_msg += f' {len(not_anonymized)} CVs need anonymization first.'
-            return jsonify({'error': error_msg}), 404
-        
-        # Run LLM analysis for each candidate
-        extractor = get_intelligence_extractor()
-        results = []
-        
-        for aid, cv_text in cv_texts.items():
-            try:
-                intelligence = extractor.extract_intelligence(
-                    cv_text, job_description, aid
-                )
-                
-                # Override the anonymized_id to keep the original
-                intelligence['anonymized_id'] = aid
-                
-                # Check for extraction errors
-                if intelligence.get("error") == "CV_NOT_ANONYMIZED":
-                    not_anonymized.append(aid)
-                    continue
-                
-                # Save updated intelligence — update existing file if it exists,
-                # otherwise create a new one. This ensures the latest JD comparison
-                # is always accessible.
-                # First look for existing intelligence file for this candidate
-                existing_file = None
-                for json_file in Path(app.config['INTELLIGENCE_FOLDER']).glob('*_intelligence.json'):
-                    try:
-                        with open(json_file, 'r', encoding='utf-8') as f:
-                            existing_data = json.load(f)
-                        if existing_data.get('anonymized_id') == aid:
-                            existing_file = json_file
-                            break
-                    except Exception:
-                        continue
-                
-                if existing_file:
-                    # Update existing file with new analysis
-                    intelligence_path = str(existing_file)
-                else:
-                    # Create new file
-                    intelligence_file = f"jd_compare_{aid}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_intelligence.json"
-                    intelligence_path = os.path.join(app.config['INTELLIGENCE_FOLDER'], intelligence_file)
-                
-                with open(intelligence_path, 'w', encoding='utf-8') as f:
-                    json.dump(intelligence, f, indent=2, ensure_ascii=False)
-                
-                # Update in Supabase if available (upserts on anonymized_id)
-                storage = get_supabase_storage()
-                if storage and "error" not in intelligence:
-                    try:
-                        storage.store_intelligence(intelligence)
-                    except Exception as e:
-                        logger.warning(f"Could not update Supabase for {aid}: {e}")
-                
-                results.append(intelligence)
-                
-            except Exception as e:
-                logger.error(f"Error comparing {aid}: {e}")
-                results.append({
-                    'anonymized_id': aid,
-                    'error': str(e),
-                    'verdict': 'REVIEW',
-                    'verdict_reason': f'Analysis failed: {str(e)}'
-                })
-        
-        # Sort by match_score descending
-        results.sort(key=lambda x: x.get('match_score', 0), reverse=True)
-        
-        return jsonify({
-            'success': True,
-            'job_description': job_description[:200] + '...' if len(job_description) > 200 else job_description,
-            'total_compared': len(results),
-            'results': results,
-            'similarity_scores': [
-                {
-                    'anonymized_id': r.get('anonymized_id'),
-                    'similarity_score': r.get('similarity_score'),
-                    'match_score': r.get('match_score'),
-                    'verdict': r.get('verdict')
-                }
-                for r in results if 'similarity_score' in r
-            ]
-        })
-        
-    except Exception as e:
-        logger.error(f"Error in JD comparison: {e}", exc_info=True)
-        return jsonify({'error': str(e)}), 500
-
-def _get_cv_text(anonymized_id: str) -> Optional[str]:
-    """
-    Get the anonymized CV text for a candidate.
-    Tries multiple sources in order:
-        1. Supabase backup JSON (cleaned_text field)
-        2. Local intelligence JSON files (cleaned_text field)
-        3. Matching redacted output files from disk
-    
-    Returns:
-        The anonymized CV text, or None if not found
-    """
-    # 1. Try from Supabase (stored in llm_raw_response JSON backup)
-    storage = get_supabase_storage()
-    if storage:
-        try:
-            record = try_supabase_operation(
-                lambda: storage.get_candidate(anonymized_id),
-                fallback_result=None,
-                timeout_seconds=10
-            )
-            if record:
-                raw = record.get('llm_raw_response', '')
-                if raw and raw.startswith('{'):
-                    full_data = json.loads(raw)
-                    if full_data.get('cleaned_text'):
-                        return full_data['cleaned_text']
-        except Exception:
-            pass
-    
-    # 2. Try from local intelligence JSON files (cleaned_text is now stored)
-    intelligence_dir = Path(app.config['INTELLIGENCE_FOLDER'])
-    for json_file in sorted(intelligence_dir.glob('*_intelligence.json'), 
-                           key=lambda x: x.stat().st_mtime, reverse=True):
-        try:
-            with open(json_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            if data.get('anonymized_id') == anonymized_id:
-                # Prefer cleaned_text (full anonymized CV)
-                if data.get('cleaned_text'):
-                    return data['cleaned_text']
-                # Fallback: try to find the original redacted file on disk
-                orig_file = data.get('original_filename_raw') or data.get('original_filename', '')
-                if orig_file:
-                    for folder in [app.config['OUTPUT_FOLDER'], 'final_output']:
-                        for txt_file in Path(folder).glob('REDACTED_*.txt'):
-                            if orig_file.replace('.txt', '') in txt_file.name:
-                                with open(txt_file, 'r', encoding='utf-8') as f:
-                                    return f.read()
-        except Exception:
-            continue
-    
-    # 3. Try matching from redacted output files by scanning intelligence records
-    candidates = load_local_intelligence_files()
-    for c in candidates:
-        if c.get('anonymized_id') == anonymized_id:
-            orig = c.get('original_filename', '')
-            if orig:
-                for folder in [app.config['OUTPUT_FOLDER'], 'final_output']:
-                    for txt_file in Path(folder).glob('REDACTED_*.txt'):
-                        if any(part in txt_file.name for part in orig.replace('.txt', '').split('_') if len(part) > 3):
-                            with open(txt_file, 'r', encoding='utf-8') as f:
-                                return f.read()
-    
-    return None
-
 @app.route('/api/sync-to-supabase', methods=['POST'])
 def sync_to_supabase():
     """Sync all local intelligence JSON files to Supabase database"""
@@ -1633,4 +1620,5 @@ if __name__ == '__main__':
     print(f"\nAccess the application at: http://localhost:5000")
     print(f"Press CTRL+C to stop the server\n")
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Temporarily disable debug mode to avoid reloader issues
+    app.run(debug=False, host='0.0.0.0', port=5000)

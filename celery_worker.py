@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from queue_manager import QueueManager
 from rate_limiter import RateLimiter
+from enhanced_triage import get_triage_engine
 from universal_pipeline_engine import PipelineOrchestrator
 from cv_intelligence_extractor import CVIntelligenceExtractor, is_cv_anonymized
 from llm_batch_processor import QuotaExhaustedException
@@ -175,7 +176,82 @@ def process_cv_task(self, job_id: str):
             queue_manager.update_job_status(job_id, QueueManager.STATUS_FAILED, error=error_msg)
             return {"error": error_msg}
         
-        # Step 2: Check rate limit before LLM call
+        # Step 2: Enhanced Triage - Check relevance before LLM call
+        logger.info(f"Running triage check for job {job_id}")
+        triage_engine = get_triage_engine()
+        should_process, triage_reason, relevance_score = triage_engine.should_process(
+            cv_text, job_description
+        )
+        
+        if not should_process:
+            # CV rejected by triage - save rejection reason without LLM call
+            logger.info(f"CV rejected by triage: {triage_reason}")
+            
+            intelligence = {
+                "anonymized_id": f"CAND_{hash(cv_filename) % 1000:03d}",
+                "analysis_date": time.strftime('%Y-%m-%dT%H:%M:%S'),
+                "verdict": "REJECT",
+                "confidence_score": 100,
+                "match_score": int(relevance_score * 100),
+                "verdict_reason": f"TRIAGE FILTER: {triage_reason}",
+                "years_experience": 0,
+                "seniority_level": "N/A",
+                "core_technical_skills": [],
+                "secondary_technical_skills": [],
+                "primary_domain": "",
+                "secondary_domains": [],
+                "leadership_indicators": [],
+                "cleaned_narrative": f"CV auto-rejected by triage filter. Relevance score: {relevance_score:.1%}",
+                "matched_requirements": [],
+                "missing_requirements": [],
+                "key_strengths": [],
+                "potential_concerns": [triage_reason],
+                "fitment_analysis": [],
+                "requires_human_review": False,
+                "triage_filtered": True,
+                "relevance_score": relevance_score,
+                "original_filename": cv_filename
+            }
+            
+            # Save intelligence JSON
+            intelligence_dir = Path('llm_analysis')
+            intelligence_dir.mkdir(exist_ok=True)
+            
+            intelligence_filename = f"{Path(cv_filename).stem}_intelligence.json"
+            intelligence_path = intelligence_dir / intelligence_filename
+            
+            import json
+            with open(intelligence_path, 'w', encoding='utf-8') as f:
+                json.dump(intelligence, f, indent=2, ensure_ascii=False)
+            
+            # Store in Supabase if available
+            stored_in_supabase = False
+            try:
+                from supabase_storage import SupabaseStorage
+                storage = SupabaseStorage()
+                storage.store_intelligence(intelligence)
+                stored_in_supabase = True
+            except Exception as e:
+                logger.warning(f"Could not store in Supabase: {e}")
+            
+            # Update job status to completed (rejected by triage)
+            result = {
+                "intelligence": intelligence,
+                "intelligence_file": intelligence_filename,
+                "stored_in_supabase": stored_in_supabase,
+                "triage_filtered": True,
+                "relevance_score": relevance_score
+            }
+            
+            queue_manager.update_job_status(job_id, QueueManager.STATUS_COMPLETED, result=result)
+            
+            logger.info(f"Completed job {job_id} (triage rejected, no LLM call)")
+            return result
+        
+        # CV passed triage, proceed with LLM extraction
+        logger.info(f"CV passed triage ({relevance_score:.1%} relevance), proceeding with LLM extraction")
+        
+        # Step 3: Check rate limit before LLM call
         extractor = get_intelligence_extractor()
         api_provider = extractor.api_provider
         
@@ -195,7 +271,7 @@ def process_cv_task(self, job_id: str):
             time.sleep(min(wait_time, 60))  # Wait max 60s per attempt
             wait_attempt += 1
         
-        # Step 3: Extract intelligence with LLM
+        # Step 4: Extract intelligence with LLM
         logger.info(f"Extracting intelligence for job {job_id}")
         
         try:
@@ -236,7 +312,7 @@ def process_cv_task(self, job_id: str):
             queue_manager.update_job_status(job_id, QueueManager.STATUS_FAILED, error=error_msg)
             return {"error": error_msg}
         
-        # Step 4: Save intelligence JSON
+        # Step 5: Save intelligence JSON
         intelligence_dir = Path('llm_analysis')
         intelligence_dir.mkdir(exist_ok=True)
         
@@ -247,7 +323,7 @@ def process_cv_task(self, job_id: str):
         with open(intelligence_path, 'w', encoding='utf-8') as f:
             json.dump(intelligence, f, indent=2, ensure_ascii=False)
         
-        # Step 5: Store in Supabase if available
+        # Step 6: Store in Supabase if available
         stored_in_supabase = False
         try:
             from supabase_storage import SupabaseStorage
@@ -262,6 +338,19 @@ def process_cv_task(self, job_id: str):
                     original_filename=cv_filename,
                     anonymized_filename=cv_filename
                 )
+            
+            # Step 7: Generate and store embedding
+            try:
+                from vector_search import generate_embedding_for_intelligence
+                
+                logger.info(f"Generating embedding for {anon_id}")
+                embedding = generate_embedding_for_intelligence(intelligence)
+                
+                if embedding:
+                    storage.store_embedding(anon_id, embedding)
+                    logger.info(f"Stored embedding for {anon_id}")
+            except Exception as e:
+                logger.warning(f"Could not generate/store embedding: {e}")
             
             stored_in_supabase = True
             logger.info(f"Stored intelligence in Supabase for job {job_id}")

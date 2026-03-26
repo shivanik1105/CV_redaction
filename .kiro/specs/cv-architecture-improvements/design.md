@@ -51,6 +51,7 @@ graph TB
         UI[Web UI / API Client]
     end
     
++}
     subgraph "API Layer - FastAPI"
         API[FastAPI Server]
         Upload[Bulk Upload Handler]

@@ -42,3 +42,8 @@ flower>=2.0.0  # Celery monitoring dashboard
 # Vector Search (for semantic candidate search)
 sentence-transformers>=2.2.0
 pgvector>=0.2.0
+
+# Testing Dependencies (Optional - for development)
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0
