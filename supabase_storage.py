@@ -2,9 +2,9 @@
 Supabase Storage Module
 Handles storing and retrieving CV intelligence data with vector search
 """
-import dns_fix  # Fix JioFiber DNS hijacking before any network imports
 import os
 import json
+import re
 from typing import Dict, List, Optional
 from datetime import datetime
 import logging
@@ -17,6 +17,15 @@ except ImportError:
     logging.warning("Supabase client not installed. Install with: pip install supabase")
 
 logger = logging.getLogger(__name__)
+
+
+def _extract_missing_column_name(error: Exception) -> Optional[str]:
+    """Parse Supabase/PostgREST missing-column errors and return the column name."""
+    error_text = str(error)
+    match = re.search(r"Could not find the '([^']+)' column", error_text)
+    if match:
+        return match.group(1)
+    return None
 
 
 class SupabaseStorage:
@@ -217,6 +226,8 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             Response from Supabase
         """
         try:
+            allowed_verdicts = {"SHORTLIST", "BACKUP"}
+
             # CRITICAL: Verify data has an anonymized_id
             anon_id = intelligence_data.get("anonymized_id")
             if not anon_id:
@@ -247,16 +258,23 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             full_json_backup = json.dumps(safe_data, default=str)
             
             # Map to existing table columns  
+            raw_verdict = (intelligence_data.get("verdict") or "").upper().strip()
+            normalized_verdict = raw_verdict if raw_verdict in allowed_verdicts else "BACKUP"
+
             flat_data = {
                 "anonymized_id": anon_id,
-                "verdict": intelligence_data.get("verdict", "REVIEW"),
+                # Keep verdict compatible with table constraint in extraction-only mode.
+                "verdict": normalized_verdict,
                 "confidence_score": intelligence_data.get("confidence_score", 0),
+                "match_score": intelligence_data.get("match_score"),
+                "requires_human_review": intelligence_data.get("requires_human_review", False),
                 "years_of_experience": intelligence_data.get("years_experience", 0),
-                "career_level": intelligence_data.get("seniority_level", "N/A"),
+                "career_level": intelligence_data.get("seniority_level", "") or "",
                 "key_skills": intelligence_data.get("core_technical_skills", []),
                 "domain_expertise": domains if domains else [],
                 "evidence_based_reasoning": intelligence_data.get("verdict_reason", ""),
                 "overall_summary": overall_summary,
+                "cleaned_text": intelligence_data.get("cleaned_text") or intelligence_data.get("cleaned_narrative", ""),
                 "original_cv_hash": intelligence_data.get("original_cv_hash", ""),
                 "llm_prompt_used": f"{intelligence_data.get('llm_provider', 'unknown')}:{intelligence_data.get('llm_model', 'unknown')}",
                 "llm_raw_response": full_json_backup,
@@ -265,11 +283,25 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             # Remove None values (Supabase doesn't like explicit nulls for some columns)
             flat_data = {k: v for k, v in flat_data.items() if v is not None}
             
-            # Insert or upsert
-            response = self.client.table(self.table_name).upsert(
-                flat_data,
-                on_conflict="anonymized_id"
-            ).execute()
+            # Insert or upsert. Some deployed Supabase environments may still be on
+            # an older schema, so retry without optional columns that are missing.
+            attempted_data = dict(flat_data)
+            while True:
+                try:
+                    response = self.client.table(self.table_name).upsert(
+                        attempted_data,
+                        on_conflict="anonymized_id"
+                    ).execute()
+                    break
+                except Exception as schema_error:
+                    missing_column = _extract_missing_column_name(schema_error)
+                    if missing_column and missing_column in attempted_data:
+                        logger.warning(
+                            f"Supabase schema missing optional column '{missing_column}', retrying without it"
+                        )
+                        attempted_data.pop(missing_column, None)
+                        continue
+                    raise schema_error
             
             logger.info(f"✓ Stored intelligence for {flat_data['anonymized_id']}")
             return response.data[0] if response.data else {}
@@ -391,7 +423,7 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
                 full_data["verdict"] = record.get("verdict", full_data.get("verdict", "REVIEW"))
                 full_data["confidence_score"] = record.get("confidence_score", full_data.get("confidence_score", 0))
                 full_data["years_experience"] = record.get("years_of_experience", full_data.get("years_experience", 0))
-                full_data["seniority_level"] = record.get("career_level", full_data.get("seniority_level", "N/A"))
+                full_data["seniority_level"] = record.get("career_level", full_data.get("seniority_level", "")) or ""
                 return full_data
             except (json.JSONDecodeError, TypeError):
                 pass
@@ -404,11 +436,11 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             "anonymized_id": record.get("anonymized_id", "UNKNOWN"),
             "verdict": record.get("verdict", "REVIEW"),
             "confidence_score": record.get("confidence_score", 0),
-            "match_score": record.get("confidence_score", 0),  # Use confidence as match score
+            "match_score": record.get("match_score", 0),
             "years_experience": record.get("years_of_experience", 0),
             "years_of_experience": record.get("years_of_experience", 0),  # Both formats
-            "seniority_level": record.get("career_level", "N/A"),
-            "career_level": record.get("career_level", "N/A"),  # Both formats
+            "seniority_level": record.get("career_level", "") or "",
+            "career_level": record.get("career_level", "") or "",  # Both formats
             "core_technical_skills": skills,
             "key_skills": skills,  # Both formats
             "primary_domain": domains[0] if domains else "",
@@ -547,7 +579,7 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             query = query.eq("career_level", seniority_level.upper())
         
         if min_match_score is not None:
-            query = query.gte("confidence_score", min_match_score)
+            query = query.gte("match_score", min_match_score)
         
         if min_confidence_score is not None:
             query = query.gte("confidence_score", min_confidence_score)
@@ -572,8 +604,8 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
         if max_years_experience is not None:
             query = query.lte("years_of_experience", max_years_experience)
         
-        # Order by confidence descending
-        query = query.order("confidence_score", desc=True).limit(limit)
+        # Order by match score first, then confidence
+        query = query.order("match_score", desc=True).order("confidence_score", desc=True).limit(limit)
         
         response = query.execute()
         results = response.data
@@ -898,6 +930,7 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             recruiter_reviewed = len([r for r in all_records if r.get("recruiter_override") is not None])
             
             avg_confidence_score = sum(r.get("confidence_score", 0) for r in all_records) / total if total > 0 else 0
+            avg_match_score = sum((r.get("match_score") or 0) for r in all_records) / total if total > 0 else 0
             
             return {
                 "total_candidates": total,
@@ -906,7 +939,7 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
                 "review_needed": review_needed,
                 "requires_human_review": requires_human,
                 "recruiter_reviewed": recruiter_reviewed,
-                "average_match_score": round(avg_confidence_score, 2),
+                "average_match_score": round(avg_match_score, 2),
                 "average_confidence_score": round(avg_confidence_score, 2),
                 "data_source": "supabase"
             }
@@ -965,8 +998,8 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             List of candidates requiring human review
         """
         try:
-            response = self.client.table(self.table_name).select("*").eq(
-                "requires_human_review", True
+            response = self.client.table(self.table_name).select("*").or_(
+                "requires_human_review.eq.true,verdict.eq.REVIEW"
             ).is_("recruiter_override", "null").order(
                 "confidence_score", desc=False
             ).limit(limit).execute()
@@ -974,7 +1007,22 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             return response.data
             
         except Exception as e:
+            err_msg = str(e)
             logger.error(f"Error fetching review queue: {e}")
+
+            # Backward compatibility: older schemas may not have requires_human_review.
+            # In that case, fall back to verdict-only review queue instead of returning empty.
+            if "requires_human_review" in err_msg or "42703" in err_msg:
+                try:
+                    response = self.client.table(self.table_name).select("*").eq(
+                        "verdict", "REVIEW"
+                    ).is_("recruiter_override", "null").order(
+                        "confidence_score", desc=False
+                    ).limit(limit).execute()
+                    return response.data
+                except Exception as fallback_error:
+                    logger.error(f"Fallback review queue query failed: {fallback_error}")
+
             return []
 
 

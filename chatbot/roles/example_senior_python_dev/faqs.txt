@@ -1,0 +1,127 @@
+# Frequently Asked Questions
+
+## Application Process
+
+**Q: How do I apply for this position?**
+A: Submit your resume and a brief cover letter explaining your interest. We review applications within 3-5 business days.
+
+**Q: What's the complete interview process?**
+A: The process typically includes:
+1. Initial phone screening (30 minutes)
+2. Technical assessment (take-home project, ~3 hours)
+3. Technical interview (90 minutes - system design and coding)
+4. Team fit interview (60 minutes - meet potential teammates)
+5. Final interview with Engineering Director (45 minutes)
+
+Total timeline: 2-3 weeks from application to offer.
+
+**Q: What should I expect in the technical interview?**
+A: You'll work on a system design problem and solve 1-2 coding challenges. We focus on problem-solving approach, code quality, and communication rather than memorized algorithms.
+
+**Q: Do you provide interview feedback?**
+A: Yes, we provide constructive feedback to all candidates who complete the technical interview, regardless of outcome.
+
+## Compensation & Benefits
+
+**Q: What's the salary range?**
+A: $120,000 - $160,000 base salary, depending on experience and location. This doesn't include equity and bonuses.
+
+**Q: What equity is offered?**
+A: Senior engineers typically receive 0.15% - 0.30% equity with a 4-year vesting schedule (1-year cliff).
+
+**Q: What benefits are included?**
+A: 
+- Comprehensive health, dental, and vision insurance (company pays 90%)
+- 401(k) with 4% company match
+- Unlimited PTO (team average is 20 days/year)
+- 12 weeks parental leave
+- $2,000 annual professional development budget
+- $500 home office stipend
+- Latest equipment (MacBook Pro, monitors, etc.)
+
+**Q: Are there performance bonuses?**
+A: Yes, annual performance bonuses up to 15% of base salary based on individual and company performance.
+
+## Work Arrangement
+
+**Q: Is this role remote, hybrid, or in-office?**
+A: Hybrid - we expect 2 days per week in our San Francisco office (typically Tuesday and Thursday). The other 3 days can be remote.
+
+**Q: Can I work fully remote?**
+A: For exceptional candidates outside the Bay Area, we can consider fully remote arrangements, but preference is given to hybrid candidates.
+
+**Q: What are the working hours?**
+A: Core hours are 10 AM - 4 PM PT for team collaboration. Outside of that, you have flexibility. Most engineers work 9 AM - 6 PM with breaks.
+
+**Q: Is there on-call rotation?**
+A: Yes, engineers participate in a rotating on-call schedule (one week every 6-8 weeks). You receive $500 per on-call week plus time off if you're paged outside business hours.
+
+## Technical Details
+
+**Q: What does the tech stack look like?**
+A: Primary stack is Python (Django/FastAPI), PostgreSQL, Redis, running on AWS with Docker/Kubernetes. We also use React for frontend.
+
+**Q: How much legacy code will I work with?**
+A: The codebase is relatively modern (started in 2020). We actively refactor and pay down tech debt. About 70% of code is less than 2 years old.
+
+**Q: What's the testing culture like?**
+A: Strong emphasis on testing - we maintain 80%+ coverage. All features require unit tests, and we have comprehensive integration tests.
+
+**Q: Do you use AI/ML?**
+A: Yes, we're incorporating ML for fraud detection and financial forecasting. Experience with ML is a plus but not required.
+
+**Q: What's the deployment frequency?**
+A: We deploy to production multiple times per day using CI/CD. Deployments are automated and low-risk.
+
+## Team & Culture
+
+**Q: What's the team size and structure?**
+A: You'll join the 8-person Payments team. The broader engineering org has 60 people across 6 teams.
+
+**Q: Who would I report to?**
+A: You'd report to the Payments Engineering Manager, who has 10+ years of experience and is very technically hands-on.
+
+**Q: What's the work-life balance like?**
+A: Strong work-life balance is a core value. No expectation to work evenings or weekends. Average work week is 40-45 hours.
+
+**Q: How diverse is the team?**
+A: We're committed to diversity - currently 40% women in engineering, team members from 20+ countries, and active DEI initiatives.
+
+**Q: What's the company culture like?**
+A: Collaborative, transparent, and innovation-focused. We value learning, experimentation, and supporting each other's growth.
+
+## Career Growth
+
+**Q: What are the growth opportunities?**
+A: Clear path from Senior → Staff → Principal Engineer. We also support moves into management if that interests you. Engineers typically get promoted every 18-24 months.
+
+**Q: Is there mentorship available?**
+A: Yes, you'll both receive mentorship from Staff/Principal engineers and mentor junior team members.
+
+**Q: Do you support conference attendance?**
+A: Yes, we have a $2,000/year professional development budget that can be used for conferences, courses, or certifications.
+
+## Logistics
+
+**Q: When is the ideal start date?**
+A: We're flexible, but ideally within 4-6 weeks of accepting an offer. We can accommodate longer notice periods if needed.
+
+**Q: Do you sponsor visas?**
+A: We can sponsor H-1B transfers for qualified candidates already in the US. We don't currently sponsor new H-1B applications or international relocations.
+
+**Q: Is relocation assistance provided?**
+A: For candidates relocating to the Bay Area, we provide a $10,000 relocation package.
+
+**Q: What equipment will I receive?**
+A: Latest MacBook Pro (M3), external monitors, ergonomic keyboard/mouse, and any other equipment you need to be productive.
+
+## Next Steps
+
+**Q: How quickly will I hear back after applying?**
+A: We review applications within 3-5 business days and reach out to qualified candidates for a phone screen.
+
+**Q: Can I talk to current team members?**
+A: Absolutely! During the interview process, you'll meet several team members. We can also arrange additional conversations if helpful.
+
+**Q: What if I have more questions?**
+A: Feel free to ask me anything, or reach out directly to our recruiter Sarah Johnson at sarah@fintech-company.com

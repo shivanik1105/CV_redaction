@@ -1,0 +1,19 @@
+# Client Information
+
+## Company Overview
+[Brief description of the client company]
+
+## Industry
+[Industry sector]
+
+## Company Size
+[Number of employees]
+
+## Culture
+[Description of company culture and values]
+
+## Tech Stack
+[Technologies used]
+
+## Why Join?
+[Compelling reasons to join this client]

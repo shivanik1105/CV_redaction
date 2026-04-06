@@ -1,6 +1,6 @@
 """
-Smart CV Processing - Process All CVs with Free Tier Optimization
-Handles rate limits, uses triage, and provides progress tracking
+Smart CV Processing - Process All CVs using Groq API (FREE)
+No rate limiting needed - Groq is free and fast!
 """
 import os
 import sys
@@ -8,36 +8,59 @@ import json
 import time
 from pathlib import Path
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Add current directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from universal_pipeline_engine import PipelineOrchestrator
 from cv_intelligence_extractor import CVIntelligenceExtractor, is_cv_anonymized
-from enhanced_triage import EnhancedTriageEngine
 from supabase_storage import SupabaseStorage
 
 
+def _extract_original_filename_from_intel_path(json_file: Path) -> str:
+    """Best-effort extraction of source CV filename from an intelligence JSON path."""
+    import re
+
+    stem = json_file.stem  # e.g. REDACTED_20260326_150441_name.pdf.txt_intelligence
+    suffix = "_intelligence"
+    if stem.endswith(suffix):
+        core = stem[:-len(suffix)]
+    else:
+        core = stem
+
+    match = re.match(r"^REDACTED_\d{8}_\d{6}_(.+)$", core)
+    if match:
+        remaining = match.group(1)
+        if remaining.endswith(".txt"):
+            remaining = remaining[:-4]
+        return remaining
+    return ""
+
+
 def process_all_cvs(
-    job_description: str,
+    job_description: str = None,
     samples_dirs: list = None,
-    use_triage: bool = True,
-    max_per_day: int = 100  # Increased default to process all at once
+    max_per_day: int = 100
 ):
     """
-    Process all CVs from samples folder with smart rate limiting
+    Process all CVs from samples folder using Groq API (FREE)
     
     Args:
-        job_description: Job description for analysis
+        job_description: Optional job description for matching analysis (if None, only extracts skills/experience)
         samples_dirs: List of directories to scan (default: ['samples', 'samples/more'])
-        use_triage: Enable pre-filtering (default: True)
-        max_per_day: Maximum CVs to process per run (default: 50 for free tier)
+        max_per_day: Maximum CVs to process per run (default: 100)
     """
     print("=" * 80)
-    print("Smart CV Processing - Free Tier Optimized")
+    print("Smart CV Processing - Groq API (FREE)")
     print("=" * 80)
-    print(f"Job Description: {job_description[:100]}...")
-    print(f"Triage: {'Enabled' if use_triage else 'Disabled'}")
+    if job_description:
+        print(f"Job Description: {job_description[:100]}...")
+    else:
+        print("Mode: Extraction only (no JD matching)")
     print(f"Max per run: {max_per_day} CVs")
     print()
     
@@ -55,6 +78,8 @@ def process_all_cvs(
             for f in sorted(sample_dir.iterdir()):
                 if f.is_file() and f.suffix.lower() in allowed_ext:
                     all_cvs.append(f)
+
+    source_cv_names = {cv.name for cv in all_cvs}
     
     print(f"Found {len(all_cvs)} CVs in samples folder")
     
@@ -66,9 +91,22 @@ def process_all_cvs(
         try:
             with open(json_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            orig_file = data.get('original_filename_raw', '')
-            if orig_file:
-                processed_files.add(orig_file)
+            # Prefer raw original filename, then fallback to sanitized/local fields.
+            raw_original = data.get('original_filename_raw', '')
+            if raw_original and raw_original != 'unknown':
+                name = Path(raw_original).name
+                if name in source_cv_names:
+                    processed_files.add(name)
+
+            fallback_original = data.get('original_filename', '')
+            if fallback_original and fallback_original != 'unknown':
+                name = Path(fallback_original).name
+                if name in source_cv_names:
+                    processed_files.add(name)
+
+            inferred_original = _extract_original_filename_from_intel_path(json_file)
+            if inferred_original and inferred_original in source_cv_names:
+                processed_files.add(Path(inferred_original).name)
         except Exception:
             pass
     
@@ -91,16 +129,18 @@ def process_all_cvs(
         print()
     
     # Initialize components
+    # Read LLM provider from environment (defaults to groq if not set)
+    llm_provider = os.getenv('LLM_PROVIDER', 'groq')
+    llm_model = os.getenv('LLM_MODEL', None)
+    
     orchestrator = PipelineOrchestrator(config_dir='config')
-    extractor = CVIntelligenceExtractor(api_provider='gemini')
-    triage = EnhancedTriageEngine() if use_triage else None
+    extractor = CVIntelligenceExtractor(api_provider=llm_provider, model=llm_model)
     storage = SupabaseStorage()
     
     # Process CVs
     stats = {
         'total': len(cvs_to_process),
         'redacted': 0,
-        'triage_rejected': 0,
         'llm_analyzed': 0,
         'stored_supabase': 0,
         'failed': 0,
@@ -122,57 +162,23 @@ def process_all_cvs(
             redacted_text, profile = orchestrator.process_cv(str(cv_path))
             with open(redacted_path, 'w', encoding='utf-8') as f:
                 f.write(redacted_text)
-            stats['redacted'] += 1
             print(f"     ✓ Redacted: {redacted_filename}")
+
+            if redacted_text.startswith("[ERROR: No text extracted"):
+                print("     ✗ No extractable text (skipping)")
+                stats['failed'] += 1
+                continue
             
             # Verify anonymization
             if not is_cv_anonymized(redacted_text):
                 print(f"     ✗ Not properly anonymized (skipping)")
                 stats['failed'] += 1
                 continue
+
+            stats['redacted'] += 1
             
-            # Step 2: Triage (if enabled)
-            if use_triage and triage:
-                print("  2. Pre-filtering with triage...")
-                should_process, reason, relevance_score = triage.should_process(
-                    redacted_text, job_description
-                )
-                match_pct = relevance_score * 100
-                
-                if not should_process:
-                    print(f"     ⚡ Rejected by triage ({match_pct:.1f}% match)")
-                    print(f"     Reason: {reason[:100]}...")
-                    stats['triage_rejected'] += 1
-                    
-                    # Save lightweight intelligence for rejected CVs
-                    intelligence = {
-                        'anonymized_id': f"CAND_{hash(cv_name) % 1000:03d}",
-                        'verdict': 'REJECT',
-                        'confidence_score': 95,
-                        'match_score': int(match_pct),
-                        'verdict_reason': f"Pre-filtered by triage: {reason}",
-                        'years_experience': 0,
-                        'seniority_level': 'UNKNOWN',
-                        'core_technical_skills': [],
-                        'primary_domain': 'Unknown',
-                        'triage_filtered': True,
-                        'original_filename_raw': cv_name
-                    }
-                    
-                    intel_filename = f"{Path(redacted_filename).stem}_intelligence.json"
-                    intel_path = intelligence_dir / intel_filename
-                    with open(intel_path, 'w', encoding='utf-8') as f:
-                        json.dump(intelligence, f, indent=2, ensure_ascii=False)
-                    
-                    continue
-                else:
-                    print(f"     ✓ Passed triage ({match_pct:.1f}% match)")
-            
-            # Step 3: LLM Analysis
-            print("  3. Analyzing with LLM...")
-            # Rate limit: 6 seconds between calls = 10 RPM
-            if idx > 1:
-                time.sleep(6)
+            # Step 2: LLM Analysis
+            print("  2. Analyzing with LLM...")
             
             intelligence = extractor.extract_intelligence(
                 redacted_text, job_description, redacted_filename
@@ -185,7 +191,7 @@ def process_all_cvs(
             
             stats['llm_analyzed'] += 1
             print(f"     ✓ Analyzed: {intelligence.get('anonymized_id')}")
-            print(f"     Verdict: {intelligence.get('verdict')} ({intelligence.get('confidence_score')}%)")
+            print(f"     Confidence: {intelligence.get('confidence_score')}%")
             
             # Save intelligence JSON
             intel_filename = f"{Path(redacted_filename).stem}_intelligence.json"
@@ -201,7 +207,7 @@ def process_all_cvs(
                 if anon_id:
                     storage.store_filename_mapping(
                         anonymized_id=anon_id,
-                        original_filename=redacted_filename,
+                        original_filename=cv_name,
                         anonymized_filename=redacted_filename
                     )
                 stats['stored_supabase'] += 1
@@ -227,7 +233,6 @@ def process_all_cvs(
     print("=" * 80)
     print(f"Total CVs: {stats['total']}")
     print(f"Redacted: {stats['redacted']}")
-    print(f"Triage rejected: {stats['triage_rejected']} ({stats['triage_rejected']/stats['total']*100:.1f}% API savings)")
     print(f"LLM analyzed: {stats['llm_analyzed']}")
     print(f"Stored in Supabase: {stats['stored_supabase']}")
     print(f"Failed: {stats['failed']}")
@@ -238,37 +243,32 @@ def process_all_cvs(
     # Remaining CVs
     if len(unprocessed_cvs) > max_per_day:
         remaining = len(unprocessed_cvs) - max_per_day
-        print(f"\n⚠️ {remaining} CVs remaining. Run again tomorrow to continue.")
+        print(f"\n⚠️ {remaining} CVs remaining. Run again to continue.")
 
 
 def main():
     """Main entry point"""
     import argparse
     
-    parser = argparse.ArgumentParser(description='Process all CVs with smart rate limiting')
+    parser = argparse.ArgumentParser(description='Process all CVs using Groq API (FREE)')
     parser.add_argument(
         '--jd',
         type=str,
-        required=True,
-        help='Job description text'
+        required=False,
+        default=None,
+        help='Job description text (optional - if not provided, only extracts skills/experience without matching)'
     )
     parser.add_argument(
         '--max',
         type=int,
-        default=50,
-        help='Maximum CVs to process per run (default: 50)'
-    )
-    parser.add_argument(
-        '--no-triage',
-        action='store_true',
-        help='Disable triage pre-filtering'
+        default=100,
+        help='Maximum CVs to process per run (default: 100)'
     )
     
     args = parser.parse_args()
     
     process_all_cvs(
         job_description=args.jd,
-        use_triage=not args.no_triage,
         max_per_day=args.max
     )
 

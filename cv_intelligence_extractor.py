@@ -26,11 +26,31 @@ try:
     os.environ.setdefault('TF_ENABLE_ONEDNN_OPTS', '0')
     from sentence_transformers import SentenceTransformer
     from sklearn.metrics.pairwise import cosine_similarity as _cosine_similarity
-    _SIMILARITY_MODEL = SentenceTransformer('all-MiniLM-L6-v2')
     SIMILARITY_AVAILABLE = True
 except Exception:
     SIMILARITY_AVAILABLE = False
-    _SIMILARITY_MODEL = None
+    SentenceTransformer = None
+
+_SIMILARITY_MODEL = None
+_SIMILARITY_MODEL_NAME = 'all-MiniLM-L6-v2'
+
+
+def _get_similarity_model():
+    """Lazily load similarity model so app startup is not blocked."""
+    global _SIMILARITY_MODEL, SIMILARITY_AVAILABLE
+
+    if not SIMILARITY_AVAILABLE:
+        return None
+
+    if _SIMILARITY_MODEL is None:
+        try:
+            _SIMILARITY_MODEL = SentenceTransformer(_SIMILARITY_MODEL_NAME)
+        except Exception as e:
+            logger.warning(f"Similarity model unavailable, fallback mode enabled: {e}")
+            SIMILARITY_AVAILABLE = False
+            _SIMILARITY_MODEL = None
+
+    return _SIMILARITY_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +89,37 @@ def build_normalized_summary(intelligence: dict) -> str:
     return " ".join(p for p in parts if p).strip()
 
 
+def _get_section(data: Dict, *candidate_names):
+    """Fetch a section by tolerating unicode and mojibake dash variants."""
+    if not isinstance(data, dict):
+        return None
+
+    normalized = {}
+    for key, value in data.items():
+        normalized_key = (
+            str(key)
+            .replace("Ã¢â‚¬â€œ", "-")
+            .replace("â€“", "-")
+            .replace("â€”", "-")
+            .replace("–", "-")
+            .replace("—", "-")
+        )
+        normalized[normalized_key] = value
+
+    for name in candidate_names:
+        normalized_name = (
+            str(name)
+            .replace("Ã¢â‚¬â€œ", "-")
+            .replace("â€“", "-")
+            .replace("â€”", "-")
+            .replace("–", "-")
+            .replace("—", "-")
+        )
+        if normalized_name in normalized:
+            return normalized[normalized_name]
+    return None
+
+
 def compute_similarity(text1: str, text2: str) -> float:
     """
     Compute semantic similarity between two texts using sentence embeddings.
@@ -77,10 +128,36 @@ def compute_similarity(text1: str, text2: str) -> float:
     """
     if not text1 or not text2:
         return 0.0
-    if SIMILARITY_AVAILABLE and _SIMILARITY_MODEL is not None:
+    similarity_model = _get_similarity_model()
+    if SIMILARITY_AVAILABLE and similarity_model is not None:
         try:
+            def _get_section(data: Dict, *candidate_names):
+                """Fetch a section by tolerating unicode and mojibake dash variants."""
+                if not isinstance(data, dict):
+                    return None
+
+                normalized = {}
+                for key, value in data.items():
+                    normalized_key = (
+                        str(key)
+                        .replace("â€“", "-")
+                        .replace("–", "-")
+                        .replace("—", "-")
+                    )
+                    normalized[normalized_key] = value
+
+                for name in candidate_names:
+                    normalized_name = (
+                        str(name)
+                        .replace("â€“", "-")
+                        .replace("–", "-")
+                        .replace("—", "-")
+                    )
+                    if normalized_name in normalized:
+                        return normalized[normalized_name]
+                return None
             import numpy as np
-            emb = _SIMILARITY_MODEL.encode([text1, text2])
+            emb = similarity_model.encode([text1, text2])
             score = float(_cosine_similarity([emb[0]], [emb[1]])[0][0])
             return round(score * 100, 2)
         except Exception:
@@ -233,7 +310,26 @@ def is_cv_anonymized(cv_text: str) -> bool:
     """
     if not cv_text or not cv_text.strip():
         return False
-    return any(marker in cv_text for marker in REDACTION_MARKERS)
+
+    # Fast path: explicit markers from redaction pipeline.
+    if any(marker in cv_text for marker in REDACTION_MARKERS):
+        return True
+
+    # Fallback: allow marker-free text only when obvious direct-contact PII is absent.
+    pii_patterns = [
+        r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b',
+        r'\b(?:\+?\d[\d\-\s().]{7,}\d)\b',
+        r'(?i)linkedin\.com/in/[\w\-]+',
+        r'(?i)github\.com/[\w\-]+',
+        r'(?i)\b(?:email|e-mail|phone|mobile|contact)\s*:\s*\S+'
+    ]
+
+    for pattern in pii_patterns:
+        if re.search(pattern, cv_text):
+            return False
+
+    # Require meaningful content to avoid accepting extraction-error placeholders.
+    return len(cv_text.strip()) >= 100
 
 
 def sanitize_filename_for_db(filename: str) -> str:
@@ -262,18 +358,19 @@ def sanitize_filename_for_db(filename: str) -> str:
 class CVIntelligenceExtractor:
     """Extract structured intelligence from anonymized CVs using LLM with deep analysis"""
     
-    def __init__(self, api_provider: str = "gemini", api_key: str = None, model: str = None):
+    def __init__(self, api_provider: str = None, api_key: str = None, model: str = None):
         """
         Initialize the CV Intelligence Extractor
         
         Args:
-            api_provider: 'openai', 'anthropic', 'gemini', or 'ollama' (default: gemini)
+            api_provider: 'openai', 'anthropic', 'gemini', 'groq', or 'ollama' (default: reads from LLM_PROVIDER env)
             api_key: API key (reads from env if not provided, not needed for Ollama)
-            model: Specific model to use (optional)
+            model: Specific model to use (optional, reads from LLM_MODEL env)
         """
-        self.api_provider = api_provider
+        # Read from environment if not provided
+        self.api_provider = api_provider or os.getenv('LLM_PROVIDER', 'groq')
         self.llm_processor = LLMBatchProcessor(
-            api_provider=api_provider,
+            api_provider=self.api_provider,
             api_key=api_key,
             model=model
         )
@@ -314,11 +411,62 @@ class CVIntelligenceExtractor:
         """
         return hashlib.sha256(cv_text.encode()).hexdigest()
         
-    def _create_extraction_prompt(self, cv_text: str, job_description: str, anonymized_id: str) -> str:
+    def _create_extraction_prompt(self, cv_text: str, job_description: str = None, anonymized_id: str = None) -> str:
         """
         Create a detailed extraction prompt that produces Gemini-quality fitment analysis.
+        If no JD provided, extracts skills/experience only without matching.
         The output is structured prose that gets parsed into JSON.
         """
+        # If no JD provided, use extraction-only mode
+        if not job_description:
+            prompt = f"""You are a senior technical recruiter extracting structured information from an anonymized professional profile.
+
+IMPORTANT RULES:
+- The CV is already anonymized (all PII removed). NEVER output names, emails, phone numbers, addresses, or company locations.
+- If you cannot determine something, state "Not specified" — NEVER invent details.
+- Be thorough and evidence-based. Cite specific technologies, years, and project details from the CV.
+- This is EXTRACTION ONLY - no job matching required.
+
+OUTPUT FORMAT (FOLLOW THIS STRUCTURE EXACTLY):
+
+SECTION 1 – Professional Summary:
+[Write a 2-3 paragraph professional summary covering:
+- Who the candidate is (years of experience, primary role, key expertise areas)
+- Major technical strengths and domains
+- Career progression and notable achievements
+IMPORTANT: This must be YOUR analytical summary, NOT copied text from the CV.]
+
+SECTION 3 – Key Strengths:
+- [Strength 1 with specific evidence from CV]
+- [Strength 2 with specific evidence from CV]
+- [Strength 3 with specific evidence from CV]
+- [Strength 4 with specific evidence from CV (if applicable)]
+
+SECTION 5 – Experience Breakdown:
+Years of Experience: [exact number, e.g., "9 years" or "5-6 years"]
+Seniority Level: [ENTRY: 0-2yrs | MID: 2-5yrs | SENIOR: 5-10yrs | LEAD: 10-15yrs | EXECUTIVE: 15+yrs]
+Core Technical Skills: [List top 10 technical skills from CV]
+Secondary Skills: [List additional tools, frameworks, soft skills]
+Primary Domain: [Main industry/sector e.g., "Automotive Embedded", "Web Development"]
+Leadership Indicators: [List concrete evidence: "Led 5-person team", "Mentored 3 juniors", or "None mentioned"]
+
+FINAL ASSESSMENT:
+Confidence: [0-100]%
+
+Reason: [2-3 sentences summarizing the candidate's profile quality and completeness.]
+
+---
+
+ANONYMIZED PROFESSIONAL PROFILE:
+{cv_text}
+
+---
+
+CANDIDATE ID: {anonymized_id or 'PENDING'}
+ANALYSIS DATE: {datetime.now().isoformat()}"""
+            return prompt
+        
+        # Original JD matching prompt
         prompt = f"""You are a senior technical recruiter performing a detailed fitment analysis. Compare the anonymized professional profile against the job description below.
 
 IMPORTANT RULES:
@@ -411,17 +559,113 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
         Extracts fitment table, strengths, gaps, and all structured fields.
         """
         try:
-            # Extract verdict
+            # Some providers return JSON-shaped section blocks instead of prose.
+            # Parse that first to avoid dropping years/domain/skills into defaults.
+            stripped = (prose_response or "").strip()
+            if stripped.startswith('{') and stripped.endswith('}'):
+                try:
+                    parsed = json.loads(stripped)
+
+                    section1 = _get_section(
+                        parsed,
+                        "SECTION 1 – Professional Summary",
+                        "SECTION 1 - Professional Summary",
+                        "SECTION 1 – Overall Assessment",
+                        "SECTION 1 - Overall Assessment",
+                    ) or []
+                    if isinstance(section1, list):
+                        cleaned_narrative = " ".join([str(x).strip() for x in section1 if str(x).strip()]).strip()
+                    else:
+                        cleaned_narrative = str(section1).strip() if section1 else ""
+
+                    section3 = _get_section(
+                        parsed,
+                        "SECTION 3 – Key Strengths",
+                        "SECTION 3 - Key Strengths",
+                    ) or []
+                    key_strengths = section3 if isinstance(section3, list) else []
+
+                    section5 = _get_section(
+                        parsed,
+                        "SECTION 5 – Experience Breakdown",
+                        "SECTION 5 - Experience Breakdown",
+                    ) or {}
+                    if not isinstance(section5, dict):
+                        section5 = {}
+
+                    years_raw = str(section5.get("Years of Experience", "")).strip()
+                    years_match = re.search(r'(\d+(?:\.\d+)?)(?:\s*-\s*(\d+(?:\.\d+)?))?', years_raw)
+                    if years_match:
+                        if years_match.group(2):
+                            start = float(years_match.group(1))
+                            end = float(years_match.group(2))
+                            years_experience = round((start + end) / 2, 1)
+                            years_experience_range = f"{start:g}-{end:g}"
+                        else:
+                            years_experience = float(years_match.group(1))
+                            years_experience_range = f"{years_experience:g}-{years_experience + 1:g}"
+                    else:
+                        years_experience = 0
+                        years_experience_range = "Not specified"
+
+                    seniority_level = str(section5.get("Seniority Level", "MID")).upper().strip() or "MID"
+                    core_technical_skills = section5.get("Core Technical Skills") or []
+                    secondary_technical_skills = section5.get("Secondary Skills") or []
+                    leadership_indicators = section5.get("Leadership Indicators") or []
+                    primary_domain = str(section5.get("Primary Domain", "")).strip()
+
+                    final_assessment = _get_section(parsed, "FINAL ASSESSMENT", "FINAL RECOMMENDATION") or {}
+                    confidence_raw = str(final_assessment.get("Confidence", "50")).strip()
+                    confidence_match = re.search(r'(\d+)', confidence_raw)
+                    confidence_score = int(confidence_match.group(1)) if confidence_match else 50
+
+                    reason = str(final_assessment.get("Reason", "")).strip()
+
+                    return {
+                        "anonymized_id": anonymized_id,
+                        "analysis_date": datetime.now().isoformat(),
+                        "verdict": None,
+                        "confidence_score": confidence_score,
+                        "match_score": None,
+                        "verdict_reason": reason or "Profile extracted - no JD matching performed",
+                        "years_experience": years_experience,
+                        "years_experience_range": years_experience_range,
+                        "seniority_level": seniority_level,
+                        "core_technical_skills": core_technical_skills if isinstance(core_technical_skills, list) else [],
+                        "secondary_technical_skills": secondary_technical_skills if isinstance(secondary_technical_skills, list) else [],
+                        "leadership_indicators": leadership_indicators if isinstance(leadership_indicators, list) else [],
+                        "primary_domain": primary_domain,
+                        "secondary_domains": [],
+                        "cleaned_narrative": cleaned_narrative,
+                        "matched_requirements": [],
+                        "missing_requirements": [],
+                        "key_strengths": key_strengths if isinstance(key_strengths, list) else [],
+                        "potential_concerns": [],
+                        "fitment_analysis": [],
+                        "fitment_summary": {
+                            "total_categories": 0,
+                            "full_match": 0,
+                            "partial_match": 0,
+                            "no_match": 0,
+                            "match_rate": 0
+                        },
+                        "detailed_analysis": prose_response
+                    }
+                except Exception:
+                    # Fall through to prose regex parser below.
+                    pass
+
+            # Extract verdict (may not exist if no JD)
             verdict_match = re.search(r'FINAL RECOMMENDATION:\s*\n?\[?(SHORTLIST|BACKUP|REVIEW)\]?', prose_response, re.IGNORECASE)
-            verdict = verdict_match.group(1).upper() if verdict_match else "REVIEW"
+            verdict = verdict_match.group(1).upper() if verdict_match else None
             
             # Extract confidence score
             confidence_match = re.search(r'Confidence:\s*\[?(\d+)\]?%', prose_response)
             confidence_score = int(confidence_match.group(1)) if confidence_match else 50
             
-            # Extract match score
+            # Extract match score (may not exist if no JD)
             match_match = re.search(r'Match Score:\s*\[?(\d+)\]?%', prose_response)
-            match_score = int(match_match.group(1)) if match_match else 50
+            match_score = int(match_match.group(1)) if match_match else None
             
             # Extract verdict reason
             reason_match = re.search(r'Reason:\s*(.+?)(?:\n\n|={3,}|$)', prose_response, re.DOTALL)
@@ -537,11 +781,11 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                 "anonymized_id": anonymized_id,
                 "analysis_date": datetime.now().isoformat(),
                 
-                # Core fields
+                # Core fields (verdict/match_score may be None if no JD)
                 "verdict": verdict,
                 "confidence_score": confidence_score,
                 "match_score": match_score,
-                "verdict_reason": verdict_reason,
+                "verdict_reason": verdict_reason if verdict else "Profile extracted - no JD matching performed",
                 
                 # Experience
                 "years_experience": years_experience,
@@ -585,10 +829,10 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
             return {
                 "anonymized_id": anonymized_id,
                 "analysis_date": datetime.now().isoformat(),
-                "verdict": "REVIEW",
+                "verdict": "BACKUP",
                 "confidence_score": 30,
                 "match_score": 50,
-                "verdict_reason": "Analysis parsing failed - requires human review",
+                "verdict_reason": "Analysis parsing failed - candidate kept as backup",
                 "detailed_analysis": prose_response,
                 "parse_error": str(e)
             }
@@ -596,7 +840,7 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
     def extract_intelligence(
         self, 
         cv_text: str, 
-        job_description: str,
+        job_description: str = None,
         original_filename: str = None
     ) -> Dict:
         """
@@ -607,7 +851,7 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
         
         Args:
             cv_text: Anonymized CV content (must contain [REDACTED_...] markers)
-            job_description: Job description to match against
+            job_description: Optional job description to match against (if None, only extracts skills/experience)
             original_filename: Original filename (for backend tracking only)
             
         Returns:
@@ -628,43 +872,44 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                     "original_filename": sanitize_filename_for_db(original_filename) if original_filename else "unknown"
                 }
             
-            # Local Checkpoint: Keyword / Requirement Filter
+            # Local Checkpoint: Keyword / Requirement Filter (only if JD provided)
             # Check if CV is totally irrelevant before making expensive LLM calls
-            cv_lower = cv_text.lower()
-            jd_lower = job_description.lower()
-            
-            # Simple check: reject if CV size is absurdly short
-            if len(cv_text.split()) < 50:
-                logger.warning(f"CV too short. Rejected locally without LLM API.")
-                return {
-                    "anonymized_id": self._generate_anonymized_id(),
-                    "analysis_date": datetime.now().isoformat(),
-                    "verdict": "REJECT",
-                    "confidence_score": 100,
-                    "match_score": 0,
-                    "verdict_reason": "LOCAL CHECKPOINT FILTER: Resume is too short to be viable (< 50 words).",
-                    "original_filename": original_filename or "unknown",
-                    "requires_human_review": False
-                }
+            if job_description:
+                cv_lower = cv_text.lower()
+                jd_lower = job_description.lower()
                 
-            jd_words = set(re.findall(r'\b[a-z]{5,}\b', jd_lower))
-            stop_words = {'about', 'their', 'there', 'which', 'would', 'these', 'other', 'could', 'should', 'experience', 'years', 'working', 'skills', 'knowledge', 'understanding', 'strong'}
-            jd_keywords = jd_words - stop_words
-            
-            if jd_keywords:
-                cv_words = set(re.findall(r'\b[a-z]{5,}\b', cv_lower))
-                overlap = jd_keywords.intersection(cv_words)
-                overlap_ratio = len(overlap) / len(jd_keywords)
-                # If overlap is extremely poor (e.g. < 5%), reject it instantly
-                if overlap_ratio < 0.05:
-                    logger.warning(f"Failed local keyword checkpoint (Overlap: {overlap_ratio:.1%}). Rejected locally without LLM API.")
+                # Simple check: reject if CV size is absurdly short
+                if len(cv_text.split()) < 50:
+                    logger.warning(f"CV too short. Rejected locally without LLM API.")
                     return {
                         "anonymized_id": self._generate_anonymized_id(),
                         "analysis_date": datetime.now().isoformat(),
                         "verdict": "REJECT",
-                        "confidence_score": 95,
-                        "match_score": int(overlap_ratio * 100),
-                        "verdict_reason": f"LOCAL CHECKPOINT FILTER: Extreme mismatch detected. Auto-rejected to save API quota.",
+                        "confidence_score": 100,
+                        "match_score": 0,
+                        "verdict_reason": "LOCAL CHECKPOINT FILTER: Resume is too short to be viable (< 50 words).",
+                        "original_filename": original_filename or "unknown",
+                        "requires_human_review": False
+                    }
+                    
+                jd_words = set(re.findall(r'\b[a-z]{5,}\b', jd_lower))
+                stop_words = {'about', 'their', 'there', 'which', 'would', 'these', 'other', 'could', 'should', 'experience', 'years', 'working', 'skills', 'knowledge', 'understanding', 'strong'}
+                jd_keywords = jd_words - stop_words
+                
+                if jd_keywords:
+                    cv_words = set(re.findall(r'\b[a-z]{5,}\b', cv_lower))
+                    overlap = jd_keywords.intersection(cv_words)
+                    overlap_ratio = len(overlap) / len(jd_keywords)
+                    # If overlap is extremely poor (e.g. < 5%), reject it instantly
+                    if overlap_ratio < 0.05:
+                        logger.warning(f"Failed local keyword checkpoint (Overlap: {overlap_ratio:.1%}). Rejected locally without LLM API.")
+                        return {
+                            "anonymized_id": self._generate_anonymized_id(),
+                            "analysis_date": datetime.now().isoformat(),
+                            "verdict": "REJECT",
+                            "confidence_score": 95,
+                            "match_score": int(overlap_ratio * 100),
+                            "verdict_reason": f"LOCAL CHECKPOINT FILTER: Extreme mismatch detected. Auto-rejected to save API quota.",
                         "original_filename": original_filename or "unknown",
                         "requires_human_review": False
                     }
@@ -679,7 +924,8 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
             original_cv_hash = self._hash_cv_content(cv_text)
             
             # Call LLM
-            logger.info(f"Analyzing {anonymized_id}...")
+            mode_str = "extraction only" if not job_description else "matching analysis"
+            logger.info(f"Analyzing {anonymized_id} ({mode_str})...")
             raw_llm_response = self.llm_processor.generate_analysis(prompt)
             
             # Parse prose response (new human-readable format)
@@ -693,23 +939,26 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                 intelligence["llm_provider"] = self.api_provider
                 intelligence["llm_model"] = self.model
                 intelligence["extraction_timestamp"] = datetime.now().isoformat()
-                intelligence["job_description_hash"] = self._hash_job_description(job_description)
+                intelligence["job_description_hash"] = self._hash_job_description(job_description) if job_description else None
+                intelligence["has_jd_matching"] = bool(job_description)
                 
                 # Store the anonymized CV text for future use (JD comparisons, re-analysis)
                 intelligence["cleaned_text"] = cv_text
+
+                # Review flow disabled for now: extraction-only keeps non-matching verdict state.
+                if not job_description and not intelligence.get("verdict"):
+                    intelligence["verdict"] = None
+                    intelligence["verdict_reason"] = "Profile extracted - no JD matching performed"
+                    intelligence["requires_human_review"] = False
                 
                 # Audit Trail (Full Explainability)
                 intelligence["original_cv_hash"] = original_cv_hash
                 intelligence["llm_prompt_used"] = prompt  # Full prompt for reproducibility
                 intelligence["llm_raw_response"] = raw_llm_response  # Raw LLM output
                 
-                # NO AUTO-REJECT POLICY: Check confidence threshold
+                # Review flow disabled for now.
                 confidence = intelligence.get("confidence_score", 0)
-                if confidence < 70:
-                    intelligence["requires_human_review"] = True
-                    logger.warning(f"⚠️  {anonymized_id}: Low confidence ({confidence}%) → HUMAN REVIEW REQUIRED")
-                else:
-                    intelligence["requires_human_review"] = False
+                intelligence["requires_human_review"] = False
 
                 # Compute CV faithfulness score:
                 # measures how accurately the LLM captured the candidate's skills
@@ -721,7 +970,7 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                     logger.warning(f"Could not compute faithfulness score: {sim_err}")
                     intelligence["similarity_score"] = None
                 
-                verdict_status = "🔴 NEEDS REVIEW" if intelligence["requires_human_review"] else intelligence.get('verdict')
+                verdict_status = intelligence.get('verdict') or 'EXTRACTED'
                 logger.info(f"✓ {anonymized_id}: {verdict_status} (Match: {intelligence.get('match_score')}%, Confidence: {confidence}%)")
                 
                 return intelligence

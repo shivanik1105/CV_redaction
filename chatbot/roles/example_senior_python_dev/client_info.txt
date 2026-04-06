@@ -1,0 +1,101 @@
+# Client Information
+
+## Company Overview
+
+Our client is a fast-growing fintech startup that's revolutionizing how small businesses manage their finances. Founded in 2020, they've grown from 10 to 150 employees and recently closed a $50M Series B funding round. Their platform helps over 50,000 businesses streamline payments, invoicing, and financial reporting.
+
+## Industry
+
+Financial Technology (FinTech) - B2B SaaS
+
+## Company Size
+
+- 150 employees globally
+- 60-person engineering team
+- Series B funded ($75M total raised)
+- Profitable and growing 200% YoY
+
+## Mission
+
+To empower small businesses with enterprise-grade financial tools that are simple, affordable, and powerful.
+
+## Culture
+
+- **Innovation-focused**: Encouraged to experiment and try new approaches
+- **Collaborative**: Cross-functional teams work closely together
+- **Work-life balance**: Flexible hours, no expectation to work weekends
+- **Transparent**: Regular all-hands meetings, open financial metrics
+- **Inclusive**: Diverse team from 20+ countries, strong DEI initiatives
+- **Learning-oriented**: Weekly tech talks, conference attendance supported
+
+## Tech Stack
+
+**Backend:**
+- Python 3.11+ with Django and FastAPI
+- PostgreSQL with pgvector for ML features
+- Redis for caching and queues
+- Celery for background tasks
+
+**Infrastructure:**
+- AWS (ECS, RDS, S3, Lambda)
+- Docker and Kubernetes
+- GitHub Actions for CI/CD
+- Terraform for infrastructure as code
+
+**Tools:**
+- GitHub for version control
+- Jira for project management
+- Slack for communication
+- Datadog for monitoring
+
+## Engineering Practices
+
+- Agile/Scrum methodology with 2-week sprints
+- Code reviews required for all changes
+- 80%+ test coverage requirement
+- Automated testing and deployment
+- Pair programming encouraged
+- Regular tech debt sprints
+
+## Team Structure
+
+You'll join the Payments team (8 engineers) reporting to the Engineering Manager. The team includes:
+- 2 Senior Engineers
+- 4 Mid-level Engineers
+- 2 Junior Engineers
+- 1 Engineering Manager
+- 1 Product Manager
+
+## Growth Opportunities
+
+- Clear career progression path (Senior → Staff → Principal)
+- Opportunity to lead projects and mentor others
+- Potential to move into management if interested
+- Exposure to cutting-edge fintech challenges
+- Chance to shape technical direction
+
+## Recent Achievements
+
+- Processed $1B in payments in 2025
+- Achieved SOC 2 Type II compliance
+- Reduced API latency by 60%
+- Launched in 3 new countries
+- Featured in TechCrunch and Forbes
+
+## Why Join?
+
+- **Impact**: Your work directly affects thousands of businesses
+- **Growth**: Company and role are both scaling rapidly
+- **Technology**: Modern stack with freedom to innovate
+- **Compensation**: Competitive salary plus meaningful equity
+- **Team**: Work with talented, passionate engineers
+- **Stability**: Well-funded with strong revenue growth
+
+## Office Location
+
+San Francisco Financial District - Modern office with:
+- Standing desks and ergonomic chairs
+- Fully stocked kitchen and snacks
+- Game room and relaxation areas
+- Commuter benefits
+- On-site gym access

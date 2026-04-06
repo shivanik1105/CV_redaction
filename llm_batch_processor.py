@@ -47,6 +47,8 @@ class LLMBatchProcessor:
             elif self.api_provider == "gemini":
                 # Allow environment override, default to 1.5-flash if requested, else 2.0-flash
                 self.model = os.getenv("LLM_MODEL", "gemini-2.0-flash")
+            elif self.api_provider == "groq":
+                self.model = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
             elif self.api_provider == "ollama":
                 self.model = os.getenv("LLM_MODEL", "qwen2.5:7b")  # Allow override
             else:
@@ -65,6 +67,9 @@ class LLMBatchProcessor:
             from google import genai
             from google.genai import types
             self.client = genai.Client(api_key=api_key or os.getenv("GOOGLE_API_KEY"))
+        elif self.api_provider == "groq":
+            from groq import Groq
+            self.client = Groq(api_key=api_key or os.getenv("GROQ_API_KEY"))
         elif self.api_provider == "ollama":
             import ollama
             self.client = ollama  # Ollama uses module-level functions
@@ -264,6 +269,44 @@ class LLMBatchProcessor:
             f"Your free-tier quota may be exhausted. Wait for reset or upgrade plan."
         )
     
+    def _call_groq(self, prompt: str) -> str:
+        """Call Groq API with retry + exponential backoff for rate limits.
+        Raises QuotaExhaustedException if daily quota is exhausted."""
+        import logging
+        _log = logging.getLogger(__name__)
+        
+        max_retries = 5
+        base_delay = 2  # seconds
+        
+        for attempt in range(max_retries):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": "You are a senior technical recruiter assistant. Analyze CVs thoroughly and follow the output format exactly as specified in the prompt."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.3,
+                    max_tokens=8192
+                )
+                return response.choices[0].message.content
+            except Exception as e:
+                error_str = str(e)
+                if '429' in error_str or 'rate_limit' in error_str.lower():
+                    delay = base_delay * (2 ** attempt)  # 2, 4, 8, 16, 32 seconds
+                    _log.warning(f"Groq rate limited. Retry {attempt+1}/{max_retries} in {delay}s...")
+                    time.sleep(delay)
+                elif 'quota' in error_str.lower():
+                    raise QuotaExhaustedException(
+                        "Groq API daily quota exhausted. Wait for reset or use another provider."
+                    )
+                else:
+                    raise
+        
+        raise QuotaExhaustedException(
+            f"Groq API rate limit exceeded after {max_retries} retries."
+        )
+    
     def _call_ollama(self, prompt: str) -> str:
         """Call Ollama (local LLM)"""
         try:
@@ -305,6 +348,8 @@ class LLMBatchProcessor:
             return self._call_anthropic(prompt)
         elif self.api_provider == "gemini":
             return self._call_gemini(prompt)
+        elif self.api_provider == "groq":
+            return self._call_groq(prompt)
         elif self.api_provider == "ollama":
             return self._call_ollama(prompt)
         else:

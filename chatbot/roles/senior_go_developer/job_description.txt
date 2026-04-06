@@ -1,0 +1,29 @@
+# Job Title: Senior Go Developer
+
+## About the Role
+[Describe the role and its importance]
+
+## Key Responsibilities
+- [Responsibility 1]
+- [Responsibility 2]
+- [Responsibility 3]
+
+## Required Skills
+- [Skill 1]
+- [Skill 2]
+- [Skill 3]
+
+## Qualifications
+- [Qualification 1]
+- [Qualification 2]
+
+## What We Offer
+- Competitive salary
+- [Benefit 1]
+- [Benefit 2]
+
+## Location
+[Location details]
+
+## Employment Type
+[Full-time/Contract/Remote]

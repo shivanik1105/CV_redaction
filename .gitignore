@@ -13,3 +13,8 @@ samples/
 
 build/
 test_*key.py
+
+# Filename mapping files (contains sensitive mappings)
+filename_mappings.json
+filename_mappings_backup.csv
+*_mappings*.csv

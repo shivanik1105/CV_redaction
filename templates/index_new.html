@@ -320,6 +320,18 @@
             color: #495057;
         }
 
+        .review-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 8px 14px;
+            font-size: 0.9em;
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -389,40 +401,12 @@
         </div>
 
         <div class="tabs">
-            <button class="tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
-            <button class="tab" onclick="showTab('search')">🔍 Search</button>
+            <button class="tab active" onclick="showTab('search')">🔍 Search</button>
             <button class="tab" onclick="showTab('process')">⚙️ Process CVs</button>
         </div>
 
-        <!-- Dashboard Tab -->
-        <div id="dashboard" class="tab-content active">
-            <div class="stats-grid" id="statsGrid">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalCVs">-</div>
-                    <div class="stat-label">Total CVs</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="shortlistCVs">-</div>
-                    <div class="stat-label">Shortlisted</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="reviewCVs">-</div>
-                    <div class="stat-label">Need Review</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="avgMatch">-</div>
-                    <div class="stat-label">Avg Match Score</div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Recent Candidates</h3>
-                <div id="recentCandidates"></div>
-            </div>
-        </div>
-
         <!-- Search Tab -->
-        <div id="search" class="tab-content">
+        <div id="search" class="tab-content active">
             <div class="card">
                 <h3>🔍 Search & Filter Candidates</h3>
                 <div class="alert alert-info">
@@ -430,24 +414,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Job Description (Optional - for keyword matching)</label>
-                    <textarea id="searchJD" rows="4" placeholder="Enter job description for keyword matching..."></textarea>
+                    <label>📝 Job Description (Optional - for matching top candidates)</label>
+                    <textarea id="searchJD" rows="4" placeholder="Paste job description here to find top matching candidates..."></textarea>
+                    <small style="color: #666;">Leave empty to search all candidates without JD matching</small>
                 </div>
 
-                <h4 style="margin: 20px 0 15px 0; color: #667eea;">🎯 Advanced Filters</h4>
-                
                 <div class="filter-grid">
-                    <div class="form-group">
-                        <label>Verdict</label>
-                        <select id="filterVerdict">
-                            <option value="">All</option>
-                            <option value="SHORTLIST">Shortlist</option>
-                            <option value="BACKUP">Backup</option>
-                            <option value="REVIEW">Review</option>
-                            <option value="REJECT">Reject</option>
-                        </select>
-                    </div>
-
                     <div class="form-group">
                         <label>Seniority Level</label>
                         <select id="filterSeniority">
@@ -509,12 +481,7 @@
             <div class="card">
                 <h3>⚙️ Process CVs</h3>
                 <div class="alert alert-warning">
-                    ⚠️ Processing takes 20-30 minutes for 100 CVs. This is a ONE-TIME setup. After processing, use Search tab for instant results.
-                </div>
-
-                <div class="form-group">
-                    <label>Job Description (for analysis)</label>
-                    <textarea id="processJD" rows="6" placeholder="Enter job description for CV analysis..."></textarea>
+                    ⚠️ This processes all sample CVs through redaction, intelligence extraction, embeddings, and storage.
                 </div>
 
                 <div class="form-group">
@@ -542,53 +509,8 @@
             
             event.target.classList.add('active');
             document.getElementById(tabName).classList.add('active');
-            
-            if (tabName === 'dashboard') {
-                loadDashboard();
-            }
         }
 
-        // Load dashboard statistics
-        async function loadDashboard() {
-            try {
-                const response = await fetch('/api/statistics');
-                const data = await response.json();
-                
-                if (data.success) {
-                    const stats = data.statistics;
-                    document.getElementById('totalCVs').textContent = stats.total_candidates || 0;
-                    document.getElementById('shortlistCVs').textContent = stats.shortlisted || 0;
-                    document.getElementById('reviewCVs').textContent = stats.review_needed || 0;
-                    document.getElementById('avgMatch').textContent = stats.average_confidence_score ? Math.round(stats.average_confidence_score) + '%' : '-';
-                }
-                
-                loadRecentCandidates();
-            } catch (error) {
-                console.error('Error loading dashboard:', error);
-            }
-        }
-
-        // Load recent candidates
-        async function loadRecentCandidates() {
-            try {
-                const response = await fetch('/api/all-candidates?limit=10');
-                const data = await response.json();
-                
-                if (data.success && data.candidates.length > 0) {
-                    displayCandidates(data.candidates, 'recentCandidates');
-                } else {
-                    document.getElementById('recentCandidates').innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-state-icon">📭</div>
-                            <h3>No CVs processed yet</h3>
-                            <p>Go to "Process CVs" tab to get started</p>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error loading candidates:', error);
-            }
-        }
 
         // Perform search
         async function performSearch() {
@@ -596,7 +518,7 @@
             
             // Get filter values
             const filters = {
-                verdict: document.getElementById('filterVerdict').value,
+                // verdict filter removed
                 seniority_level: document.getElementById('filterSeniority').value,
                 min_match_score: document.getElementById('filterMinScore').value ? parseInt(document.getElementById('filterMinScore').value) : null,
                 min_confidence_score: document.getElementById('filterMinConfidence').value ? parseInt(document.getElementById('filterMinConfidence').value) : null,
@@ -631,9 +553,7 @@
                         // Apply filters to results
                         let matches = data.matches;
                         
-                        if (filters.verdict) {
-                            matches = matches.filter(m => m.verdict === filters.verdict);
-                        }
+                        // verdict filtering removed
                         if (filters.seniority_level) {
                             matches = matches.filter(m => m.seniority_level === filters.seniority_level);
                         }
@@ -728,7 +648,7 @@
         // Clear filters
         function clearFilters() {
             document.getElementById('searchJD').value = '';
-            document.getElementById('filterVerdict').value = '';
+            // verdict filter removed
             document.getElementById('filterSeniority').value = '';
             document.getElementById('filterMinScore').value = '';
             document.getElementById('filterMinConfidence').value = '';
@@ -741,13 +661,7 @@
 
         // Process all CVs
         async function processAllCVs() {
-            const jd = document.getElementById('processJD').value.trim();
             const forceReprocess = document.getElementById('forceReprocess').checked;
-            
-            if (!jd) {
-                alert('Please enter a job description');
-                return;
-            }
             
             const btn = document.getElementById('btnProcess');
             const resultsDiv = document.getElementById('processResults');
@@ -767,7 +681,6 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        job_description: jd,
                         force_reprocess: forceReprocess
                     })
                 });
@@ -776,8 +689,11 @@
                 
                 if (data.success) {
                     let message = `✅ Done! ${data.successful}/${data.total_originals} CVs processed.`;
-                    if (data.triage_rejected > 0) {
-                        message += ` ⚡ ${data.triage_rejected} pre-filtered (${data.api_savings_percent}% API savings).`;
+                    if (data.embeddings_generated > 0) {
+                        message += ` 🔗 ${data.embeddings_generated} embeddings generated.`;
+                    }
+                    if (data.stored_in_supabase > 0) {
+                        message += ` ☁️ ${data.stored_in_supabase} stored in Supabase.`;
                     }
                     if (data.skipped > 0) {
                         message += ` ⚠️ ${data.skipped} skipped (quota exhausted).`;
@@ -788,8 +704,7 @@
                             ${message}
                         </div>
                     `;
-                    
-                    loadDashboard();
+
                 } else {
                     resultsDiv.innerHTML = `
                         <div class="alert alert-error">
@@ -813,6 +728,7 @@
         // Display candidates
         function displayCandidates(candidates, containerId, showMatch = false) {
             const container = document.getElementById(containerId);
+            container.innerHTML = '';
             const grid = document.createElement('div');
             grid.className = 'results-grid';
             
@@ -821,10 +737,12 @@
                 card.className = 'candidate-card';
                 
                 const matchScore = showMatch ? candidate.match_percentage : candidate.match_score;
-                
+
                 const years = candidate.years_experience || candidate.years_of_experience || 0;
-                const seniority = candidate.seniority_level || candidate.career_level || 'N/A';
-                const domain = candidate.primary_domain || (candidate.domain_expertise && candidate.domain_expertise[0]) || 'N/A';
+                const rawSeniority = candidate.seniority_level || candidate.career_level;
+                const rawDomain = candidate.primary_domain || (candidate.domain_expertise && candidate.domain_expertise[0]);
+                const seniority = rawSeniority && rawSeniority !== 'N/A' ? rawSeniority : 'Not classified';
+                const domain = rawDomain && rawDomain !== 'N/A' ? rawDomain : 'Not extracted';
                 const skills = candidate.core_technical_skills || candidate.key_skills || [];
                 
                 card.innerHTML = `
@@ -833,7 +751,7 @@
                         ${matchScore ? `<div class="match-badge ${getMatchClass(matchScore)}">${Math.round(matchScore)}%</div>` : ''}
                     </div>
                     <div class="candidate-info">
-                        <strong>Verdict:</strong> ${candidate.verdict || 'N/A'}
+                        <strong>Confidence:</strong> ${candidate.confidence_score}%
                     </div>
                     <div class="candidate-info">
                         <strong>Experience:</strong> ${years} years (${seniority})
@@ -859,6 +777,8 @@
             container.appendChild(grid);
         }
 
+
+
         // Get match class based on score
         function getMatchClass(score) {
             if (score >= 60) return 'match-high';
@@ -866,9 +786,9 @@
             return 'match-low';
         }
 
-        // Load dashboard on page load
+        // Page ready
         window.addEventListener('DOMContentLoaded', () => {
-            loadDashboard();
+            console.log('CV Intelligence System ready');
         });
     </script>
 </body>

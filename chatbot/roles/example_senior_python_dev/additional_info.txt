@@ -1,0 +1,168 @@
+# Additional Information
+
+## Interview Preparation Tips
+
+### Technical Interview
+- Review system design fundamentals (scalability, databases, caching)
+- Practice Python coding problems (focus on clean, readable code)
+- Be ready to discuss your past projects in detail
+- Prepare questions about our architecture and challenges
+
+### Behavioral Interview
+- Prepare examples of leadership and mentorship
+- Think about times you've handled technical disagreements
+- Have stories about debugging complex issues
+- Be ready to discuss your career goals
+
+### What We Look For
+- Strong technical skills and problem-solving ability
+- Clear communication and collaboration
+- Growth mindset and willingness to learn
+- Alignment with our values and culture
+- Passion for building great products
+
+## Application Timeline
+
+**Week 1:**
+- Submit application
+- Initial screening (if qualified)
+- Phone interview scheduled
+
+**Week 2:**
+- Phone screening
+- Take-home project sent (if passed)
+- Technical interview scheduled
+
+**Week 3:**
+- Technical interview
+- Team fit interview
+- Final interview with Director
+
+**Week 4:**
+- Reference checks
+- Offer extended
+- Negotiation and acceptance
+
+## What Happens After You Apply
+
+1. **Application Review** (1-3 days)
+   - Our recruiting team reviews your resume
+   - We look for relevant experience and skills
+   - Qualified candidates are contacted for phone screen
+
+2. **Phone Screening** (30 minutes)
+   - Brief conversation with recruiter
+   - Discuss your background and interest
+   - Overview of role and company
+   - Answer your initial questions
+
+3. **Take-Home Project** (3-4 hours)
+   - Real-world coding challenge
+   - Build a small API or solve a problem
+   - Focus on code quality and design
+   - You have 5 days to complete
+
+4. **Technical Interview** (90 minutes)
+   - System design discussion (45 min)
+   - Live coding session (45 min)
+   - Meet with senior engineers
+   - Two-way conversation
+
+5. **Team Fit Interview** (60 minutes)
+   - Meet potential teammates
+   - Discuss collaboration and culture
+   - Learn about day-to-day work
+   - Ask questions about the team
+
+6. **Final Interview** (45 minutes)
+   - Conversation with Engineering Director
+   - Discuss vision and growth
+   - Address any remaining questions
+   - Mutual assessment of fit
+
+7. **Offer & Negotiation**
+   - Verbal offer within 2 days
+   - Written offer with full details
+   - Time to review and negotiate
+   - Typically 1 week to decide
+
+## Contact Information
+
+**Primary Recruiter:**
+Sarah Johnson
+Email: sarah@fintech-company.com
+Phone: +1 (415) 555-0123
+LinkedIn: linkedin.com/in/sarahjohnson
+
+**Hiring Manager:**
+Michael Chen, Engineering Manager - Payments
+Email: michael.chen@fintech-company.com
+
+**Best Times to Reach Us:**
+Monday - Friday, 9 AM - 6 PM PT
+
+**Response Time:**
+We typically respond within 1-2 business days
+
+## Important Notes
+
+### Equal Opportunity
+We're an equal opportunity employer committed to building a diverse and inclusive team. We welcome applications from candidates of all backgrounds.
+
+### Accommodations
+If you need any accommodations during the interview process, please let us know. We're happy to work with you.
+
+### Confidentiality
+Your application is kept confidential. We won't contact your current employer without your explicit permission.
+
+### Referrals
+If you were referred by a current employee, please mention their name in your application.
+
+### Questions?
+Don't hesitate to ask questions at any stage. We want you to have all the information you need to make the best decision.
+
+## Why Candidates Love This Role
+
+Here's what recent hires have said:
+
+*"The team is incredibly talented but also humble and supportive. I've learned more in 6 months here than in 2 years at my previous job."* - Alex, Senior Engineer
+
+*"The work-life balance is real, not just a recruiting pitch. I actually use my unlimited PTO and never feel guilty about it."* - Priya, Senior Engineer
+
+*"I love that we're solving real problems for real businesses. The impact is tangible and motivating."* - Jordan, Senior Engineer
+
+## Red Flags We Don't Have
+
+- No "rockstar" or "ninja" culture
+- No expectation to work 60+ hour weeks
+- No toxic competitiveness
+- No micromanagement
+- No unclear career paths
+- No "we're a family" rhetoric
+- No ping pong tables instead of fair compensation
+
+## Green Flags We Do Have
+
+- Clear, documented processes
+- Transparent salary bands
+- Regular 1-on-1s and feedback
+- Psychological safety to ask questions
+- Investment in your growth
+- Respect for your time
+- Actual work-life balance
+
+## Ready to Apply?
+
+If this sounds like the right opportunity for you, we'd love to hear from you!
+
+**To apply:**
+1. Send your resume to sarah@fintech-company.com
+2. Include a brief note about what interests you
+3. Mention any questions you have
+
+**Or apply through:**
+- Our careers page: fintech-company.com/careers
+- LinkedIn job posting
+- This chatbot (I can connect you with Sarah)
+
+We're excited to meet you!

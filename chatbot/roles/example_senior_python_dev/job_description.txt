@@ -1,0 +1,68 @@
+# Senior Python Developer
+
+## About the Role
+
+We're seeking an experienced Senior Python Developer to join our growing engineering team. You'll be responsible for designing and implementing scalable backend systems, mentoring junior developers, and driving technical excellence across our platform.
+
+## Key Responsibilities
+
+- Design, develop, and maintain high-performance Python applications and APIs
+- Lead architectural decisions for backend systems
+- Mentor and guide junior and mid-level developers
+- Collaborate with product managers and frontend teams
+- Optimize application performance and database queries
+- Implement best practices for code quality, testing, and deployment
+- Participate in code reviews and technical discussions
+- Contribute to technical documentation and knowledge sharing
+
+## Required Skills
+
+- 5+ years of professional Python development experience
+- Strong expertise in Django or FastAPI frameworks
+- Proficiency with PostgreSQL and database optimization
+- Experience with RESTful API design and implementation
+- Solid understanding of software design patterns and principles
+- Experience with Git and collaborative development workflows
+- Strong problem-solving and debugging skills
+- Excellent communication and teamwork abilities
+
+## Nice to Have
+
+- Experience with microservices architecture
+- Knowledge of Docker and Kubernetes
+- Familiarity with AWS or other cloud platforms
+- Experience with Redis or other caching solutions
+- Background in fintech or payment systems
+- Contributions to open-source projects
+- Experience with CI/CD pipelines
+
+## Qualifications
+
+- Bachelor's degree in Computer Science or related field (or equivalent experience)
+- Proven track record of delivering production-grade applications
+- Experience leading technical projects
+- Strong understanding of security best practices
+
+## What We Offer
+
+- Competitive salary: $120,000 - $160,000 based on experience
+- Comprehensive health, dental, and vision insurance
+- 401(k) with company matching
+- Unlimited PTO policy
+- Professional development budget ($2,000/year)
+- Latest MacBook Pro and equipment
+- Flexible work arrangements
+- Stock options
+- Annual team retreats
+
+## Location
+
+San Francisco Bay Area (Hybrid: 2 days in office, 3 days remote)
+
+## Employment Type
+
+Full-time, permanent position
+
+## Start Date
+
+Flexible, ideally within 4-6 weeks

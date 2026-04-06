@@ -3,12 +3,13 @@ Flask Web UI for CV Redaction Pipeline with Intelligence Extraction
 Allows users to upload CVs, redact PII, extract intelligence, and search candidates
 Supports both Supabase and local JSON-based storage with automatic fallback
 """
-import dns_fix  # Fix JioFiber DNS hijacking - must be before any network imports
 import os
 import sys
 import json
 import glob
-from typing import Optional
+import hashlib
+import re
+from typing import Any, Dict, Optional
 from flask import Flask, render_template, request, send_file, jsonify, url_for
 from werkzeug.utils import secure_filename
 from pathlib import Path
@@ -79,8 +80,9 @@ def get_intelligence_extractor():
     """Get or create intelligence extractor"""
     global _intelligence_extractor
     if _intelligence_extractor is None:
-        api_provider = os.getenv('LLM_PROVIDER', 'gemini')
-        _intelligence_extractor = CVIntelligenceExtractor(api_provider=api_provider)
+        api_provider = os.getenv('LLM_PROVIDER', 'groq')
+        llm_model = os.getenv('LLM_MODEL', None)
+        _intelligence_extractor = CVIntelligenceExtractor(api_provider=api_provider, model=llm_model)
     return _intelligence_extractor
 
 def get_supabase_storage():
@@ -188,6 +190,120 @@ def is_supabase_configured():
     return SUPABASE_AVAILABLE and bool(os.getenv('SUPABASE_URL')) and bool(os.getenv('SUPABASE_KEY'))
 
 
+def _has_real_secret(env_var_name: str) -> bool:
+    """Check whether an env var looks like a real configured secret instead of a placeholder."""
+    value = os.getenv(env_var_name, '')
+    if not value:
+        return False
+    lowered = value.lower()
+    return 'your-' not in lowered and 'placeholder' not in lowered and 'change-this' not in lowered
+
+
+def probe_llm_provider() -> Dict[str, Any]:
+    """Run a small live probe against the configured LLM provider when supported."""
+    provider = os.getenv('LLM_PROVIDER', 'groq').lower()
+    model = os.getenv('LLM_MODEL', '')
+
+    status = {
+        'provider': provider,
+        'model': model,
+        'configured': False,
+        'reachable': False,
+        'message': ''
+    }
+
+    provider_key_map = {
+        'groq': 'GROQ_API_KEY',
+        'openai': 'OPENAI_API_KEY',
+        'anthropic': 'ANTHROPIC_API_KEY',
+        'gemini': 'GOOGLE_API_KEY'
+    }
+    key_name = provider_key_map.get(provider)
+    status['configured'] = _has_real_secret(key_name) if key_name else provider == 'ollama'
+
+    try:
+        if provider == 'groq':
+            from groq import Groq
+            client = Groq(api_key=os.getenv('GROQ_API_KEY'))
+            response = client.chat.completions.create(
+                model=model or 'llama-3.3-70b-versatile',
+                messages=[{'role': 'user', 'content': 'Reply with exactly OK'}],
+                temperature=0,
+                max_tokens=5
+            )
+            status['reachable'] = response.choices[0].message.content.strip().upper().startswith('OK')
+            status['message'] = 'live Groq probe succeeded'
+        elif provider == 'ollama':
+            import ollama
+            response = ollama.chat(
+                model=model or 'qwen2.5:7b',
+                messages=[{'role': 'user', 'content': 'Reply with exactly OK'}],
+                options={'temperature': 0, 'num_predict': 5}
+            )
+            content = response.get('message', {}).get('content', '')
+            status['reachable'] = content.strip().upper().startswith('OK')
+            status['message'] = 'live Ollama probe succeeded'
+        else:
+            status['message'] = f'live probe not implemented for provider: {provider}'
+    except Exception as e:
+        status['message'] = str(e)
+
+    return status
+
+
+def probe_embedding_runtime() -> Dict[str, Any]:
+    """Verify embeddings can be generated with the configured provider."""
+    provider = os.getenv('EMBEDDING_PROVIDER', 'local')
+    status = {
+        'provider': provider,
+        'configured': True,
+        'reachable': False,
+        'dimensions': None,
+        'message': ''
+    }
+
+    if provider == 'openai':
+        status['configured'] = _has_real_secret('OPENAI_API_KEY')
+
+    try:
+        from vector_search import get_vector_search_engine
+        engine = get_vector_search_engine(embedding_provider=provider)
+        vector = engine.generate_embedding('python backend developer')
+        status['reachable'] = bool(vector)
+        status['dimensions'] = len(vector) if vector else 0
+        status['message'] = 'embedding probe succeeded'
+    except Exception as e:
+        status['message'] = str(e)
+
+    return status
+
+
+def probe_supabase_runtime() -> Dict[str, Any]:
+    """Run a real Supabase probe using the configured database credentials."""
+    status = {
+        'configured': is_supabase_configured(),
+        'reachable': False,
+        'message': 'not configured'
+    }
+
+    if not status['configured']:
+        return status
+
+    try:
+        storage = get_supabase_storage()
+        if not storage:
+            status['message'] = 'storage client unavailable'
+            return status
+
+        response = storage.client.table('cv_intelligence').select('anonymized_id').limit(1).execute()
+        status['reachable'] = isinstance(response.data, list)
+        status['message'] = f'live Supabase probe succeeded ({len(response.data)} rows sample)'
+    except Exception as e:
+        status['message'] = str(e)
+
+    return status
+
+
 # ============================================================================
 # LOCAL JSON STORAGE FALLBACK
 # ============================================================================
@@ -213,11 +329,12 @@ def load_local_intelligence_files():
             # Normalize fields for display
             candidate = {
                 'anonymized_id': data.get('anonymized_id', 'UNKNOWN'),
-                'verdict': data.get('verdict', 'REVIEW'),
+                'verdict': data.get('verdict'),  # Can be None for extraction-only
+                'has_jd_matching': data.get('has_jd_matching', data.get('match_score') is not None),
                 'confidence_score': data.get('confidence_score', 0),
-                'match_score': data.get('match_score', 0),
+                'match_score': data.get('match_score'),  # Can be None
                 'years_experience': data.get('years_experience', 0),
-                'seniority_level': data.get('seniority_level', 'N/A'),
+                'seniority_level': data.get('seniority_level', ''),
                 'core_technical_skills': data.get('core_technical_skills', []),
                 'secondary_technical_skills': data.get('secondary_technical_skills', []),
                 'frameworks_tools': data.get('frameworks_tools', []),
@@ -245,7 +362,7 @@ def load_local_intelligence_files():
 
 def get_local_statistics():
     """Calculate statistics from local JSON intelligence files"""
-    candidates = load_local_intelligence_files()
+    candidates = [c for c in load_local_intelligence_files() if _candidate_has_searchable_signal(c)]
     total = len(candidates)
     
     if total == 0:
@@ -254,19 +371,24 @@ def get_local_statistics():
             'shortlisted': 0,
             'backup': 0,
             'review_needed': 0,
+            'extracted_only': 0,
             'requires_human_review': 0,
             'recruiter_reviewed': 0,
-            'average_match_score': 0,
+            'average_match_score': 'N/A',
             'average_confidence_score': 0,
             'data_source': 'local_json'
         }
     
     shortlisted = len([c for c in candidates if c.get('verdict') == 'SHORTLIST'])
     backup = len([c for c in candidates if c.get('verdict') == 'BACKUP'])
-    review = len([c for c in candidates if c.get('verdict') == 'REVIEW'])
-    human_review = len([c for c in candidates if c.get('requires_human_review')])
+    review = 0
+    extracted_only = len([c for c in candidates if c.get('verdict') is None or c.get('has_jd_matching') == False])
+    human_review = 0
     reviewed = len([c for c in candidates if c.get('recruiter_override')])
-    avg_match = sum(c.get('match_score', 0) for c in candidates) / total
+    
+    # Calculate average match score only for CVs with JD matching
+    cvs_with_jd = [c for c in candidates if c.get('match_score') is not None]
+    avg_match = sum(c.get('match_score', 0) for c in cvs_with_jd) / len(cvs_with_jd) if cvs_with_jd else 'N/A'
     avg_conf = sum(c.get('confidence_score', 0) for c in candidates) / total
     
     return {
@@ -274,9 +396,10 @@ def get_local_statistics():
         'shortlisted': shortlisted,
         'backup': backup,
         'review_needed': review,
+        'extracted_only': extracted_only,
         'requires_human_review': human_review,
         'recruiter_reviewed': reviewed,
-        'average_match_score': round(avg_match, 2),
+        'average_match_score': round(avg_match, 2) if isinstance(avg_match, (int, float)) else avg_match,
         'average_confidence_score': round(avg_conf, 2),
         'data_source': 'local_json'
     }
@@ -296,6 +419,8 @@ def search_local_candidates(filters):
     
     results = []
     for c in candidates:
+        if not _candidate_has_searchable_signal(c):
+            continue
         if verdict and c.get('verdict') != verdict:
             continue
         if seniority and c.get('seniority_level') != seniority:
@@ -328,6 +453,296 @@ def allowed_file(filename):
     """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
+def _current_jd_hash(job_description: Optional[str]) -> Optional[str]:
+    """Create a stable hash for the active job description."""
+    if not job_description:
+        return None
+    return hashlib.sha256(job_description.encode('utf-8')).hexdigest()[:16]
+
+
+def _load_cached_intelligence(redacted_filename: str) -> Optional[Dict[str, Any]]:
+    """Load a previously saved intelligence file for a redacted CV."""
+    intelligence_path = Path(app.config['INTELLIGENCE_FOLDER']) / f"{Path(redacted_filename).stem}_intelligence.json"
+    if not intelligence_path.exists():
+        return None
+
+    try:
+        with open(intelligence_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        logger.warning(f"Could not read cached intelligence for {redacted_filename}: {e}")
+        return None
+
+
+def _is_cached_result_compatible(intelligence: Optional[Dict[str, Any]], job_description: Optional[str]) -> bool:
+    """Ensure we only reuse cached results for the same JD mode/hash."""
+    if not intelligence or 'error' in intelligence:
+        return False
+
+    cached_has_jd = bool(intelligence.get('has_jd_matching'))
+    requested_has_jd = bool(job_description)
+    if cached_has_jd != requested_has_jd:
+        return False
+
+    if not requested_has_jd:
+        return True
+
+    return intelligence.get('job_description_hash') == _current_jd_hash(job_description)
+
+
+def _save_intelligence_json(redacted_filename: str, intelligence: Dict[str, Any]) -> str:
+    """Persist intelligence locally so the app always has a disk fallback."""
+    intelligence_file = f"{Path(redacted_filename).stem}_intelligence.json"
+    intelligence_path = Path(app.config['INTELLIGENCE_FOLDER']) / intelligence_file
+    with open(intelligence_path, 'w', encoding='utf-8') as f:
+        json.dump(intelligence, f, indent=2, ensure_ascii=False)
+    return intelligence_file
+
+
+def _attach_embedding(intelligence: Dict[str, Any]) -> Dict[str, Any]:
+    """Generate a semantic embedding without making processing fail if the model is unavailable."""
+    if 'error' in intelligence:
+        return {
+            'embedding_generated': False,
+            'embedding_error': intelligence.get('error')
+        }
+
+    existing_embedding = intelligence.get('embedding')
+    if existing_embedding:
+        return {
+            'embedding_generated': True,
+            'embedding_dimensions': len(existing_embedding)
+        }
+
+    try:
+        from vector_search import generate_embedding_for_intelligence
+
+        embedding = generate_embedding_for_intelligence(intelligence)
+        if embedding:
+            intelligence['embedding'] = embedding
+            intelligence['embedding_dimensions'] = len(embedding)
+            intelligence['embedding_provider'] = os.getenv('EMBEDDING_PROVIDER', 'local')
+            intelligence['embedding_generated_at'] = datetime.now().isoformat()
+            return {
+                'embedding_generated': True,
+                'embedding_dimensions': len(embedding)
+            }
+
+        return {
+            'embedding_generated': False,
+            'embedding_error': 'Empty embedding generated'
+        }
+    except Exception as e:
+        logger.warning(f"Embedding generation unavailable for {intelligence.get('anonymized_id', 'unknown')}: {e}")
+        intelligence['embedding_error'] = str(e)
+        return {
+            'embedding_generated': False,
+            'embedding_error': str(e)
+        }
+
+
+def _persist_intelligence(intelligence: Dict[str, Any], redacted_filename: str, original_filename: Optional[str] = None) -> Dict[str, Any]:
+    """Save intelligence locally and, when available, to Supabase."""
+    intelligence_file = _save_intelligence_json(redacted_filename, intelligence)
+    persistence = {
+        'intelligence_file': intelligence_file,
+        'stored_in_supabase': False,
+        'stored_embedding_in_supabase': False,
+        'supabase_error': None
+    }
+
+    if not SUPABASE_AVAILABLE or 'error' in intelligence:
+        return persistence
+
+    storage = get_supabase_storage()
+    if not storage:
+        return persistence
+
+    try:
+        storage.store_intelligence(intelligence)
+        anon_id = intelligence.get('anonymized_id')
+        if anon_id:
+            storage.store_filename_mapping(
+                anonymized_id=anon_id,
+                original_filename=original_filename or redacted_filename,
+                anonymized_filename=redacted_filename
+            )
+
+            embedding = intelligence.get('embedding')
+            if embedding:
+                try:
+                    storage.store_embedding(
+                        anonymized_id=anon_id,
+                        embedding=embedding,
+                        embedding_model=intelligence.get('embedding_provider')
+                    )
+                    persistence['stored_embedding_in_supabase'] = True
+                except Exception as embedding_error:
+                    logger.warning(f"Could not store embedding for {anon_id}: {embedding_error}")
+
+        persistence['stored_in_supabase'] = True
+    except Exception as e:
+        logger.warning(f"Could not store intelligence in Supabase: {e}")
+        persistence['supabase_error'] = str(e)
+
+    return persistence
+
+
+def process_redacted_cv_text(
+    redacted_text: str,
+    redacted_filename: str,
+    job_description: Optional[str] = None,
+    original_filename: Optional[str] = None,
+    force_reprocess: bool = False
+) -> Dict[str, Any]:
+    """Run the LLM, faithfulness, embedding, and persistence stages for an anonymized CV."""
+    from cv_intelligence_extractor import is_cv_anonymized
+
+    if not is_cv_anonymized(redacted_text):
+        return {
+            'success': False,
+            'error': 'CV is not anonymized. Please redact PII first.',
+            'redacted_filename': redacted_filename
+        }
+
+    if not force_reprocess:
+        cached = _load_cached_intelligence(redacted_filename)
+        if _is_cached_result_compatible(cached, job_description):
+            return {
+                'success': True,
+                'cached': True,
+                'redacted_filename': redacted_filename,
+                'intelligence': cached,
+                'intelligence_file': f"{Path(redacted_filename).stem}_intelligence.json",
+                'stored_in_supabase': False,
+                'stored_embedding_in_supabase': False,
+                'embedding_generated': bool(cached.get('embedding')),
+                'similarity_score': cached.get('similarity_score')
+            }
+
+    extractor = get_intelligence_extractor()
+    intelligence = extractor.extract_intelligence(
+        redacted_text,
+        job_description,
+        original_filename or redacted_filename
+    )
+
+    if intelligence.get('error') == 'CV_NOT_ANONYMIZED':
+        return {
+            'success': False,
+            'error': intelligence.get('error_message', 'CV is not anonymized.'),
+            'redacted_filename': redacted_filename
+        }
+
+    intelligence['redacted_filename'] = redacted_filename
+
+    embedding_state = _attach_embedding(intelligence)
+    persistence = _persist_intelligence(intelligence, redacted_filename, original_filename=original_filename)
+
+    return {
+        'success': 'error' not in intelligence,
+        'cached': False,
+        'redacted_filename': redacted_filename,
+        'intelligence': intelligence,
+        'similarity_score': intelligence.get('similarity_score'),
+        **embedding_state,
+        **persistence
+    }
+
+
+def process_source_cv(
+    cv_path: Path,
+    job_description: Optional[str] = None,
+    force_reprocess: bool = False,
+    existing_redacted_path: Optional[Path] = None
+) -> Dict[str, Any]:
+    """Execute the full architecture for an original CV file starting from redaction."""
+    original_filename = cv_path.name
+
+    if existing_redacted_path and existing_redacted_path.exists():
+        redacted_path = existing_redacted_path
+        redacted_filename = existing_redacted_path.name
+        with open(existing_redacted_path, 'r', encoding='utf-8') as f:
+            redacted_text = f.read()
+    else:
+        orchestrator = PipelineOrchestrator(config_dir='config')
+        safe_name = secure_filename(original_filename)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        redacted_filename = f"REDACTED_{timestamp}_{safe_name}.txt"
+        redacted_path = Path(app.config['OUTPUT_FOLDER']) / redacted_filename
+
+        redacted_text, profile = orchestrator.process_cv(str(cv_path))
+        with open(redacted_path, 'w', encoding='utf-8') as f:
+            f.write(redacted_text)
+
+    if redacted_text.startswith("[ERROR: No text extracted"):
+        return {
+            'success': False,
+            'error': 'No extractable text found in CV',
+            'redacted_filename': redacted_filename,
+            'preview': redacted_text
+        }
+
+    result = process_redacted_cv_text(
+        redacted_text=redacted_text,
+        redacted_filename=redacted_filename,
+        job_description=job_description,
+        original_filename=original_filename,
+        force_reprocess=force_reprocess
+    )
+    result['preview'] = redacted_text
+    return result
+
+
+def compute_local_keyword_match(cv_text: str, job_description: str) -> Dict[str, Any]:
+    """Lightweight keyword match used when enhanced triage is unavailable."""
+    stop_words = {
+        'about', 'after', 'again', 'also', 'and', 'are', 'been', 'being', 'build',
+        'candidate', 'candidates', 'experience', 'good', 'have', 'into', 'knowledge',
+        'must', 'need', 'plus', 'role', 'should', 'skills', 'strong', 'team',
+        'their', 'they', 'this', 'using', 'with', 'years'
+    }
+    tokens = re.findall(r'[a-zA-Z0-9+#./-]{2,}', job_description.lower())
+    keywords = []
+    seen = set()
+    for token in tokens:
+        if token in stop_words:
+            continue
+        if token not in seen:
+            seen.add(token)
+            keywords.append(token)
+
+    cv_lower = cv_text.lower()
+    matched = [keyword for keyword in keywords if keyword in cv_lower]
+    score = round((len(matched) / len(keywords)) * 100, 1) if keywords else 0.0
+
+    return {
+        'match_percentage': score,
+        'matched_keywords': matched[:15],
+        'reason': f"Matched {len(matched)} of {len(keywords)} extracted JD keywords"
+    }
+
+
+def _candidate_has_searchable_signal(intel: Dict[str, Any]) -> bool:
+    """Filter out placeholder or unusable records from UI search results."""
+    skills = (
+        intel.get('core_technical_skills')
+        or intel.get('secondary_technical_skills')
+        or intel.get('key_skills')
+        or []
+    )
+    domain = (intel.get('primary_domain') or '').strip()
+    years = intel.get('years_experience')
+    if years is None:
+        years = intel.get('years_of_experience')
+
+    return bool(
+        skills or
+        domain or
+        (isinstance(years, (int, float)) and years > 0)
+    )
+
 @app.route('/')
 def index():
     """Render the new unified interface"""
@@ -346,7 +761,7 @@ def semantic_search_page():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    """Handle file upload and process CV (with optional queue mode)"""
+    """Handle file upload and optionally execute the full CV intelligence pipeline."""
     try:
         # Check if file is present
         if 'cv_file' not in request.files:
@@ -373,7 +788,7 @@ def upload_file():
         
         # Check if queue mode is enabled and requested
         use_queue = request.form.get('use_queue', 'false').lower() == 'true'
-        job_description = request.form.get('job_description', '')
+        job_description = request.form.get('job_description', '').strip() or None
         
         if use_queue and QUEUE_AVAILABLE and job_description:
             # Queue mode: enqueue job and return job_id
@@ -401,30 +816,42 @@ def upload_file():
                     logger.warning(f"Queue failed, falling back to sync: {e}")
                     # Fall through to synchronous processing
         
-        # Synchronous mode: process immediately
+        # Synchronous mode: redact always, and run full intelligence extraction when JD is provided.
         try:
-            # Create fresh orchestrator instance with latest code
-            orchestrator = PipelineOrchestrator(config_dir='config')
-            
-            logger.info(f"Processing CV with pipeline...")
-            redacted_text, profile = orchestrator.process_cv(upload_path)
-            
-            # Save the output
-            output_path = os.path.join(app.config['OUTPUT_FOLDER'], f"REDACTED_{unique_filename}.txt")
-            with open(output_path, 'w', encoding='utf-8') as f:
-                f.write(redacted_text)
-            
-            logger.info(f"CV processed successfully: {output_path}")
-            
-            # Return success response with download link
-            return jsonify({
+            pipeline_result = process_source_cv(
+                cv_path=Path(upload_path),
+                job_description=job_description,
+                force_reprocess=True
+            )
+
+            if not pipeline_result.get('success'):
+                return jsonify({'error': pipeline_result.get('error', 'CV processing failed')}), 500
+
+            response = {
                 'success': True,
                 'mode': 'synchronous',
                 'message': 'CV processed successfully',
-                'output_filename': f"REDACTED_{unique_filename}.txt",
-                'preview': redacted_text,  # Full text instead of truncated
-                'download_url': url_for('download_file', filename=f"REDACTED_{unique_filename}.txt")
-            })
+                'output_filename': pipeline_result['redacted_filename'],
+                'preview': pipeline_result.get('preview', ''),
+                'download_url': url_for('download_file', filename=pipeline_result['redacted_filename'])
+            }
+
+            intelligence = pipeline_result.get('intelligence')
+            if intelligence:
+                response.update({
+                    'pipeline_executed': 'full',
+                    'intelligence': intelligence,
+                    'intelligence_file': pipeline_result.get('intelligence_file'),
+                    'stored_in_supabase': pipeline_result.get('stored_in_supabase', False),
+                    'stored_embedding_in_supabase': pipeline_result.get('stored_embedding_in_supabase', False),
+                    'embedding_generated': pipeline_result.get('embedding_generated', False),
+                    'similarity_score': pipeline_result.get('similarity_score')
+                })
+            else:
+                response['pipeline_executed'] = 'redaction_only'
+
+            logger.info(f"CV processed successfully: {pipeline_result['redacted_filename']}")
+            return jsonify(response)
             
         except Exception as e:
             logger.error(f"Error processing CV: {str(e)}", exc_info=True)
@@ -455,24 +882,13 @@ def download_file(filename):
 @app.route('/health')
 def health():
     """Health check endpoint with connection status"""
-    supabase_configured = is_supabase_configured()
-    supabase_status = 'configured' if supabase_configured else 'not configured'
-
-    # Proactively probe Supabase if not yet checked
-    if _supabase_reachable is None and supabase_configured:
-        try:
-            storage = get_supabase_storage()
-            if storage:
-                def _ping():
-                    return storage.client.table('cv_intelligence').select('anonymized_id').limit(1).execute()
-                try_supabase_operation(_ping, fallback_result=None, timeout_seconds=5)
-        except Exception:
-            pass
-
-    if _supabase_reachable is True:
+    supabase_probe = probe_supabase_runtime()
+    if supabase_probe['reachable']:
         supabase_status = 'connected'
-    elif _supabase_reachable is False:
+    elif supabase_probe['configured']:
         supabase_status = 'configured but unreachable (using local fallback)'
+    else:
+        supabase_status = 'not configured'
     
     # Check queue system
     queue_status = 'not configured'
@@ -485,7 +901,8 @@ def health():
             except:
                 queue_status = 'configured but unreachable'
     
-    llm_provider = os.getenv('LLM_PROVIDER', 'gemini')
+    llm_probe = probe_llm_provider()
+    embedding_probe = probe_embedding_runtime()
     
     # Count local data
     redacted_count = len(list(Path(app.config['OUTPUT_FOLDER']).glob('REDACTED_*.txt')))
@@ -496,10 +913,18 @@ def health():
         'service': 'CV Redaction Pipeline',
         'supabase': supabase_status,
         'queue_system': queue_status,
-        'llm_provider': llm_provider,
+        'llm_provider': llm_probe['provider'],
+        'llm_reachable': llm_probe['reachable'],
+        'embedding_provider': embedding_probe['provider'],
+        'embedding_reachable': embedding_probe['reachable'],
         'redacted_cvs': redacted_count,
         'intelligence_files': intelligence_count,
-        'api_key_configured': bool(os.getenv('GOOGLE_API_KEY') or os.getenv('OPENAI_API_KEY') or os.getenv('ANTHROPIC_API_KEY'))
+        'api_key_configured': llm_probe['configured'],
+        'live_checks': {
+            'llm': llm_probe,
+            'supabase': supabase_probe,
+            'embeddings': embedding_probe
+        }
     })
 
 
@@ -863,55 +1288,28 @@ def extract_intelligence():
                 'action_required': 'anonymize_first'
             }), 400
         
-        # Extract intelligence
-        extractor = get_intelligence_extractor()
-        intelligence = extractor.extract_intelligence(
-            cv_text,
-            job_description,
-            redacted_cv_file
+        result = process_redacted_cv_text(
+            redacted_text=cv_text,
+            redacted_filename=redacted_cv_file,
+            job_description=job_description,
+            original_filename=redacted_cv_file,
+            force_reprocess=True
         )
-        
-        # Check if extraction returned an error (e.g., CV not anonymized)
-        if intelligence.get("error") == "CV_NOT_ANONYMIZED":
+
+        if not result.get('success'):
             return jsonify({
-                'error': intelligence.get('error_message', 'CV is not anonymized'),
+                'error': result.get('error', 'Intelligence extraction failed'),
                 'action_required': 'anonymize_first'
             }), 400
         
-        # Save intelligence JSON locally (includes raw filename for local tracking)
-        intelligence_file = f"{Path(redacted_cv_file).stem}_intelligence.json"
-        intelligence_path = os.path.join(app.config['INTELLIGENCE_FOLDER'], intelligence_file)
-        with open(intelligence_path, 'w', encoding='utf-8') as f:
-            json.dump(intelligence, f, indent=2, ensure_ascii=False)
-        
-        # Store in Supabase if available (only anonymized data goes to DB)
-        stored = False
-        if SUPABASE_AVAILABLE and "error" not in intelligence:
-            storage = get_supabase_storage()
-            if storage:
-                try:
-                    storage.store_intelligence(intelligence)
-                    # Also store filename mapping for tracking
-                    anon_id = intelligence.get('anonymized_id')
-                    if anon_id:
-                        try:
-                            storage.store_filename_mapping(
-                                anonymized_id=anon_id,
-                                original_filename=redacted_cv_file,
-                                anonymized_filename=redacted_cv_file
-                            )
-                        except Exception as me:
-                            logger.warning(f"Could not store filename mapping: {me}")
-                    stored = True
-                except Exception as e:
-                    logger.warning(f"Could not store in Supabase: {e}")
-        
         return jsonify({
             'success': True,
-            'intelligence': intelligence,
-            'intelligence_file': intelligence_file,
-            'stored_in_supabase': stored,
-            'similarity_score': intelligence.get('similarity_score')
+            'intelligence': result.get('intelligence'),
+            'intelligence_file': result.get('intelligence_file'),
+            'stored_in_supabase': result.get('stored_in_supabase', False),
+            'stored_embedding_in_supabase': result.get('stored_embedding_in_supabase', False),
+            'embedding_generated': result.get('embedding_generated', False),
+            'similarity_score': result.get('similarity_score')
         })
         
     except Exception as e:
@@ -921,25 +1319,13 @@ def extract_intelligence():
 @app.route('/api/process-samples', methods=['POST'])
 def process_samples():
     """
-    Full pipeline with ENHANCED TRIAGE: Read original CVs → Redact PII → Pre-filter with triage → Extract Intelligence (only promising CVs) → Store in DB.
-    
-    OPTIMIZATION: Uses enhanced triage to pre-filter CVs before LLM analysis.
-    This saves 30-50% of LLM API calls by rejecting obvious mismatches early.
-    
-    Request body: {
-        "job_description": "Senior Java Developer...",
-        "force_reprocess": false,  // optional: re-process even if cached results exist
-        "use_triage": true  // optional: enable pre-filtering (default: true)
-    }
+    Full pipeline for the sample corpus:
+    original CV -> redaction -> LLM intelligence -> faithfulness -> embedding -> storage.
     """
     try:
-        data = request.get_json()
-        job_description = data.get('job_description')
+        data = request.get_json() or {}
+        job_description = (data.get('job_description') or '').strip() or None
         force_reprocess = data.get('force_reprocess', False)
-        use_triage = data.get('use_triage', True)  # Enable by default
-        
-        if not job_description:
-            return jsonify({'error': 'job_description is required. Paste the JD in the text area.'}), 400
         
         # Collect all original CVs from samples/ and samples/more/
         sample_dirs = [Path('samples'), Path('samples/more')]
@@ -954,226 +1340,100 @@ def process_samples():
         if not original_cvs:
             return jsonify({'error': 'No original CVs found in samples/ directory'}), 404
         
-        logger.info(f"Processing {len(original_cvs)} original CVs with dynamic JD (triage: {use_triage})")
-        
-        # Initialize pipeline components
-        orchestrator = PipelineOrchestrator(config_dir='config')
-        extractor = get_intelligence_extractor()
-        from cv_intelligence_extractor import is_cv_anonymized
-        
-        # Initialize enhanced triage if enabled
-        triage_engine = None
-        if use_triage:
-            try:
-                from enhanced_triage import EnhancedTriageEngine
-                triage_engine = EnhancedTriageEngine()
-                logger.info("✓ Enhanced triage enabled - will pre-filter CVs before LLM")
-            except ImportError:
-                logger.warning("Enhanced triage not available, processing all CVs")
-                use_triage = False
+        logger.info(f"Processing {len(original_cvs)} original CVs through the full pipeline")
         
         results = []
         redacted_count = 0
         intelligence_count = 0
-        triage_rejected_count = 0
-        quota_exhausted = False  # Track if daily quota is hit
-        consecutive_429 = 0  # Track consecutive rate-limit failures
+        embedding_count = 0
+        stored_supabase_count = 0
+        quota_exhausted = False
         
-        for idx, cv_path in enumerate(original_cvs):
+        for cv_path in original_cvs:
             cv_name = cv_path.name
             
-            # If quota is exhausted, skip LLM calls for remaining CVs
             if quota_exhausted:
                 results.append({
                     'file': cv_name, 'status': 'skipped',
-                    'error': 'Skipped — daily API quota exhausted. Already-processed CVs are saved. Re-run later without force_reprocess to continue.'
+                    'error': 'Skipped - API quota exhausted. Re-run later to continue.'
                 })
                 continue
             
             try:
-                # Rate limit: pause between LLM calls to avoid 429
-                if idx > 0 and intelligence_count > 0:  # Only pause if we actually called LLM
-                    import time
-                    time.sleep(6)  # 6s gap = 10 RPM safe for free tier
-                
-                # STEP 1: Redact PII
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 safe_name = secure_filename(cv_name)
-                redacted_filename = f"REDACTED_{timestamp}_{safe_name}.txt"
-                redacted_path = Path(app.config['OUTPUT_FOLDER']) / redacted_filename
-                
-                # Check if already redacted (skip if not force_reprocess)
                 existing_redacted = list(Path(app.config['OUTPUT_FOLDER']).glob(f'REDACTED_*_{safe_name}*'))
-                if existing_redacted and not force_reprocess:
-                    redacted_path = existing_redacted[0]
-                    redacted_filename = existing_redacted[0].name
-                    logger.info(f"  Using cached redacted: {redacted_filename}")
-                else:
-                    logger.info(f"  Redacting: {cv_name}")
-                    redacted_text, profile = orchestrator.process_cv(str(cv_path))
-                    with open(redacted_path, 'w', encoding='utf-8') as f:
-                        f.write(redacted_text)
-                    redacted_count += 1
-                
-                # Read redacted text
-                with open(redacted_path, 'r', encoding='utf-8') as f:
-                    cv_text = f.read()
-                
-                # Verify anonymization
-                if not is_cv_anonymized(cv_text):
-                    results.append({
-                        'file': cv_name, 'status': 'error',
-                        'error': 'Redaction did not produce anonymized output (possibly scanned/image CV)'
-                    })
-                    continue
-                
-                # STEP 2: Check cached intelligence (skip if not force_reprocess)
-                if not force_reprocess:
-                    existing_intel = list(Path(app.config['INTELLIGENCE_FOLDER']).glob(
-                        f'{Path(redacted_filename).stem}_intelligence.json'
-                    ))
-                    if existing_intel:
-                        try:
-                            with open(existing_intel[0], 'r', encoding='utf-8') as f:
-                                intelligence = json.load(f)
-                            if 'error' not in intelligence:
-                                results.append({
-                                    'file': cv_name, 'status': 'success',
-                                    'intelligence': intelligence, 'cached': True
-                                })
-                                continue
-                        except Exception:
-                            pass
-                
-                # STEP 3: ENHANCED TRIAGE - Pre-filter before LLM (saves 30-50% API calls)
-                if use_triage and triage_engine:
-                    triage_result = triage_engine.quick_triage(cv_text, job_description)
-                    match_percentage = triage_result['match_percentage']
-                    
-                    # Auto-reject if match is too low (<5%)
-                    if match_percentage < 5:
-                        logger.info(f"  ⚡ Triage rejected: {cv_name} (match: {match_percentage:.1f}%)")
-                        triage_rejected_count += 1
-                        
-                        # Create a lightweight intelligence record for rejected CVs
-                        intelligence = {
-                            'anonymized_id': f"CAND_{hash(cv_name) % 1000:03d}",
-                            'verdict': 'REJECT',
-                            'confidence_score': 95,  # High confidence in rejection
-                            'match_score': int(match_percentage),
-                            'verdict_reason': f"Pre-filtered by triage: {triage_result['reason']}",
-                            'years_experience': 0,
-                            'seniority_level': 'UNKNOWN',
-                            'core_technical_skills': triage_result.get('matched_keywords', []),
-                            'primary_domain': 'Unknown',
-                            'triage_filtered': True,
-                            'original_filename_raw': cv_name
-                        }
-                        
-                        # Save lightweight intelligence
-                        intel_filename = f"{Path(redacted_filename).stem}_intelligence.json"
-                        intel_path = Path(app.config['INTELLIGENCE_FOLDER']) / intel_filename
-                        with open(intel_path, 'w', encoding='utf-8') as f:
-                            json.dump(intelligence, f, indent=2, ensure_ascii=False)
-                        
-                        results.append({
-                            'file': cv_name, 'status': 'triage_rejected',
-                            'match_percentage': match_percentage,
-                            'reason': triage_result['reason']
-                        })
-                        continue
-                    else:
-                        logger.info(f"  ✓ Triage passed: {cv_name} (match: {match_percentage:.1f}%) - sending to LLM")
-                
-                # STEP 4: Extract intelligence with the dynamic JD (only for promising CVs)
-                logger.info(f"  Analyzing with LLM: {cv_name}")
-                intelligence = extractor.extract_intelligence(
-                    cv_text, job_description, redacted_filename
+                pipeline_result = process_source_cv(
+                    cv_path=cv_path,
+                    job_description=job_description,
+                    force_reprocess=force_reprocess,
+                    existing_redacted_path=existing_redacted[0] if (existing_redacted and not force_reprocess) else None
                 )
-                
-                if intelligence.get("error") == "CV_NOT_ANONYMIZED":
+
+                if not existing_redacted or force_reprocess:
+                    redacted_count += 1
+
+                if pipeline_result.get('success'):
+                    intelligence = pipeline_result.get('intelligence', {})
+                    if pipeline_result.get('intelligence'):
+                        intelligence_count += 1
+                    if pipeline_result.get('embedding_generated'):
+                        embedding_count += 1
+                    if pipeline_result.get('stored_in_supabase'):
+                        stored_supabase_count += 1
+
                     results.append({
-                        'file': cv_name, 'status': 'error',
-                        'error': 'CV not properly anonymized'
+                        'file': cv_name,
+                        'status': 'success',
+                        'cached': pipeline_result.get('cached', False),
+                        'redacted_filename': pipeline_result.get('redacted_filename'),
+                        'embedding_generated': pipeline_result.get('embedding_generated', False),
+                        'stored_in_supabase': pipeline_result.get('stored_in_supabase', False),
+                        'similarity_score': pipeline_result.get('similarity_score'),
+                        'intelligence': {
+                            'anonymized_id': intelligence.get('anonymized_id'),
+                            'verdict': intelligence.get('verdict'),
+                            'confidence_score': intelligence.get('confidence_score'),
+                            'match_score': intelligence.get('match_score'),
+                            'years_experience': intelligence.get('years_experience'),
+                            'seniority_level': intelligence.get('seniority_level'),
+                            'core_technical_skills': intelligence.get('core_technical_skills', []),
+                            'primary_domain': intelligence.get('primary_domain', ''),
+                            'verdict_reason': intelligence.get('verdict_reason', '')
+                        }
                     })
-                    continue
-                
-                # Save intelligence JSON
-                intel_filename = f"{Path(redacted_filename).stem}_intelligence.json"
-                intel_path = Path(app.config['INTELLIGENCE_FOLDER']) / intel_filename
-                with open(intel_path, 'w', encoding='utf-8') as f:
-                    json.dump(intelligence, f, indent=2, ensure_ascii=False)
-                intelligence_count += 1
-                
-                # Store in Supabase
-                if SUPABASE_AVAILABLE and 'error' not in intelligence:
-                    storage = get_supabase_storage()
-                    if storage:
-                        try:
-                            storage.store_intelligence(intelligence)
-                            anon_id = intelligence.get('anonymized_id')
-                            if anon_id:
-                                storage.store_filename_mapping(
-                                    anonymized_id=anon_id,
-                                    original_filename=redacted_filename,
-                                    anonymized_filename=redacted_filename
-                                )
-                        except Exception as se:
-                            logger.warning(f"Supabase store failed for {cv_name}: {se}")
-                
-                results.append({
-                    'file': cv_name, 'status': 'success',
-                    'intelligence': {
-                        'anonymized_id': intelligence.get('anonymized_id'),
-                        'verdict': intelligence.get('verdict'),
-                        'confidence_score': intelligence.get('confidence_score'),
-                        'match_score': intelligence.get('match_score'),
-                        'years_experience': intelligence.get('years_experience'),
-                        'seniority_level': intelligence.get('seniority_level'),
-                        'core_technical_skills': intelligence.get('core_technical_skills', []),
-                        'primary_domain': intelligence.get('primary_domain', ''),
-                        'verdict_reason': intelligence.get('verdict_reason', '')
-                    }
-                })
+                else:
+                    results.append({
+                        'file': cv_name,
+                        'status': 'error',
+                        'error': pipeline_result.get('error', 'Processing failed')
+                    })
                 
             except Exception as e:
                 error_msg = str(e)
                 logger.error(f"Error processing {cv_name}: {error_msg}")
                 
-                # Detect quota exhaustion and abort remaining CVs
                 if 'quota' in error_msg.lower() or 'rate limit exceeded' in error_msg.lower() or '429' in error_msg:
-                    consecutive_429 += 1
-                    if consecutive_429 >= 2:
-                        quota_exhausted = True
-                        logger.error(f"Quota exhausted after {consecutive_429} consecutive failures. Stopping LLM calls.")
-                        results.append({'file': cv_name, 'status': 'error', 'error': 'API quota exhausted — stopping. Re-run later to continue.'})
-                        continue
-                else:
-                    consecutive_429 = 0  # Reset on non-quota error
+                    quota_exhausted = True
                 
                 results.append({'file': cv_name, 'status': 'error', 'error': error_msg})
         
         successful = len([r for r in results if r.get('status') == 'success'])
         skipped = len([r for r in results if r.get('status') == 'skipped'])
-        triage_rejected = len([r for r in results if r.get('status') == 'triage_rejected'])
-        
-        # Calculate API savings
-        api_savings_percent = 0
-        if use_triage and len(original_cvs) > 0:
-            api_savings_percent = (triage_rejected / len(original_cvs)) * 100
         
         return jsonify({
             'success': True,
             'total_originals': len(original_cvs),
             'redacted': redacted_count,
             'intelligence_extracted': intelligence_count,
-            'triage_rejected': triage_rejected,
+            'embeddings_generated': embedding_count,
+            'stored_in_supabase': stored_supabase_count,
             'successful': successful,
-            'failed': len(original_cvs) - successful - skipped - triage_rejected,
+            'failed': len(original_cvs) - successful - skipped,
             'skipped': skipped,
             'quota_exhausted': quota_exhausted,
-            'api_savings_percent': round(api_savings_percent, 1),
-            'triage_enabled': use_triage,
+            'triage_rejected': 0,
+            'api_savings_percent': 0,
+            'triage_enabled': False,
             'results': results
         })
         
@@ -1188,12 +1448,9 @@ def batch_extract_intelligence():
     Only processes anonymized CVs — skips any that aren't properly redacted.
     """
     try:
-        data = request.get_json()
-        job_description = data.get('job_description')
+        data = request.get_json() or {}
+        job_description = (data.get('job_description') or '').strip() or None
         force_reprocess = data.get('force_reprocess', False)
-        
-        if not job_description:
-            return jsonify({'error': 'job_description required'}), 400
         
         # Get all redacted CV files
         output_dir = Path(app.config['OUTPUT_FOLDER'])
@@ -1202,11 +1459,8 @@ def batch_extract_intelligence():
         if not cv_files:
             return jsonify({'error': 'No redacted CVs found. Process sample CVs first.'}), 404
         
-        from cv_intelligence_extractor import is_cv_anonymized
         from llm_batch_processor import QuotaExhaustedException
         
-        # Process in batch
-        extractor = get_intelligence_extractor()
         results = []
         skipped_not_anonymized = 0
         quota_exhausted = False
@@ -1229,66 +1483,40 @@ def batch_extract_intelligence():
                     try:
                         with open(intelligence_path, 'r', encoding='utf-8') as f:
                             intelligence = json.load(f)
-                        results.append({
-                            'file': cv_file.name,
-                            'status': 'success' if 'error' not in intelligence else 'error',
-                            'intelligence': intelligence,
-                            'cached': True
-                        })
-                        continue
+                        if _is_cached_result_compatible(intelligence, job_description):
+                            results.append({
+                                'file': cv_file.name,
+                                'status': 'success' if 'error' not in intelligence else 'error',
+                                'intelligence': intelligence,
+                                'cached': True
+                            })
+                            continue
                     except:
                         pass # If invalid JSON, re-process
 
                 with open(cv_file, 'r', encoding='utf-8') as f:
                     cv_text = f.read()
-                
-                # Verify anonymization before processing
-                if not is_cv_anonymized(cv_text):
-                    skipped_not_anonymized += 1
-                    results.append({
-                        'file': cv_file.name,
-                        'status': 'error',
-                        'error': 'CV is not anonymized — please redact PII first'
-                    })
-                    continue
-                
-                intelligence = extractor.extract_intelligence(
-                    cv_text,
-                    job_description,
-                    cv_file.name
+
+                result = process_redacted_cv_text(
+                    redacted_text=cv_text,
+                    redacted_filename=cv_file.name,
+                    job_description=job_description,
+                    original_filename=cv_file.name,
+                    force_reprocess=force_reprocess
                 )
-                
-                # Save JSON
-                intelligence_file = f"{cv_file.stem}_intelligence.json"
-                intelligence_path = os.path.join(app.config['INTELLIGENCE_FOLDER'], intelligence_file)
-                with open(intelligence_path, 'w', encoding='utf-8') as f:
-                    json.dump(intelligence, f, indent=2, ensure_ascii=False)
-                
+
+                if not result.get('success') and 'anonymized' in (result.get('error', '').lower()):
+                    skipped_not_anonymized += 1
+
                 results.append({
                     'file': cv_file.name,
-                    'status': 'success' if 'error' not in intelligence else 'error',
-                    'intelligence': intelligence
+                    'status': 'success' if result.get('success') else 'error',
+                    'cached': result.get('cached', False),
+                    'embedding_generated': result.get('embedding_generated', False),
+                    'stored_in_supabase': result.get('stored_in_supabase', False),
+                    'intelligence': result.get('intelligence'),
+                    'error': result.get('error')
                 })
-                
-                # Store in Supabase if available
-                if SUPABASE_AVAILABLE and "error" not in intelligence:
-                    storage = get_supabase_storage()
-                    if storage:
-                        try:
-                            storage.store_intelligence(intelligence)
-                            # Also store filename mapping
-                            anon_id = intelligence.get('anonymized_id')
-                            if anon_id:
-                                try:
-                                    storage.store_filename_mapping(
-                                        anonymized_id=anon_id,
-                                        original_filename=cv_file.name,
-                                        anonymized_filename=cv_file.name
-                                    )
-                                except Exception as me:
-                                    logger.warning(f"Could not store filename mapping: {me}")
-                        except Exception as e:
-                            logger.warning(f"Could not store {cv_file.name} in Supabase: {e}")
                 
             except QuotaExhaustedException as qe:
                 logger.error(f"Quota exhausted during batch extract: {qe}")
@@ -1309,6 +1537,8 @@ def batch_extract_intelligence():
         
         successful = len([r for r in results if r.get('status') == 'success'])
         skipped = len([r for r in results if r.get('status') == 'skipped'])
+        embeddings_generated = len([r for r in results if r.get('embedding_generated')])
+        stored_in_supabase = len([r for r in results if r.get('stored_in_supabase')])
         
         response_data = {
             'success': True,
@@ -1316,6 +1546,8 @@ def batch_extract_intelligence():
             'successful': successful,
             'failed': len(cv_files) - successful - skipped,
             'skipped': skipped,
+            'embeddings_generated': embeddings_generated,
+            'stored_in_supabase': stored_in_supabase,
             'quota_exhausted': quota_exhausted,
             'results': results
         }
@@ -1360,7 +1592,11 @@ def search_candidates():
             )
             if raw_results is not None:
                 # Convert DB records to app format
-                results = [storage._db_record_to_app_format(r) for r in raw_results]
+                results = [
+                    candidate
+                    for candidate in (storage._db_record_to_app_format(r) for r in raw_results)
+                    if _candidate_has_searchable_signal(candidate)
+                ]
                 return jsonify({
                     'success': True,
                     'count': len(results),
@@ -1386,9 +1622,8 @@ def quick_search_api():
     """Quick search using keyword matching - instant, no LLM calls"""
     try:
         import time
-        from enhanced_triage import EnhancedTriageEngine
         
-        data = request.get_json()
+        data = request.get_json() or {}
         job_description = data.get('job_description', '')
         limit = data.get('limit', 10)
         
@@ -1408,48 +1643,83 @@ def quick_search_api():
                 
                 if 'error' in intel and not intel.get('verdict'):
                     continue
+                if not _candidate_has_searchable_signal(intel):
+                    continue
                 
-                # Get CV text for matching
-                cv_text = intel.get('cleaned_narrative', '')
-                if not cv_text:
-                    skills = intel.get('core_technical_skills', [])
-                    domain = intel.get('primary_domain', '')
-                    cv_text = f"{domain} {' '.join(skills)}"
+                # Prefer structured fields for matching so placeholder narratives
+                # do not outrank candidates with actual extracted metadata.
+                skills = (intel.get('core_technical_skills') or []) + (intel.get('secondary_technical_skills') or [])
+                domain = intel.get('primary_domain', '')
+                seniority = intel.get('seniority_level', '')
+                years = intel.get('years_experience')
+                structured_text = " ".join(
+                    str(part).strip()
+                    for part in [domain, seniority, f"{years} years" if years else ""] + skills
+                    if str(part).strip()
+                ).strip()
+                cv_text = structured_text or intel.get('cleaned_narrative') or intel.get('cleaned_text', '')
                 
                 cvs.append({'data': intel, 'text': cv_text})
             except Exception:
                 pass
         
-        # Use triage for matching
-        triage = EnhancedTriageEngine()
+        triage = None
+        try:
+            from enhanced_triage import EnhancedTriageEngine
+            triage = EnhancedTriageEngine()
+        except ImportError:
+            logger.info("Enhanced triage not available, using built-in keyword matcher")
+
         matches = []
         
         for cv in cvs:
-            should_process, reason, relevance_score = triage.should_process(
-                cv['text'], job_description
-            )
-            match_percentage = relevance_score * 100
-            
-            # Extract matched keywords
-            cv_keywords = triage.extract_keywords(cv['text'])
-            jd_keywords = triage.extract_keywords(job_description)
-            matched_keywords = list(cv_keywords.intersection(jd_keywords))
+            if triage:
+                should_process, reason, relevance_score = triage.should_process(
+                    cv['text'], job_description
+                )
+                match_percentage = relevance_score * 100
+                cv_keywords = triage.extract_keywords(cv['text'])
+                jd_keywords = triage.extract_keywords(job_description)
+                matched_keywords = list(cv_keywords.intersection(jd_keywords))
+            else:
+                local_match = compute_local_keyword_match(cv['text'], job_description)
+                reason = local_match['reason']
+                match_percentage = local_match['match_percentage']
+                matched_keywords = local_match['matched_keywords']
+
+            if match_percentage <= 0 or not matched_keywords:
+                continue
             
             matches.append({
                 'anonymized_id': cv['data'].get('anonymized_id', 'UNKNOWN'),
                 'match_percentage': match_percentage,
                 'matched_keywords': matched_keywords,
-                'verdict': cv['data'].get('verdict', 'UNKNOWN'),
+                'verdict': cv['data'].get('verdict'),
                 'confidence_score': cv['data'].get('confidence_score', 0),
                 'years_experience': cv['data'].get('years_experience', 0),
-                'seniority_level': cv['data'].get('seniority_level', 'UNKNOWN'),
+                'seniority_level': cv['data'].get('seniority_level', 'N/A'),
                 'core_technical_skills': cv['data'].get('core_technical_skills', [])[:5],
-                'primary_domain': cv['data'].get('primary_domain', 'Unknown'),
+                'primary_domain': cv['data'].get('primary_domain', ''),
                 'verdict_reason': cv['data'].get('verdict_reason', '')
             })
         
+        deduped_matches = {}
+        for match in matches:
+            key = match['anonymized_id']
+            current = deduped_matches.get(key)
+            if current is None or match['match_percentage'] > current['match_percentage']:
+                deduped_matches[key] = match
+
         # Sort by match percentage
-        matches.sort(key=lambda x: x['match_percentage'], reverse=True)
+        matches = list(deduped_matches.values())
+        matches.sort(
+            key=lambda x: (
+                x['match_percentage'],
+                x.get('confidence_score', 0),
+                x.get('years_experience', 0)
+            ),
+            reverse=True
+        )
         top_matches = matches[:limit]
         
         elapsed = time.time() - start_time
@@ -1545,7 +1815,11 @@ def get_all_candidates():
             )
             if raw_candidates is not None:
                 # Convert DB records to app format
-                candidates = [storage._db_record_to_app_format(r) for r in raw_candidates]
+                candidates = [
+                    candidate
+                    for candidate in (storage._db_record_to_app_format(r) for r in raw_candidates)
+                    if _candidate_has_searchable_signal(candidate)
+                ]
                 return jsonify({
                     'success': True,
                     'count': len(candidates),
@@ -1554,7 +1828,7 @@ def get_all_candidates():
                 })
         
         # Local fallback
-        candidates = load_local_intelligence_files()[:limit]
+        candidates = [c for c in load_local_intelligence_files() if _candidate_has_searchable_signal(c)][:limit]
         return jsonify({
             'success': True,
             'count': len(candidates),
@@ -1570,40 +1844,12 @@ def get_all_candidates():
 def get_review_queue():
     """Get candidates requiring human review (confidence < 70%) - with local fallback"""
     try:
-        limit = request.args.get('limit', 50, type=int)
-        
-        # Try Supabase first with timeout
-        storage = get_supabase_storage()
-        if storage:
-            candidates = try_supabase_operation(
-                lambda: storage.get_candidates_requiring_review(limit=limit),
-                fallback_result=None,
-                timeout_seconds=5
-            )
-            if candidates is not None:
-                return jsonify({
-                    'success': True,
-                    'count': len(candidates),
-                    'candidates': candidates,
-                    'message': f'{len(candidates)} candidates need human review (confidence <70% or unclear AI verdict)',
-                    'data_source': 'supabase'
-                })
-        
-        # Local fallback
-        all_candidates = load_local_intelligence_files()
-        candidates = [
-            c for c in all_candidates
-            if c.get('requires_human_review') and not c.get('recruiter_override')
-        ]
-        candidates.sort(key=lambda x: x.get('confidence_score', 0))
-        candidates = candidates[:limit]
-        
         return jsonify({
             'success': True,
-            'count': len(candidates),
-            'candidates': candidates,
-            'message': f'{len(candidates)} candidates need human review (confidence <70% or unclear AI verdict)',
-            'data_source': 'local_json'
+            'count': 0,
+            'candidates': [],
+            'message': 'Human review queue is disabled for now.',
+            'data_source': 'disabled'
         })
         
     except Exception as e:
@@ -1742,16 +1988,22 @@ def sync_to_supabase():
 @app.route('/api/connection-status')
 def connection_status():
     """Check real-time connection status of all services"""
+    llm_probe = probe_llm_provider()
+    embedding_probe = probe_embedding_runtime()
+    supabase_probe = probe_supabase_runtime()
     status = {
         'supabase': {
-            'configured': is_supabase_configured(),
-            'reachable': _supabase_reachable if _supabase_reachable is not None else 'unknown',
-            'url': os.getenv('SUPABASE_URL', 'NOT SET')
+            'configured': supabase_probe['configured'],
+            'reachable': supabase_probe['reachable'],
+            'url': os.getenv('SUPABASE_URL', 'NOT SET'),
+            'message': supabase_probe['message']
         },
         'llm': {
-            'provider': os.getenv('LLM_PROVIDER', 'not set'),
-            'model': os.getenv('LLM_MODEL', 'default'),
-            'api_key_set': bool(os.getenv('GOOGLE_API_KEY') or os.getenv('OPENAI_API_KEY'))
+            **llm_probe,
+            'api_key_set': llm_probe['configured']
+        },
+        'embeddings': {
+            **embedding_probe
         },
         'local_data': {
             'redacted_cvs': len(list(Path(app.config['OUTPUT_FOLDER']).glob('REDACTED_*.txt'))),
