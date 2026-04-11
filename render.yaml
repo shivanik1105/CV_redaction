@@ -1,83 +1,18 @@
-# Render deployment configuration for CV Intelligence System
 services:
   - type: web
-    name: cv-intelligence-system
+    name: cv-matcher
     env: python
-    region: oregon
-    plan: starter  # $7/month - upgrade to standard ($25/month) for better performance
-    branch: main
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
-    startCommand: gunicorn app:app --host 0.0.0.0 --port $PORT --workers 2 --timeout 120 --log-level info
-    healthCheckPath: /health
-    autoDeploy: true
-    
+    buildCommand: |
+      apt-get update && apt-get install -y \
+        build-essential \
+        libfreetype6-dev \
+        libharfbuzz-dev \
+        libjpeg-dev \
+        libopenjp2-7-dev \
+        mupdf-tools \
+        && pip install --upgrade pip \
+        && pip install -r requirements.txt
+    startCommand: gunicorn app:app
     envVars:
-      # Flask Configuration
-      - key: FLASK_ENV
-        value: production
-      
-      - key: SECRET_KEY
-        generateValue: true  # Auto-generate secure secret key
-      
-      - key: PORT
-        value: 10000
-      
-      # LLM Provider Configuration
-      - key: LLM_PROVIDER
-        value: groq
-      
-      - key: LLM_MODEL
-        value: llama-3.3-70b-versatile
-      
-      # API Keys (Add these in Render Dashboard as secrets)
-      - key: GROQ_API_KEY
-        sync: false  # Set in Render Dashboard
-      
-      - key: OPENAI_API_KEY
-        sync: false  # Optional
-      
-      - key: ANTHROPIC_API_KEY
-        sync: false  # Optional
-      
-      - key: GOOGLE_API_KEY
-        sync: false  # Optional
-      
-      # Supabase Configuration (Add these in Render Dashboard)
-      - key: SUPABASE_URL
-        sync: false  # Set in Render Dashboard
-      
-      - key: SUPABASE_KEY
-        sync: false  # Set in Render Dashboard
-      
-      # Embedding Provider
-      - key: EMBEDDING_PROVIDER
-        value: local
-      
-      # Performance Tuning
-      - key: UPLOAD_WORKER_COUNT
-        value: 2
-      
-      - key: LLM_MAX_CONCURRENT_REQUESTS
-        value: 2
-      
-      - key: LLM_MIN_INTERVAL_SECONDS
-        value: 0.5
-      
-      - key: QUICK_SEARCH_CACHE_TTL_SECONDS
-        value: 60
-      
-      - key: UPLOAD_JOB_TTL_SECONDS
-        value: 3600
-      
-      - key: UPLOAD_ASYNC_DEFAULT
-        value: true
-      
-      # Asset Version (for cache busting)
-      - key: ASSET_VERSION
-        generateValue: true
-
-# Disk storage for uploaded files and processed data
-disks:
-  - name: data
-    mountPath: /opt/render/project/src/data
-    sizeGB: 1  # 1GB free, upgrade if needed
+      - key: PYTHON_VERSION
+        value: 3.11.7

@@ -5,7 +5,7 @@ python-dotenv==1.0.0
 gunicorn==21.2.0
 
 # PDF Processing
-PyMuPDF==1.23.8
+PyMuPDF==1.22.5  # Last version with reliable pre-built wheels
 pdfplumber==0.10.3
 pdfminer.six==20221105
 pypdfium2==4.26.0
