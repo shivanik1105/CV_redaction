@@ -6,11 +6,8 @@ services:
     region: oregon
     plan: starter  # $7/month - upgrade to standard ($25/month) for better performance
     branch: main
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-      python -m spacy download en_core_web_sm
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt && python -m spacy download en_core_web_sm
+    startCommand: gunicorn app:app --host 0.0.0.0 --port $PORT --workers 2 --timeout 120 --log-level info
     healthCheckPath: /health
     autoDeploy: true
     
