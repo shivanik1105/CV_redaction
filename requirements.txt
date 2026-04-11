@@ -23,15 +23,15 @@ phonenumbers==8.13.26
 # NLP Model (download separately: python -m spacy download en_core_web_sm)
 # en-core-web-sm==3.7.1
 
-# LLM Providers
-groq==0.4.1
-openai==1.6.1
-anthropic==0.8.1
-google-generativeai==0.3.2
-ollama==0.1.6
+# LLM Providers (updated versions to resolve httpx conflict)
+groq==0.11.0
+openai==1.54.0
+anthropic==0.39.0
+google-generativeai==0.8.3
+# ollama==0.1.6  # Commented out - conflicts with httpx, use if needed locally
 
-# Database & Storage
-supabase==2.3.0
+# Database & Storage (updated to resolve httpx conflict)
+supabase==2.10.0
 psycopg2-binary==2.9.9
 
 # Vector Search & Embeddings
