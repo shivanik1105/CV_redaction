@@ -1,0 +1,27 @@
+{
+  "anonymized_id": "SYN_048",
+  "archetype": "python_generalist",
+  "years_experience": 3.3,
+  "core_technical_skills": [
+    "Pandas",
+    "Docker",
+    "NumPy",
+    "FastAPI",
+    "Python",
+    "SQL"
+  ],
+  "secondary_technical_skills": [
+    "Terraform",
+    "Cloud Basics",
+    "Team Collaboration",
+    "Problem Solving",
+    "Testing"
+  ],
+  "key_strengths": [
+    "Good all-round software delivery and execution",
+    "Strong coding discipline and collaboration"
+  ],
+  "primary_domain": "Software Engineering",
+  "cleaned_narrative": "Worked on mixed backend and analytics tasks with solid execution across multiple projects.",
+  "verdict_reason": "Good all-round software delivery and execution"
+}

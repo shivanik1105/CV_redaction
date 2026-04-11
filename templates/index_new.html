@@ -4,7 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CV Intelligence System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-a: #f6f7ef;
+            --bg-b: #f8efe1;
+            --panel: #fffdf8;
+            --ink-strong: #132321;
+            --ink-soft: #58615f;
+            --brand-1: #0f7a72;
+            --brand-2: #145b7d;
+            --accent: #ea7f46;
+            --line: #dfe5df;
+            --ok-bg: #d6f2e8;
+            --ok-text: #1f5f49;
+            --warn-bg: #fff0cd;
+            --warn-text: #7a5b11;
+            --err-bg: #fbd9db;
+            --err-text: #7a2125;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,8 +33,12 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Manrope', 'Segoe UI', sans-serif;
+            color: var(--ink-strong);
+            background:
+                radial-gradient(1200px 420px at 10% -8%, rgba(20, 91, 125, 0.12), transparent 60%),
+                radial-gradient(900px 360px at 95% -2%, rgba(234, 127, 70, 0.14), transparent 55%),
+                linear-gradient(140deg, var(--bg-a) 0%, var(--bg-b) 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -21,22 +46,25 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background: white;
+            background: var(--panel);
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 24px 70px rgba(13, 31, 30, 0.16);
             overflow: hidden;
+            border: 1px solid rgba(15, 122, 114, 0.12);
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(125deg, var(--brand-1) 0%, var(--brand-2) 68%, var(--accent) 100%);
             color: white;
             padding: 30px;
             text-align: center;
         }
 
         .header h1 {
+            font-family: 'Space Grotesk', 'Manrope', sans-serif;
             font-size: 2.5em;
             margin-bottom: 10px;
+            letter-spacing: 0.01em;
         }
 
         .header p {
@@ -46,8 +74,8 @@
 
         .tabs {
             display: flex;
-            background: #f8f9fa;
-            border-bottom: 2px solid #e9ecef;
+            background: #f2f4f1;
+            border-bottom: 2px solid var(--line);
             overflow-x: auto;
         }
 
@@ -58,19 +86,19 @@
             background: none;
             font-size: 1em;
             font-weight: 500;
-            color: #6c757d;
+            color: var(--ink-soft);
             transition: all 0.3s;
             white-space: nowrap;
         }
 
         .tab:hover {
-            background: #e9ecef;
-            color: #495057;
+            background: #e3e8e4;
+            color: var(--ink-strong);
         }
 
         .tab.active {
-            color: #667eea;
-            border-bottom: 3px solid #667eea;
+            color: var(--brand-2);
+            border-bottom: 3px solid var(--brand-2);
             background: white;
         }
 
@@ -91,15 +119,15 @@
 
         .card {
             background: white;
-            border: 1px solid #e9ecef;
+            border: 1px solid var(--line);
             border-radius: 12px;
             padding: 25px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 6px 18px rgba(16, 35, 35, 0.06);
         }
 
         .card h3 {
-            color: #667eea;
+            color: var(--brand-2);
             margin-bottom: 15px;
             font-size: 1.3em;
         }
@@ -118,13 +146,13 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(125deg, var(--brand-1) 0%, var(--brand-2) 100%);
             color: white;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 16px rgba(20, 91, 125, 0.28);
         }
 
         .btn-secondary {
@@ -144,7 +172,7 @@
         textarea {
             width: 100%;
             padding: 15px;
-            border: 2px solid #e9ecef;
+            border: 2px solid var(--line);
             border-radius: 8px;
             font-size: 1em;
             font-family: inherit;
@@ -154,13 +182,13 @@
 
         textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--brand-2);
         }
 
         input[type="text"], input[type="number"], select {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e9ecef;
+            border: 2px solid var(--line);
             border-radius: 8px;
             font-size: 1em;
             transition: border-color 0.3s;
@@ -168,7 +196,7 @@
 
         input:focus, select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--brand-2);
         }
 
         .form-group {
@@ -192,32 +220,32 @@
         }
 
         .alert-info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border-left: 4px solid #17a2b8;
+            background: #d7eef7;
+            color: #1d4f63;
+            border-left: 4px solid var(--brand-2);
         }
 
         .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
+            background: var(--ok-bg);
+            color: var(--ok-text);
+            border-left: 4px solid #2e9f78;
         }
 
         .alert-warning {
-            background: #fff3cd;
-            color: #856404;
-            border-left: 4px solid #ffc107;
+            background: var(--warn-bg);
+            color: var(--warn-text);
+            border-left: 4px solid #efbf34;
         }
 
         .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border-left: 4px solid #dc3545;
+            background: var(--err-bg);
+            color: var(--err-text);
+            border-left: 4px solid #d75863;
         }
 
         .spinner {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border-top: 3px solid var(--brand-2);
             border-radius: 50%;
             width: 24px;
             height: 24px;
@@ -248,15 +276,15 @@
 
         .candidate-card {
             background: white;
-            border: 2px solid #e9ecef;
+            border: 2px solid var(--line);
             border-radius: 12px;
             padding: 20px;
             transition: all 0.3s;
         }
 
         .candidate-card:hover {
-            border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            border-color: var(--brand-2);
+            box-shadow: 0 6px 14px rgba(20, 91, 125, 0.16);
             transform: translateY(-2px);
         }
 
@@ -270,7 +298,7 @@
         .candidate-id {
             font-size: 1.2em;
             font-weight: 600;
-            color: #667eea;
+            color: var(--brand-2);
         }
 
         .match-badge {
@@ -340,11 +368,97 @@
         }
 
         .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(125deg, var(--brand-1) 0%, var(--brand-2) 78%);
             color: white;
             padding: 25px;
             border-radius: 12px;
             text-align: center;
+        }
+
+        .runtime-strip {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .runtime-chip {
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.26);
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 0.9em;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+        }
+
+        .upload-file-picker {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .upload-file-name {
+            color: var(--ink-soft);
+            font-weight: 600;
+        }
+
+        .upload-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 10px;
+        }
+
+        .job-status-panel {
+            margin-top: 15px;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: #f6faf7;
+        }
+
+        .upload-result-preview {
+            margin-top: 14px;
+            background: #f5f7f6;
+            border: 1px solid #dbe4df;
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .upload-result-preview h4 {
+            margin-bottom: 10px;
+            color: #2d4f4c;
+        }
+
+        .upload-result-preview pre {
+            max-height: 280px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+            color: #324543;
+        }
+
+        .score-breakdown {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .breakdown-item {
+            background: #eef5f3;
+            color: #2b5150;
+            border: 1px solid #d5e4df;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 0.8em;
+            font-weight: 600;
         }
 
         .stat-number {
@@ -396,19 +510,23 @@
 
     <div class="container">
         <div class="header">
-            <h1>🎯 CV Intelligence System</h1>
+            <h1>CV Intelligence System</h1>
             <p>AI-Powered Candidate Screening & Matching</p>
+            <div id="runtimeStatus" class="runtime-strip">
+                <span class="runtime-chip">Runtime status loading...</span>
+            </div>
         </div>
 
         <div class="tabs">
-            <button class="tab active" onclick="showTab('search')">🔍 Search</button>
-            <button class="tab" onclick="showTab('process')">⚙️ Process CVs</button>
+            <button class="tab active" data-tab="search" onclick="showTab('search', this)">Search</button>
+            <button class="tab" data-tab="upload" onclick="showTab('upload', this)">Upload CV</button>
+            <button class="tab" data-tab="process" onclick="showTab('process', this)">Process CVs</button>
         </div>
 
         <!-- Search Tab -->
         <div id="search" class="tab-content active">
             <div class="card">
-                <h3>🔍 Search & Filter Candidates</h3>
+                <h3>Search and Filter Candidates</h3>
                 <div class="alert alert-info">
                     ⚡ Instant search with advanced filters. Results in <1 second. Use filters below to narrow down candidates.
                 </div>
@@ -440,6 +558,11 @@
                     <div class="form-group">
                         <label>Min Confidence (%)</label>
                         <input type="number" id="filterMinConfidence" placeholder="e.g., 60" min="0" max="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Top Candidates (10-15)</label>
+                        <input type="number" id="filterTopLimit" value="15" min="10" max="15">
                     </div>
 
                     <div class="form-group">
@@ -476,10 +599,73 @@
             <div id="searchResults"></div>
         </div>
 
+        <!-- Upload Tab -->
+        <div id="upload" class="tab-content">
+            <div class="card">
+                <h3>Upload and Process Single CV</h3>
+                <div class="alert alert-info">
+                    Upload one CV, optionally provide JD context, and track async job status from this page.
+                </div>
+
+                <div class="form-group">
+                    <label>CV File (PDF/DOCX)</label>
+                    <div class="upload-file-picker">
+                        <input id="uploadFileInput" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                        <span id="uploadSelectedFile" class="upload-file-name">No file selected</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Job Description (Optional)</label>
+                    <textarea id="uploadJD" rows="4" placeholder="Paste JD to run JD-specific matching. Leave empty to run general intelligence extraction and Supabase storage."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="uploadAsync" checked>
+                        Process asynchronously (recommended for concurrency)
+                    </label>
+                </div>
+
+                <div class="upload-meta-grid">
+                    <div class="form-group">
+                        <label>LLM Provider (Optional per-user override)</label>
+                        <select id="uploadLLMProvider">
+                            <option value="">Use server default</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic</option>
+                            <option value="gemini">Gemini</option>
+                            <option value="groq">Groq</option>
+                            <option value="ollama">Ollama</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>LLM Model (Optional)</label>
+                        <input id="uploadLLMModel" type="text" placeholder="Example: gpt-4o-mini">
+                    </div>
+
+                    <div class="form-group">
+                        <label>LLM API Key (Optional per-user key)</label>
+                        <input id="uploadLLMApiKey" type="password" placeholder="Only sent with this request">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" id="btnUploadCV" onclick="submitUploadCv()">Upload CV</button>
+                    <button class="btn btn-secondary" onclick="resetUploadForm()">Reset</button>
+                </div>
+
+                <div id="uploadJobStatus" class="job-status-panel" style="display:none;"></div>
+            </div>
+
+            <div id="uploadResults"></div>
+        </div>
+
         <!-- Process CVs Tab -->
         <div id="process" class="tab-content">
             <div class="card">
-                <h3>⚙️ Process CVs</h3>
+                <h3>Bulk Process CVs</h3>
                 <div class="alert alert-warning">
                     ⚠️ This processes all sample CVs through redaction, intelligence extraction, embeddings, and storage.
                 </div>
@@ -497,18 +683,49 @@
 
             <div id="processResults"></div>
         </div>
-
-        </div>
     </div>
 
     <script>
         // Tab switching
-        function showTab(tabName) {
+        function showTab(tabName, tabButton = null) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            event.target.classList.add('active');
+
+            const activeButton = tabButton || document.querySelector(`.tab[data-tab="${tabName}"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
             document.getElementById(tabName).classList.add('active');
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        async function loadRuntimeStatus() {
+            const statusNode = document.getElementById('runtimeStatus');
+            if (!statusNode) return;
+
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                if (!response.ok || !data.status) {
+                    throw new Error(data.error || 'Health check failed');
+                }
+
+                statusNode.innerHTML = `
+                    <span class="runtime-chip">Supabase: ${escapeHtml(data.supabase)}</span>
+                    <span class="runtime-chip">LLM: ${escapeHtml(data.llm_provider)} (${data.llm_reachable ? 'reachable' : 'check'})</span>
+                    <span class="runtime-chip">Upload workers: ${escapeHtml(data.async_upload.worker_count)} | Queue: ${escapeHtml(data.async_upload.queue_size)}</span>
+                `;
+            } catch (error) {
+                statusNode.innerHTML = `<span class="runtime-chip">Runtime status unavailable: ${escapeHtml(error.message)}</span>`;
+            }
         }
 
 
@@ -522,12 +739,14 @@
                 seniority_level: document.getElementById('filterSeniority').value,
                 min_match_score: document.getElementById('filterMinScore').value ? parseInt(document.getElementById('filterMinScore').value) : null,
                 min_confidence_score: document.getElementById('filterMinConfidence').value ? parseInt(document.getElementById('filterMinConfidence').value) : null,
+                top_limit: document.getElementById('filterTopLimit').value ? parseInt(document.getElementById('filterTopLimit').value) : 15,
                 min_years_experience: document.getElementById('filterMinYears').value ? parseFloat(document.getElementById('filterMinYears').value) : null,
                 max_years_experience: document.getElementById('filterMaxYears').value ? parseFloat(document.getElementById('filterMaxYears').value) : null,
                 required_skills: document.getElementById('filterSkills').value ? 
                     document.getElementById('filterSkills').value.split(',').map(s => s.trim()) : null,
                 primary_domain: document.getElementById('filterDomain').value || null
             };
+            filters.top_limit = Math.max(10, Math.min(15, filters.top_limit || 15));
             
             const resultsDiv = document.getElementById('searchResults');
             resultsDiv.innerHTML = `
@@ -545,7 +764,7 @@
                     response = await fetch('/api/quick-search', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ job_description: jd, limit: 50 })
+                        body: JSON.stringify({ job_description: jd, limit: filters.top_limit })
                     });
                     data = await response.json();
                     
@@ -588,29 +807,36 @@
                                 <div class="card">
                                     <h3>Search Results (${matches.length} matches)</h3>
                                     <div class="alert alert-success">
-                                        ✓ Found ${matches.length} matches in ${data.search_time}
+                                        ✓ Found ${matches.length} matches in ${data.search_time} (source: ${data.data_source || 'unknown'})
                                     </div>
                                 </div>
                             `;
-                            displayCandidates(matches, 'searchResults', true);
+                            displayCandidates(matches, 'searchResults', true, true);
                         } else {
                             resultsDiv.innerHTML = `
                                 <div class="card">
                                     <div class="empty-state">
                                         <div class="empty-state-icon">🔍</div>
                                         <h3>No matches found</h3>
+                                        <p>Source: ${data.data_source || 'unknown'} | CVs scanned: ${data.total_cvs || 0}</p>
                                         <p>Try adjusting your filters</p>
                                     </div>
                                 </div>
                             `;
                         }
+                    } else {
+                        resultsDiv.innerHTML = `
+                            <div class="alert alert-error">
+                                ❌ Error: ${data.error || 'Search failed'}
+                            </div>
+                        `;
                     }
                 } else {
                     // No JD, use filter-based search
                     response = await fetch('/api/search-candidates', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(filters)
+                        body: JSON.stringify({ ...filters, limit: filters.top_limit })
                     });
                     data = await response.json();
                     
@@ -619,19 +845,26 @@
                             <div class="card">
                                 <h3>Search Results (${data.candidates.length} matches)</h3>
                                 <div class="alert alert-success">
-                                    ✓ Found ${data.candidates.length} matches
+                                        ✓ Found ${data.candidates.length} matches (source: ${data.data_source || 'unknown'})
                                 </div>
                             </div>
                         `;
-                        displayCandidates(data.candidates, 'searchResults', false);
-                    } else {
+                        displayCandidates(data.candidates, 'searchResults', false, true);
+                    } else if (data.success) {
                         resultsDiv.innerHTML = `
                             <div class="card">
                                 <div class="empty-state">
                                     <div class="empty-state-icon">🔍</div>
                                     <h3>No matches found</h3>
+                                    <p>Source: ${data.data_source || 'unknown'}</p>
                                     <p>Try adjusting your filters</p>
                                 </div>
+                            </div>
+                        `;
+                    } else {
+                        resultsDiv.innerHTML = `
+                            <div class="alert alert-error">
+                                ❌ Error: ${data.error || 'Search failed'}
                             </div>
                         `;
                     }
@@ -652,11 +885,140 @@
             document.getElementById('filterSeniority').value = '';
             document.getElementById('filterMinScore').value = '';
             document.getElementById('filterMinConfidence').value = '';
+            document.getElementById('filterTopLimit').value = '15';
             document.getElementById('filterMinYears').value = '';
             document.getElementById('filterMaxYears').value = '';
             document.getElementById('filterSkills').value = '';
             document.getElementById('filterDomain').value = '';
             document.getElementById('searchResults').innerHTML = '';
+        }
+
+        function renderUploadStatus(message, type = 'info') {
+            const panel = document.getElementById('uploadJobStatus');
+            panel.style.display = 'block';
+            panel.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        }
+
+        function resetUploadForm() {
+            document.getElementById('uploadFileInput').value = '';
+            document.getElementById('uploadSelectedFile').textContent = 'No file selected';
+            document.getElementById('uploadJD').value = '';
+            document.getElementById('uploadAsync').checked = true;
+            document.getElementById('uploadLLMProvider').value = '';
+            document.getElementById('uploadLLMModel').value = '';
+            document.getElementById('uploadLLMApiKey').value = '';
+            document.getElementById('uploadResults').innerHTML = '';
+            document.getElementById('uploadJobStatus').style.display = 'none';
+        }
+
+        function renderUploadResult(data, modeLabel) {
+            const preview = data.preview ? escapeHtml(data.preview) : 'Preview not available for this response.';
+            const canDownload = Boolean(data.download_url);
+            const downloadSection = canDownload
+                ? `<a class="btn btn-primary" href="${escapeHtml(data.download_url)}" target="_blank" rel="noopener">Download Redacted Output</a>`
+                : `<button class="btn btn-secondary" disabled>Download unavailable</button>`;
+
+            document.getElementById('uploadResults').innerHTML = `
+                <div class="card">
+                    <h3>Upload Result</h3>
+                    <div class="alert alert-success">${escapeHtml(modeLabel)}</div>
+                    <div class="candidate-info"><strong>Pipeline:</strong> ${escapeHtml(data.pipeline_executed || 'unknown')}</div>
+                    <div class="candidate-info"><strong>Stored in Supabase:</strong> ${data.stored_in_supabase ? 'yes' : 'no'}</div>
+                    <div class="candidate-info"><strong>Output File:</strong> ${escapeHtml(data.output_filename || 'N/A')}</div>
+                    <div class="upload-result-preview">
+                        <h4>Redacted Content</h4>
+                        <pre>${preview}</pre>
+                    </div>
+                    <div style="margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        ${downloadSection}
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('uploadFileInput').addEventListener('change', (event) => {
+            const file = event.target.files && event.target.files[0];
+            document.getElementById('uploadSelectedFile').textContent = file ? file.name : 'No file selected';
+        });
+
+        async function pollUploadJob(statusUrl) {
+            const maxAttempts = 120;
+            for (let i = 0; i < maxAttempts; i++) {
+                const response = await fetch(statusUrl);
+                const data = await response.json();
+
+                if (data.status === 'completed') {
+                    const outputName = data.output_filename || 'processed output';
+                    const intelligencePresent = data.intelligence ? 'yes' : 'no';
+                    renderUploadStatus(`✓ Job completed. Output: ${escapeHtml(outputName)} | intelligence: ${intelligencePresent}`, 'success');
+
+                    renderUploadResult(data, 'Completed in asynchronous mode.');
+                    return;
+                }
+
+                if (data.status === 'failed') {
+                    renderUploadStatus(`❌ Job failed: ${escapeHtml(data.error || 'Unknown error')}`, 'error');
+                    return;
+                }
+
+                renderUploadStatus(
+                    `Job ${escapeHtml(data.job_id)} is ${escapeHtml(data.status || 'queued')} | queue size: ${escapeHtml(data.queue_size || 0)}`,
+                    'info'
+                );
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+
+            renderUploadStatus('Upload job timed out while polling. Open queue monitor or retry status check.', 'warning');
+        }
+
+        async function submitUploadCv() {
+            const fileInput = document.getElementById('uploadFileInput');
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) {
+                renderUploadStatus('Please choose a CV file first.', 'warning');
+                return;
+            }
+
+            const button = document.getElementById('btnUploadCV');
+            button.disabled = true;
+            button.textContent = 'Uploading...';
+
+            try {
+                const formData = new FormData();
+                formData.append('cv_file', file);
+                formData.append('job_description', document.getElementById('uploadJD').value.trim());
+                formData.append('async', document.getElementById('uploadAsync').checked ? 'true' : 'false');
+
+                const provider = document.getElementById('uploadLLMProvider').value;
+                const model = document.getElementById('uploadLLMModel').value.trim();
+                const apiKey = document.getElementById('uploadLLMApiKey').value.trim();
+
+                if (provider) formData.append('llm_provider', provider);
+                if (model) formData.append('llm_model', model);
+                if (apiKey) formData.append('llm_api_key', apiKey);
+
+                renderUploadStatus('Submitting upload request...', 'info');
+                const response = await fetch('/upload', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Upload failed');
+                }
+
+                if (data.mode === 'asynchronous' && data.status_url) {
+                    renderUploadStatus(`Upload accepted. Job id: ${escapeHtml(data.job_id)}`, 'info');
+                    await pollUploadJob(data.status_url);
+                    return;
+                }
+
+                renderUploadStatus('✓ Upload completed in synchronous mode.', 'success');
+                renderUploadResult(data, 'Synchronous processing completed.');
+            } catch (error) {
+                renderUploadStatus(`❌ ${escapeHtml(error.message)}`, 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Upload CV';
+            }
         }
 
         // Process all CVs
@@ -726,9 +1088,11 @@
 
         // Upload CV
         // Display candidates
-        function displayCandidates(candidates, containerId, showMatch = false) {
+        function displayCandidates(candidates, containerId, showMatch = false, preserveExisting = false) {
             const container = document.getElementById(containerId);
-            container.innerHTML = '';
+            if (!preserveExisting) {
+                container.innerHTML = '';
+            }
             const grid = document.createElement('div');
             grid.className = 'results-grid';
             
@@ -744,6 +1108,7 @@
                 const seniority = rawSeniority && rawSeniority !== 'N/A' ? rawSeniority : 'Not classified';
                 const domain = rawDomain && rawDomain !== 'N/A' ? rawDomain : 'Not extracted';
                 const skills = candidate.core_technical_skills || candidate.key_skills || [];
+                const breakdown = candidate.score_breakdown || {};
                 
                 card.innerHTML = `
                     <div class="candidate-header">
@@ -762,6 +1127,29 @@
                     ${showMatch && candidate.matched_keywords ? `
                         <div class="candidate-info">
                             <strong>Matched:</strong> ${candidate.matched_keywords.slice(0, 5).join(', ')}
+                        </div>
+                    ` : ''}
+                    ${showMatch && candidate.selection_basis ? `
+                        <div class="candidate-info">
+                            <strong>Why selected:</strong> ${candidate.selection_basis}
+                        </div>
+                    ` : ''}
+                    ${showMatch && typeof candidate.critical_skill_coverage === 'number' ? `
+                        <div class="candidate-info">
+                            <strong>Critical Skill Coverage:</strong> ${Math.round(candidate.critical_skill_coverage)}%
+                        </div>
+                    ` : ''}
+                    ${showMatch && candidate.best_knowledge ? `
+                        <div class="candidate-info">
+                            <strong>Best Knowledge:</strong> ${candidate.best_knowledge}
+                        </div>
+                    ` : ''}
+                    ${showMatch && Object.keys(breakdown).length ? `
+                        <div class="score-breakdown">
+                            <span class="breakdown-item">Skills ${Math.round(breakdown.skill_score || 0)}</span>
+                            <span class="breakdown-item">Capability ${Math.round(breakdown.capability_score || 0)}</span>
+                            <span class="breakdown-item">Experience ${Math.round(breakdown.experience_score || 0)}</span>
+                            <span class="breakdown-item">Domain ${Math.round(breakdown.domain_score || 0)}</span>
                         </div>
                     ` : ''}
                     <div class="skills-list">
@@ -788,6 +1176,15 @@
 
         // Page ready
         window.addEventListener('DOMContentLoaded', () => {
+            loadRuntimeStatus();
+            const params = new URLSearchParams(window.location.search);
+            const requestedTab = params.get('tab');
+            if (requestedTab) {
+                const tabButton = document.querySelector(`.tab[data-tab="${requestedTab}"]`);
+                if (tabButton) {
+                    tabButton.click();
+                }
+            }
             console.log('CV Intelligence System ready');
         });
     </script>

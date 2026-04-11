@@ -1,0 +1,20 @@
+{
+  "warmup_status": 200,
+  "warmup_data_source": "supabase_live",
+  "warmup_latency_ms": 1790.19,
+  "total_requests": 60,
+  "success_count": 60,
+  "failure_count": 0,
+  "http_status_histogram": {
+    "200": 60
+  },
+  "latency_ms": {
+    "p50": 1812.4,
+    "p90": 1999.81,
+    "p95": 2231.83,
+    "max": 2306.76
+  },
+  "distinct_data_source_values": [
+    "supabase_cache"
+  ]
+}

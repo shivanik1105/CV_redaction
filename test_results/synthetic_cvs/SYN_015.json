@@ -1,0 +1,27 @@
+{
+  "anonymized_id": "SYN_015",
+  "archetype": "python_generalist",
+  "years_experience": 5.4,
+  "core_technical_skills": [
+    "FastAPI",
+    "Pandas",
+    "SQL",
+    "Docker",
+    "Python",
+    "NumPy"
+  ],
+  "secondary_technical_skills": [
+    "Team Collaboration",
+    "Cloud Basics",
+    "Problem Solving",
+    "Azure",
+    "Kafka"
+  ],
+  "key_strengths": [
+    "Strong coding discipline and collaboration",
+    "Good all-round software delivery and execution"
+  ],
+  "primary_domain": "Software Engineering",
+  "cleaned_narrative": "Worked on mixed backend and analytics tasks with solid execution across multiple projects.",
+  "verdict_reason": "Strong coding discipline and collaboration"
+}

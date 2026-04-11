@@ -1,0 +1,27 @@
+{
+  "anonymized_id": "SYN_033",
+  "archetype": "python_automation",
+  "years_experience": 5.3,
+  "core_technical_skills": [
+    "Selenium",
+    "Python",
+    "Postman",
+    "PyTest",
+    "API Testing"
+  ],
+  "secondary_technical_skills": [
+    "Terraform",
+    "Regression Testing",
+    "Test Automation",
+    "Jenkins",
+    "Power BI",
+    "CI/CD"
+  ],
+  "key_strengths": [
+    "Built reliable automation frameworks",
+    "Strong root cause analysis and bug triage"
+  ],
+  "primary_domain": "QA Automation",
+  "cleaned_narrative": "Implemented automation strategy across UI and API layers to improve release quality.",
+  "verdict_reason": "Built reliable automation frameworks"
+}

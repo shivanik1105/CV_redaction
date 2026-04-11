@@ -1,0 +1,64 @@
+[REDACTED_NAME]
+
+[REDACTED_PHONE] [REDACTED_EMAIL] linkedin.com/jagdeep
+
+SUMMARY
+
+• 10+yearsofexpertisein Androiddevelopmentwithastrongfoundationin OOP, advanceddesignpatterns, and Androidinternals.
+• Proficientinmodern Androidtechnologiesincluding Kotlin,[NAME], Coroutines, and MVVMarchitecturefor buildingscalable, maintainableapplications.
+• Experiencedwithlibrarieslike Hilt, Room, creatinguser-centricinterfaceswith Material Designwhileensuring seamlessintegrationwith RESTfulservices.
+• Strongbackgroundinperformanceoptimization, modularization, and Dependency Injection, leadingtotestableand high-performancecodebases.
+• Provenleadershipandcommunicationskills, successfullyleadingandmentoringateamof4-5developers, driving projectsuccessthrougheffectivecollaborationandtechnicalguidance.
+
+
+SKILLS
+
+
+Technicaltools: Android, CI/CD, Gradle
+Languages: Java, Kotlin, Javascript(Basic)
+Database: SQLite, Room, My SQL
+Designing Tools: XML, Jetpack Compose, HTML
+Version Control: Git, SVN, TFS
+Other Skills: Jetpack Compose, Hilt, Dagger, Coroutines, MVVM, MVP, OOP, Design Patterns
+Experience/Projects
+Paytm Feb2021–Present
+Senior Technical Lead ()
+• Paytm App-Official Paytmappwhichoffersarangeofservicesincludingpayments, banking, insurance, and e-commerce. Workedonthescannerandimprovedtheoverallscanningperformanceandtime.
+
+Workedon UPIonboardingvertical & developedfeatureslike Aadhaar-basedpin Setup, Revamped Banklinking pageon Jetpack Compose, multibanklinkingsolely.
+
+Playedakeyroleintherecentmigrationof Paytmtothe TPAP(Third Party Application Provider)model.
+
+Senior Software Engg. Feb2019–Jan2021
+Yatra.com
+• Yatra–B2CApplication-: Yatraonlineoffersabookingservicethatenablesindividualstofindandbookflights, hotels, cabs, buses, etc.
+Redesignedthe Flight UIaccordingtothenewmaterialdesign. Implemented Multicityflowforflightmodule.
+
+Improvedoverallarchitectureoftheproject
+• Yatra Corporate Application-: Thisapplicationismadefortheclient'sspecifications. Thereisalsoahierarchical approvalflowandthewholeapplicationrunsonaconfiguration-basedarchitecture.
+Introduced Online Busbookingflow.
+
+Refractedtheoldcodewithnew Kotlincodeand MVVMstandards.
+
+Migrationof SDKslike Firebasecrashlytics, analytics, and Andorid X.
+
+Consultant Dec2015–Jan2019
+Infogain Pvt. Ltd.
+• Samsung Smartdost–HHP-: Samsung Smartdostappisarole-basedappthatexposesadifferentsetoffeatures basedonuserlogin. Improvedthebasearchitecturewith MVVMmodel. Reduceddatabaseinsertiontimeandimproveduserexperienceduringoffline. Developedmultipledynamicmoduleswhichcanbeconfigureddynamicallyviaconsole.
+• Samsung Retail Management System-: SRMSisanandroidapplicationthatservesthepurposeofautomatingthe maintenanceprocessofthefixturesdeployedatthe Dealer'sstore. Requirementgatheringanddocumentation. Designing UIandimplementingfunctionalityofmultiplemodules.
+
+Toimplementthenetworklayeranddatabaselayerwiththehelpof Retrofit2, Dagger2and Rx Java2.
+• Samsung Partner Portal-: SPPisanapplicationforthe Samsunginternalemployeesandpartners. Usergets productinformation, updatedpriceandnewschemesonthehandhelddeviceslikemobile, tabsorwearable.
+Improved UIwithupdated Material Design. Handledfeaturesexposurebasedonmultipleroles.
+
+Software Engineer May2014–Dec2015
+Iprof Learning Solution Pvt. Ltd.
+
+[REDACTED_CONTACT_LINE] videos. Italsoenablesuserstogivepracticetestsbasedonvarioussubjectsandcourses. Userscanalsodownload thecoursesandtestforstudyingevenwhentheappisoffline.
+Workedinan Agileenvironmentandparticipatedindifferentphasesoftheprojectcyclelikedesignand development. Implementvariousapprequirementslikequestionnairesandcoursedescriptionmodules. Developedofflinedownloadofthecontentsuchas PDFandvideos. thattheuserhaspurchased. Thisapplicationreadstheencryptedcontentfromthe SDcardafterdecryption. Designing UIfordifferenttabletresolutions.
+
+
+CERTIFICATIONS
+
+
+Java Oracle Certified Professional, Java SE6Programmer(1Z0-851)

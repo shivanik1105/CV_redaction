@@ -9,7 +9,11 @@ import json
 import glob
 import hashlib
 import re
-from typing import Any, Dict, Optional
+import time
+import threading
+import queue
+import uuid
+from typing import Any, Dict, List, Optional
 from flask import Flask, render_template, request, send_file, jsonify, url_for
 from werkzeug.utils import secure_filename
 from pathlib import Path
@@ -38,26 +42,29 @@ except ImportError:
     SUPABASE_AVAILABLE = False
     logging.warning("Supabase not available. Install with: pip install supabase")
 
-# Import Queue System (optional)
-try:
-    from queue_manager import QueueManager
-    from rate_limiter import RateLimiter
-    from celery_worker import process_cv_task
-    from redis import Redis
-    QUEUE_AVAILABLE = True
-    print(f"DEBUG: QUEUE_AVAILABLE set to True")
-except (ImportError, Exception) as e:
-    QUEUE_AVAILABLE = False
-    print(f"DEBUG: QUEUE_AVAILABLE set to False due to: {e}")
-    logging.warning(f"Queue system not available: {e}")
-
 
 # Configure Flask app
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['OUTPUT_FOLDER'] = 'redacted_output'
-app.config['INTELLIGENCE_FOLDER'] = 'llm_analysis'
+
+
+def _resolve_runtime_data_root() -> Path:
+    """Return a persistent writable root for runtime data.
+
+    In frozen PyInstaller mode, avoid ephemeral _MEI temp paths and store data
+    next to the executable so downloads remain available during app runtime.
+    """
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).resolve().parent
+    return Path(os.path.dirname(os.path.abspath(__file__)))
+
+
+_RUNTIME_DATA_ROOT = _resolve_runtime_data_root()
+app.config['UPLOAD_FOLDER'] = str(_RUNTIME_DATA_ROOT / 'uploads')
+app.config['OUTPUT_FOLDER'] = str(_RUNTIME_DATA_ROOT / 'redacted_output')
+app.config['INTELLIGENCE_FOLDER'] = str(_RUNTIME_DATA_ROOT / 'llm_analysis')
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+app.config['ASSET_VERSION'] = os.getenv('ASSET_VERSION', datetime.utcnow().strftime('%Y%m%d%H%M%S'))
 app.secret_key = 'cv-redaction-secret-key-2024'
 
 # Configure logging
@@ -73,17 +80,248 @@ Path(app.config['INTELLIGENCE_FOLDER']).mkdir(exist_ok=True)
 _intelligence_extractor = None
 _supabase_storage = None
 _supabase_reachable = None  # Track if Supabase is actually reachable
-_queue_manager = None
-_rate_limiter = None
+_quick_search_cache_lock = threading.Lock()
+_quick_search_candidate_cache = {
+    'updated_at': 0.0,
+    'candidates': []
+}
+_quick_search_cache_refreshing = False
+_QUICK_SEARCH_CACHE_TTL_SECONDS = int(os.getenv('QUICK_SEARCH_CACHE_TTL_SECONDS', '45'))
+_lock_registry_guard = threading.Lock()
+_redaction_lock_registry = {}
+_intelligence_lock_registry = {}
+_upload_jobs_lock = threading.Lock()
+_upload_jobs: Dict[str, Dict[str, Any]] = {}
+_upload_job_queue: "queue.Queue[Dict[str, Any]]" = queue.Queue()
+_upload_workers_started = False
+_UPLOAD_JOB_TTL_SECONDS = int(os.getenv('UPLOAD_JOB_TTL_SECONDS', '3600'))
+_UPLOAD_WORKER_COUNT = max(1, int(os.getenv('UPLOAD_WORKER_COUNT', '4')))
+_UPLOAD_ASYNC_DEFAULT = os.getenv('UPLOAD_ASYNC_DEFAULT', 'true').strip().lower() not in {'0', 'false', 'no'}
+_LLM_MAX_CONCURRENT = max(1, int(os.getenv('LLM_MAX_CONCURRENT_REQUESTS', '2')))
+_LLM_MIN_INTERVAL_SECONDS = max(0.0, float(os.getenv('LLM_MIN_INTERVAL_SECONDS', '0.35')))
+_llm_request_semaphore = threading.BoundedSemaphore(_LLM_MAX_CONCURRENT)
+_llm_rate_lock = threading.Lock()
+_last_llm_request_at = 0.0
+_DEFAULT_PROFILE_JD = (
+    "General candidate profiling for recruiter search: extract skills, years of experience, "
+    "seniority level, domain expertise, strengths, and evidence-based summary for ranking."
+)
+
+
+def _get_named_lock(lock_registry: Dict[str, threading.Lock], key: str) -> threading.Lock:
+    """Return a stable in-process lock for a key (single-flight helper)."""
+    with _lock_registry_guard:
+        lock = lock_registry.get(key)
+        if lock is None:
+            lock = threading.Lock()
+            lock_registry[key] = lock
+        return lock
+
+
+def _sha256_for_file(file_path: Path) -> str:
+    """Compute a deterministic hash for a source CV file."""
+    digest = hashlib.sha256()
+    with open(file_path, 'rb') as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _parse_bool(value: Any, default: bool = False) -> bool:
+    """Parse boolean-like values from form/query payloads."""
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    text = str(value).strip().lower()
+    if text in {'1', 'true', 'yes', 'on'}:
+        return True
+    if text in {'0', 'false', 'no', 'off'}:
+        return False
+    return default
+
+
+def _run_llm_with_rate_limit(extractor, redacted_text: str, job_description: Optional[str], source_name: str):
+    """Protect provider APIs from request bursts with concurrency + pacing limits."""
+    global _last_llm_request_at
+
+    with _llm_request_semaphore:
+        with _llm_rate_lock:
+            now = time.time()
+            wait_time = _LLM_MIN_INTERVAL_SECONDS - (now - _last_llm_request_at)
+            if wait_time > 0:
+                time.sleep(wait_time)
+            _last_llm_request_at = time.time()
+
+        return extractor.extract_intelligence(redacted_text, job_description, source_name)
+
+
+@app.after_request
+def disable_static_cache(response):
+    """Prevent stale frontend assets from breaking updated client-side behavior."""
+    if request.path.startswith('/static/'):
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    return response
+
+
+@app.context_processor
+def inject_asset_version():
+    """Inject static asset version for deterministic cache busting."""
+    return {'asset_version': app.config.get('ASSET_VERSION', '1')}
 
 def get_intelligence_extractor():
-    """Get or create intelligence extractor"""
+    """Get or create default intelligence extractor."""
+    return get_runtime_intelligence_extractor()
+
+
+def get_runtime_intelligence_extractor(
+    api_provider: Optional[str] = None,
+    api_key: Optional[str] = None,
+    llm_model: Optional[str] = None
+):
+    """Return default cached extractor, or a request-scoped one for per-user keys."""
     global _intelligence_extractor
+
+    runtime_override = bool(api_provider or api_key or llm_model)
+    if runtime_override:
+        provider = (api_provider or os.getenv('LLM_PROVIDER', 'groq')).strip().lower()
+        model = llm_model or os.getenv('LLM_MODEL', None)
+        return CVIntelligenceExtractor(api_provider=provider, api_key=api_key, model=model)
+
     if _intelligence_extractor is None:
-        api_provider = os.getenv('LLM_PROVIDER', 'groq')
-        llm_model = os.getenv('LLM_MODEL', None)
-        _intelligence_extractor = CVIntelligenceExtractor(api_provider=api_provider, model=llm_model)
+        provider = os.getenv('LLM_PROVIDER', 'groq')
+        model = os.getenv('LLM_MODEL', None)
+        _intelligence_extractor = CVIntelligenceExtractor(api_provider=provider, model=model)
     return _intelligence_extractor
+
+
+def _extract_runtime_llm_config(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Optional[str]]:
+    """Read optional per-user LLM settings from request payload or headers."""
+    payload = payload or {}
+    llm_config = payload.get('llm_config') or {}
+    if not isinstance(llm_config, dict):
+        llm_config = {}
+
+    provider = (
+        llm_config.get('provider')
+        or payload.get('llm_provider')
+        or request.headers.get('X-LLM-Provider')
+        or None
+    )
+    api_key = (
+        llm_config.get('api_key')
+        or payload.get('llm_api_key')
+        or request.headers.get('X-LLM-Api-Key')
+        or None
+    )
+    model = (
+        llm_config.get('model')
+        or payload.get('llm_model')
+        or request.headers.get('X-LLM-Model')
+        or None
+    )
+
+    allowed_providers = {'openai', 'anthropic', 'gemini', 'groq', 'ollama'}
+    provider = provider.strip().lower() if isinstance(provider, str) and provider.strip() else None
+    if provider and provider not in allowed_providers:
+        provider = None
+
+    api_key = api_key.strip() if isinstance(api_key, str) and api_key.strip() else None
+    model = model.strip() if isinstance(model, str) and model.strip() else None
+
+    return {
+        'provider': provider,
+        'api_key': api_key,
+        'model': model
+    }
+
+
+def _get_quick_search_cache_snapshot() -> List[Dict[str, Any]]:
+    """Return a shallow copy of cached quick-search candidates."""
+    with _quick_search_cache_lock:
+        return list(_quick_search_candidate_cache.get('candidates') or [])
+
+
+def _invalidate_quick_search_cache(reason: str = '') -> None:
+    """Force next quick-search call to refetch latest candidates from Supabase."""
+    with _quick_search_cache_lock:
+        _quick_search_candidate_cache['candidates'] = []
+        _quick_search_candidate_cache['updated_at'] = 0.0
+    if reason:
+        logger.info("Quick-search cache invalidated: %s", reason)
+
+
+def _get_quick_search_candidates(storage, limit: int = 5000) -> Dict[str, Any]:
+    """Get candidates for quick-search using Supabase with TTL cache and stale fallback."""
+    global _quick_search_cache_refreshing
+    now = time.time()
+    should_refresh = False
+
+    with _quick_search_cache_lock:
+        cached_candidates = list(_quick_search_candidate_cache.get('candidates') or [])
+        cache_age = now - float(_quick_search_candidate_cache.get('updated_at') or 0.0)
+        if cached_candidates and cache_age <= _QUICK_SEARCH_CACHE_TTL_SECONDS:
+            return {
+                'candidates': cached_candidates,
+                'source': 'supabase_cache',
+                'cache_age_seconds': round(cache_age, 3)
+            }
+
+        if _quick_search_cache_refreshing:
+            if cached_candidates:
+                return {
+                    'candidates': cached_candidates,
+                    'source': 'supabase_cache_stale',
+                    'cache_age_seconds': round(cache_age, 3)
+                }
+            return {
+                'candidates': [],
+                'source': 'supabase_refresh_in_progress',
+                'cache_age_seconds': None
+            }
+
+        _quick_search_cache_refreshing = True
+        should_refresh = True
+
+    raw_candidates = try_supabase_operation(
+        lambda: storage.get_all_candidates(limit=limit),
+        fallback_result=None,
+        timeout_seconds=10
+    )
+
+    if raw_candidates is not None:
+        candidate_rows = [
+            storage._db_record_to_app_format(record)
+            for record in raw_candidates
+        ]
+        with _quick_search_cache_lock:
+            _quick_search_candidate_cache['candidates'] = list(candidate_rows)
+            _quick_search_candidate_cache['updated_at'] = time.time()
+            _quick_search_cache_refreshing = False
+            return {
+                'candidates': candidate_rows,
+                'source': 'supabase_live',
+                'cache_age_seconds': 0.0
+            }
+
+    with _quick_search_cache_lock:
+        _quick_search_cache_refreshing = False
+        cached_candidates = list(_quick_search_candidate_cache.get('candidates') or [])
+        cache_age = time.time() - float(_quick_search_candidate_cache.get('updated_at') or 0.0)
+        if cached_candidates:
+            return {
+                'candidates': cached_candidates,
+                'source': 'supabase_cache_stale',
+                'cache_age_seconds': round(cache_age, 3)
+            }
+
+        return {
+            'candidates': [],
+            'source': 'supabase_unavailable',
+            'cache_age_seconds': None
+        }
 
 def get_supabase_storage():
     """Get or create Supabase storage with timeout handling"""
@@ -99,50 +337,6 @@ def get_supabase_storage():
             _supabase_storage = None
             _supabase_reachable = False
     return _supabase_storage
-
-def get_queue_manager():
-    """Get or create queue manager"""
-    global _queue_manager
-    if _queue_manager is None and QUEUE_AVAILABLE:
-        try:
-            redis_host = os.getenv('REDIS_HOST', 'localhost')
-            redis_port = int(os.getenv('REDIS_PORT', 6379))
-            redis_db = int(os.getenv('REDIS_DB', 0))
-            redis_password = os.getenv('REDIS_PASSWORD', None)
-            _queue_manager = QueueManager(
-                redis_host=redis_host,
-                redis_port=redis_port,
-                redis_db=redis_db,
-                redis_password=redis_password
-            )
-            logger.info("Queue manager initialized")
-        except Exception as e:
-            logger.warning(f"Queue manager not available: {e}")
-            _queue_manager = None
-    return _queue_manager
-
-def get_rate_limiter():
-    """Get or create rate limiter"""
-    global _rate_limiter
-    if _rate_limiter is None and QUEUE_AVAILABLE:
-        try:
-            redis_host = os.getenv('REDIS_HOST', 'localhost')
-            redis_port = int(os.getenv('REDIS_PORT', 6379))
-            redis_db = int(os.getenv('REDIS_DB', 0))
-            redis_password = os.getenv('REDIS_PASSWORD', None)
-            redis_client = Redis(
-                host=redis_host,
-                port=redis_port,
-                db=redis_db,
-                password=redis_password,
-                decode_responses=True
-            )
-            _rate_limiter = RateLimiter(redis_client)
-            logger.info("Rate limiter initialized")
-        except Exception as e:
-            logger.warning(f"Rate limiter not available: {e}")
-            _rate_limiter = None
-    return _rate_limiter
 
 def try_supabase_operation(operation, fallback_result=None, timeout_seconds=5):
     """
@@ -407,7 +601,11 @@ def get_local_statistics():
 def search_local_candidates(filters):
     """Search local JSON candidates with filters"""
     candidates = load_local_intelligence_files()
-    
+    return _filter_candidate_records(candidates, filters)
+
+
+def _filter_candidate_records(candidates: List[Dict[str, Any]], filters: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Apply candidate search filters to in-memory candidate records."""
     verdict = filters.get('verdict')
     seniority = filters.get('seniority_level')
     min_score = filters.get('min_match_score')
@@ -415,34 +613,85 @@ def search_local_candidates(filters):
     primary_domain = filters.get('primary_domain')
     min_years = filters.get('min_years_experience')
     max_years = filters.get('max_years_experience')
-    required_skills = filters.get('required_skills')
-    
+    required_skills = filters.get('required_skills') or []
+    domains = filters.get('domains') or []
+
+    def normalize_terms(value) -> List[str]:
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [value.strip().lower()] if value.strip() else []
+        terms = []
+        for item in value:
+            item_str = str(item).strip().lower()
+            if item_str:
+                terms.append(item_str)
+        return terms
+
+    required_skills_norm = normalize_terms(required_skills)
+    domains_norm = normalize_terms(domains)
+    primary_domain_norm = str(primary_domain or '').strip().lower()
+
     results = []
     for c in candidates:
         if not _candidate_has_searchable_signal(c):
             continue
+
         if verdict and c.get('verdict') != verdict:
             continue
         if seniority and c.get('seniority_level') != seniority:
             continue
-        if min_score is not None and (c.get('match_score') or 0) < min_score:
+
+        if min_score is not None and float(c.get('match_score') or 0) < float(min_score):
             continue
-        if min_conf is not None and (c.get('confidence_score') or 0) < min_conf:
+        if min_conf is not None and float(c.get('confidence_score') or 0) < float(min_conf):
             continue
-        if primary_domain and primary_domain.lower() not in (c.get('primary_domain') or '').lower():
+
+        years_exp = float(c.get('years_experience') or 0)
+        if min_years is not None and years_exp < float(min_years):
             continue
-        if min_years is not None and (c.get('years_experience') or 0) < min_years:
+        if max_years is not None and years_exp > float(max_years):
             continue
-        if max_years is not None and (c.get('years_experience') or 0) > max_years:
-            continue
-        if required_skills:
-            candidate_skills = [s.lower() for s in (c.get('core_technical_skills') or [])]
-            if not all(skill.lower() in candidate_skills for skill in required_skills):
+
+        searchable_skills = [
+            str(skill).strip().lower()
+            for skill in (
+                (c.get('core_technical_skills') or [])
+                + (c.get('secondary_technical_skills') or [])
+                + (c.get('key_skills') or [])
+                + (c.get('frameworks_tools') or [])
+            )
+            if str(skill).strip()
+        ]
+        if required_skills_norm:
+            if not all(any(req in skill for skill in searchable_skills) for req in required_skills_norm):
                 continue
+
+        domain_parts = [
+            c.get('primary_domain', ''),
+            ' '.join(c.get('secondary_domains') or []),
+            ' '.join(c.get('domain_expertise') or []),
+            c.get('cleaned_narrative', ''),
+            c.get('overall_summary', '')
+        ]
+        searchable_domain_text = ' '.join(str(part).lower() for part in domain_parts if str(part).strip())
+
+        if primary_domain_norm and primary_domain_norm not in searchable_domain_text:
+            continue
+
+        if domains_norm and not any(domain in searchable_domain_text for domain in domains_norm):
+            continue
+
         results.append(c)
-    
-    # Sort by match_score desc
-    results.sort(key=lambda x: (x.get('match_score') or 0), reverse=True)
+
+    results.sort(
+        key=lambda x: (
+            float(x.get('match_score') or 0),
+            float(x.get('confidence_score') or 0),
+            float(x.get('years_experience') or 0)
+        ),
+        reverse=True
+    )
     return results
 
 
@@ -582,6 +831,7 @@ def _persist_intelligence(intelligence: Dict[str, Any], redacted_filename: str, 
                     logger.warning(f"Could not store embedding for {anon_id}: {embedding_error}")
 
         persistence['stored_in_supabase'] = True
+        _invalidate_quick_search_cache(reason=f"new_or_updated_candidate:{intelligence.get('anonymized_id', 'unknown')}")
     except Exception as e:
         logger.warning(f"Could not store intelligence in Supabase: {e}")
         persistence['supabase_error'] = str(e)
@@ -594,71 +844,94 @@ def process_redacted_cv_text(
     redacted_filename: str,
     job_description: Optional[str] = None,
     original_filename: Optional[str] = None,
-    force_reprocess: bool = False
+    force_reprocess: bool = False,
+    llm_runtime_config: Optional[Dict[str, Optional[str]]] = None
 ) -> Dict[str, Any]:
     """Run the LLM, faithfulness, embedding, and persistence stages for an anonymized CV."""
     from cv_intelligence_extractor import is_cv_anonymized
 
-    if not is_cv_anonymized(redacted_text):
-        return {
-            'success': False,
-            'error': 'CV is not anonymized. Please redact PII first.',
-            'redacted_filename': redacted_filename
-        }
+    cache_key = f"{redacted_filename}:{_current_jd_hash(job_description) or 'no_jd'}"
+    cache_lock = _get_named_lock(_intelligence_lock_registry, cache_key)
 
-    if not force_reprocess:
-        cached = _load_cached_intelligence(redacted_filename)
-        if _is_cached_result_compatible(cached, job_description):
+    with cache_lock:
+        if not is_cv_anonymized(redacted_text):
             return {
-                'success': True,
-                'cached': True,
-                'redacted_filename': redacted_filename,
-                'intelligence': cached,
-                'intelligence_file': f"{Path(redacted_filename).stem}_intelligence.json",
-                'stored_in_supabase': False,
-                'stored_embedding_in_supabase': False,
-                'embedding_generated': bool(cached.get('embedding')),
-                'similarity_score': cached.get('similarity_score')
+                'success': False,
+                'error': 'CV is not anonymized. Please redact PII first.',
+                'redacted_filename': redacted_filename
             }
 
-    extractor = get_intelligence_extractor()
-    intelligence = extractor.extract_intelligence(
-        redacted_text,
-        job_description,
-        original_filename or redacted_filename
-    )
+        if not force_reprocess:
+            cached = _load_cached_intelligence(redacted_filename)
+            if _is_cached_result_compatible(cached, job_description):
+                if not cached.get('best_knowledge_summary'):
+                    cached['best_knowledge_summary'] = _best_knowledge_summary(cached)
+                persistence = _persist_intelligence(cached, redacted_filename, original_filename=original_filename)
+                return {
+                    'success': True,
+                    'cached': True,
+                    'redacted_filename': redacted_filename,
+                    'intelligence': cached,
+                    'intelligence_file': f"{Path(redacted_filename).stem}_intelligence.json",
+                    'stored_in_supabase': persistence.get('stored_in_supabase', False),
+                    'stored_embedding_in_supabase': persistence.get('stored_embedding_in_supabase', False),
+                    'embedding_generated': bool(cached.get('embedding')),
+                    'similarity_score': cached.get('similarity_score'),
+                    'supabase_error': persistence.get('supabase_error')
+                }
 
-    if intelligence.get('error') == 'CV_NOT_ANONYMIZED':
+        llm_runtime_config = llm_runtime_config or {}
+        extractor = get_runtime_intelligence_extractor(
+            api_provider=llm_runtime_config.get('provider'),
+            api_key=llm_runtime_config.get('api_key'),
+            llm_model=llm_runtime_config.get('model')
+        )
+        intelligence = _run_llm_with_rate_limit(
+            extractor=extractor,
+            redacted_text=redacted_text,
+            job_description=job_description,
+            source_name=original_filename or redacted_filename
+        )
+
+        if intelligence.get('error') == 'CV_NOT_ANONYMIZED':
+            return {
+                'success': False,
+                'error': intelligence.get('error_message', 'CV is not anonymized.'),
+                'redacted_filename': redacted_filename
+            }
+
+        intelligence['redacted_filename'] = redacted_filename
+        if not intelligence.get('best_knowledge_summary'):
+            intelligence['best_knowledge_summary'] = _best_knowledge_summary(intelligence)
+
+        embedding_state = _attach_embedding(intelligence)
+        persistence = _persist_intelligence(intelligence, redacted_filename, original_filename=original_filename)
+
         return {
-            'success': False,
-            'error': intelligence.get('error_message', 'CV is not anonymized.'),
-            'redacted_filename': redacted_filename
+            'success': 'error' not in intelligence,
+            'cached': False,
+            'redacted_filename': redacted_filename,
+            'intelligence': intelligence,
+            'similarity_score': intelligence.get('similarity_score'),
+            **embedding_state,
+            **persistence
         }
-
-    intelligence['redacted_filename'] = redacted_filename
-
-    embedding_state = _attach_embedding(intelligence)
-    persistence = _persist_intelligence(intelligence, redacted_filename, original_filename=original_filename)
-
-    return {
-        'success': 'error' not in intelligence,
-        'cached': False,
-        'redacted_filename': redacted_filename,
-        'intelligence': intelligence,
-        'similarity_score': intelligence.get('similarity_score'),
-        **embedding_state,
-        **persistence
-    }
 
 
 def process_source_cv(
     cv_path: Path,
     job_description: Optional[str] = None,
     force_reprocess: bool = False,
-    existing_redacted_path: Optional[Path] = None
+    existing_redacted_path: Optional[Path] = None,
+    llm_runtime_config: Optional[Dict[str, Optional[str]]] = None
 ) -> Dict[str, Any]:
     """Execute the full architecture for an original CV file starting from redaction."""
     original_filename = cv_path.name
+    # Upload handler prefixes stored filenames with a timestamp; recover the user-facing
+    # source filename so extraction logic receives stable inputs.
+    timestamp_prefix_match = re.match(r'^\d{8}_\d{6}_(.+)$', original_filename)
+    if timestamp_prefix_match:
+        original_filename = timestamp_prefix_match.group(1)
 
     if existing_redacted_path and existing_redacted_path.exists():
         redacted_path = existing_redacted_path
@@ -666,15 +939,21 @@ def process_source_cv(
         with open(existing_redacted_path, 'r', encoding='utf-8') as f:
             redacted_text = f.read()
     else:
-        orchestrator = PipelineOrchestrator(config_dir='config')
         safe_name = secure_filename(original_filename)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        redacted_filename = f"REDACTED_{timestamp}_{safe_name}.txt"
+        source_hash = _sha256_for_file(cv_path)[:16]
+        redacted_filename = f"REDACTED_{source_hash}_{safe_name}.txt"
         redacted_path = Path(app.config['OUTPUT_FOLDER']) / redacted_filename
 
-        redacted_text, profile = orchestrator.process_cv(str(cv_path))
-        with open(redacted_path, 'w', encoding='utf-8') as f:
-            f.write(redacted_text)
+        redaction_lock = _get_named_lock(_redaction_lock_registry, source_hash)
+        with redaction_lock:
+            if redacted_path.exists() and not force_reprocess:
+                with open(redacted_path, 'r', encoding='utf-8') as f:
+                    redacted_text = f.read()
+            else:
+                orchestrator = PipelineOrchestrator(config_dir='config')
+                redacted_text, profile = orchestrator.process_cv(str(cv_path))
+                with open(redacted_path, 'w', encoding='utf-8') as f:
+                    f.write(redacted_text)
 
     if redacted_text.startswith("[ERROR: No text extracted"):
         return {
@@ -689,10 +968,168 @@ def process_source_cv(
         redacted_filename=redacted_filename,
         job_description=job_description,
         original_filename=original_filename,
-        force_reprocess=force_reprocess
+        force_reprocess=force_reprocess,
+        llm_runtime_config=llm_runtime_config
     )
     result['preview'] = redacted_text
     return result
+
+
+def _build_upload_success_payload(pipeline_result: Dict[str, Any], mode: str = 'synchronous') -> Dict[str, Any]:
+    """Build a stable API response from a completed pipeline result."""
+    response = {
+        'success': True,
+        'mode': mode,
+        'message': 'CV processed successfully',
+        'output_filename': pipeline_result['redacted_filename'],
+        'preview': pipeline_result.get('preview', ''),
+        'download_url': url_for('download_file', filename=pipeline_result['redacted_filename'])
+    }
+
+    intelligence = pipeline_result.get('intelligence')
+    if intelligence:
+        response.update({
+            'pipeline_executed': 'full',
+            'intelligence': intelligence,
+            'intelligence_file': pipeline_result.get('intelligence_file'),
+            'stored_in_supabase': pipeline_result.get('stored_in_supabase', False),
+            'stored_embedding_in_supabase': pipeline_result.get('stored_embedding_in_supabase', False),
+            'embedding_generated': pipeline_result.get('embedding_generated', False),
+            'similarity_score': pipeline_result.get('similarity_score')
+        })
+    else:
+        response['pipeline_executed'] = 'redaction_only'
+
+    return response
+
+
+def _cleanup_upload_jobs_locked(now_ts: Optional[float] = None) -> None:
+    """Remove completed/failed jobs older than TTL to avoid memory growth."""
+    now_ts = now_ts or time.time()
+    expired_ids = []
+    for job_id, job in _upload_jobs.items():
+        status = job.get('status')
+        terminal = status in {'completed', 'failed'}
+        completed_at = float(job.get('completed_ts') or 0.0)
+        if terminal and completed_at and (now_ts - completed_at) > _UPLOAD_JOB_TTL_SECONDS:
+            expired_ids.append(job_id)
+
+    for job_id in expired_ids:
+        _upload_jobs.pop(job_id, None)
+
+
+def _create_async_upload_job(
+    upload_path: str,
+    original_filename: str,
+    job_description: Optional[str],
+    llm_runtime_config: Optional[Dict[str, Optional[str]]],
+    force_reprocess: bool
+) -> str:
+    """Create and enqueue an async upload job."""
+    now_ts = time.time()
+    job_id = f"job_{uuid.uuid4().hex[:16]}"
+    record = {
+        'job_id': job_id,
+        'status': 'queued',
+        'submitted_at': datetime.now().isoformat(),
+        'submitted_ts': now_ts,
+        'completed_ts': None,
+        'upload_path': upload_path,
+        'original_filename': original_filename,
+        'job_description_provided': bool(job_description),
+        'job_description': job_description,
+        'llm_runtime_config': llm_runtime_config or {},
+        'force_reprocess': force_reprocess,
+        'error': None,
+        'pipeline_result': None,
+    }
+    with _upload_jobs_lock:
+        _cleanup_upload_jobs_locked(now_ts)
+        _upload_jobs[job_id] = record
+
+    _upload_job_queue.put({'job_id': job_id})
+    return job_id
+
+
+def _process_async_upload_job(job_id: str) -> None:
+    """Process one async upload job in worker thread."""
+    with _upload_jobs_lock:
+        job = _upload_jobs.get(job_id)
+        if not job:
+            return
+        job['status'] = 'processing'
+        job['started_at'] = datetime.now().isoformat()
+
+    try:
+        pipeline_result = process_source_cv(
+            cv_path=Path(job['upload_path']),
+            job_description=job.get('job_description'),
+            force_reprocess=bool(job.get('force_reprocess')),
+            llm_runtime_config=job.get('llm_runtime_config') or {}
+        )
+
+        with _upload_jobs_lock:
+            current = _upload_jobs.get(job_id)
+            if not current:
+                return
+            if pipeline_result.get('success'):
+                current['status'] = 'completed'
+                current['pipeline_result'] = pipeline_result
+                current['error'] = None
+            else:
+                current['status'] = 'failed'
+                current['error'] = pipeline_result.get('error', 'CV processing failed')
+            current['completed_ts'] = time.time()
+            current['completed_at'] = datetime.now().isoformat()
+
+    except Exception as e:
+        logger.error(f"Async upload job failed: {job_id} -> {e}", exc_info=True)
+        with _upload_jobs_lock:
+            current = _upload_jobs.get(job_id)
+            if not current:
+                return
+            current['status'] = 'failed'
+            current['error'] = str(e)
+            current['completed_ts'] = time.time()
+            current['completed_at'] = datetime.now().isoformat()
+
+
+def _upload_worker_loop(worker_name: str) -> None:
+    """Worker loop consuming queued upload jobs."""
+    logger.info(f"Upload worker started: {worker_name}")
+    while True:
+        task = _upload_job_queue.get()
+        try:
+            job_id = task.get('job_id') if isinstance(task, dict) else None
+            if not job_id:
+                continue
+            _process_async_upload_job(job_id)
+        except Exception as e:
+            logger.error(f"Unhandled upload worker error ({worker_name}): {e}", exc_info=True)
+        finally:
+            _upload_job_queue.task_done()
+
+
+def _ensure_upload_workers_started() -> None:
+    """Start upload workers once for this process."""
+    global _upload_workers_started
+    if _upload_workers_started:
+        return
+
+    with _upload_jobs_lock:
+        if _upload_workers_started:
+            return
+        for i in range(_UPLOAD_WORKER_COUNT):
+            worker = threading.Thread(
+                target=_upload_worker_loop,
+                args=(f'upload-worker-{i+1}',),
+                daemon=True
+            )
+            worker.start()
+        _upload_workers_started = True
+
+
+_ensure_upload_workers_started()
 
 
 def compute_local_keyword_match(cv_text: str, job_description: str) -> Dict[str, Any]:
@@ -724,6 +1161,318 @@ def compute_local_keyword_match(cv_text: str, job_description: str) -> Dict[str,
     }
 
 
+def _tokenize_for_matching(text: str) -> List[str]:
+    """Tokenize text into normalized terms used for ranking."""
+    if not text:
+        return []
+    return re.findall(r'[a-zA-Z0-9+#./-]{2,}', text.lower())
+
+
+def _extract_min_years_requirement(job_description: str) -> Optional[float]:
+    """Extract minimum years requirement from JD when explicitly mentioned."""
+    if not job_description:
+        return None
+    patterns = [
+        r'(\d+(?:\.\d+)?)\s*\+?\s*years?',
+        r'min(?:imum)?\s*(\d+(?:\.\d+)?)\s*years?',
+        r'(\d+(?:\.\d+)?)\s*yrs?'
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, job_description.lower())
+        if match:
+            try:
+                return float(match.group(1))
+            except Exception:
+                return None
+    return None
+
+
+_KNOWN_TECH_SKILLS = {
+    'python', 'typescript', 'javascript', 'java', 'c++', 'c#', 'go', 'golang', 'rust', 'php',
+    'django', 'flask', 'fastapi', 'node', 'nodejs', 'react', 'angular', 'vue',
+    'sql', 'postgresql', 'mysql', 'mongodb', 'redis', 'elasticsearch',
+    'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'terraform',
+    'pandas', 'numpy', 'scikit-learn', 'spark', 'airflow', 'mlflow',
+    'machine learning', 'data science', 'system design', 'rest api', 'microservices'
+}
+
+
+def _extract_critical_jd_skills(job_description: str) -> List[str]:
+    """Extract explicit must-have skills from JD text for stronger ranking separation."""
+    if not job_description:
+        return []
+
+    jd_lower = job_description.lower()
+    found: List[str] = []
+
+    for skill in sorted(_KNOWN_TECH_SKILLS, key=len, reverse=True):
+        if re.search(rf'\b{re.escape(skill)}\b', jd_lower):
+            found.append(skill)
+
+    phrase_patterns = [
+        r'(?:experience in|strong in|must have|hands[- ]on(?: experience)? with|proficient in)\s+([^.;\n]+)',
+        r'(?:looking for|need|required)\s+([^.;\n]+)'
+    ]
+    splitter = re.compile(r',|/|\band\b|\bor\b|&', re.IGNORECASE)
+    for pattern in phrase_patterns:
+        for match in re.finditer(pattern, jd_lower):
+            phrase = (match.group(1) or '').strip()
+            if not phrase:
+                continue
+            for chunk in splitter.split(phrase):
+                token = re.sub(r'[^a-z0-9+#./\-\s]', ' ', chunk).strip()
+                token = re.sub(r'\s+', ' ', token)
+                if token in _KNOWN_TECH_SKILLS:
+                    found.append(token)
+
+    deduped: List[str] = []
+    seen = set()
+    for skill in found:
+        key = skill.strip().lower()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        deduped.append(key)
+
+    return deduped[:8]
+
+
+def _extract_target_seniority(job_description: str) -> Optional[int]:
+    """Infer target seniority level from JD terms."""
+    if not job_description:
+        return None
+
+    jd = job_description.lower()
+    seniority_map = {
+        'entry': 1,
+        'junior': 1,
+        'mid': 2,
+        'senior': 3,
+        'lead': 4,
+        'staff': 4,
+        'manager': 4,
+        'principal': 5,
+        'architect': 5,
+        'executive': 5,
+    }
+
+    hits = [level for term, level in seniority_map.items() if re.search(rf'\b{re.escape(term)}\b', jd)]
+    return max(hits) if hits else None
+
+
+def _candidate_seniority_value(candidate: Dict[str, Any]) -> int:
+    """Convert candidate seniority into an ordered numeric scale."""
+    value = str(candidate.get('seniority_level') or candidate.get('career_level') or '').strip().upper()
+    mapping = {
+        'ENTRY': 1,
+        'JUNIOR': 1,
+        'MID': 2,
+        'SENIOR': 3,
+        'LEAD': 4,
+        'EXECUTIVE': 5,
+    }
+    return mapping.get(value, 0)
+
+
+def _best_knowledge_summary(candidate: Dict[str, Any]) -> str:
+    """Build a concise recruiter-facing summary of strongest knowledge areas."""
+    skills = [
+        str(s).strip() for s in (
+            (candidate.get('core_technical_skills') or [])
+            + (candidate.get('secondary_technical_skills') or [])
+            + (candidate.get('frameworks_tools') or [])
+        ) if str(s).strip()
+    ]
+    strengths = [str(s).strip() for s in (candidate.get('key_strengths') or []) if str(s).strip()]
+
+    top_skills: List[str] = []
+    seen = set()
+    for skill in skills:
+        key = skill.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        top_skills.append(skill)
+        if len(top_skills) >= 5:
+            break
+
+    top_strengths = strengths[:2]
+    parts = []
+    if top_skills:
+        parts.append(f"Core strengths: {', '.join(top_skills)}")
+    if top_strengths:
+        parts.append(f"Evidence: {'; '.join(top_strengths)}")
+    return ' | '.join(parts)
+
+
+def _capability_focus_score(jd_text: str, strength_text: str) -> float:
+    """Score whether candidate capability cues align with the role intent in JD."""
+    jd = jd_text.lower()
+    strengths = strength_text.lower()
+
+    focus_map = {
+        'case_study': ['case study', 'hypothesis', 'ab test', 'experiment', 'analytics', 'business problem'],
+        'problem_solving': ['problem solving', 'complex problem', 'reasoning', 'debugging'],
+        'dsa': ['dsa', 'data structure', 'algorithm', 'leetcode', 'competitive programming'],
+        'ml_data': ['machine learning', 'modeling', 'statistics', 'data science', 'feature engineering'],
+        'backend_platform': ['backend', 'api', 'microservice', 'system design', 'scalability']
+    }
+
+    jd_hits = []
+    candidate_hits = []
+    for key, phrases in focus_map.items():
+        if any(phrase in jd for phrase in phrases):
+            jd_hits.append(key)
+        if any(phrase in strengths for phrase in phrases):
+            candidate_hits.append(key)
+
+    if not jd_hits:
+        return 35.0
+
+    overlap = len(set(jd_hits).intersection(candidate_hits))
+    return round((overlap / len(set(jd_hits))) * 100.0, 2)
+
+
+def compute_intelligent_candidate_match(candidate: Dict[str, Any], job_description: str, cv_text: str) -> Dict[str, Any]:
+    """Compute weighted candidate ranking beyond plain keyword matching."""
+    keyword_match = compute_local_keyword_match(cv_text, job_description)
+
+    jd_text = job_description or ''
+    jd_tokens = set(_tokenize_for_matching(jd_text))
+    candidate_tokens = set(_tokenize_for_matching(cv_text))
+    token_overlap = len(jd_tokens.intersection(candidate_tokens))
+    token_score = round((token_overlap / len(jd_tokens)) * 100.0, 2) if jd_tokens else 0.0
+
+    core_skills = [str(s).strip() for s in (candidate.get('core_technical_skills') or []) if str(s).strip()]
+    secondary_skills = [str(s).strip() for s in (candidate.get('secondary_technical_skills') or []) if str(s).strip()]
+    framework_skills = [str(s).strip() for s in (candidate.get('frameworks_tools') or []) if str(s).strip()]
+    all_skills_lower = [s.lower() for s in core_skills + secondary_skills + framework_skills]
+    all_skill_blob = " ".join(all_skills_lower)
+
+    critical_skills = _extract_critical_jd_skills(jd_text)
+    matched_critical_skills = [
+        skill for skill in critical_skills
+        if re.search(rf'\b{re.escape(skill)}\b', all_skill_blob)
+    ]
+    critical_coverage = round((len(matched_critical_skills) / len(critical_skills)) * 100.0, 2) if critical_skills else 0.0
+    if len(critical_skills) <= 2:
+        minimum_critical_coverage = 100.0 if critical_skills else 0.0
+    else:
+        minimum_critical_coverage = 67.0
+
+    jd_skill_terms = [token for token in jd_tokens if len(token) >= 3]
+    if jd_skill_terms:
+        exact_skill_hits = sum(1 for term in jd_skill_terms if any(term == skill for skill in all_skills_lower))
+        fuzzy_skill_hits = sum(1 for term in jd_skill_terms if any(term in skill for skill in all_skills_lower))
+        skill_score = round(((2 * exact_skill_hits + fuzzy_skill_hits) / (3 * len(jd_skill_terms))) * 100.0, 2)
+        skill_score = min(skill_score, 100.0)
+    else:
+        skill_score = keyword_match['match_percentage']
+
+    strength_bits = [
+        candidate.get('verdict_reason') or '',
+        " ".join(candidate.get('key_strengths') or []),
+        " ".join(candidate.get('matched_requirements') or []),
+    ]
+    fitment = candidate.get('fitment_analysis') or []
+    if isinstance(fitment, list):
+        for entry in fitment:
+            if isinstance(entry, dict):
+                strength_bits.append(str(entry.get('category') or ''))
+                strength_bits.append(str(entry.get('candidate_profile') or ''))
+
+    strength_text = " ".join(strength_bits)
+    capability_score = _capability_focus_score(jd_text, strength_text)
+
+    min_years = _extract_min_years_requirement(jd_text)
+    years = candidate.get('years_experience')
+    if years is None:
+        years = candidate.get('years_of_experience')
+    years = float(years or 0)
+    if min_years is None:
+        experience_score = min(100.0, 45.0 + (years * 5.0)) if years > 0 else 25.0
+    elif years >= min_years:
+        experience_score = min(100.0, 80.0 + ((years - min_years) * 4.0))
+    else:
+        experience_score = max(0.0, (years / max(min_years, 0.5)) * 55.0)
+
+    target_seniority = _extract_target_seniority(jd_text)
+    candidate_seniority = _candidate_seniority_value(candidate)
+    if target_seniority is None:
+        seniority_score = 55.0 if candidate_seniority > 0 else 35.0
+    elif candidate_seniority >= target_seniority:
+        seniority_score = 100.0
+    else:
+        shortfall = target_seniority - candidate_seniority
+        seniority_score = max(0.0, 75.0 - (shortfall * 30.0))
+
+    domain_text = " ".join(
+        [
+            str(candidate.get('primary_domain') or ''),
+            " ".join([str(d) for d in (candidate.get('secondary_domains') or [])]),
+            " ".join([str(d) for d in (candidate.get('domain_expertise') or [])]),
+        ]
+    ).lower()
+    domain_terms = ['data science', 'analytics', 'machine learning', 'backend', 'platform', 'cloud', 'python']
+    jd_domain_hits = [term for term in domain_terms if term in jd_text.lower()]
+    if not jd_domain_hits:
+        domain_score = 45.0
+    else:
+        domain_score = round(
+            (sum(1 for term in jd_domain_hits if term in domain_text) / len(jd_domain_hits)) * 100.0,
+            2
+        )
+
+    final_score = round(
+        (0.40 * (critical_coverage if critical_skills else skill_score)) +
+        (0.18 * skill_score) +
+        (0.12 * capability_score) +
+        (0.12 * token_score) +
+        (0.10 * experience_score) +
+        (0.08 * seniority_score),
+        2
+    )
+
+    if critical_skills and critical_coverage < 100.0:
+        if critical_coverage < 50.0:
+            final_score = round(final_score * 0.45, 2)
+        else:
+            final_score = round(final_score * 0.75, 2)
+
+    missing_critical_skills = [skill for skill in critical_skills if skill not in matched_critical_skills]
+    selection_basis = (
+        f"Selected for {len(matched_critical_skills)}/{len(critical_skills)} critical skills"
+        if critical_skills
+        else "Selected on weighted skill, capability, and experience fit"
+    )
+
+    return {
+        'match_percentage': final_score,
+        'matched_keywords': keyword_match['matched_keywords'],
+        'reason': (
+            f"Weighted fit: critical={critical_coverage if critical_skills else skill_score:.1f}, "
+            f"skills={skill_score:.1f}, capability={capability_score:.1f}, "
+            f"experience={experience_score:.1f}, seniority={seniority_score:.1f}."
+        ),
+        'selection_basis': selection_basis,
+        'critical_skills_required': critical_skills,
+        'critical_skills_matched': matched_critical_skills,
+        'critical_skills_missing': missing_critical_skills,
+        'critical_skill_coverage': critical_coverage,
+        'critical_skill_min_required': minimum_critical_coverage,
+        'best_knowledge': _best_knowledge_summary(candidate),
+        'score_breakdown': {
+            'critical_skill_score': critical_coverage if critical_skills else skill_score,
+            'skill_score': skill_score,
+            'capability_score': capability_score,
+            'token_score': token_score,
+            'experience_score': round(experience_score, 2),
+            'seniority_score': round(seniority_score, 2),
+            'domain_score': domain_score
+        }
+    }
+
+
 def _candidate_has_searchable_signal(intel: Dict[str, Any]) -> bool:
     """Filter out placeholder or unusable records from UI search results."""
     skills = (
@@ -745,14 +1494,17 @@ def _candidate_has_searchable_signal(intel: Dict[str, Any]) -> bool:
 
 @app.route('/')
 def index():
-    """Render the new unified interface"""
+    """Render unified interface by default; allow redactor-only mode via query."""
+    mode = request.args.get('mode', '').strip().lower()
+    if mode in {'redactor', 'cv-redactor', 'redaction'}:
+        return render_template('index.html')
     return render_template('index_new.html')
-    return render_template('index.html')
 
-@app.route('/queue-monitor')
-def queue_monitor():
-    """Render the queue monitoring page"""
-    return render_template('queue_monitor.html')
+
+@app.route('/redactor')
+def redactor_page():
+    """Render the standalone CV redactor page."""
+    return render_template('index.html')
 
 @app.route('/semantic-search')
 def semantic_search_page():
@@ -761,7 +1513,7 @@ def semantic_search_page():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    """Handle file upload and optionally execute the full CV intelligence pipeline."""
+    """Handle file upload; queue async processing by default and support optional sync mode."""
     try:
         # Check if file is present
         if 'cv_file' not in request.files:
@@ -785,70 +1537,83 @@ def upload_file():
         file.save(upload_path)
         
         logger.info(f"File uploaded: {upload_path}")
-        
-        # Check if queue mode is enabled and requested
-        use_queue = request.form.get('use_queue', 'false').lower() == 'true'
+
         job_description = request.form.get('job_description', '').strip() or None
-        
-        if use_queue and QUEUE_AVAILABLE and job_description:
-            # Queue mode: enqueue job and return job_id
-            queue_manager = get_queue_manager()
-            if queue_manager:
-                try:
-                    job_id = queue_manager.enqueue_cv_processing(
-                        cv_path=upload_path,
-                        job_description=job_description,
-                        priority=QueueManager.PRIORITY_NORMAL,
-                        metadata={'original_filename': filename}
-                    )
-                    
-                    # Trigger Celery task
-                    process_cv_task.delay(job_id)
-                    
-                    return jsonify({
-                        'success': True,
-                        'mode': 'queued',
-                        'job_id': job_id,
-                        'message': 'CV queued for processing',
-                        'status_url': url_for('get_job_status', job_id=job_id, _external=True)
-                    })
-                except Exception as e:
-                    logger.warning(f"Queue failed, falling back to sync: {e}")
-                    # Fall through to synchronous processing
-        
-        # Synchronous mode: redact always, and run full intelligence extraction when JD is provided.
+        effective_job_description = job_description or _DEFAULT_PROFILE_JD
+        async_requested = _parse_bool(
+            request.form.get('async', request.args.get('async')),
+            default=_UPLOAD_ASYNC_DEFAULT
+        )
+        force_reprocess = _parse_bool(request.form.get('force_reprocess'), default=False)
+        logger.info(
+            "Upload request async=%s job_description_present=%s value_preview=%r",
+            async_requested,
+            bool(job_description),
+            (job_description or '')[:80]
+        )
+        llm_runtime_config = _extract_runtime_llm_config({
+            'llm_provider': request.form.get('llm_provider'),
+            'llm_api_key': request.form.get('llm_api_key'),
+            'llm_model': request.form.get('llm_model')
+        })
+
+        if async_requested:
+            job_id = _create_async_upload_job(
+                upload_path=upload_path,
+                original_filename=filename,
+                job_description=effective_job_description,
+                llm_runtime_config=llm_runtime_config,
+                force_reprocess=force_reprocess
+            )
+            return jsonify({
+                'success': True,
+                'mode': 'asynchronous',
+                'status': 'queued',
+                'job_id': job_id,
+                'status_url': url_for('get_upload_job_status', job_id=job_id),
+                'message': 'Upload accepted. Poll status_url for completion.',
+                'queue_size': _upload_job_queue.qsize()
+            })
+
+        # Optional synchronous mode: redact always and run intelligence extraction when JD is provided.
         try:
             pipeline_result = process_source_cv(
                 cv_path=Path(upload_path),
-                job_description=job_description,
-                force_reprocess=True
+                job_description=effective_job_description,
+                force_reprocess=force_reprocess,
+                llm_runtime_config=llm_runtime_config
             )
+
+            # Safety fallback: if sync upload somehow returns redaction-only,
+            # run extraction/persistence from the generated redacted text so
+            # Supabase stays current for newly uploaded CVs.
+            if pipeline_result.get('success') and not pipeline_result.get('intelligence'):
+                try:
+                    redacted_filename = pipeline_result.get('redacted_filename')
+                    redacted_path = Path(app.config['OUTPUT_FOLDER']) / str(redacted_filename or '')
+                    if redacted_filename and redacted_path.exists():
+                        with open(redacted_path, 'r', encoding='utf-8') as redacted_file:
+                            redacted_text = redacted_file.read()
+
+                        fallback_result = process_redacted_cv_text(
+                            redacted_text=redacted_text,
+                            redacted_filename=redacted_filename,
+                            job_description=job_description,
+                            original_filename=filename,
+                            force_reprocess=force_reprocess,
+                            llm_runtime_config=llm_runtime_config
+                        )
+
+                        if fallback_result.get('success') and fallback_result.get('intelligence'):
+                            fallback_result['preview'] = pipeline_result.get('preview', redacted_text)
+                            pipeline_result = fallback_result
+                except Exception as fallback_error:
+                    logger.warning(f"Upload fallback extraction skipped: {fallback_error}")
 
             if not pipeline_result.get('success'):
                 return jsonify({'error': pipeline_result.get('error', 'CV processing failed')}), 500
 
-            response = {
-                'success': True,
-                'mode': 'synchronous',
-                'message': 'CV processed successfully',
-                'output_filename': pipeline_result['redacted_filename'],
-                'preview': pipeline_result.get('preview', ''),
-                'download_url': url_for('download_file', filename=pipeline_result['redacted_filename'])
-            }
-
-            intelligence = pipeline_result.get('intelligence')
-            if intelligence:
-                response.update({
-                    'pipeline_executed': 'full',
-                    'intelligence': intelligence,
-                    'intelligence_file': pipeline_result.get('intelligence_file'),
-                    'stored_in_supabase': pipeline_result.get('stored_in_supabase', False),
-                    'stored_embedding_in_supabase': pipeline_result.get('stored_embedding_in_supabase', False),
-                    'embedding_generated': pipeline_result.get('embedding_generated', False),
-                    'similarity_score': pipeline_result.get('similarity_score')
-                })
-            else:
-                response['pipeline_executed'] = 'redaction_only'
+            response = _build_upload_success_payload(pipeline_result, mode='synchronous')
 
             logger.info(f"CV processed successfully: {pipeline_result['redacted_filename']}")
             return jsonify(response)
@@ -860,6 +1625,41 @@ def upload_file():
     except Exception as e:
         logger.error(f"Error handling upload: {str(e)}", exc_info=True)
         return jsonify({'error': f'Error uploading file: {str(e)}'}), 500
+
+
+@app.route('/api/upload-jobs/<job_id>', methods=['GET'])
+def get_upload_job_status(job_id):
+    """Poll asynchronous upload job status and retrieve final result when completed."""
+    with _upload_jobs_lock:
+        _cleanup_upload_jobs_locked()
+        job = _upload_jobs.get(job_id)
+        if not job:
+            return jsonify({'success': False, 'error': 'Job not found'}), 404
+
+        status = job.get('status', 'queued')
+        base_payload = {
+            'success': status != 'failed',
+            'mode': 'asynchronous',
+            'job_id': job_id,
+            'status': status,
+            'submitted_at': job.get('submitted_at'),
+            'started_at': job.get('started_at'),
+            'completed_at': job.get('completed_at'),
+            'job_description_provided': bool(job.get('job_description_provided')),
+            'queue_size': _upload_job_queue.qsize()
+        }
+
+        if status == 'completed':
+            pipeline_result = job.get('pipeline_result') or {}
+            final_payload = _build_upload_success_payload(pipeline_result, mode='asynchronous')
+            final_payload.update(base_payload)
+            return jsonify(final_payload)
+
+        if status == 'failed':
+            base_payload['error'] = job.get('error', 'Upload processing failed')
+            return jsonify(base_payload), 500
+
+        return jsonify(base_payload)
 
 @app.route('/download/<filename>')
 def download_file(filename):
@@ -890,17 +1690,6 @@ def health():
     else:
         supabase_status = 'not configured'
     
-    # Check queue system
-    queue_status = 'not configured'
-    if QUEUE_AVAILABLE:
-        queue_manager = get_queue_manager()
-        if queue_manager:
-            try:
-                queue_manager.redis.ping()
-                queue_status = 'connected'
-            except:
-                queue_status = 'configured but unreachable'
-    
     llm_probe = probe_llm_provider()
     embedding_probe = probe_embedding_runtime()
     
@@ -912,13 +1701,22 @@ def health():
         'status': 'healthy',
         'service': 'CV Redaction Pipeline',
         'supabase': supabase_status,
-        'queue_system': queue_status,
         'llm_provider': llm_probe['provider'],
         'llm_reachable': llm_probe['reachable'],
         'embedding_provider': embedding_probe['provider'],
         'embedding_reachable': embedding_probe['reachable'],
         'redacted_cvs': redacted_count,
         'intelligence_files': intelligence_count,
+        'async_upload': {
+            'default_async': _UPLOAD_ASYNC_DEFAULT,
+            'worker_count': _UPLOAD_WORKER_COUNT,
+            'queue_size': _upload_job_queue.qsize(),
+            'jobs_tracked': len(_upload_jobs)
+        },
+        'llm_throttle': {
+            'max_concurrent_requests': _LLM_MAX_CONCURRENT,
+            'min_interval_seconds': _LLM_MIN_INTERVAL_SECONDS
+        },
         'api_key_configured': llm_probe['configured'],
         'live_checks': {
             'llm': llm_probe,
@@ -926,119 +1724,6 @@ def health():
             'embeddings': embedding_probe
         }
     })
-
-
-@app.route('/api/queue/stats')
-def get_queue_stats():
-    """Get queue statistics"""
-    if not QUEUE_AVAILABLE:
-        return jsonify({'error': 'Queue system not available. Install redis and celery.'}), 503
-    
-    queue_manager = get_queue_manager()
-    if not queue_manager:
-        return jsonify({'error': 'Queue manager not initialized'}), 503
-    
-    try:
-        stats = queue_manager.get_queue_stats()
-        return jsonify({
-            'success': True,
-            'stats': stats
-        })
-    except Exception as e:
-        logger.error(f"Error getting queue stats: {e}")
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/api/queue/jobs', methods=['GET'])
-def get_queued_jobs():
-    """Get list of queued jobs"""
-    if not QUEUE_AVAILABLE:
-        return jsonify({'error': 'Queue system not available'}), 503
-    
-    queue_manager = get_queue_manager()
-    if not queue_manager:
-        return jsonify({'error': 'Queue manager not initialized'}), 503
-    
-    try:
-        limit = request.args.get('limit', 100, type=int)
-        jobs = queue_manager.get_queued_jobs(limit=limit)
-        return jsonify({
-            'success': True,
-            'count': len(jobs),
-            'jobs': jobs
-        })
-    except Exception as e:
-        logger.error(f"Error getting queued jobs: {e}")
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/api/jobs/<job_id>/status', methods=['GET'])
-def get_job_status(job_id: str):
-    """Get job status by ID"""
-    if not QUEUE_AVAILABLE:
-        return jsonify({'error': 'Queue system not available'}), 503
-    
-    queue_manager = get_queue_manager()
-    if not queue_manager:
-        return jsonify({'error': 'Queue manager not initialized'}), 503
-    
-    try:
-        job_data = queue_manager.get_job_status(job_id)
-        if not job_data:
-            return jsonify({'error': 'Job not found'}), 404
-        
-        return jsonify({
-            'success': True,
-            'job': job_data
-        })
-    except Exception as e:
-        logger.error(f"Error getting job status: {e}")
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/api/jobs/<job_id>/cancel', methods=['POST'])
-def cancel_job(job_id: str):
-    """Cancel a queued job"""
-    if not QUEUE_AVAILABLE:
-        return jsonify({'error': 'Queue system not available'}), 503
-    
-    queue_manager = get_queue_manager()
-    if not queue_manager:
-        return jsonify({'error': 'Queue manager not initialized'}), 503
-    
-    try:
-        success = queue_manager.cancel_job(job_id)
-        if success:
-            return jsonify({
-                'success': True,
-                'message': f'Job {job_id} cancelled'
-            })
-        else:
-            return jsonify({'error': 'Failed to cancel job'}), 400
-    except Exception as e:
-        logger.error(f"Error cancelling job: {e}")
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/api/rate-limit/stats', methods=['GET'])
-def get_rate_limit_stats():
-    """Get rate limit statistics for all LLM providers"""
-    if not QUEUE_AVAILABLE:
-        return jsonify({'error': 'Queue system not available'}), 503
-    
-    rate_limiter = get_rate_limiter()
-    if not rate_limiter:
-        return jsonify({'error': 'Rate limiter not initialized'}), 503
-    
-    try:
-        stats = rate_limiter.get_all_stats()
-        return jsonify({
-            'success': True,
-            'stats': stats
-        })
-    except Exception as e:
-        logger.error(f"Error getting rate limit stats: {e}")
-        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/triage/test', methods=['POST'])
@@ -1268,6 +1953,7 @@ def extract_intelligence():
         
         redacted_cv_file = data.get('redacted_cv_file')
         job_description = data.get('job_description')
+        llm_runtime_config = _extract_runtime_llm_config(data)
         
         if not redacted_cv_file or not job_description:
             return jsonify({'error': 'Both redacted_cv_file and job_description required'}), 400
@@ -1293,7 +1979,8 @@ def extract_intelligence():
             redacted_filename=redacted_cv_file,
             job_description=job_description,
             original_filename=redacted_cv_file,
-            force_reprocess=True
+            force_reprocess=True,
+            llm_runtime_config=llm_runtime_config
         )
 
         if not result.get('success'):
@@ -1326,6 +2013,7 @@ def process_samples():
         data = request.get_json() or {}
         job_description = (data.get('job_description') or '').strip() or None
         force_reprocess = data.get('force_reprocess', False)
+        llm_runtime_config = _extract_runtime_llm_config(data)
         
         # Collect all original CVs from samples/ and samples/more/
         sample_dirs = [Path('samples'), Path('samples/more')]
@@ -1366,7 +2054,8 @@ def process_samples():
                     cv_path=cv_path,
                     job_description=job_description,
                     force_reprocess=force_reprocess,
-                    existing_redacted_path=existing_redacted[0] if (existing_redacted and not force_reprocess) else None
+                    existing_redacted_path=existing_redacted[0] if (existing_redacted and not force_reprocess) else None,
+                    llm_runtime_config=llm_runtime_config
                 )
 
                 if not existing_redacted or force_reprocess:
@@ -1451,6 +2140,7 @@ def batch_extract_intelligence():
         data = request.get_json() or {}
         job_description = (data.get('job_description') or '').strip() or None
         force_reprocess = data.get('force_reprocess', False)
+        llm_runtime_config = _extract_runtime_llm_config(data)
         
         # Get all redacted CV files
         output_dir = Path(app.config['OUTPUT_FOLDER'])
@@ -1502,7 +2192,8 @@ def batch_extract_intelligence():
                     redacted_filename=cv_file.name,
                     job_description=job_description,
                     original_filename=cv_file.name,
-                    force_reprocess=force_reprocess
+                    force_reprocess=force_reprocess,
+                    llm_runtime_config=llm_runtime_config
                 )
 
                 if not result.get('success') and 'anonymized' in (result.get('error', '').lower()):
@@ -1567,50 +2258,78 @@ def batch_extract_intelligence():
 
 @app.route('/api/search-candidates', methods=['POST'])
 def search_candidates():
-    """Search candidates using filters - with Supabase or local fallback"""
+    """Search candidates using filters from Supabase only."""
     try:
         data = request.get_json() or {}
+        limit = int(data.get('limit', 5000) or 5000)
         
-        # Try Supabase first with timeout
         storage = get_supabase_storage()
-        if storage:
-            raw_results = try_supabase_operation(
-                lambda: storage.search_by_filters(
-                    verdict=data.get('verdict'),
-                    seniority_level=data.get('seniority_level'),
-                    min_match_score=data.get('min_match_score'),
-                    min_confidence_score=data.get('min_confidence_score'),
-                    required_skills=data.get('required_skills'),
-                    domains=data.get('domains'),
-                    primary_domain=data.get('primary_domain'),
-                    min_years_experience=data.get('min_years_experience'),
-                    max_years_experience=data.get('max_years_experience'),
-                    limit=data.get('limit', 50)
-                ),
-                fallback_result=None,
-                timeout_seconds=10
-            )
-            if raw_results is not None:
-                # Convert DB records to app format
-                results = [
-                    candidate
-                    for candidate in (storage._db_record_to_app_format(r) for r in raw_results)
-                    if _candidate_has_searchable_signal(candidate)
-                ]
+        if not storage:
+            cached_candidates = _get_quick_search_cache_snapshot()
+            if cached_candidates:
+                filtered = _filter_candidate_records(cached_candidates, data)[:limit]
                 return jsonify({
                     'success': True,
-                    'count': len(results),
-                    'candidates': results,
-                    'data_source': 'supabase'
+                    'count': len(filtered),
+                    'candidates': filtered,
+                    'data_source': 'supabase_cache_stale',
+                    'supabase_only': True
                 })
-        
-        # Local fallback
-        results = search_local_candidates(data)
+            return jsonify({
+                'success': False,
+                'error': 'Supabase is not reachable. Supabase-only mode is enabled.',
+                'data_source': 'supabase',
+                'supabase_only': True
+            }), 503
+
+        raw_results = try_supabase_operation(
+            lambda: storage.search_by_filters(
+                verdict=data.get('verdict'),
+                seniority_level=data.get('seniority_level'),
+                min_match_score=data.get('min_match_score'),
+                min_confidence_score=data.get('min_confidence_score'),
+                required_skills=data.get('required_skills'),
+                domains=data.get('domains'),
+                primary_domain=data.get('primary_domain'),
+                min_years_experience=data.get('min_years_experience'),
+                max_years_experience=data.get('max_years_experience'),
+                limit=limit
+            ),
+            fallback_result=None,
+            timeout_seconds=10
+        )
+        if raw_results is None:
+            candidate_payload = _get_quick_search_candidates(storage=storage, limit=5000)
+            cached_rows = candidate_payload.get('candidates', [])
+            if not cached_rows:
+                return jsonify({
+                    'success': False,
+                    'error': 'Supabase query failed or timed out. Supabase-only mode is enabled.',
+                    'data_source': 'supabase',
+                    'supabase_only': True
+                }), 503
+
+            filtered_cached = _filter_candidate_records(cached_rows, data)[:limit]
+            return jsonify({
+                'success': True,
+                'count': len(filtered_cached),
+                'candidates': filtered_cached,
+                'data_source': candidate_payload.get('source', 'supabase_cache_stale'),
+                'cache_age_seconds': candidate_payload.get('cache_age_seconds'),
+                'supabase_only': True
+            })
+
+        results = [
+            candidate
+            for candidate in (storage._db_record_to_app_format(r) for r in raw_results)
+            if _candidate_has_searchable_signal(candidate)
+        ]
         return jsonify({
             'success': True,
             'count': len(results),
             'candidates': results,
-            'data_source': 'local_json'
+            'data_source': 'supabase_live',
+            'supabase_only': True
         })
         
     except Exception as e:
@@ -1619,88 +2338,121 @@ def search_candidates():
 
 @app.route('/api/quick-search', methods=['POST'])
 def quick_search_api():
-    """Quick search using keyword matching - instant, no LLM calls"""
+    """Quick JD-to-candidate search using weighted intelligent ranking over Supabase candidates."""
     try:
         import time
         
         data = request.get_json() or {}
         job_description = data.get('job_description', '')
-        limit = data.get('limit', 10)
+        requested_limit = data.get('limit', 15)
+        try:
+            requested_limit = int(requested_limit)
+        except Exception:
+            requested_limit = 15
+        # Keep quick-search focused on strongest matches only.
+        limit = max(10, min(15, requested_limit))
         
         if not job_description:
             return jsonify({'error': 'job_description required'}), 400
         
         start_time = time.time()
-        
-        # Load intelligence files
-        intelligence_dir = Path(app.config['INTELLIGENCE_FOLDER'])
-        cvs = []
-        
-        for json_file in intelligence_dir.glob('*_intelligence.json'):
-            try:
-                with open(json_file, 'r', encoding='utf-8') as f:
-                    intel = json.load(f)
-                
-                if 'error' in intel and not intel.get('verdict'):
-                    continue
-                if not _candidate_has_searchable_signal(intel):
-                    continue
-                
-                # Prefer structured fields for matching so placeholder narratives
-                # do not outrank candidates with actual extracted metadata.
-                skills = (intel.get('core_technical_skills') or []) + (intel.get('secondary_technical_skills') or [])
-                domain = intel.get('primary_domain', '')
-                seniority = intel.get('seniority_level', '')
-                years = intel.get('years_experience')
-                structured_text = " ".join(
-                    str(part).strip()
-                    for part in [domain, seniority, f"{years} years" if years else ""] + skills
-                    if str(part).strip()
-                ).strip()
-                cv_text = structured_text or intel.get('cleaned_narrative') or intel.get('cleaned_text', '')
-                
-                cvs.append({'data': intel, 'text': cv_text})
-            except Exception:
-                pass
-        
-        triage = None
-        try:
-            from enhanced_triage import EnhancedTriageEngine
-            triage = EnhancedTriageEngine()
-        except ImportError:
-            logger.info("Enhanced triage not available, using built-in keyword matcher")
+        data_source = 'supabase'
+        candidate_rows = []
+        cache_age_seconds = None
 
+        storage = get_supabase_storage()
+        if storage:
+            candidate_payload = _get_quick_search_candidates(storage=storage, limit=5000)
+            candidate_rows = candidate_payload.get('candidates', [])
+            data_source = candidate_payload.get('source', 'supabase')
+            cache_age_seconds = candidate_payload.get('cache_age_seconds')
+        else:
+            candidate_rows = _get_quick_search_cache_snapshot()
+            if candidate_rows:
+                data_source = 'supabase_cache_stale'
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': 'Supabase is not reachable and no cached candidates are available.',
+                    'data_source': 'supabase',
+                    'supabase_only': True
+                }), 503
+
+        cvs = []
+        for intel in candidate_rows:
+            if 'error' in intel and not intel.get('verdict'):
+                continue
+            if not _candidate_has_searchable_signal(intel):
+                continue
+
+            # Prefer structured fields for matching so placeholder narratives
+            # do not outrank candidates with actual extracted metadata.
+            skills = (
+                (intel.get('core_technical_skills') or [])
+                + (intel.get('secondary_technical_skills') or [])
+                + (intel.get('key_skills') or [])
+                + (intel.get('frameworks_tools') or [])
+            )
+            domain = intel.get('primary_domain', '')
+            seniority = intel.get('seniority_level', '')
+            years = intel.get('years_experience')
+            secondary_domains = intel.get('secondary_domains') or intel.get('domain_expertise') or []
+            summary_text = (
+                intel.get('cleaned_narrative')
+                or intel.get('overall_summary')
+                or intel.get('cleaned_text')
+                or ''
+            )
+            rationale_text = intel.get('verdict_reason') or intel.get('evidence_based_reasoning') or ''
+            structured_text = " ".join(
+                str(part).strip()
+                for part in [domain, seniority, f"{years} years" if years else ""] + secondary_domains + skills
+                if str(part).strip()
+            ).strip()
+            cv_text = " ".join(part for part in [structured_text, summary_text, rationale_text] if part).strip()
+
+            cvs.append({'data': intel, 'text': cv_text})
+        
         matches = []
         
         for cv in cvs:
-            if triage:
-                should_process, reason, relevance_score = triage.should_process(
-                    cv['text'], job_description
-                )
-                match_percentage = relevance_score * 100
-                cv_keywords = triage.extract_keywords(cv['text'])
-                jd_keywords = triage.extract_keywords(job_description)
-                matched_keywords = list(cv_keywords.intersection(jd_keywords))
-            else:
-                local_match = compute_local_keyword_match(cv['text'], job_description)
-                reason = local_match['reason']
-                match_percentage = local_match['match_percentage']
-                matched_keywords = local_match['matched_keywords']
+            ranked = compute_intelligent_candidate_match(
+                candidate=cv['data'],
+                job_description=job_description,
+                cv_text=cv['text']
+            )
 
-            if match_percentage <= 0 or not matched_keywords:
+            match_percentage = ranked['match_percentage']
+            matched_keywords = ranked['matched_keywords']
+            reason = ranked['reason']
+            critical_coverage = float(ranked.get('critical_skill_coverage') or 0.0)
+            min_required_coverage = float(ranked.get('critical_skill_min_required') or 0.0)
+            critical_required = ranked.get('critical_skills_required') or []
+
+            if match_percentage < 10:
+                continue
+            if critical_required and critical_coverage < min_required_coverage:
                 continue
             
             matches.append({
                 'anonymized_id': cv['data'].get('anonymized_id', 'UNKNOWN'),
                 'match_percentage': match_percentage,
                 'matched_keywords': matched_keywords,
+                'score_breakdown': ranked.get('score_breakdown', {}),
+                'selection_basis': ranked.get('selection_basis', ''),
+                'critical_skills_required': critical_required,
+                'critical_skills_matched': ranked.get('critical_skills_matched', []),
+                'critical_skills_missing': ranked.get('critical_skills_missing', []),
+                'critical_skill_coverage': critical_coverage,
+                'best_knowledge': ranked.get('best_knowledge') or cv['data'].get('best_knowledge_summary', ''),
                 'verdict': cv['data'].get('verdict'),
                 'confidence_score': cv['data'].get('confidence_score', 0),
                 'years_experience': cv['data'].get('years_experience', 0),
                 'seniority_level': cv['data'].get('seniority_level', 'N/A'),
                 'core_technical_skills': cv['data'].get('core_technical_skills', [])[:5],
                 'primary_domain': cv['data'].get('primary_domain', ''),
-                'verdict_reason': cv['data'].get('verdict_reason', '')
+                'verdict_reason': cv['data'].get('verdict_reason', ''),
+                'match_reason': reason
             })
         
         deduped_matches = {}
@@ -1728,7 +2480,10 @@ def quick_search_api():
             'success': True,
             'matches': top_matches,
             'total_cvs': len(cvs),
-            'search_time': f'{elapsed:.3f}s'
+            'search_time': f'{elapsed:.3f}s',
+            'data_source': data_source,
+            'cache_age_seconds': cache_age_seconds,
+            'supabase_only': True
         })
         
     except Exception as e:
@@ -2023,5 +2778,5 @@ if __name__ == '__main__':
     print(f"\nAccess the application at: http://localhost:5000")
     print(f"Press CTRL+C to stop the server\n")
     
-    # Temporarily disable debug mode to avoid reloader issues
-    app.run(debug=False, host='0.0.0.0', port=5000)
+    # Threaded mode improves local concurrency behavior during load tests.
+    app.run(debug=False, host='0.0.0.0', port=5000, threaded=True)

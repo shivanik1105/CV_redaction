@@ -5,7 +5,7 @@ Handles storing and retrieving CV intelligence data with vector search
 import os
 import json
 import re
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from datetime import datetime
 import logging
 
@@ -26,6 +26,95 @@ def _extract_missing_column_name(error: Exception) -> Optional[str]:
     if match:
         return match.group(1)
     return None
+
+
+def _as_clean_text(value: Any, max_len: int = 1200) -> str:
+    """Normalize text-ish values to compact safe strings."""
+    if value is None:
+        return ""
+    text = str(value).strip()
+    if not text:
+        return ""
+    text = re.sub(r"\s+", " ", text)
+    return text[:max_len]
+
+
+def _as_clean_list(value: Any, max_items: int = 25, max_len: int = 80) -> List[str]:
+    """Normalize list-like fields into deduplicated, non-empty string arrays."""
+    if value is None:
+        return []
+
+    if isinstance(value, str):
+        items = [chunk.strip() for chunk in value.split(',') if chunk.strip()]
+    elif isinstance(value, list):
+        items = value
+    else:
+        return []
+
+    cleaned: List[str] = []
+    seen = set()
+    for item in items:
+        normalized = _as_clean_text(item, max_len=max_len)
+        if not normalized:
+            continue
+        key = normalized.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        cleaned.append(normalized)
+        if len(cleaned) >= max_items:
+            break
+    return cleaned
+
+
+def _normalize_percent(value: Any, default: Optional[int] = 0) -> Optional[int]:
+    """Convert confidence/match scores into integer percentages in [0, 100]."""
+    if value is None:
+        return default
+    try:
+        parsed = int(round(float(value)))
+    except Exception:
+        return default
+    return max(0, min(100, parsed))
+
+
+def _normalize_years(value: Any, default: float = 0.0) -> float:
+    """Normalize years of experience into a non-negative float."""
+    if value is None:
+        return default
+    try:
+        parsed = float(value)
+    except Exception:
+        return default
+    return round(max(0.0, parsed), 1)
+
+
+def _build_search_keywords(intelligence_data: Dict, key_skills: List[str], domains: List[str]) -> List[str]:
+    """Build searchable terms from technical skills plus capability cues."""
+    tags: List[str] = []
+    tags.extend(key_skills)
+    tags.extend(domains)
+    tags.extend(_as_clean_list(intelligence_data.get("secondary_technical_skills"), max_items=10))
+    tags.extend(_as_clean_list(intelligence_data.get("frameworks_tools"), max_items=10))
+
+    for capability in _as_clean_list(intelligence_data.get("key_strengths"), max_items=10, max_len=120):
+        lower = capability.lower()
+        if "case" in lower and "study" in lower:
+            tags.append("case study")
+        if "problem" in lower and "solv" in lower:
+            tags.append("problem solving")
+        if "dsa" in lower or "algorithm" in lower:
+            tags.append("algorithms")
+        if "data" in lower and ("analysis" in lower or "scient" in lower):
+            tags.append("data science")
+        tags.append(capability)
+
+    return _as_clean_list(tags, max_items=40, max_len=80)
+
+
+def _has_minimum_search_signal(summary: str, key_skills: List[str], domains: List[str], years: float) -> bool:
+    """Reject payloads that are effectively empty placeholders."""
+    return bool(summary or key_skills or domains or years > 0)
 
 
 class SupabaseStorage:
@@ -229,7 +318,7 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             allowed_verdicts = {"SHORTLIST", "BACKUP"}
 
             # CRITICAL: Verify data has an anonymized_id
-            anon_id = intelligence_data.get("anonymized_id")
+            anon_id = _as_clean_text(intelligence_data.get("anonymized_id"), max_len=40)
             if not anon_id:
                 raise ValueError("Cannot store intelligence without anonymized_id")
             
@@ -242,15 +331,69 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             
             # Build domain expertise array: primary + secondary domains
             domains = []
-            if intelligence_data.get("primary_domain"):
-                domains.append(intelligence_data["primary_domain"])
-            domains.extend(intelligence_data.get("secondary_domains", []))
+            primary_domain = _as_clean_text(intelligence_data.get("primary_domain"), max_len=120)
+            if primary_domain:
+                domains.append(primary_domain)
+            domains.extend(_as_clean_list(intelligence_data.get("secondary_domains"), max_items=8, max_len=120))
+            domains = _as_clean_list(domains, max_items=10, max_len=120)
+
+            key_skills = _as_clean_list(
+                (intelligence_data.get("core_technical_skills") or []) +
+                (intelligence_data.get("secondary_technical_skills") or []),
+                max_items=25,
+                max_len=80,
+            )
             
             # Build accurate overall_summary from the LLM's actual analysis
             # Priority: use the LLM-generated cleaned_narrative (executive summary)
             # NOT raw CV text — this should be the analyst's own summary
             overall_summary = self._build_accurate_summary(intelligence_data)
             
+            confidence_score = _normalize_percent(intelligence_data.get("confidence_score"), default=0)
+            match_score = _normalize_percent(intelligence_data.get("match_score"), default=None)
+            years_of_experience = _normalize_years(intelligence_data.get("years_experience"), default=0.0)
+            career_level = _as_clean_text((intelligence_data.get("seniority_level") or "").upper(), max_len=40)
+            evidence_reason = _as_clean_text(intelligence_data.get("verdict_reason"), max_len=1000)
+            cleaned_text = _as_clean_text(
+                intelligence_data.get("cleaned_text") or intelligence_data.get("cleaned_narrative"),
+                max_len=20000,
+            )
+            search_keywords = _build_search_keywords(intelligence_data, key_skills, domains)
+            cleaned_narrative = _as_clean_text(intelligence_data.get("cleaned_narrative"), max_len=2500)
+            years_experience_range = _as_clean_text(intelligence_data.get("years_experience_range"), max_len=20)
+            if not years_experience_range and years_of_experience > 0:
+                lower_bound = int(years_of_experience)
+                upper_bound = lower_bound + 1
+                years_experience_range = f"{lower_bound}-{upper_bound}"
+
+            core_technical_skills = _as_clean_list(intelligence_data.get("core_technical_skills"), max_items=20, max_len=80)
+            secondary_technical_skills = _as_clean_list(intelligence_data.get("secondary_technical_skills"), max_items=20, max_len=80)
+            frameworks_tools = _as_clean_list(intelligence_data.get("frameworks_tools"), max_items=20, max_len=80)
+            soft_skills = _as_clean_list(intelligence_data.get("soft_skills"), max_items=20, max_len=80)
+            certifications = _as_clean_list(intelligence_data.get("certifications"), max_items=20, max_len=120)
+            secondary_domains = _as_clean_list(intelligence_data.get("secondary_domains"), max_items=10, max_len=120)
+            role_types = _as_clean_list(intelligence_data.get("role_types"), max_items=12, max_len=100)
+            leadership_indicators = _as_clean_list(intelligence_data.get("leadership_indicators"), max_items=12, max_len=120)
+            matched_requirements = _as_clean_list(intelligence_data.get("matched_requirements"), max_items=20, max_len=200)
+            missing_requirements = _as_clean_list(intelligence_data.get("missing_requirements"), max_items=20, max_len=200)
+            key_strengths = _as_clean_list(intelligence_data.get("key_strengths"), max_items=10, max_len=200)
+            potential_concerns = _as_clean_list(intelligence_data.get("potential_concerns"), max_items=10, max_len=200)
+            highlight_achievements = _as_clean_list(intelligence_data.get("highlight_achievements"), max_items=12, max_len=220)
+
+            highest_degree = _as_clean_text(intelligence_data.get("highest_degree"), max_len=120)
+            field_of_study = _as_clean_text(intelligence_data.get("field_of_study"), max_len=120)
+            education_level = _as_clean_text((intelligence_data.get("education_level") or "").upper(), max_len=30)
+            llm_provider = _as_clean_text(intelligence_data.get("llm_provider"), max_len=50)
+            llm_model = _as_clean_text(intelligence_data.get("llm_model"), max_len=100)
+            job_description_hash = _as_clean_text(intelligence_data.get("job_description_hash"), max_len=64)
+            best_knowledge_summary = _as_clean_text(intelligence_data.get("best_knowledge_summary"), max_len=500)
+
+            if not _has_minimum_search_signal(overall_summary, key_skills, domains, years_of_experience):
+                raise ValueError(
+                    f"Candidate {anon_id} has no searchable signal (skills/domain/summary/experience). "
+                    "Skipping database write to avoid empty records."
+                )
+
             # Strip any PII from the JSON backup before storing
             # Remove original_filename_raw (contains real names) from DB copy
             safe_data = {k: v for k, v in intelligence_data.items() 
@@ -265,19 +408,46 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
                 "anonymized_id": anon_id,
                 # Keep verdict compatible with table constraint in extraction-only mode.
                 "verdict": normalized_verdict,
-                "confidence_score": intelligence_data.get("confidence_score", 0),
-                "match_score": intelligence_data.get("match_score"),
+                "confidence_score": confidence_score,
+                "match_score": match_score,
                 "requires_human_review": intelligence_data.get("requires_human_review", False),
-                "years_of_experience": intelligence_data.get("years_experience", 0),
-                "career_level": intelligence_data.get("seniority_level", "") or "",
-                "key_skills": intelligence_data.get("core_technical_skills", []),
+                "years_of_experience": years_of_experience,
+                "career_level": career_level,
+                "years_experience": years_of_experience,
+                "years_experience_range": years_experience_range,
+                "seniority_level": career_level,
+                "key_skills": key_skills,
                 "domain_expertise": domains if domains else [],
-                "evidence_based_reasoning": intelligence_data.get("verdict_reason", ""),
+                "core_technical_skills": core_technical_skills,
+                "secondary_technical_skills": secondary_technical_skills,
+                "frameworks_tools": frameworks_tools,
+                "soft_skills": soft_skills,
+                "certifications": certifications,
+                "primary_domain": primary_domain,
+                "secondary_domains": secondary_domains,
+                "role_types": role_types,
+                "leadership_indicators": leadership_indicators,
+                "highest_degree": highest_degree,
+                "field_of_study": field_of_study,
+                "education_level": education_level,
+                "evidence_based_reasoning": evidence_reason,
                 "overall_summary": overall_summary,
-                "cleaned_text": intelligence_data.get("cleaned_text") or intelligence_data.get("cleaned_narrative", ""),
-                "original_cv_hash": intelligence_data.get("original_cv_hash", ""),
+                "cleaned_text": cleaned_text,
+                "cleaned_narrative": cleaned_narrative,
+                "search_keywords": search_keywords,
+                "matched_requirements": matched_requirements,
+                "missing_requirements": missing_requirements,
+                "key_strengths": key_strengths,
+                "potential_concerns": potential_concerns,
+                "highlight_achievements": highlight_achievements,
+                "llm_provider": llm_provider,
+                "llm_model": llm_model,
+                "extraction_timestamp": intelligence_data.get("extraction_timestamp") or datetime.now().isoformat(),
+                "job_description_hash": job_description_hash,
+                "original_cv_hash": _as_clean_text(intelligence_data.get("original_cv_hash"), max_len=120),
                 "llm_prompt_used": f"{intelligence_data.get('llm_provider', 'unknown')}:{intelligence_data.get('llm_model', 'unknown')}",
                 "llm_raw_response": full_json_backup,
+                "best_knowledge_summary": best_knowledge_summary,
             }
             
             # Remove None values (Supabase doesn't like explicit nulls for some columns)
@@ -403,6 +573,23 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             if intelligence_data.get("field_of_study"):
                 edu += f" in {intelligence_data['field_of_study']}"
             parts.append(f"Education: {edu}")
+
+        # Add strongest knowledge cues to improve recruiter-side comparison context.
+        best_knowledge = _as_clean_text(intelligence_data.get("best_knowledge_summary"), max_len=350)
+        if not best_knowledge:
+            knowledge_items = _as_clean_list(
+                (intelligence_data.get("core_technical_skills") or []) +
+                (intelligence_data.get("frameworks_tools") or []),
+                max_items=8,
+                max_len=70,
+            )
+            strength_items = _as_clean_list(intelligence_data.get("key_strengths"), max_items=3, max_len=120)
+            combined = knowledge_items + strength_items
+            if combined:
+                best_knowledge = ", ".join(combined[:8])
+
+        if best_knowledge:
+            parts.append(f"Best knowledge signals: {best_knowledge}")
         
         return " | ".join(parts)
     
@@ -578,8 +765,8 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
         if seniority_level:
             query = query.eq("career_level", seniority_level.upper())
         
-        if min_match_score is not None:
-            query = query.gte("match_score", min_match_score)
+        # Some deployments do not have a persisted match_score column.
+        # Apply this filter client-side after fetch for compatibility.
         
         if min_confidence_score is not None:
             query = query.gte("confidence_score", min_confidence_score)
@@ -604,8 +791,8 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
         if max_years_experience is not None:
             query = query.lte("years_of_experience", max_years_experience)
         
-        # Order by match score first, then confidence
-        query = query.order("match_score", desc=True).order("confidence_score", desc=True).limit(limit)
+        # Keep ordering schema-safe: confidence_score exists across deployments.
+        query = query.order("confidence_score", desc=True).order("created_at", desc=True).limit(limit)
         
         response = query.execute()
         results = response.data
@@ -628,6 +815,25 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
                     for skill in required_skills
                 )
             results = [r for r in results if has_all_skills(r)]
+
+        if min_match_score is not None:
+            def extract_match_score(record: Dict) -> float:
+                score = record.get("match_score")
+                if isinstance(score, (int, float)):
+                    return float(score)
+
+                raw = record.get("llm_raw_response", "")
+                if raw and raw.startswith("{"):
+                    try:
+                        full = json.loads(raw)
+                        parsed = full.get("match_score")
+                        if isinstance(parsed, (int, float)):
+                            return float(parsed)
+                    except Exception:
+                        pass
+                return 0.0
+
+            results = [r for r in results if extract_match_score(r) >= float(min_match_score)]
         
         if primary_domain:
             pd_lower = primary_domain.lower()

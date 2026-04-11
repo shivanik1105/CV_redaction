@@ -1,0 +1,28 @@
+{
+  "anonymized_id": "SYN_055",
+  "archetype": "python_generalist",
+  "years_experience": 5.4,
+  "core_technical_skills": [
+    "Docker",
+    "Python",
+    "FastAPI",
+    "SQL",
+    "Pandas",
+    "NumPy"
+  ],
+  "secondary_technical_skills": [
+    "LangChain",
+    "Cloud Basics",
+    "Power BI",
+    "Problem Solving",
+    "Testing",
+    "Team Collaboration"
+  ],
+  "key_strengths": [
+    "Good all-round software delivery and execution",
+    "Strong coding discipline and collaboration"
+  ],
+  "primary_domain": "Software Engineering",
+  "cleaned_narrative": "Worked on mixed backend and analytics tasks with solid execution across multiple projects.",
+  "verdict_reason": "Good all-round software delivery and execution"
+}

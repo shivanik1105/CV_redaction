@@ -1,0 +1,26 @@
+{
+  "anonymized_id": "SYN_036",
+  "archetype": "python_backend",
+  "years_experience": 8.2,
+  "core_technical_skills": [
+    "Redis",
+    "Django",
+    "Docker",
+    "FastAPI",
+    "Python",
+    "PostgreSQL"
+  ],
+  "secondary_technical_skills": [
+    "CI/CD",
+    "Spark",
+    "AWS",
+    "Microservices"
+  ],
+  "key_strengths": [
+    "Strong debugging and production incident handling",
+    "Designed scalable backend APIs"
+  ],
+  "primary_domain": "Backend Platform",
+  "cleaned_narrative": "Developed production backend services and API platforms with reliability and scaling focus.",
+  "verdict_reason": "Strong debugging and production incident handling"
+}

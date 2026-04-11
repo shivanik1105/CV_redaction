@@ -1,0 +1,28 @@
+{
+  "anonymized_id": "SYN_053",
+  "archetype": "python_data_case",
+  "years_experience": 5.9,
+  "core_technical_skills": [
+    "Pandas",
+    "scikit-learn",
+    "NumPy",
+    "Statistics",
+    "SQL",
+    "Python"
+  ],
+  "secondary_technical_skills": [
+    "A/B Testing",
+    "Business Analytics",
+    "Data Visualization",
+    "GCP",
+    "Hypothesis Testing"
+  ],
+  "key_strengths": [
+    "Designs experiments and validates hypotheses",
+    "Excellent problem solving using data-driven approaches",
+    "Strong case study solving and business problem framing"
+  ],
+  "primary_domain": "Data Science",
+  "cleaned_narrative": "Built end-to-end data science solutions and presented measurable business impact through analytics.",
+  "verdict_reason": "Designs experiments and validates hypotheses"
+}

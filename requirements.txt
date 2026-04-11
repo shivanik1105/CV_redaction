@@ -1,32 +1,51 @@
-# Core Dependencies (Required)
-pymupdf==1.23.8
-pdfplumber==0.10.3
-
-# PII Redaction (Required)
-presidio-analyzer==2.2.354
-presidio-anonymizer==2.2.354
-spacy==3.7.2
-
-# Supporting Libraries
-Pillow==10.1.0
-python-docx==1.1.0
-
-# Web UI
+# Core Dependencies
 Flask==3.0.0
 Werkzeug==3.0.1
+python-dotenv==1.0.0
+gunicorn==21.2.0
 
-# LLM (Groq - FREE)
-groq>=0.4.0
+# PDF Processing
+PyMuPDF==1.23.8
+pdfplumber==0.10.3
+pdfminer.six==20221105
+pypdfium2==4.26.0
 
-# Environment Configuration
-python-dotenv>=1.0.0
+# Document Processing
+python-docx==1.1.0
+Pillow==10.1.0
 
-# Database (Supabase)
-supabase>=2.0.0
+# PII Detection & Redaction
+presidio-analyzer==2.2.33
+presidio-anonymizer==2.2.33
+spacy==3.7.2
+phonenumbers==8.13.26
 
-# Vector Search (Semantic Search)
-sentence-transformers>=2.2.0
-pgvector>=0.2.0
+# NLP Model (download separately: python -m spacy download en_core_web_sm)
+# en-core-web-sm==3.7.1
 
-# Note: After installing, run:
-# python -m spacy download en_core_web_sm
+# LLM Providers
+groq==0.4.1
+openai==1.6.1
+anthropic==0.8.1
+google-generativeai==0.3.2
+ollama==0.1.6
+
+# Database & Storage
+supabase==2.3.0
+psycopg2-binary==2.9.9
+
+# Vector Search & Embeddings
+sentence-transformers==2.2.2
+numpy==1.24.3
+
+# Security & Authentication
+Flask-Login==0.6.3
+Flask-Limiter==3.5.0
+Flask-Cors==4.0.0
+bcrypt==4.1.2
+
+# Utilities
+requests==2.31.0
+urllib3==2.1.0
+certifi==2023.11.17
+charset-normalizer==3.3.2

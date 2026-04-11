@@ -1,0 +1,107 @@
+[NAME] B303,[NAME],[NAME],
+
+Kondhwa,-
+
+[REDACTED_EMAIL]
+
+[REDACTED_CONTACT_LINE]
+
+[NAME]:1st Oct1989
+Profile: Github, Linked In Profile:-
+• Iamaresults-driven Back-end Developerwithademonstratedabilitytotakefullownershipofmultiple applicationback-endinterfaces(APIs). Withastrategicunderstandingofmicroservicesarchitectureand digitalization, Iexcelincreatingefficient, scalable, andreliablesolutions.
+• Myexperienceincludesparticipationincodereviews, performing Static Code Analysis, and Dynamic Code
+
+Analysistoensurethehighestcodequality. Ipossessastrongadaptabilitytonewscriptinglanguagesand rapidtechnologystackchanges.
+• Provenexpertiseinwritingproduction-gradebackendservicesandbuildingrobust RESTAPIs. Proficientin asynchronousprogrammingusing Celeryandmessagebrokerservicessuchas Rabbit MQ.
+• Atotalof6+yearsexperience, includingrelevantexperiencein Python(Flask, Django, Dockers,
+
+Kubernetes). Myexpertiseextendsto SQLdatabase, datamodeling, andscalableschemadesign.
+• Proficientexposuretocloudapplicationdeployment, microservices, auth0, containerization, Docker, messagequeues, Relationaldatabases, andcachingsystems.
+WORK EXPERIENCELTIMindtreeasa Specialist-Product Engineeringfrom Jan2022tilldate.
+Colgate-Palmolivepvt. Ltd Mumbaiasa Specialist, Full Stack Developmentfrom Sept19till Jan
+
+Trackpoint GPSPrivate Limitedas Web Developerfrom April2019till Sept2019.
+Capita Private Limitedas Senior Executivefrom Sept2016till March2019.
+
+TECHNICALSKILLS
+
+• Python Scripting, Pythonframework(Django & Flask, Django Rest Framework, Redis, Rabbitmq,
+
+Kubernates, Big Query, Dockers, Apache, Celery, Airflow, Generaloverviewof Google Cloud
+Platform(GCP), linux, CICD, Jenkins, C, C++, Airflow, Devops, Data Modelling, Workingon AImodels
+Nermodels, OI(Object Identification), IC(Image Classification)etc
+• Object-Relational Mapping(ORM), SQLAlchmely, Jinga, HTML5, CSS3, Bootstrap,
+
+Java Script, JQuery, Json, SQL, MVC
+• Developback-endcomponentstoimproveresponsivenessandoverallperformance.•
+
+Knowledgein Database[RDBMSlike Postgre SQL, MYSQL, SQLite
+• Devopsknowledgein Dockers Kubernetes, Red Hat Open Shift
+• RESTful APIsusing Flaskand Djangowithgeneralknowledgeof Numpy, Pandas
+• Version Control Tool-GIT, Jiraapplicationtomanageworktickets, SCRUM
+
+1 B. E-M. H. Saboo Siddik Collegeof Engineering-2015-16
+2 H. S. C-Smt. Meher Banu Collegeof Scienceand Commerce-2007-08
+3 S. S. C-Holy Cross Convent High School-20015-06 CONFERENCE/WORKSHOPS: .
+• Attended06 days STTPon“Digital Wireless Communication''at ACET, Nagpur2013.•Attended02 days specializedcourseon“Research Methodology Including Mathematical Modellingin Engineeringand
+Technology”at PRPCET, Amravatiin2014.
+• Attended02 days ISTEapproved DPon“Achieving Excellencein Profession''at PRPCEM, Aravatiin2014. PROFESSIONALEXPERIENCE: . Company-LTIMindtree.
+Duration-Jan2022tilldate
+Technologies Used-Python, Flask Framework, Django Rest Framework, Celery, Rabbitmq, Redis, Postgre SQL,
+My SQL, Kubernetes, Docker, Jenkins, Airflow
+Project-Fosfor-Aspect
+• Agnitioisdataextractionrelatedproductwhichinvolvesextractingdatafromvarioustypesasperconfiguration byuser.
+• Itfollowsmicroservice-basedarchitecture.
+• Itinvolvesvarious AImodelsaswellas Regular Expression Techniquetobasicallyextractdatafromdocuments alongwithvariousparsers.
+• Ithasvariousmodelsforentityextraction, toclassifydocumenttype, extractzonesfrom image/document, sentimentextraction.
+• Italsoinvolvesvarious OCRtechniquestogettextofdocumentswhichisthenprocessedtogetrequiredin requiredformat.
+• Workedon Saa SVersionofproductwhichishostedat Azure Marketplace.
+• Workedon APPIFicationoftheentireproductwherewemustsupporteachfunctionalitythrough APIonly withoutinterventionof UI/Frontend.
+• Thisalsoincludesasynchronous APIdevelopmentaswellformodeltrainingandinferenceandotherflows.•
+
+Integrated and worked Celery, Celery Beataswelltoschedulelongrunningtasksinqueuesandtorunperiodic tasks.
+• Creating Product Bundletodeploytheapplicationontheclient'son-premenvironment.•Create RESTAPIs using Djangoandintegrateitwith Angularbyfollowingallstandards.•Createmodelsandvarious ORMqueriesin anoptimizedwaytoimprove APIperformance.•Create Viewsandmiddlewarein Djangotosupportvarious requirementsandbusinessneeds. Ihavedatabasemigrationsaswellusing Django.
+
+Company-Colgate Palmolive Pvt. Ltd.
+Duration-Sept2019till Dec2021
+Technologies Used-Python, Django Rest Framework, Big Query, Celery, Rabbitmq, Redis, Postgre SQL, GCP,
+Kubernates
+Project-Atlas
+Atlas is a planning tool that is used for planning the customers across the globe to forecast the sale for next financial year. The app helps maintain thebaselinevolumeandachieveoverandabovevolumesalesusingdifferentpromotions.
+Customers can easily maintain plannable products using the atlas-control systemwhichisalsocalledas Assortmentby whichtheycanchoosewhichproductscouldbepartofplanning.
+Thelegacyappwas Cycle6whichwasdevelopedon SAP, itgotmigratedto Pythonforbetterperformance The dataflowsfrom SAPto ATLASindifferentstageswhichalsoincludesdatastagingin Big Query.
+ContributionWorking as a backend apideveloperondjangorestframework. Theprojectisdesignedtousetheforecastdata so that users can create strategies and optimize the strategy, and then do planning for customers which helpsachieve thebaselinesales.
+• Createdthe Assortmentcontrolsystemforatlasthathelpstomanageplannableproducts.
+• Creating Modelsindjangoasperthemodelsin Cycle6withmodificationasper Atlasfunctionality.
+• Creatingreusablecodestructureandfollowingcodingstandardsasper Atlasrules.
+• Writingautomatedtestcasestocoverrestful APIendpoints.
+• Managing Celerytasksandwritingqueriesat Big Query.
+• Monitoringpodsperformanceat GCP.
+• Responsibleforensuringdataflowsfrom Big Queryto Atlasstagingandthenstagingtolive data.
+• Creatingtheterritorymanagementsystem, wheretheuserisassignedtoaterritorynodewith respectivepermissions.•Workingonbugspostgo-livefordifferentcountries.
+
+Company-Trackpoint GPSPrivate Limited
+Duration-March2019till Sept2019
+Technologies Used-Python, Django Rest Framework, JWT, Celery, Rabbitmq, Redis, Postgre SQL, Apache Server,
+Javascript
+Project List and ContributionCentral Authentication Web Appusing Django
+• Workedoncentralizedauthenticationappwhichuses JWTforauthentication
+
+Central Payment Gateway Web Appusing Django
+• Workedon Central Payment Gatewaywhichacceptspaymentfrominternalapplicationusing CCAvenue gatewayapis
+Inventory Management Systemusing Django
+• Workedonthe Inventory Management System Applicationbuildon Djangowebframeworkdeployedon
+
+Apache Web Server.
+Company-Capita Private Limited
+Duration-Sept2016till March2019
+Technologies Used-Python, Django, Flask, Pythonscript, javascript
+Project List and ContributionKnowledge Baseusing Django
+• Workedonbuildingof Knowledge Basewebappusingpythonscriptinganddjangoframework
+
+Knowledgebasedmobileapplicationusing Django Backend.
+
+People Search Appin Flask
+• Workedonthefeatured Peoplesearchappbuildon Flask. CERTIFICATION:
+
+Cs50's Web Programming with Python and Javascript

@@ -1,0 +1,26 @@
+{
+  "anonymized_id": "SYN_019",
+  "archetype": "python_backend",
+  "years_experience": 5.0,
+  "core_technical_skills": [
+    "Docker",
+    "FastAPI",
+    "PostgreSQL",
+    "Python",
+    "Django"
+  ],
+  "secondary_technical_skills": [
+    "Snowflake",
+    "CI/CD",
+    "AWS",
+    "REST APIs",
+    "Terraform"
+  ],
+  "key_strengths": [
+    "Designed scalable backend APIs",
+    "Strong debugging and production incident handling"
+  ],
+  "primary_domain": "Backend Platform",
+  "cleaned_narrative": "Developed production backend services and API platforms with reliability and scaling focus.",
+  "verdict_reason": "Designed scalable backend APIs"
+}

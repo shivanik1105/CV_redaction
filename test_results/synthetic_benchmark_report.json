@@ -1,0 +1,372 @@
+{
+  "total_candidates": 60,
+  "jds": [
+    {
+      "name": "Python Data Scientist",
+      "ideal_archetype": "python_data_case",
+      "precision": {
+        "p_at_5_keyword": 1.0,
+        "p_at_5_intelligent": 1.0,
+        "p_at_5_delta": 0.0,
+        "p_at_10_keyword": 0.6,
+        "p_at_10_intelligent": 0.6,
+        "p_at_10_delta": 0.0,
+        "ideal_in_top3_keyword": 1,
+        "ideal_in_top3_intelligent": 1
+      },
+      "top10_keyword": [
+        {
+          "candidate_id": "SYN_008",
+          "score": 50.0,
+          "archetype": "python_data_case"
+        },
+        {
+          "candidate_id": "SYN_053",
+          "score": 50.0,
+          "archetype": "python_data_case"
+        },
+        {
+          "candidate_id": "SYN_012",
+          "score": 45.45,
+          "archetype": "python_data_case"
+        },
+        {
+          "candidate_id": "SYN_038",
+          "score": 45.45,
+          "archetype": "python_data_case"
+        },
+        {
+          "candidate_id": "SYN_045",
+          "score": 45.45,
+          "archetype": "python_data_case"
+        },
+        {
+          "candidate_id": "SYN_005",
+          "score": 40.91,
+          "archetype": "python_generalist"
+        },
+        {
+          "candidate_id": "SYN_016",
+          "score": 40.91,
+          "archetype": "python_data_case"
+        },
+        {
+          "candidate_id": "SYN_021",
+          "score": 40.91,
+          "archetype": "python_generalist"
+        },
+        {
+          "candidate_id": "SYN_031",
+          "score": 40.91,
+          "archetype": "python_generalist"
+        },
+        {
+          "candidate_id": "SYN_041",
+          "score": 40.91,
+          "archetype": "python_generalist"
+        }
+      ],
+      "top10_intelligent": [
+        {
+          "candidate_id": "SYN_008",
+          "score": 75.38,
+          "archetype": "python_data_case"
+        },
+        {
+          "candidate_id": "SYN_053",
+          "score": 75.31,
+          "archetype": "python_data_case"
+        },
+        {
+          "candidate_id": "SYN_045",
+          "score": 72.36,
+          "archetype": "python_data_case"
+        },
+        {
+          "candidate_id": "SYN_038",
+          "score": 72.28,
+          "archetype": "python_data_case"
+        },
+        {
+          "candidate_id": "SYN_016",
+          "score": 71.37,
+          "archetype": "python_data_case"
+        },
+        {
+          "candidate_id": "SYN_012",
+          "score": 71.31,
+          "archetype": "python_data_case"
+        },
+        {
+          "candidate_id": "SYN_005",
+          "score": 48.36,
+          "archetype": "python_generalist"
+        },
+        {
+          "candidate_id": "SYN_021",
+          "score": 47.61,
+          "archetype": "python_generalist"
+        },
+        {
+          "candidate_id": "SYN_049",
+          "score": 47.46,
+          "archetype": "python_generalist"
+        },
+        {
+          "candidate_id": "SYN_031",
+          "score": 47.16,
+          "archetype": "python_generalist"
+        }
+      ]
+    },
+    {
+      "name": "Python Backend Engineer",
+      "ideal_archetype": "python_backend",
+      "precision": {
+        "p_at_5_keyword": 1.0,
+        "p_at_5_intelligent": 1.0,
+        "p_at_5_delta": 0.0,
+        "p_at_10_keyword": 1.0,
+        "p_at_10_intelligent": 1.0,
+        "p_at_10_delta": 0.0,
+        "ideal_in_top3_keyword": 1,
+        "ideal_in_top3_intelligent": 1
+      },
+      "top10_keyword": [
+        {
+          "candidate_id": "SYN_002",
+          "score": 64.71,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_017",
+          "score": 64.71,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_036",
+          "score": 64.71,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_050",
+          "score": 64.71,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_052",
+          "score": 64.71,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_004",
+          "score": 58.82,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_006",
+          "score": 58.82,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_007",
+          "score": 58.82,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_013",
+          "score": 58.82,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_020",
+          "score": 58.82,
+          "archetype": "python_backend"
+        }
+      ],
+      "top10_intelligent": [
+        {
+          "candidate_id": "SYN_036",
+          "score": 67.94,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_002",
+          "score": 67.34,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_017",
+          "score": 66.51,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_052",
+          "score": 66.14,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_050",
+          "score": 65.91,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_006",
+          "score": 65.38,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_007",
+          "score": 65.38,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_034",
+          "score": 65.38,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_004",
+          "score": 65.16,
+          "archetype": "python_backend"
+        },
+        {
+          "candidate_id": "SYN_029",
+          "score": 64.78,
+          "archetype": "python_backend"
+        }
+      ]
+    },
+    {
+      "name": "Python MLOps Engineer",
+      "ideal_archetype": "python_mlops",
+      "precision": {
+        "p_at_5_keyword": 1.0,
+        "p_at_5_intelligent": 1.0,
+        "p_at_5_delta": 0.0,
+        "p_at_10_keyword": 1.0,
+        "p_at_10_intelligent": 1.0,
+        "p_at_10_delta": 0.0,
+        "ideal_in_top3_keyword": 1,
+        "ideal_in_top3_intelligent": 1
+      },
+      "top10_keyword": [
+        {
+          "candidate_id": "SYN_009",
+          "score": 64.71,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_011",
+          "score": 64.71,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_018",
+          "score": 64.71,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_026",
+          "score": 64.71,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_027",
+          "score": 64.71,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_039",
+          "score": 64.71,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_043",
+          "score": 64.71,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_046",
+          "score": 64.71,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_037",
+          "score": 58.82,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_051",
+          "score": 58.82,
+          "archetype": "python_mlops"
+        }
+      ],
+      "top10_intelligent": [
+        {
+          "candidate_id": "SYN_018",
+          "score": 69.08,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_039",
+          "score": 69.08,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_046",
+          "score": 69.08,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_026",
+          "score": 68.93,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_009",
+          "score": 68.25,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_043",
+          "score": 68.25,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_027",
+          "score": 67.35,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_011",
+          "score": 66.52,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_051",
+          "score": 66.33,
+          "archetype": "python_mlops"
+        },
+        {
+          "candidate_id": "SYN_037",
+          "score": 65.8,
+          "archetype": "python_mlops"
+        }
+      ]
+    }
+  ],
+  "head_to_head": {
+    "jd": "Python Data Scientist",
+    "keyword": {
+      "case_candidate": 54.55,
+      "dsa_candidate": 31.82,
+      "preferred": "case_candidate"
+    },
+    "intelligent": {
+      "case_candidate": 73.89,
+      "dsa_candidate": 43.39,
+      "preferred": "case_candidate"
+    }
+  }
+}

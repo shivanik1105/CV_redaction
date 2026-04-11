@@ -1,0 +1,40 @@
+[NAME]
+
+[REDACTED_EMAIL] (Mob-[REDACTED_PHONE])
+Title: Sr. Consultant. (Capgemini) Location:
+Languages: English, Marathi, Hindi
+Experience Summary
+I am Senior Consultant with overall 6.8 years of IT experience in software design, development and maintenance of Enterprise Integrations and Enterprise web applications.
+I have worked in all the phases of Software Development Life Cycle like requirement gathering, design, development, testing, implementation, and support thereby gaining extensive functional cum technical knowledge
+Expert on Mule Soft Anypoint Platform and Integration technologies , Mulesoft being the major part of the journey. Skilled in Mule Soft , Oracle SOA Suite, Oracle Service Bus, and Agile Methodologies. Currently playing a role of Software Engineer exhibiting skills and ability to handle multiple concurrent priorities/tasks in fast-paced environment. I have acquired good exposure to Continuous Integration and Delivery tools surrounding Anypoint
+Platform. Additionally, My SQL, Postman and CI/CD tools such as Jenkins, and Bitbucket are the areas which I have worked upon as part of the project delivery. KEY SKILLS:
+
+ Functional: Sprint Planning
+ Technical: Mule Soft , Anypoint Platform, Anypoint Studio, Mule ESB , Postman , Jenkins ,
+Bitbucket, Gitlab , sql
+
+WORK EXPERIENCE
+
+Capgemini (Nov 2021 till date)
+01 Type of Industry: Retail
+Project PVH CORP Description:
+Role/Title: Consultant
+Project Duration: Nov 2021 till date
+Responsibilities:  Implemented integration flows using Mule Anypoint Studio to connect to REST, SOAP service, Oracle Database.
+ Developing flows / orchestrations for integrating the components written on top of different internal platforms using Mule ESB and Active MQ.
+ Experience in integrating Cloud applications like SFDC, Kafka & Intact using
+Mule Soft ESB.
+Resume | Operating Systems:
+Software / Languages:
+01 Type of Industry:
+Project Description: Role/Title: Project Duration: Responsibilities: Operating Systems:
+Software / Languages:
+Type of Industry
+
+Published & Presented / Awards
+ Awarded with the SPOT Award for outstanding performance and lasting contributionin and Recognition in 2020 March
+ Extra Mile awared in the Capgemini 2023 Q3
+Higher Education
+ B. Tech Electrical Engineering from Government College of Engineering Amravati.
+Resume |
+Quarterly Rewards

@@ -1,0 +1,25 @@
+{
+  "anonymized_id": "SYN_014",
+  "archetype": "python_dsa",
+  "years_experience": 4.9,
+  "core_technical_skills": [
+    "Data Structures",
+    "Graph Algorithms",
+    "Algorithms",
+    "Dynamic Programming",
+    "Python"
+  ],
+  "secondary_technical_skills": [
+    "LeetCode",
+    "System Design Basics",
+    "Flask",
+    "Competitive Programming"
+  ],
+  "key_strengths": [
+    "Very strong DSA and algorithmic optimization",
+    "Fast at coding interviews and complexity reduction"
+  ],
+  "primary_domain": "Software Engineering",
+  "cleaned_narrative": "Focused on algorithm-heavy engineering tasks with strong coding performance and optimization mindset.",
+  "verdict_reason": "Very strong DSA and algorithmic optimization"
+}

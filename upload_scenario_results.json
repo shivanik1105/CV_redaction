@@ -1,0 +1,304 @@
+{
+  "no_jd": {
+    "summary": {
+      "total": 15,
+      "status_200": 15,
+      "status_non_200": 0,
+      "pipeline_full": 0,
+      "pipeline_redaction_only": 15,
+      "contains_intelligence_true": 0,
+      "has_intelligence_data_true": 0,
+      "error_count": 0,
+      "mismatch_count": 0
+    },
+    "mismatches": [],
+    "rows": [
+      {
+        "scenario": "no_jd",
+        "index": 1,
+        "status_code": 200,
+        "pipeline_executed": "redaction_only",
+        "contains_intelligence": false,
+        "has_intelligence_data": false,
+        "error": null
+      },
+      {
+        "scenario": "no_jd",
+        "index": 2,
+        "status_code": 200,
+        "pipeline_executed": "redaction_only",
+        "contains_intelligence": false,
+        "has_intelligence_data": false,
+        "error": null
+      },
+      {
+        "scenario": "no_jd",
+        "index": 3,
+        "status_code": 200,
+        "pipeline_executed": "redaction_only",
+        "contains_intelligence": false,
+        "has_intelligence_data": false,
+        "error": null
+      },
+      {
+        "scenario": "no_jd",
+        "index": 4,
+        "status_code": 200,
+        "pipeline_executed": "redaction_only",
+        "contains_intelligence": false,
+        "has_intelligence_data": false,
+        "error": null
+      },
+      {
+        "scenario": "no_jd",
+        "index": 5,
+        "status_code": 200,
+        "pipeline_executed": "redaction_only",
+        "contains_intelligence": false,
+        "has_intelligence_data": false,
+        "error": null
+      },
+      {
+        "scenario": "no_jd",
+        "index": 6,
+        "status_code": 200,
+        "pipeline_executed": "redaction_only",
+        "contains_intelligence": false,
+        "has_intelligence_data": false,
+        "error": null
+      },
+      {
+        "scenario": "no_jd",
+        "index": 7,
+        "status_code": 200,
+        "pipeline_executed": "redaction_only",
+        "contains_intelligence": false,
+        "has_intelligence_data": false,
+        "error": null
+      },
+      {
+        "scenario": "no_jd",
+        "index": 8,
+        "status_code": 200,
+        "pipeline_executed": "redaction_only",
+        "contains_intelligence": false,
+        "has_intelligence_data": false,
+        "error": null
+      },
+      {
+        "scenario": "no_jd",
+        "index": 9,
+        "status_code": 200,
+        "pipeline_executed": "redaction_only",
+        "contains_intelligence": false,
+        "has_intelligence_data": false,
+        "error": null
+      },
+      {
+        "scenario": "no_jd",
+        "index": 10,
+        "status_code": 200,
+        "pipeline_executed": "redaction_only",
+        "contains_intelligence": false,
+        "has_intelligence_data": false,
+        "error": null
+      },
+      {
+        "scenario": "no_jd",
+        "index": 11,
+        "status_code": 200,
+        "pipeline_executed": "redaction_only",
+        "contains_intelligence": false,
+        "has_intelligence_data": false,
+        "error": null
+      },
+      {
+        "scenario": "no_jd",
+        "index": 12,
+        "status_code": 200,
+        "pipeline_executed": "redaction_only",
+        "contains_intelligence": false,
+        "has_intelligence_data": false,
+        "error": null
+      },
+      {
+        "scenario": "no_jd",
+        "index": 13,
+        "status_code": 200,
+        "pipeline_executed": "redaction_only",
+        "contains_intelligence": false,
+        "has_intelligence_data": false,
+        "error": null
+      },
+      {
+        "scenario": "no_jd",
+        "index": 14,
+        "status_code": 200,
+        "pipeline_executed": "redaction_only",
+        "contains_intelligence": false,
+        "has_intelligence_data": false,
+        "error": null
+      },
+      {
+        "scenario": "no_jd",
+        "index": 15,
+        "status_code": 200,
+        "pipeline_executed": "redaction_only",
+        "contains_intelligence": false,
+        "has_intelligence_data": false,
+        "error": null
+      }
+    ]
+  },
+  "with_jd": {
+    "summary": {
+      "total": 15,
+      "status_200": 15,
+      "status_non_200": 0,
+      "pipeline_full": 15,
+      "pipeline_redaction_only": 0,
+      "contains_intelligence_true": 15,
+      "has_intelligence_data_true": 15,
+      "error_count": 0,
+      "mismatch_count": 0
+    },
+    "mismatches": [],
+    "rows": [
+      {
+        "scenario": "with_jd",
+        "index": 1,
+        "status_code": 200,
+        "pipeline_executed": "full",
+        "contains_intelligence": true,
+        "has_intelligence_data": true,
+        "error": null
+      },
+      {
+        "scenario": "with_jd",
+        "index": 2,
+        "status_code": 200,
+        "pipeline_executed": "full",
+        "contains_intelligence": true,
+        "has_intelligence_data": true,
+        "error": null
+      },
+      {
+        "scenario": "with_jd",
+        "index": 3,
+        "status_code": 200,
+        "pipeline_executed": "full",
+        "contains_intelligence": true,
+        "has_intelligence_data": true,
+        "error": null
+      },
+      {
+        "scenario": "with_jd",
+        "index": 4,
+        "status_code": 200,
+        "pipeline_executed": "full",
+        "contains_intelligence": true,
+        "has_intelligence_data": true,
+        "error": null
+      },
+      {
+        "scenario": "with_jd",
+        "index": 5,
+        "status_code": 200,
+        "pipeline_executed": "full",
+        "contains_intelligence": true,
+        "has_intelligence_data": true,
+        "error": null
+      },
+      {
+        "scenario": "with_jd",
+        "index": 6,
+        "status_code": 200,
+        "pipeline_executed": "full",
+        "contains_intelligence": true,
+        "has_intelligence_data": true,
+        "error": null
+      },
+      {
+        "scenario": "with_jd",
+        "index": 7,
+        "status_code": 200,
+        "pipeline_executed": "full",
+        "contains_intelligence": true,
+        "has_intelligence_data": true,
+        "error": null
+      },
+      {
+        "scenario": "with_jd",
+        "index": 8,
+        "status_code": 200,
+        "pipeline_executed": "full",
+        "contains_intelligence": true,
+        "has_intelligence_data": true,
+        "error": null
+      },
+      {
+        "scenario": "with_jd",
+        "index": 9,
+        "status_code": 200,
+        "pipeline_executed": "full",
+        "contains_intelligence": true,
+        "has_intelligence_data": true,
+        "error": null
+      },
+      {
+        "scenario": "with_jd",
+        "index": 10,
+        "status_code": 200,
+        "pipeline_executed": "full",
+        "contains_intelligence": true,
+        "has_intelligence_data": true,
+        "error": null
+      },
+      {
+        "scenario": "with_jd",
+        "index": 11,
+        "status_code": 200,
+        "pipeline_executed": "full",
+        "contains_intelligence": true,
+        "has_intelligence_data": true,
+        "error": null
+      },
+      {
+        "scenario": "with_jd",
+        "index": 12,
+        "status_code": 200,
+        "pipeline_executed": "full",
+        "contains_intelligence": true,
+        "has_intelligence_data": true,
+        "error": null
+      },
+      {
+        "scenario": "with_jd",
+        "index": 13,
+        "status_code": 200,
+        "pipeline_executed": "full",
+        "contains_intelligence": true,
+        "has_intelligence_data": true,
+        "error": null
+      },
+      {
+        "scenario": "with_jd",
+        "index": 14,
+        "status_code": 200,
+        "pipeline_executed": "full",
+        "contains_intelligence": true,
+        "has_intelligence_data": true,
+        "error": null
+      },
+      {
+        "scenario": "with_jd",
+        "index": 15,
+        "status_code": 200,
+        "pipeline_executed": "full",
+        "contains_intelligence": true,
+        "has_intelligence_data": true,
+        "error": null
+      }
+    ]
+  }
+}

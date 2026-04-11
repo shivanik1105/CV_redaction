@@ -1,0 +1,26 @@
+{
+  "anonymized_id": "SYN_051",
+  "archetype": "python_mlops",
+  "years_experience": 6.8,
+  "core_technical_skills": [
+    "Kubernetes",
+    "AWS",
+    "MLflow",
+    "Airflow",
+    "Python"
+  ],
+  "secondary_technical_skills": [
+    "Kafka",
+    "Model Deployment",
+    "Feature Store",
+    "Monitoring",
+    "LangChain"
+  ],
+  "key_strengths": [
+    "Strong platform engineering and MLOps practices",
+    "Productionized ML models with robust pipelines"
+  ],
+  "primary_domain": "MLOps",
+  "cleaned_narrative": "Operationalized machine learning systems with automated deployment, monitoring, and retraining.",
+  "verdict_reason": "Strong platform engineering and MLOps practices"
+}

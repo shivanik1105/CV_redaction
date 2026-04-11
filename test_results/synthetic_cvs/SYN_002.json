@@ -1,0 +1,26 @@
+{
+  "anonymized_id": "SYN_002",
+  "archetype": "python_backend",
+  "years_experience": 7.2,
+  "core_technical_skills": [
+    "FastAPI",
+    "Docker",
+    "Python",
+    "Django",
+    "Redis",
+    "PostgreSQL"
+  ],
+  "secondary_technical_skills": [
+    "Power BI",
+    "Microservices",
+    "AWS",
+    "LangChain"
+  ],
+  "key_strengths": [
+    "Designed scalable backend APIs",
+    "Strong debugging and production incident handling"
+  ],
+  "primary_domain": "Backend Platform",
+  "cleaned_narrative": "Developed production backend services and API platforms with reliability and scaling focus.",
+  "verdict_reason": "Designed scalable backend APIs"
+}

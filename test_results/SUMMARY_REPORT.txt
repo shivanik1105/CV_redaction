@@ -1,0 +1,898 @@
+================================================================================
+CV EXTRACTION TEST - DETAILED REPORT
+================================================================================
+
+
+================================================================================
+File: AbhishekKumarDwivedi[.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.CREATIVE_DESIGNER
+Confidence: 85.0%
+Processing Time: 2.7s
+Text Length: 17470 chars
+Lines: 176
+Output: test_results\AbhishekKumarDwivedi[_output.txt
+
+Warnings:
+  - No EDUCATION section found
+  - No PII redactions found (might be okay)
+
+================================================================================
+File: AMITPRAKASHPANDEY (1).pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.5s
+Text Length: 3282 chars
+Lines: 75
+Output: test_results\AMITPRAKASHPANDEY (1)_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Anandprakash_Tandale_Resume (2).pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.STANDARD_ATS
+Confidence: 75.0%
+Processing Time: 0.1s
+Text Length: 3084 chars
+Lines: 72
+Output: test_results\Anandprakash_Tandale_Resume (2)_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: 2024_Resume_MuleSoft_Ravi_Purankar-1.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.8s
+Text Length: 2345 chars
+Lines: 40
+Output: test_results\2024_Resume_MuleSoft_Ravi_Purankar-1_output.txt
+
+================================================================================
+File: AasimHussain_python devops_TTL_Pune_August24_Propellence.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 1.5s
+Text Length: 7008 chars
+Lines: 107
+Output: test_results\AasimHussain_python devops_TTL_Pune_August24_Propellence_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: AdityaPatil.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.5s
+Text Length: 2125 chars
+Lines: 69
+Output: test_results\AdityaPatil_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Bhavesh-8.9Yr-Java-Spring-Microservices.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 4.6s
+Text Length: 4685 chars
+Lines: 64
+Output: test_results\Bhavesh-8.9Yr-Java-Spring-Microservices_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: CV Jonny Kanwar.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 1.6s
+Text Length: 8981 chars
+Lines: 278
+Output: test_results\CV Jonny Kanwar_output.txt
+
+Warnings:
+  - No EXPERIENCE section found
+  - No EDUCATION section found
+  - No SKILLS section found
+
+================================================================================
+File: CV_Akhilesh_Bisane_27092024.pdf
+================================================================================
+Status: [ERROR]
+Error: 'charmap' codec can't encode character '\uf0d8' in position 247: character maps to <undefined>
+
+================================================================================
+File: CV_Sebastian_Loew_eng.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.8s
+Text Length: 1878 chars
+Lines: 45
+Output: test_results\CV_Sebastian_Loew_eng_output.txt
+
+Warnings:
+  - No EXPERIENCE section found
+  - No SKILLS section found
+  - No PII redactions found (might be okay)
+
+================================================================================
+File: Dnyanesh_Palkhiwale_HIL_Validation.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 6.1s
+Text Length: 3265 chars
+Lines: 37
+Output: test_results\Dnyanesh_Palkhiwale_HIL_Validation_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: HarshadPatil_UpdatedCV.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.8s
+Text Length: 3911 chars
+Lines: 68
+Output: test_results\HarshadPatil_UpdatedCV_output.txt
+
+Warnings:
+  - No EDUCATION section found
+  - No PII redactions found (might be okay)
+
+================================================================================
+File: Imteyaz_JAVA_AWS.pdf
+================================================================================
+Status: [ERROR]
+Error: 'charmap' codec can't encode character '\uf0d8' in position 246: character maps to <undefined>
+
+================================================================================
+File: JagdeepSingh.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.9s
+Text Length: 3901 chars
+Lines: 64
+Output: test_results\JagdeepSingh_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: JassiKaushik.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.6s
+Text Length: 2232 chars
+Lines: 42
+Output: test_results\JassiKaushik_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: ManishLohia.pdf
+================================================================================
+Status: [FAIL] FAILED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.1s
+Text Length: 180 chars
+Lines: 1
+Output: test_results\ManishLohia_output.txt
+
+Issues:
+  - Text too short (180 chars)
+  - Too few content lines (1)
+
+Warnings:
+  - No EXPERIENCE section found
+  - No EDUCATION section found
+  - No SKILLS section found
+  - No PII redactions found (might be okay)
+
+================================================================================
+File: Naukri_AditiNitinNene[7y_0m].pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.2s
+Text Length: 2526 chars
+Lines: 57
+Output: test_results\Naukri_AditiNitinNene[7y_0m]_output.txt
+
+Warnings:
+  - No EDUCATION section found
+  - No PII redactions found (might be okay)
+
+================================================================================
+File: Naukri_AmitRai[3y_0m].pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.2s
+Text Length: 2642 chars
+Lines: 41
+Output: test_results\Naukri_AmitRai[3y_0m]_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Naukri_ArpitaLokhande[4y_2m].pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.3s
+Text Length: 2686 chars
+Lines: 57
+Output: test_results\Naukri_ArpitaLokhande[4y_2m]_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Naukri_ArunSinghRawat[5y_6m].pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.2s
+Text Length: 4588 chars
+Lines: 85
+Output: test_results\Naukri_ArunSinghRawat[5y_6m]_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Naukri_AvinashTare[6y_0m].pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.1s
+Text Length: 2164 chars
+Lines: 80
+Output: test_results\Naukri_AvinashTare[6y_0m]_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Naukri_KalpeshAgarwal[5y_5m].pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.1s
+Text Length: 3701 chars
+Lines: 82
+Output: test_results\Naukri_KalpeshAgarwal[5y_5m]_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Naukri_Mamtagopalshelke_5y_7m_.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.2s
+Text Length: 4373 chars
+Lines: 71
+Output: test_results\Naukri_Mamtagopalshelke_5y_7m__output.txt
+
+Warnings:
+  - No EDUCATION section found
+  - No PII redactions found (might be okay)
+
+================================================================================
+File: Naukri_MohammedAmjad[7y_0m].pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.2s
+Text Length: 3432 chars
+Lines: 74
+Output: test_results\Naukri_MohammedAmjad[7y_0m]_output.txt
+
+================================================================================
+File: Naukri_NileshMishra[13y_0m].pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.7s
+Text Length: 6868 chars
+Lines: 90
+Output: test_results\Naukri_NileshMishra[13y_0m]_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Naukri_PratikDhoble[8y_0m].pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 1.9s
+Text Length: 8645 chars
+Lines: 173
+Output: test_results\Naukri_PratikDhoble[8y_0m]_output.txt
+
+Warnings:
+  - No EDUCATION section found
+  - No PII redactions found (might be okay)
+
+================================================================================
+File: Naukri_RAHULMEGHRAJJADHAO[11y_0m].pdf
+================================================================================
+Status: [ERROR]
+Error: 'charmap' codec can't encode character '\uf0b7' in position 80: character maps to <undefined>
+
+================================================================================
+File: Naukri_RaviPurankar[6y_0m].pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.2s
+Text Length: 3697 chars
+Lines: 67
+Output: test_results\Naukri_RaviPurankar[6y_0m]_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Naukri_YogeshBhagwatraoJadhav[5y_2m].pdf
+================================================================================
+Status: [ERROR]
+Error: 'charmap' codec can't encode character '\ue069' in position 64: character maps to <undefined>
+
+================================================================================
+File: Nikhil_Resume (1) (1).pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.6s
+Text Length: 3122 chars
+Lines: 29
+Output: test_results\Nikhil_Resume (1) (1)_output.txt
+
+Warnings:
+  - No EDUCATION section found
+  - No PII redactions found (might be okay)
+
+================================================================================
+File: Nikhil_Resume (1).pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.6s
+Text Length: 3265 chars
+Lines: 28
+Output: test_results\Nikhil_Resume (1)_output.txt
+
+Warnings:
+  - No EDUCATION section found
+  - No PII redactions found (might be okay)
+
+================================================================================
+File: PranavMondhe.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.9s
+Text Length: 4966 chars
+Lines: 71
+Output: test_results\PranavMondhe_output.txt
+
+Warnings:
+  - No EDUCATION section found
+  - No PII redactions found (might be okay)
+
+================================================================================
+File: Pranay Kharode_Senior Specialist_Resume.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.6s
+Text Length: 2030 chars
+Lines: 33
+Output: test_results\Pranay Kharode_Senior Specialist_Resume_output.txt
+
+Warnings:
+  - No EDUCATION section found
+  - No SKILLS section found
+
+================================================================================
+File: RahulRaina.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.8s
+Text Length: 5624 chars
+Lines: 81
+Output: test_results\RahulRaina_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: RajendraPrasad.pdf
+================================================================================
+Status: [ERROR]
+Error: 'charmap' codec can't encode character '\uf076' in position 294: character maps to <undefined>
+
+================================================================================
+File: RAJESH _ZANKE __-_Sr. Technical Support Engineer _Rajesh Siddharth Zanke conv (1).pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 1.5s
+Text Length: 2677 chars
+Lines: 32
+Output: test_results\RAJESH _ZANKE __-_Sr. Technical Support Engineer _Rajesh Siddharth Zanke conv (1)_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: ResumeU.pdf
+================================================================================
+Status: [ERROR]
+Error: 'charmap' codec can't encode character '\u27a2' in position 209: character maps to <undefined>
+
+================================================================================
+File: RishabhJain.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.5s
+Text Length: 3573 chars
+Lines: 42
+Output: test_results\RishabhJain_output.txt
+
+Warnings:
+  - No EDUCATION section found
+  - No PII redactions found (might be okay)
+
+================================================================================
+File: Samrat Tidke (1).pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.8s
+Text Length: 9275 chars
+Lines: 80
+Output: test_results\Samrat Tidke (1)_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: SayliMukundHisvankar.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.3s
+Text Length: 2501 chars
+Lines: 57
+Output: test_results\SayliMukundHisvankar_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Shivani Shinde-Resume.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.5s
+Text Length: 1784 chars
+Lines: 35
+Output: test_results\Shivani Shinde-Resume_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Sneha Telkar Prod Support1.pdf.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 1.2s
+Text Length: 9163 chars
+Lines: 100
+Output: test_results\Sneha Telkar Prod Support1.pdf_output.txt
+
+Warnings:
+  - No EDUCATION section found
+  - No PII redactions found (might be okay)
+
+================================================================================
+File: Tejas Deshmukhs Resume.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.4s
+Text Length: 1410 chars
+Lines: 62
+Output: test_results\Tejas Deshmukhs Resume_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: TejasDeshmukh.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.4s
+Text Length: 1391 chars
+Lines: 61
+Output: test_results\TejasDeshmukh_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: VarsharaniJagdale.pdf
+================================================================================
+Status: [ERROR]
+Error: 'charmap' codec can't encode character '\uf0a7' in position 121: character maps to <undefined>
+
+================================================================================
+File: VarunsaagarSaravanan_ML Engg.or GEN AI_TTL_Bangalore_July24_Propellence.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 1.5s
+Text Length: 15668 chars
+Lines: 163
+Output: test_results\VarunsaagarSaravanan_ML Engg.or GEN AI_TTL_Bangalore_July24_Propellence_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Vishnu Suresh Babu_Mechanical Lead_Tata Elxsi_02 OCT 2024 (1).pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.STANDARD_ATS
+Confidence: 75.0%
+Processing Time: 0.2s
+Text Length: 5219 chars
+Lines: 148
+Output: test_results\Vishnu Suresh Babu_Mechanical Lead_Tata Elxsi_02 OCT 2024 (1)_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Vishnu_Thermal Systems - Battery Development.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.STANDARD_ATS
+Confidence: 75.0%
+Processing Time: 0.2s
+Text Length: 5219 chars
+Lines: 148
+Output: test_results\Vishnu_Thermal Systems - Battery Development_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Naukri_AbhinavVinodSolapurkar[5y_8m].pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.1s
+Text Length: 3464 chars
+Lines: 71
+Output: test_results\Naukri_AbhinavVinodSolapurkar[5y_8m]_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Naukri_ChirayuYelane[5y_2m].pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.2s
+Text Length: 4582 chars
+Lines: 68
+Output: test_results\Naukri_ChirayuYelane[5y_2m]_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Naukri_jyotiSaxena[9y_1m].pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.2s
+Text Length: 4561 chars
+Lines: 86
+Output: test_results\Naukri_jyotiSaxena[9y_1m]_output.txt
+
+Warnings:
+  - No EDUCATION section found
+  - No PII redactions found (might be okay)
+
+================================================================================
+File: Naukri_MayurPatil[3y_2m].pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.1s
+Text Length: 2805 chars
+Lines: 38
+Output: test_results\Naukri_MayurPatil[3y_2m]_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Naukri_NathajiPatil[8y_0m].pdf
+================================================================================
+Status: [ERROR]
+Error: 'charmap' codec can't encode character '\u27a2' in position 269: character maps to <undefined>
+
+================================================================================
+File: Naukri_RajeshwariSakharkar[5y_4m].pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.1s
+Text Length: 5437 chars
+Lines: 115
+Output: test_results\Naukri_RajeshwariSakharkar[5y_4m]_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: PrashantSediwal.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.9s
+Text Length: 4522 chars
+Lines: 81
+Output: test_results\PrashantSediwal_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Resume - Kedarinath.docx...pdf
+================================================================================
+Status: [ERROR]
+Error: 'charmap' codec can't encode character '\uf0b7' in position 241: character maps to <undefined>
+
+================================================================================
+File: Resume -Sunil Durgale.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.6s
+Text Length: 4529 chars
+Lines: 96
+Output: test_results\Resume -Sunil Durgale_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: Resume_preeti_wadhwani 06.10.24.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.4s
+Text Length: 3155 chars
+Lines: 64
+Output: test_results\Resume_preeti_wadhwani 06.10.24_output.txt
+
+================================================================================
+File: Rohini_Parhate_Resume_1991-1 (1).pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 4.0s
+Text Length: 3308 chars
+Lines: 62
+Output: test_results\Rohini_Parhate_Resume_1991-1 (1)_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: TitikshaWankhedkar.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.5s
+Text Length: 2992 chars
+Lines: 47
+Output: test_results\TitikshaWankhedkar_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: 20260406_160300_Resume_-Sunil_Durgale.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.6s
+Text Length: 4529 chars
+Lines: 96
+Output: test_results\20260406_160300_Resume_-Sunil_Durgale_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: 20260406_160313_Resume_-Sunil_Durgale.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.6s
+Text Length: 4529 chars
+Lines: 96
+Output: test_results\20260406_160313_Resume_-Sunil_Durgale_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: 20260406_172841_Naukri_RajeshwariSakharkar5y_4m.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.NAUKRI
+Confidence: 95.0%
+Processing Time: 0.2s
+Text Length: 5437 chars
+Lines: 115
+Output: test_results\20260406_172841_Naukri_RajeshwariSakharkar5y_4m_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: 20260406_195923_Resume_-Sunil_Durgale.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.6s
+Text Length: 4529 chars
+Lines: 96
+Output: test_results\20260406_195923_Resume_-Sunil_Durgale_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: 20260406_200837_Resume_-Sunil_Durgale.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.6s
+Text Length: 4529 chars
+Lines: 96
+Output: test_results\20260406_200837_Resume_-Sunil_Durgale_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: 20260406_200913_Resume_-Sunil_Durgale.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.6s
+Text Length: 4529 chars
+Lines: 96
+Output: test_results\20260406_200913_Resume_-Sunil_Durgale_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: 20260406_201426_Resume_-Sunil_Durgale.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.6s
+Text Length: 4529 chars
+Lines: 96
+Output: test_results\20260406_201426_Resume_-Sunil_Durgale_output.txt
+
+Warnings:
+  - No EDUCATION section found
+
+================================================================================
+File: 20260406_201714_Resume_-Sunil_Durgale.pdf
+================================================================================
+Status: [OK] PASSED
+CV Type: CVType.SCANNED_IMAGE
+Confidence: 85.0%
+Processing Time: 0.7s
+Text Length: 4529 chars
+Lines: 96
+Output: test_results\20260406_201714_Resume_-Sunil_Durgale_output.txt
+
+Warnings:
+  - No EDUCATION section found

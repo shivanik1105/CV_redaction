@@ -1564,6 +1564,13 @@ class StandardATSPipeline(BasePipeline):
     """Standard extraction with improved column handling"""
     
     def extract_text(self, pdf_path: str) -> str:
+        # For this CV type, prefer pdfplumber if available as it handles columns better
+        if HAS_PDFPLUMBER:
+            logger.info("Using pdfplumber for extraction (preferred for this CV type)")
+            result = self._pdfplumber_fallback(pdf_path)
+            if result and len(result.strip()) > 100:
+                return result
+        
         # Try PyMuPDF first with improved column detection
         if HAS_FITZ:
             all_pages_text = []
@@ -1633,15 +1640,63 @@ class StandardATSPipeline(BasePipeline):
                     is_two_column = max_gap > 40 and len(left_blocks) >= 3 and len(right_blocks) >= 3
                     
                     if is_two_column:
-                        # Two-column layout detected - read LEFT column completely, then RIGHT column
+                        # Two-column layout detected - use semantic column-by-column reading
+                        # Strategy: Detect which column has main content and read appropriately
+                        
+                        # Sort each column top to bottom
                         left_blocks.sort(key=lambda b: (b['y0'], b['x0']))
                         right_blocks.sort(key=lambda b: (b['y0'], b['x0']))
                         
-                        # Output left column first, then right column
-                        page_lines = []
-                        page_lines.extend([b['text'] for b in left_blocks])
-                        page_lines.append("")  # Separator between columns
-                        page_lines.extend([b['text'] for b in right_blocks])
+                        # Analyze content to determine layout type
+                        left_text = " ".join([b['text'] for b in left_blocks]).lower()
+                        right_text = " ".join([b['text'] for b in right_blocks]).lower()
+                        
+                        # Check if left column has contact/sidebar content
+                        left_has_contact = any(kw in left_text for kw in ['email', 'phone', '@', '+91', 'www', 'linkedin'])
+                        left_has_skills = 'skill' in left_text or 'technical' in left_text
+                        left_has_education = 'education' in left_text or 'bachelor' in left_text or 'university' in left_text
+                        
+                        # Check if right column has main content
+                        right_has_experience = any(kw in right_text for kw in ['experience', 'professional', 'work history'])
+                        right_has_summary = 'summary' in right_text
+                        
+                        # Determine if this is a sidebar layout (left=sidebar, right=main)
+                        is_sidebar_layout = (left_has_contact or left_has_skills or left_has_education) and (right_has_experience or right_has_summary)
+                        
+                        if is_sidebar_layout:
+                            # Sidebar layout: Right column has main content, left has supplementary
+                            # Read: Name (if at top of right) → Right column → Left column
+                            page_lines = []
+                            
+                            # Check if first block of right column is a name
+                            if right_blocks:
+                                first_block = right_blocks[0]['text'].strip()
+                                words = first_block.split()
+                                # Name detection: 2-3 words, short, capitalized, no special chars
+                                if (len(words) >= 2 and len(words) <= 3 and 
+                                    len(first_block) < 50 and 
+                                    first_block[0].isupper() and
+                                    not any(char in first_block for char in ['@', '.com', '+', 'www', 'http'])):
+                                    page_lines.append(first_block)
+                                    right_blocks = right_blocks[1:]
+                            
+                            # Add right column (main content: summary, experience)
+                            for block in right_blocks:
+                                page_lines.append(block['text'])
+                            
+                            page_lines.append("")  # Separator
+                            
+                            # Add left column (sidebar: contact, skills, education)
+                            for block in left_blocks:
+                                page_lines.append(block['text'])
+                        else:
+                            # Standard two-column: Read left column first, then right
+                            page_lines = []
+                            for block in left_blocks:
+                                page_lines.append(block['text'])
+                            page_lines.append("")  # Separator
+                            for block in right_blocks:
+                                page_lines.append(block['text'])
                         
                         page_text = "\n".join(page_lines)
                     else:
@@ -1657,11 +1712,13 @@ class StandardATSPipeline(BasePipeline):
                 # Validation checks to trigger fallback:
                 # 1. Text is too short (< 100 chars)
                 # 2. Text has very few newlines (< 5) but is long (> 500 chars) - indicates structure loss
+                # 3. Has empty section headers (SUMMARY followed by SKILLS with no content between)
                 is_too_short = len(full_text.strip()) < 100
                 has_structure_loss = len(full_text) > 500 and full_text.count('\n') < 5
+                has_empty_sections = 'SUMMARY\n\n\n\nSKILLS' in full_text or 'SUMMARY\n\n\nSKILLS' in full_text
                 
-                if (is_too_short or has_structure_loss) and HAS_PDFPLUMBER:
-                    logger.info(f"Suboptimal text extraction (len={len(full_text)}, lines={full_text.count(chr(10))}), falling back to pdfplumber")
+                if (is_too_short or has_structure_loss or has_empty_sections) and HAS_PDFPLUMBER:
+                    logger.info(f"Suboptimal text extraction (len={len(full_text)}, lines={full_text.count(chr(10))}, empty_sections={has_empty_sections}), falling back to pdfplumber")
                     return self._pdfplumber_fallback(pdf_path)
                     
                 return full_text
@@ -1673,8 +1730,107 @@ class StandardATSPipeline(BasePipeline):
 
     def _pdfplumber_fallback(self, pdf_path: str) -> str:
         try:
-             with pdfplumber.open(pdf_path) as pdf:
-                return "\n\n".join([page.extract_text() or "" for page in pdf.pages])
+            import pdfplumber
+            all_pages = []
+            
+            with pdfplumber.open(pdf_path) as pdf:
+                for page in pdf.pages:
+                    # Get page dimensions
+                    page_width = page.width
+                    page_height = page.height
+                    
+                    # Extract words with positions
+                    words = page.extract_words(x_tolerance=2, y_tolerance=2)
+                    
+                    if not words:
+                        # Fallback to simple text extraction
+                        text = page.extract_text()
+                        if text:
+                            all_pages.append(text)
+                        continue
+                    
+                    # Analyze X-positions to detect columns
+                    x_positions = [w['x0'] for w in words]
+                    x_centers = [(w['x0'] + w['x1']) / 2 for w in words]
+                    
+                    # Find column boundary
+                    sorted_x = sorted(set(x_centers))
+                    max_gap = 0
+                    column_boundary = page_width / 2
+                    
+                    for i in range(len(sorted_x) - 1):
+                        gap = sorted_x[i + 1] - sorted_x[i]
+                        if gap > max_gap and gap > 30 and page_width * 0.2 < sorted_x[i] < page_width * 0.8:
+                            max_gap = gap
+                            column_boundary = (sorted_x[i] + sorted_x[i + 1]) / 2
+                    
+                    # Check if two-column layout
+                    is_two_column = max_gap > 30
+                    
+                    if is_two_column:
+                        # Separate words into columns
+                        left_words = [w for w in words if (w['x0'] + w['x1']) / 2 < column_boundary]
+                        right_words = [w for w in words if (w['x0'] + w['x1']) / 2 >= column_boundary]
+                        
+                        # Group words into lines for each column
+                        def words_to_lines(word_list):
+                            if not word_list:
+                                return []
+                            
+                            # Sort by Y position
+                            word_list = sorted(word_list, key=lambda w: (w['top'], w['x0']))
+                            
+                            lines = []
+                            current_line = [word_list[0]]
+                            current_y = word_list[0]['top']
+                            
+                            for word in word_list[1:]:
+                                if abs(word['top'] - current_y) < 3:  # Same line
+                                    current_line.append(word)
+                                else:  # New line
+                                    # Sort current line left-to-right
+                                    current_line.sort(key=lambda w: w['x0'])
+                                    line_text = ' '.join([w['text'] for w in current_line])
+                                    lines.append(line_text)
+                                    current_line = [word]
+                                    current_y = word['top']
+                            
+                            # Add last line
+                            if current_line:
+                                current_line.sort(key=lambda w: w['x0'])
+                                line_text = ' '.join([w['text'] for w in current_line])
+                                lines.append(line_text)
+                            
+                            return lines
+                        
+                        left_lines = words_to_lines(left_words)
+                        right_lines = words_to_lines(right_words)
+                        
+                        # Detect which column has main content
+                        left_text = ' '.join(left_lines).lower()
+                        right_text = ' '.join(right_lines).lower()
+                        
+                        left_has_contact = any(kw in left_text for kw in ['email', 'phone', '@', 'www', 'linkedin'])
+                        right_has_experience = 'experience' in right_text or 'professional' in right_text
+                        
+                        is_sidebar_layout = left_has_contact and right_has_experience
+                        
+                        if is_sidebar_layout:
+                            # Right column first (main content), then left (sidebar)
+                            page_text = '\n'.join(right_lines + [''] + left_lines)
+                        else:
+                            # Left column first, then right
+                            page_text = '\n'.join(left_lines + [''] + right_lines)
+                        
+                        all_pages.append(page_text)
+                    else:
+                        # Single column - use simple extraction
+                        text = page.extract_text()
+                        if text:
+                            all_pages.append(text)
+            
+            return '\n\n'.join(all_pages)
+            
         except Exception as e:
             logger.error(f"pdfplumber fallback failed: {e}")
             return ""
@@ -3510,6 +3666,10 @@ class PipelineOrchestrator:
         
         for i, line in enumerate(lines):
             line_lower = line.strip().lower()
+
+            # Never expose internal section-removal markers in end-user output.
+            if re.match(r'^\s*\[REMOVED_SECTION_[A-Z_]+\]\s*$', line):
+                continue
             
             # FORCE PRESERVE REDACTED MARKERS
             if '[REDACTED' in line:
@@ -3524,7 +3684,14 @@ class PipelineOrchestrator:
             #     continue
             # if re.match(r'^\s*\[REDACTED_(PHONE|EMAIL|URL|CONTACT_LINE)\]\s*$', line):
             #     continue
-            # Skip remaining parts of LinkedIn/social media URLs  
+            # Remove standalone contact labels and OCR-split social URL fragments.
+            if re.match(r'^\s*(www|website|web|url|linkedin|github)\s*[:\-]?\s*$', line, re.IGNORECASE):
+                continue
+
+            # Catch fragments like "/in/username/" or "in/username" that remain after URL redaction.
+            if re.match(r'^\s*/?(?:in|pub|company)/[\w\-./%]+/?\s*$', line, re.IGNORECASE):
+                continue
+
             if re.match(r'^\s*akash-tandale-\d+\s*$', line):  # Leftover URL fragments
                 continue
             
@@ -3669,6 +3836,174 @@ class PipelineOrchestrator:
             cleaned_lines.append(line)
         
         text = '\n'.join(cleaned_lines)
+
+        # 6.5 Remove OCR/sidebar artifact lines that often leak into WORK EXPERIENCE.
+        lines = text.split('\n')
+        cleaned_lines = []
+        in_experience = False
+        current_section = ''
+        reset_experience_headers = {
+            'skills', 'technical skills', 'summary', 'projects', 'project',
+            'education', 'certifications', 'certification', 'achievements',
+            'objective', 'profile'
+        }
+        artifact_terms = {
+            'apollo', 'lusha', 'sales nav', 'sales enablement',
+            'sales process optimization', 'zoho', 'lead squared',
+            'meddic', 'bant', 'deal desk', 'certified',
+            'revenue operations', 'accomplishment'
+        }
+
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            lower = stripped.lower()
+
+            if not stripped:
+                cleaned_lines.append(line)
+                continue
+
+            if lower in ('work experience', 'professional experience'):
+                in_experience = True
+                current_section = lower
+                cleaned_lines.append(line)
+                continue
+
+            if lower in reset_experience_headers:
+                in_experience = False
+                current_section = lower
+                cleaned_lines.append(line)
+                continue
+
+            artifact_candidate = stripped.lstrip('•*- ').strip().lower()
+
+            # Remove obvious OCR name scraps like "Mr. E".
+            if re.match(r'^(mr|mrs|ms)\.?\s+[A-Z]\.?$', stripped, re.IGNORECASE):
+                continue
+
+            # Standalone month/year lines (e.g., 01/2010) are usually orphaned table artifacts.
+            if re.match(r'^\d{2}/\d{4}$', stripped):
+                continue
+
+            if in_experience:
+                prev_blank = i == 0 or not lines[i - 1].strip()
+                next_blank = i == len(lines) - 1 or not lines[i + 1].strip()
+
+                short_fragment = (
+                    len(stripped) <= 28 and
+                    len(stripped.split()) <= 3 and
+                    not any(ch.isdigit() for ch in stripped) and
+                    not stripped.startswith(('•', '-'))
+                )
+
+                likely_valid_role_or_company = bool(
+                    re.search(r'(ltd|limited|inc|corp|llc|pvt|manager|engineer|developer|analyst|specialist|consultant|director|head|lead)', lower)
+                )
+
+                # Remove isolated short fragments and known sidebar skill/tool tags.
+                if artifact_candidate in artifact_terms:
+                    continue
+                if short_fragment and prev_blank and next_blank and not likely_valid_role_or_company:
+                    continue
+                if re.match(r'^[A-Z]{2,6}-[A-Za-z]+\.?$', stripped):
+                    continue
+
+            # Certification blocks can still contain OCR scraps from sidebars.
+            if current_section in ('certifications', 'certification'):
+                if artifact_candidate in artifact_terms:
+                    continue
+                if artifact_candidate in {'documentation.', 'certified', 'accomplishment'}:
+                    continue
+                if re.match(r'^[A-Z]{2,6}-[A-Za-z]+\.?$', stripped):
+                    continue
+
+            cleaned_lines.append(line)
+
+        text = '\n'.join(cleaned_lines)
+
+        # 6.6 Improve readability for OCR artifacts and wrapped lines.
+        text = text.replace('ﬀ', 'ff').replace('ﬁ', 'fi').replace('ﬂ', 'fl')
+        text = re.sub(
+            r'([A-Za-z])(installed|created|managed|developed|implemented|designed|handled|maintained|optimized|improved|coordinated|generated|directed)\b',
+            r'\1 \2',
+            text,
+            flags=re.IGNORECASE
+        )
+
+        lines = text.split('\n')
+        merged_lines = []
+
+        def _is_section_header(value: str) -> bool:
+            v = value.strip().upper()
+            return v in {
+                'SUMMARY', 'SKILLS', 'WORK EXPERIENCE', 'CERTIFICATIONS',
+                'EDUCATION', 'PROJECTS'
+            }
+
+        def _should_merge(prev_line: str, next_line: str) -> bool:
+            if not prev_line or not next_line:
+                return False
+            if _is_section_header(prev_line) or _is_section_header(next_line):
+                return False
+            if next_line.startswith(('•', '-')):
+                return False
+            if re.match(r'^\d{2}/\d{4}$', next_line):
+                return False
+            if re.match(r'^\d{2}/\d{4}\s*[-–]\s*\d{2}/\d{4}$', next_line):
+                return False
+            if re.match(r'^\d{4}\s*[-–]\s*\d{4}$', next_line):
+                return False
+
+            # Merge explicit continuation lines.
+            if re.match(r'^[a-z(]', next_line):
+                return True
+            if len(next_line.split()) <= 2 and next_line.endswith(('.', ',', ';', ':')):
+                return True
+            if re.search(r'\b(and|or|to|for|with|of|at|in|on|by|from|across|under|over|through|within|into|as|per|via)\s*$', prev_line, re.IGNORECASE):
+                return True
+
+            return False
+
+        i = 0
+        while i < len(lines):
+            current = lines[i].rstrip()
+            stripped_current = current.strip()
+
+            if not stripped_current:
+                merged_lines.append(current)
+                i += 1
+                continue
+
+            j = i + 1
+            while j < len(lines):
+                candidate = lines[j].strip()
+
+                if not candidate:
+                    if j + 1 < len(lines) and _should_merge(stripped_current, lines[j + 1].strip()):
+                        j += 1
+                        continue
+                    break
+
+                if _should_merge(stripped_current, candidate):
+                    current = current.rstrip() + ' ' + candidate
+                    stripped_current = current.strip()
+                    j += 1
+                    continue
+
+                break
+
+            merged_lines.append(current)
+            i = j
+
+        # Drop trailing orphan line that ends with an unfinished conjunction.
+        while merged_lines and not merged_lines[-1].strip():
+            merged_lines.pop()
+        if merged_lines:
+            tail = merged_lines[-1].strip()
+            if len(tail) > 30 and re.search(r'\b(and|or|to|for|with|of|at|in|on|by|from)\s*$', tail, re.IGNORECASE):
+                merged_lines.pop()
+
+        text = '\n'.join(merged_lines)
+        text = re.sub(r'([A-Za-z0-9,])\n\s*\n([a-z][^\n]*)', r'\1 \2', text)
         
         # 7. Normalize spacing
         text = re.sub(r' {2,}', ' ', text)
@@ -3683,6 +4018,9 @@ class PipelineOrchestrator:
         
         # 10. Deduplicate section headers - only allow each section once
         text = self._deduplicate_section_headers(text)
+
+        # 11. Fix section headers that are misclassified by OCR (common in scanned CVs).
+        text = self._fix_misclassified_section_headers(text)
         
         return text.strip()
     
@@ -3701,12 +4039,12 @@ class PipelineOrchestrator:
             ('key skills', 'SKILLS'),
             ('skills', 'SKILLS'),
             ('core competencies', 'SKILLS'),
-            ('education', '[REMOVED_SECTION_EDUCATION]'),
-            ('academic', '[REMOVED_SECTION_EDUCATION]'),
-            ('qualifications', '[REMOVED_SECTION_EDUCATION]'),
-            ('certifications', '[REMOVED_SECTION_EDUCATION]'),
-            ('certification', '[REMOVED_SECTION_EDUCATION]'),
-            ('training', '[REMOVED_SECTION_EDUCATION]'),
+            ('education', 'EDUCATION'),
+            ('academic', 'EDUCATION'),
+            ('qualifications', 'EDUCATION'),
+            ('certifications', 'CERTIFICATIONS'),
+            ('certification', 'CERTIFICATIONS'),
+            ('training', 'CERTIFICATIONS'),
             ('projects', 'PROJECTS'),
             ('project', 'PROJECTS'),
             ('summary', 'SUMMARY'),
@@ -3738,7 +4076,7 @@ class PipelineOrchestrator:
         deduped_lines = []
         
         # Standard section headers to track
-        section_headers = {'WORK EXPERIENCE', 'SKILLS', 'PROJECTS', 'SUMMARY', 'CERTIFICATIONS'}
+        section_headers = {'WORK EXPERIENCE', 'SKILLS', 'PROJECTS', 'SUMMARY', 'CERTIFICATIONS', 'EDUCATION'}
         
         for line in lines:
             stripped = line.strip()
@@ -3755,6 +4093,53 @@ class PipelineOrchestrator:
                 deduped_lines.append(line)
         
         return '\n'.join(deduped_lines)
+
+    def _fix_misclassified_section_headers(self, text: str) -> str:
+        """Correct section headers when OCR places work-experience content under CERTIFICATIONS."""
+        lines = text.split('\n')
+        result = []
+        seen_work_experience = False
+
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+
+            if stripped == 'WORK EXPERIENCE':
+                seen_work_experience = True
+                result.append(line)
+                continue
+
+            if stripped == 'CERTIFICATIONS':
+                lookahead = []
+                for j in range(i + 1, min(i + 25, len(lines))):
+                    nxt = lines[j].strip()
+                    if not nxt:
+                        continue
+                    if nxt in {'SUMMARY', 'SKILLS', 'WORK EXPERIENCE', 'PROJECTS', 'EDUCATION', 'CERTIFICATIONS'}:
+                        break
+                    lookahead.append(nxt)
+
+                joined = ' '.join(lookahead)
+                looks_like_work = bool(re.search(
+                    r'(\b\d{2}/\d{4}\s*[-–]\s*\d{2}/\d{4}\b|\b(pvt|ltd|limited|inc|corp|manager|analyst|specialist|engineer|developer|responsible|workflow|dashboard|pipeline)\b)',
+                    joined,
+                    re.IGNORECASE
+                ))
+                looks_like_cert = bool(re.search(
+                    r'(\bcertif|certificate|course|pmp|scrum|aws\s+certified|azure\s+certified)\b',
+                    joined,
+                    re.IGNORECASE
+                ))
+
+                if looks_like_work and not looks_like_cert:
+                    if seen_work_experience:
+                        continue
+                    result.append('WORK EXPERIENCE')
+                    seen_work_experience = True
+                    continue
+
+            result.append(line)
+
+        return '\n'.join(result)
     
     def process_directory(self, input_dir: str, output_dir: str = None):
         """Process all PDFs in directory"""
