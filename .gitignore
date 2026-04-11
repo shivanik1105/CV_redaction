@@ -1,20 +1,51 @@
-resume/
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# Environment variables
+.env
+.env.local
+
+# User data
+users.json
 uploads/
 redacted_output/
 llm_analysis/
-*.log
-*.env
-.env
-test_docx_output/
-debug_output/
-samples/
-*.pyc
+intelligence_output/
+test_results/
 
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
 build/
-test_*key.py
+dist/
+*.egg-info/
+*.spec
 
-# Filename mapping files (contains sensitive mappings)
-filename_mappings.json
-filename_mappings_backup.csv
-*_mappings*.csv
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
