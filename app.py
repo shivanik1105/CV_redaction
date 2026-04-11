@@ -1497,9 +1497,113 @@ def index():
     """Render unified interface by default; allow redactor-only mode via query."""
     mode = request.args.get('mode', '').strip().lower()
     if mode in {'redactor', 'cv-redactor', 'redaction'}:
-        return render_template('index.html')
-    return render_template('index_new.html')
+        try:
+            return render_template('index.html')
+        except:
+            return landing_page()
+    try:
+        return render_template('index_new.html')
+    except:
+        return landing_page()
 
+@app.route('/landing')
+def landing_page():
+    """Simple landing page when templates are not available"""
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>CV Intelligence System</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                max-width: 800px;
+                margin: 50px auto;
+                padding: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+            }
+            .container {
+                background: white;
+                padding: 40px;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            }
+            h1 { color: #333; margin-bottom: 10px; }
+            h2 { color: #667eea; margin-top: 30px; }
+            .status { padding: 15px; background: #e8f5e9; border-radius: 8px; margin: 20px 0; }
+            .status.error { background: #ffebee; }
+            a { color: #667eea; text-decoration: none; font-weight: 600; }
+            a:hover { text-decoration: underline; }
+            ul { line-height: 2; }
+            .api-link { 
+                display: inline-block;
+                padding: 10px 20px;
+                background: #667eea;
+                color: white;
+                border-radius: 8px;
+                margin: 10px 10px 10px 0;
+            }
+            .api-link:hover { background: #5568d3; text-decoration: none; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🎯 CV Intelligence System</h1>
+            <p><strong>Status:</strong> ✅ Running</p>
+            
+            <div class="status">
+                <strong>⚠️ Templates Not Found</strong><br>
+                The HTML templates are missing. Using API-only mode.
+            </div>
+            
+            <h2>📡 Available API Endpoints:</h2>
+            <a href="/health" class="api-link">Health Check</a>
+            <a href="/api/connection-status" class="api-link">Connection Status</a>
+            <a href="/api/statistics" class="api-link">Statistics</a>
+            
+            <h2>🔧 How to Fix:</h2>
+            <ol>
+                <li>Ensure <code>templates/</code> folder is in your repository</li>
+                <li>Check that templates are not in <code>.gitignore</code></li>
+                <li>Redeploy on Render</li>
+            </ol>
+            
+            <h2>📚 API Usage:</h2>
+            <ul>
+                <li><strong>POST /api/redact</strong> - Redact a CV</li>
+                <li><strong>POST /upload</strong> - Upload and process CV</li>
+                <li><strong>POST /api/search</strong> - Search candidates</li>
+                <li><strong>GET /api/statistics</strong> - Get statistics</li>
+                <li><strong>GET /health</strong> - Health check</li>
+            </ul>
+            
+            <h2>🔗 Repository:</h2>
+            <p><a href="https://github.com/Shivanikinagi/CV-redactor" target="_blank">
+                https://github.com/Shivanikinagi/CV-redactor
+            </a></p>
+            
+            <p style="margin-top: 40px; color: #666; font-size: 14px;">
+                CV Intelligence System v1.0.0
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+    return html
+
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint"""
+    return jsonify({
+        'status': 'healthy',
+        'version': '1.0.0',
+        'timestamp': datetime.utcnow().isoformat(),
+        'templates_available': os.path.exists('templates'),
+        'supabase_configured': is_supabase_configured(),
+        'llm_configured': bool(os.getenv('GROQ_API_KEY') or os.getenv('OPENAI_API_KEY'))
+    })
 
 @app.route('/redactor')
 def redactor_page():
