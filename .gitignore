@@ -49,3 +49,6 @@ dist/
 *.db
 *.sqlite
 *.sqlite3
+
+# Release builds
+release/
