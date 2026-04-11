@@ -2,17 +2,11 @@ services:
   - type: web
     name: cv-matcher
     env: python
-    buildCommand: |
-      apt-get update && apt-get install -y \
-        build-essential \
-        libfreetype6-dev \
-        libharfbuzz-dev \
-        libjpeg-dev \
-        libopenjp2-7-dev \
-        mupdf-tools \
-        && pip install --upgrade pip \
-        && pip install -r requirements.txt
+    runtime: python
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.7
+      - key: PYTHONUNBUFFERED
+        value: 1

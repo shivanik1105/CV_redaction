@@ -1,30 +1,24 @@
-# Use Python 3.11 slim image
-FROM python:3.11-slim
+FROM python:3.11.9-slim
 
-# Set working directory
 WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
+# Copy requirements
 COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p uploads redacted_output llm_analysis intelligence_output
-
 # Expose port
-EXPOSE $PORT
+EXPOSE 10000
 
-# Start command
-CMD gunicorn app:app --host 0.0.0.0 --port $PORT --workers 2 --timeout 120 --log-level info
+# Run the application
+CMD ["gunicorn", "--bind", "0.0.0.0:10000", "app:app"]
