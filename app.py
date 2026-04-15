@@ -1333,6 +1333,106 @@ def _capability_focus_score(jd_text: str, strength_text: str) -> float:
     return round((overlap / len(set(jd_hits))) * 100.0, 2)
 
 
+def compute_semantic_candidate_match(
+    candidate: Dict[str, Any],
+    jd_embedding: List[float],
+    job_description: str
+) -> Dict[str, Any]:
+    """
+    Compute semantic similarity between candidate and JD using vector embeddings.
+    This provides TRUE contextual understanding, not just keyword matching.
+    """
+    from vector_search import get_vector_search_engine
+    
+    # Get candidate embedding
+    candidate_embedding = candidate.get('embedding')
+    
+    if not candidate_embedding:
+        # Generate embedding from candidate data (NO fallback to keyword matching)
+        try:
+            engine = get_vector_search_engine()
+            candidate_text = engine.build_embedding_text(candidate)
+            candidate_embedding = engine.generate_embedding(candidate_text)
+        except Exception as e:
+            logger.error(f"Could not generate embedding for candidate: {e}")
+            # Return error - NO fallback to keyword matching
+            raise ValueError(f"Semantic ranking requires embeddings. Candidate embedding generation failed: {e}")
+    
+    # Compute semantic similarity (contextual understanding)
+    try:
+        engine = get_vector_search_engine()
+        similarity = engine.cosine_similarity(jd_embedding, candidate_embedding)
+    except Exception as e:
+        logger.error(f"Could not compute similarity: {e}")
+        # Return error - NO fallback to keyword matching
+        raise ValueError(f"Semantic ranking requires similarity computation. Failed: {e}")
+    
+    # Convert to percentage (0-100)
+    semantic_score = round(similarity * 100, 2)
+    
+    # Extract critical skills for additional validation
+    critical_skills = _extract_critical_jd_skills(job_description)
+    candidate_skills = (
+        (candidate.get('core_technical_skills') or []) +
+        (candidate.get('secondary_technical_skills') or []) +
+        (candidate.get('frameworks_tools') or [])
+    )
+    
+    all_skills_lower = [str(s).lower() for s in candidate_skills if str(s).strip()]
+    all_skill_blob = " ".join(all_skills_lower)
+    
+    matched_critical = [
+        skill for skill in critical_skills
+        if re.search(rf'\b{re.escape(skill)}\b', all_skill_blob)
+    ]
+    
+    critical_coverage = (
+        round((len(matched_critical) / len(critical_skills)) * 100.0, 2)
+        if critical_skills else 100.0
+    )
+    
+    # Determine minimum critical coverage threshold
+    if len(critical_skills) <= 2:
+        minimum_critical_coverage = 100.0 if critical_skills else 0.0
+    else:
+        minimum_critical_coverage = 67.0
+    
+    # Blend semantic similarity with critical skills
+    # 70% semantic understanding + 30% critical skills
+    final_score = round(
+        0.70 * semantic_score +
+        0.30 * critical_coverage,
+        2
+    )
+    
+    missing_critical = [s for s in critical_skills if s not in matched_critical]
+    
+    selection_basis = (
+        f"Semantic match with {len(matched_critical)}/{len(critical_skills)} critical skills"
+        if critical_skills
+        else "Semantic contextual match"
+    )
+    
+    return {
+        'match_percentage': final_score,
+        'semantic_score': semantic_score,
+        'critical_skill_coverage': critical_coverage,
+        'critical_skill_min_required': minimum_critical_coverage,
+        'critical_skills_required': critical_skills,
+        'critical_skills_matched': matched_critical,
+        'critical_skills_missing': missing_critical,
+        'matched_keywords': matched_critical,  # For compatibility
+        'selection_basis': selection_basis,
+        'best_knowledge': _best_knowledge_summary(candidate),
+        'reason': f"Semantic similarity: {semantic_score}%, Critical skills: {critical_coverage}%",
+        'score_breakdown': {
+            'semantic_score': semantic_score,
+            'critical_skill_coverage': critical_coverage,
+            'final_blended_score': final_score
+        }
+    }
+
+
 def compute_intelligent_candidate_match(candidate: Dict[str, Any], job_description: str, cv_text: str) -> Dict[str, Any]:
     """Compute weighted candidate ranking beyond plain keyword matching."""
     keyword_match = compute_local_keyword_match(cv_text, job_description)
@@ -2442,19 +2542,21 @@ def search_candidates():
 
 @app.route('/api/quick-search', methods=['POST'])
 def quick_search_api():
-    """Quick JD-to-candidate search using weighted intelligent ranking over Supabase candidates."""
+    """Quick JD-to-candidate search using PURE SEMANTIC ranking (NO keyword matching)."""
     try:
         import time
+        from vector_search import get_vector_search_engine
         
         data = request.get_json() or {}
         job_description = data.get('job_description', '')
         requested_limit = data.get('limit', 15)
+        
         try:
             requested_limit = int(requested_limit)
         except Exception:
             requested_limit = 15
         # Keep quick-search focused on strongest matches only.
-        limit = max(10, min(15, requested_limit))
+        limit = max(10, min(50, requested_limit))  # Allow up to 50 results
         
         if not job_description:
             return jsonify({'error': 'job_description required'}), 400
@@ -2463,6 +2565,18 @@ def quick_search_api():
         data_source = 'supabase'
         candidate_rows = []
         cache_age_seconds = None
+
+        # ALWAYS use semantic ranking (NO keyword fallback)
+        try:
+            engine = get_vector_search_engine()
+            jd_embedding = engine.generate_embedding(job_description)
+            logger.info(f"Generated JD embedding for semantic search ({len(jd_embedding)} dimensions)")
+        except Exception as e:
+            logger.error(f"Could not generate JD embedding: {e}")
+            return jsonify({
+                'success': False,
+                'error': f'Semantic ranking failed: {str(e)}. Please ensure embedding model is available.'
+            }), 500
 
         storage = get_supabase_storage()
         if storage:
@@ -2482,65 +2596,40 @@ def quick_search_api():
                     'supabase_only': True
                 }), 503
 
-        cvs = []
+        matches = []
+        
+        # PURE SEMANTIC RANKING - NO KEYWORD MATCHING
         for intel in candidate_rows:
             if 'error' in intel and not intel.get('verdict'):
                 continue
             if not _candidate_has_searchable_signal(intel):
                 continue
-
-            # Prefer structured fields for matching so placeholder narratives
-            # do not outrank candidates with actual extracted metadata.
-            skills = (
-                (intel.get('core_technical_skills') or [])
-                + (intel.get('secondary_technical_skills') or [])
-                + (intel.get('key_skills') or [])
-                + (intel.get('frameworks_tools') or [])
-            )
-            domain = intel.get('primary_domain', '')
-            seniority = intel.get('seniority_level', '')
-            years = intel.get('years_experience')
-            secondary_domains = intel.get('secondary_domains') or intel.get('domain_expertise') or []
-            summary_text = (
-                intel.get('cleaned_narrative')
-                or intel.get('overall_summary')
-                or intel.get('cleaned_text')
-                or ''
-            )
-            rationale_text = intel.get('verdict_reason') or intel.get('evidence_based_reasoning') or ''
-            structured_text = " ".join(
-                str(part).strip()
-                for part in [domain, seniority, f"{years} years" if years else ""] + secondary_domains + skills
-                if str(part).strip()
-            ).strip()
-            cv_text = " ".join(part for part in [structured_text, summary_text, rationale_text] if part).strip()
-
-            cvs.append({'data': intel, 'text': cv_text})
-        
-        matches = []
-        
-        for cv in cvs:
-            ranked = compute_intelligent_candidate_match(
-                candidate=cv['data'],
-                job_description=job_description,
-                cv_text=cv['text']
+            
+            # Use ONLY semantic ranking (contextual understanding)
+            ranked = compute_semantic_candidate_match(
+                candidate=intel,
+                jd_embedding=jd_embedding,
+                job_description=job_description
             )
 
             match_percentage = ranked['match_percentage']
-            matched_keywords = ranked['matched_keywords']
+            matched_keywords = ranked.get('matched_keywords', [])
             reason = ranked['reason']
             critical_coverage = float(ranked.get('critical_skill_coverage') or 0.0)
             min_required_coverage = float(ranked.get('critical_skill_min_required') or 0.0)
             critical_required = ranked.get('critical_skills_required') or []
+            semantic_score = ranked.get('semantic_score', 0)
 
-            if match_percentage < 10:
+            # Semantic threshold: 30% minimum
+            if match_percentage < 30:
                 continue
             if critical_required and critical_coverage < min_required_coverage:
                 continue
             
-            matches.append({
-                'anonymized_id': cv['data'].get('anonymized_id', 'UNKNOWN'),
+            match_data = {
+                'anonymized_id': intel.get('anonymized_id', 'UNKNOWN'),
                 'match_percentage': match_percentage,
+                'semantic_score': semantic_score,
                 'matched_keywords': matched_keywords,
                 'score_breakdown': ranked.get('score_breakdown', {}),
                 'selection_basis': ranked.get('selection_basis', ''),
@@ -2548,29 +2637,31 @@ def quick_search_api():
                 'critical_skills_matched': ranked.get('critical_skills_matched', []),
                 'critical_skills_missing': ranked.get('critical_skills_missing', []),
                 'critical_skill_coverage': critical_coverage,
-                'best_knowledge': ranked.get('best_knowledge') or cv['data'].get('best_knowledge_summary', ''),
-                'verdict': cv['data'].get('verdict'),
-                'confidence_score': cv['data'].get('confidence_score', 0),
-                'years_experience': cv['data'].get('years_experience', 0),
-                'seniority_level': cv['data'].get('seniority_level', 'N/A'),
-                'core_technical_skills': cv['data'].get('core_technical_skills', [])[:5],
-                'primary_domain': cv['data'].get('primary_domain', ''),
-                'verdict_reason': cv['data'].get('verdict_reason', ''),
+                'best_knowledge': ranked.get('best_knowledge') or intel.get('best_knowledge_summary', ''),
+                'verdict': intel.get('verdict'),
+                'confidence_score': intel.get('confidence_score', 0),
+                'years_experience': intel.get('years_experience', 0),
+                'seniority_level': intel.get('seniority_level', 'N/A'),
+                'core_technical_skills': intel.get('core_technical_skills', [])[:5],
+                'primary_domain': intel.get('primary_domain', ''),
+                'verdict_reason': intel.get('verdict_reason', ''),
                 'match_reason': reason
-            })
+            }
+            
+            matches.append(match_data)
         
+        # Deduplicate and sort by semantic similarity
         deduped_matches = {}
         for match in matches:
             key = match['anonymized_id']
             current = deduped_matches.get(key)
-            if current is None or match['match_percentage'] > current['match_percentage']:
+            if current is None or match['semantic_score'] > current['semantic_score']:
                 deduped_matches[key] = match
 
-        # Sort by match percentage
         matches = list(deduped_matches.values())
         matches.sort(
             key=lambda x: (
-                x['match_percentage'],
+                x['semantic_score'],  # Primary: semantic similarity
                 x.get('confidence_score', 0),
                 x.get('years_experience', 0)
             ),
@@ -2583,11 +2674,15 @@ def quick_search_api():
         return jsonify({
             'success': True,
             'matches': top_matches,
-            'total_cvs': len(cvs),
+            'total_candidates_searched': len(candidate_rows),
+            'total_matches': len(matches),
             'search_time': f'{elapsed:.3f}s',
             'data_source': data_source,
             'cache_age_seconds': cache_age_seconds,
-            'supabase_only': True
+            'supabase_only': True,
+            'ranking_method': 'pure_semantic_similarity',
+            'embedding_model': engine.embedding_provider,
+            'embedding_dimensions': engine.dimensions
         })
         
     except Exception as e:

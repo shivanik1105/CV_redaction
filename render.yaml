@@ -4,9 +4,9 @@ services:
     env: python
     runtime: python
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.7
+        value: 3.11.9
       - key: PYTHONUNBUFFERED
         value: 1
