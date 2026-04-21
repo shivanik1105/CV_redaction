@@ -1026,9 +1026,30 @@ def _create_async_upload_job(
     llm_runtime_config: Optional[Dict[str, Optional[str]]],
     force_reprocess: bool
 ) -> str:
-    """Create and enqueue an async upload job."""
-    now_ts = time.time()
+    """Create and enqueue an async upload job in Supabase (or fallback to memory)."""
     job_id = f"job_{uuid.uuid4().hex[:16]}"
+    
+    # Try Supabase first
+    storage = get_supabase_storage()
+    if storage:
+        try:
+            result = storage.create_upload_job(
+                job_id=job_id,
+                upload_path=upload_path,
+                original_filename=original_filename,
+                job_description=job_description,
+                force_reprocess=force_reprocess,
+                llm_runtime_config=llm_runtime_config
+            )
+            if result:
+                _upload_job_queue.put({'job_id': job_id})
+                logger.info(f"Created upload job in Supabase: {job_id}")
+                return job_id
+        except Exception as e:
+            logger.warning(f"Failed to create job in Supabase, using memory fallback: {e}")
+    
+    # Fallback to in-memory storage
+    now_ts = time.time()
     record = {
         'job_id': job_id,
         'status': 'queued',
@@ -1047,20 +1068,37 @@ def _create_async_upload_job(
     with _upload_jobs_lock:
         _cleanup_upload_jobs_locked(now_ts)
         _upload_jobs[job_id] = record
-        logger.info(f"Created upload job {job_id} for file: {original_filename}")
+        logger.info(f"Created upload job in memory: {job_id}")
 
     _upload_job_queue.put({'job_id': job_id})
     return job_id
 
 
 def _process_async_upload_job(job_id: str) -> None:
-    """Process one async upload job in worker thread."""
-    with _upload_jobs_lock:
-        job = _upload_jobs.get(job_id)
-        if not job:
-            return
-        job['status'] = 'processing'
-        job['started_at'] = datetime.now().isoformat()
+    """Process one async upload job in worker thread (Supabase or memory)."""
+    # Try to get job from Supabase first
+    storage = get_supabase_storage()
+    job = None
+    use_supabase = False
+    
+    if storage:
+        try:
+            job = storage.get_upload_job(job_id)
+            if job:
+                use_supabase = True
+                storage.update_upload_job_status(job_id, 'processing')
+        except Exception as e:
+            logger.warning(f"Failed to get job from Supabase: {e}")
+    
+    # Fallback to memory
+    if not job:
+        with _upload_jobs_lock:
+            job = _upload_jobs.get(job_id)
+            if not job:
+                logger.warning(f"Job {job_id} not found in Supabase or memory")
+                return
+            job['status'] = 'processing'
+            job['started_at'] = datetime.now().isoformat()
 
     try:
         pipeline_result = process_source_cv(
@@ -1070,30 +1108,53 @@ def _process_async_upload_job(job_id: str) -> None:
             llm_runtime_config=job.get('llm_runtime_config') or {}
         )
 
-        with _upload_jobs_lock:
-            current = _upload_jobs.get(job_id)
-            if not current:
-                return
-            if pipeline_result.get('success'):
-                current['status'] = 'completed'
-                current['pipeline_result'] = pipeline_result
-                current['error'] = None
-            else:
-                current['status'] = 'failed'
-                current['error'] = pipeline_result.get('error', 'CV processing failed')
-            current['completed_ts'] = time.time()
-            current['completed_at'] = datetime.now().isoformat()
+        # Update job status
+        if use_supabase and storage:
+            try:
+                if pipeline_result.get('success'):
+                    storage.update_upload_job_status(
+                        job_id, 'completed',
+                        pipeline_result=pipeline_result
+                    )
+                else:
+                    storage.update_upload_job_status(
+                        job_id, 'failed',
+                        error=pipeline_result.get('error', 'CV processing failed')
+                    )
+            except Exception as e:
+                logger.error(f"Failed to update job in Supabase: {e}")
+        else:
+            with _upload_jobs_lock:
+                current = _upload_jobs.get(job_id)
+                if not current:
+                    return
+                if pipeline_result.get('success'):
+                    current['status'] = 'completed'
+                    current['pipeline_result'] = pipeline_result
+                    current['error'] = None
+                else:
+                    current['status'] = 'failed'
+                    current['error'] = pipeline_result.get('error', 'CV processing failed')
+                current['completed_ts'] = time.time()
+                current['completed_at'] = datetime.now().isoformat()
 
     except Exception as e:
         logger.error(f"Async upload job failed: {job_id} -> {e}", exc_info=True)
-        with _upload_jobs_lock:
-            current = _upload_jobs.get(job_id)
-            if not current:
-                return
-            current['status'] = 'failed'
-            current['error'] = str(e)
-            current['completed_ts'] = time.time()
-            current['completed_at'] = datetime.now().isoformat()
+        
+        if use_supabase and storage:
+            try:
+                storage.update_upload_job_status(job_id, 'failed', error=str(e))
+            except Exception as update_error:
+                logger.error(f"Failed to update failed job in Supabase: {update_error}")
+        else:
+            with _upload_jobs_lock:
+                current = _upload_jobs.get(job_id)
+                if not current:
+                    return
+                current['status'] = 'failed'
+                current['error'] = str(e)
+                current['completed_ts'] = time.time()
+                current['completed_at'] = datetime.now().isoformat()
 
 
 def _upload_worker_loop(worker_name: str) -> None:
@@ -1771,11 +1832,6 @@ def upload_file():
                 llm_runtime_config=llm_runtime_config,
                 force_reprocess=force_reprocess
             )
-            # Verify job was created before returning
-            with _upload_jobs_lock:
-                if job_id not in _upload_jobs:
-                    logger.error(f"Job {job_id} not found immediately after creation!")
-                    return jsonify({'error': 'Failed to create upload job'}), 500
             
             logger.info(f"Returning job {job_id} to client. Queue size: {_upload_job_queue.qsize()}")
             return jsonify({
@@ -1843,38 +1899,58 @@ def upload_file():
 @app.route('/api/upload-jobs/<job_id>', methods=['GET'])
 def get_upload_job_status(job_id):
     """Poll asynchronous upload job status and retrieve final result when completed."""
-    with _upload_jobs_lock:
-        _cleanup_upload_jobs_locked()
-        job = _upload_jobs.get(job_id)
-        if not job:
-            logger.warning(f"Job not found: {job_id}. Available jobs: {list(_upload_jobs.keys())}")
-            return jsonify({'success': False, 'error': 'Job not found'}), 404
+    # Try Supabase first
+    storage = get_supabase_storage()
+    job = None
+    
+    if storage:
+        try:
+            job = storage.get_upload_job(job_id)
+            if job:
+                logger.debug(f"Job {job_id} found in Supabase: status={job.get('status')}")
+        except Exception as e:
+            logger.warning(f"Failed to get job from Supabase: {e}")
+    
+    # Fallback to memory
+    if not job:
+        with _upload_jobs_lock:
+            _cleanup_upload_jobs_locked()
+            job = _upload_jobs.get(job_id)
+            if job:
+                logger.debug(f"Job {job_id} found in memory: status={job.get('status')}")
+    
+    if not job:
+        logger.warning(f"Job not found: {job_id}")
+        # Check if there are any jobs in memory for debugging
+        with _upload_jobs_lock:
+            memory_jobs = list(_upload_jobs.keys())
+        logger.warning(f"Available jobs in memory: {memory_jobs}")
+        return jsonify({'success': False, 'error': 'Job not found'}), 404
 
-        status = job.get('status', 'queued')
-        logger.debug(f"Job {job_id} status: {status}")
-        base_payload = {
-            'success': status != 'failed',
-            'mode': 'asynchronous',
-            'job_id': job_id,
-            'status': status,
-            'submitted_at': job.get('submitted_at'),
-            'started_at': job.get('started_at'),
-            'completed_at': job.get('completed_at'),
-            'job_description_provided': bool(job.get('job_description_provided')),
-            'queue_size': _upload_job_queue.qsize()
-        }
+    status = job.get('status', 'queued')
+    base_payload = {
+        'success': status != 'failed',
+        'mode': 'asynchronous',
+        'job_id': job_id,
+        'status': status,
+        'submitted_at': job.get('submitted_at'),
+        'started_at': job.get('started_at'),
+        'completed_at': job.get('completed_at'),
+        'job_description_provided': bool(job.get('job_description_provided')),
+        'queue_size': _upload_job_queue.qsize()
+    }
 
-        if status == 'completed':
-            pipeline_result = job.get('pipeline_result') or {}
-            final_payload = _build_upload_success_payload(pipeline_result, mode='asynchronous')
-            final_payload.update(base_payload)
-            return jsonify(final_payload)
+    if status == 'completed':
+        pipeline_result = job.get('pipeline_result') or {}
+        final_payload = _build_upload_success_payload(pipeline_result, mode='asynchronous')
+        final_payload.update(base_payload)
+        return jsonify(final_payload)
 
-        if status == 'failed':
-            base_payload['error'] = job.get('error', 'Upload processing failed')
-            return jsonify(base_payload), 500
+    if status == 'failed':
+        base_payload['error'] = job.get('error', 'Upload processing failed')
+        return jsonify(base_payload), 500
 
-        return jsonify(base_payload)
+    return jsonify(base_payload)
 
 @app.route('/download/<filename>')
 def download_file(filename):

@@ -1153,6 +1153,195 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             logger.error(f"Error getting statistics: {e}")
             return {}
     
+    # ========== UPLOAD JOB MANAGEMENT (for multi-instance support) ==========
+    
+    def create_upload_job(
+        self,
+        job_id: str,
+        upload_path: str,
+        original_filename: str,
+        job_description: Optional[str] = None,
+        force_reprocess: bool = False,
+        llm_runtime_config: Optional[Dict] = None
+    ) -> Dict:
+        """
+        Create a new upload job in Supabase
+        
+        Args:
+            job_id: Unique job identifier
+            upload_path: Path to uploaded file
+            original_filename: Original filename
+            job_description: Optional job description
+            force_reprocess: Whether to force reprocessing
+            llm_runtime_config: LLM configuration
+            
+        Returns:
+            Created job record
+        """
+        try:
+            job_data = {
+                'job_id': job_id,
+                'status': 'queued',
+                'upload_path': upload_path,
+                'original_filename': original_filename,
+                'job_description': job_description,
+                'job_description_provided': bool(job_description),
+                'force_reprocess': force_reprocess,
+                'llm_runtime_config': llm_runtime_config or {}
+            }
+            
+            response = self.client.table('upload_jobs').insert(job_data).execute()
+            
+            if response.data:
+                logger.info(f"✓ Created upload job in Supabase: {job_id}")
+                return response.data[0]
+            else:
+                logger.error(f"Failed to create upload job: {job_id}")
+                return {}
+                
+        except Exception as e:
+            logger.error(f"Error creating upload job: {e}")
+            raise
+    
+    def get_upload_job(self, job_id: str) -> Optional[Dict]:
+        """
+        Get upload job status from Supabase
+        
+        Args:
+            job_id: Job identifier
+            
+        Returns:
+            Job record or None
+        """
+        try:
+            response = self.client.table('upload_jobs').select('*').eq(
+                'job_id', job_id
+            ).execute()
+            
+            if response.data:
+                return response.data[0]
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error getting upload job: {e}")
+            return None
+    
+    def update_upload_job_status(
+        self,
+        job_id: str,
+        status: str,
+        error: Optional[str] = None,
+        pipeline_result: Optional[Dict] = None
+    ) -> bool:
+        """
+        Update upload job status in Supabase
+        
+        Args:
+            job_id: Job identifier
+            status: New status (queued, processing, completed, failed)
+            error: Error message if failed
+            pipeline_result: Processing result if completed
+            
+        Returns:
+            True if updated successfully
+        """
+        try:
+            update_data = {'status': status}
+            
+            if status == 'processing':
+                update_data['started_at'] = datetime.now().isoformat()
+            elif status in ('completed', 'failed'):
+                update_data['completed_at'] = datetime.now().isoformat()
+                if error:
+                    update_data['error'] = error
+                if pipeline_result:
+                    update_data['pipeline_result'] = pipeline_result
+            
+            response = self.client.table('upload_jobs').update(
+                update_data
+            ).eq('job_id', job_id).execute()
+            
+            if response.data:
+                logger.debug(f"Updated job {job_id} to status: {status}")
+                return True
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error updating upload job: {e}")
+            return False
+    
+    def get_queued_upload_jobs(self, limit: int = 10) -> List[Dict]:
+        """
+        Get queued upload jobs for worker processing
+        
+        Args:
+            limit: Maximum number of jobs to return
+            
+        Returns:
+            List of queued job records
+        """
+        try:
+            response = self.client.table('upload_jobs').select('*').eq(
+                'status', 'queued'
+            ).order('submitted_at').limit(limit).execute()
+            
+            return response.data or []
+            
+        except Exception as e:
+            logger.error(f"Error getting queued jobs: {e}")
+            return []
+    
+    def cleanup_old_upload_jobs(self) -> int:
+        """
+        Cleanup old completed/failed jobs (older than 1 hour)
+        
+        Returns:
+            Number of jobs deleted
+        """
+        try:
+            # Call the Supabase function
+            response = self.client.rpc('cleanup_old_upload_jobs').execute()
+            
+            deleted_count = response.data if response.data else 0
+            if deleted_count > 0:
+                logger.info(f"Cleaned up {deleted_count} old upload jobs")
+            return deleted_count
+            
+        except Exception as e:
+            logger.error(f"Error cleaning up old jobs: {e}")
+            return 0
+    
+    def get_upload_job_stats(self) -> Dict:
+        """
+        Get statistics about upload jobs
+        
+        Returns:
+            Dictionary with job counts by status
+        """
+        try:
+            response = self.client.table('upload_jobs').select('status').execute()
+            
+            stats = {
+                'total': 0,
+                'queued': 0,
+                'processing': 0,
+                'completed': 0,
+                'failed': 0
+            }
+            
+            if response.data:
+                stats['total'] = len(response.data)
+                for job in response.data:
+                    status = job.get('status', 'unknown')
+                    if status in stats:
+                        stats[status] += 1
+            
+            return stats
+            
+        except Exception as e:
+            logger.error(f"Error getting job stats: {e}")
+            return {}
+    
     def add_recruiter_override(
         self,
         anonymized_id: str,
