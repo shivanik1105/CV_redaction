@@ -1029,8 +1029,9 @@ def _create_async_upload_job(
     """Create and enqueue an async upload job in Supabase (or fallback to memory)."""
     job_id = f"job_{uuid.uuid4().hex[:16]}"
     
-    # Try Supabase first
+    # Try Supabase first (but don't fail if it doesn't work)
     storage = get_supabase_storage()
+    supabase_success = False
     if storage:
         try:
             result = storage.create_upload_job(
@@ -1042,13 +1043,12 @@ def _create_async_upload_job(
                 llm_runtime_config=llm_runtime_config
             )
             if result:
-                _upload_job_queue.put({'job_id': job_id})
+                supabase_success = True
                 logger.info(f"Created upload job in Supabase: {job_id}")
-                return job_id
         except Exception as e:
             logger.warning(f"Failed to create job in Supabase, using memory fallback: {e}")
     
-    # Fallback to in-memory storage
+    # Always create in memory as well (for fallback)
     now_ts = time.time()
     record = {
         'job_id': job_id,
@@ -1068,7 +1068,8 @@ def _create_async_upload_job(
     with _upload_jobs_lock:
         _cleanup_upload_jobs_locked(now_ts)
         _upload_jobs[job_id] = record
-        logger.info(f"Created upload job in memory: {job_id}")
+        if not supabase_success:
+            logger.info(f"Created upload job in memory: {job_id}")
 
     _upload_job_queue.put({'job_id': job_id})
     return job_id

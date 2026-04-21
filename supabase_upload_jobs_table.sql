@@ -61,6 +61,8 @@ ALTER TABLE upload_jobs ENABLE ROW LEVEL SECURITY;
 -- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Service role can manage upload_jobs" ON upload_jobs;
 DROP POLICY IF EXISTS "Anyone can read upload_jobs" ON upload_jobs;
+DROP POLICY IF EXISTS "Anyone can insert upload_jobs" ON upload_jobs;
+DROP POLICY IF EXISTS "Anyone can update upload_jobs" ON upload_jobs;
 
 -- Allow service role to do everything
 CREATE POLICY "Service role can manage upload_jobs"
@@ -70,9 +72,24 @@ CREATE POLICY "Service role can manage upload_jobs"
     USING (true)
     WITH CHECK (true);
 
--- Allow anon role to read their own jobs (if needed for frontend)
+-- Allow anon/authenticated to insert jobs
+CREATE POLICY "Anyone can insert upload_jobs"
+    ON upload_jobs
+    FOR INSERT
+    TO anon, authenticated
+    WITH CHECK (true);
+
+-- Allow anon/authenticated to read jobs
 CREATE POLICY "Anyone can read upload_jobs"
     ON upload_jobs
     FOR SELECT
     TO anon, authenticated
     USING (true);
+
+-- Allow anon/authenticated to update jobs (for status changes)
+CREATE POLICY "Anyone can update upload_jobs"
+    ON upload_jobs
+    FOR UPDATE
+    TO anon, authenticated
+    USING (true)
+    WITH CHECK (true);
