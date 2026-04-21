@@ -32,6 +32,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop trigger if exists, then recreate
+DROP TRIGGER IF EXISTS upload_jobs_updated_at ON upload_jobs;
+
 CREATE TRIGGER upload_jobs_updated_at
     BEFORE UPDATE ON upload_jobs
     FOR EACH ROW
@@ -54,6 +57,10 @@ $$ LANGUAGE plpgsql;
 
 -- Grant permissions (adjust role name as needed)
 ALTER TABLE upload_jobs ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Service role can manage upload_jobs" ON upload_jobs;
+DROP POLICY IF EXISTS "Anyone can read upload_jobs" ON upload_jobs;
 
 -- Allow service role to do everything
 CREATE POLICY "Service role can manage upload_jobs"

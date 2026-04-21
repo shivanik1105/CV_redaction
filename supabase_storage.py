@@ -1200,8 +1200,9 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
                 return {}
                 
         except Exception as e:
-            logger.error(f"Error creating upload job: {e}")
-            raise
+            # Table might not exist yet - log but don't crash
+            logger.warning(f"Error creating upload job in Supabase (table may not exist): {e}")
+            return {}
     
     def get_upload_job(self, job_id: str) -> Optional[Dict]:
         """
@@ -1330,7 +1331,8 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
                 return None
             
         except Exception as e:
-            logger.error(f"Error claiming job: {e}")
+            # Table might not exist yet - log but don't crash
+            logger.debug(f"Error claiming job (table may not exist): {e}")
             return None
     
     def cleanup_old_upload_jobs(self) -> int:
