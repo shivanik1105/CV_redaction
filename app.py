@@ -1013,6 +1013,7 @@ def _cleanup_upload_jobs_locked(now_ts: Optional[float] = None) -> None:
         completed_at = float(job.get('completed_ts') or 0.0)
         if terminal and completed_at and (now_ts - completed_at) > _UPLOAD_JOB_TTL_SECONDS:
             expired_ids.append(job_id)
+            logger.info(f"Cleaning up expired job {job_id}: status={status}, age={(now_ts - completed_at):.1f}s")
 
     for job_id in expired_ids:
         _upload_jobs.pop(job_id, None)
@@ -1046,6 +1047,7 @@ def _create_async_upload_job(
     with _upload_jobs_lock:
         _cleanup_upload_jobs_locked(now_ts)
         _upload_jobs[job_id] = record
+        logger.info(f"Created upload job {job_id} for file: {original_filename}")
 
     _upload_job_queue.put({'job_id': job_id})
     return job_id
@@ -1769,6 +1771,13 @@ def upload_file():
                 llm_runtime_config=llm_runtime_config,
                 force_reprocess=force_reprocess
             )
+            # Verify job was created before returning
+            with _upload_jobs_lock:
+                if job_id not in _upload_jobs:
+                    logger.error(f"Job {job_id} not found immediately after creation!")
+                    return jsonify({'error': 'Failed to create upload job'}), 500
+            
+            logger.info(f"Returning job {job_id} to client. Queue size: {_upload_job_queue.qsize()}")
             return jsonify({
                 'success': True,
                 'mode': 'asynchronous',
@@ -1838,9 +1847,11 @@ def get_upload_job_status(job_id):
         _cleanup_upload_jobs_locked()
         job = _upload_jobs.get(job_id)
         if not job:
+            logger.warning(f"Job not found: {job_id}. Available jobs: {list(_upload_jobs.keys())}")
             return jsonify({'success': False, 'error': 'Job not found'}), 404
 
         status = job.get('status', 'queued')
+        logger.debug(f"Job {job_id} status: {status}")
         base_payload = {
             'success': status != 'failed',
             'mode': 'asynchronous',
