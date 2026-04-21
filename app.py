@@ -1074,103 +1074,141 @@ def _create_async_upload_job(
     return job_id
 
 
-def _process_async_upload_job(job_id: str) -> None:
-    """Process one async upload job in worker thread (Supabase or memory)."""
-    # Try to get job from Supabase first
-    storage = get_supabase_storage()
-    job = None
-    use_supabase = False
-    
-    if storage:
-        try:
-            job = storage.get_upload_job(job_id)
-            if job:
-                use_supabase = True
-                storage.update_upload_job_status(job_id, 'processing')
-        except Exception as e:
-            logger.warning(f"Failed to get job from Supabase: {e}")
-    
-    # Fallback to memory
-    if not job:
-        with _upload_jobs_lock:
-            job = _upload_jobs.get(job_id)
-            if not job:
-                logger.warning(f"Job {job_id} not found in Supabase or memory")
-                return
-            job['status'] = 'processing'
-            job['started_at'] = datetime.now().isoformat()
-
-    try:
-        pipeline_result = process_source_cv(
-            cv_path=Path(job['upload_path']),
-            job_description=job.get('job_description'),
-            force_reprocess=bool(job.get('force_reprocess')),
-            llm_runtime_config=job.get('llm_runtime_config') or {}
-        )
-
-        # Update job status
-        if use_supabase and storage:
-            try:
-                if pipeline_result.get('success'):
-                    storage.update_upload_job_status(
-                        job_id, 'completed',
-                        pipeline_result=pipeline_result
-                    )
-                else:
-                    storage.update_upload_job_status(
-                        job_id, 'failed',
-                        error=pipeline_result.get('error', 'CV processing failed')
-                    )
-            except Exception as e:
-                logger.error(f"Failed to update job in Supabase: {e}")
-        else:
-            with _upload_jobs_lock:
-                current = _upload_jobs.get(job_id)
-                if not current:
-                    return
-                if pipeline_result.get('success'):
-                    current['status'] = 'completed'
-                    current['pipeline_result'] = pipeline_result
-                    current['error'] = None
-                else:
-                    current['status'] = 'failed'
-                    current['error'] = pipeline_result.get('error', 'CV processing failed')
-                current['completed_ts'] = time.time()
-                current['completed_at'] = datetime.now().isoformat()
-
-    except Exception as e:
-        logger.error(f"Async upload job failed: {job_id} -> {e}", exc_info=True)
-        
-        if use_supabase and storage:
-            try:
-                storage.update_upload_job_status(job_id, 'failed', error=str(e))
-            except Exception as update_error:
-                logger.error(f"Failed to update failed job in Supabase: {update_error}")
-        else:
-            with _upload_jobs_lock:
-                current = _upload_jobs.get(job_id)
-                if not current:
-                    return
-                current['status'] = 'failed'
-                current['error'] = str(e)
-                current['completed_ts'] = time.time()
-                current['completed_at'] = datetime.now().isoformat()
-
-
 def _upload_worker_loop(worker_name: str) -> None:
-    """Worker loop consuming queued upload jobs."""
+    """Worker loop consuming queued upload jobs from Supabase or memory queue."""
     logger.info(f"Upload worker started: {worker_name}")
+    storage = get_supabase_storage()
+    poll_interval = 2  # seconds between Supabase polls
+    
     while True:
-        task = _upload_job_queue.get()
-        try:
-            job_id = task.get('job_id') if isinstance(task, dict) else None
-            if not job_id:
+        job = None
+        from_supabase = False
+        
+        # Try to claim a job from Supabase first (for multi-instance support)
+        if storage:
+            try:
+                job = storage.claim_upload_job(worker_name)
+                if job:
+                    from_supabase = True
+                    logger.info(f"{worker_name}: Claimed job from Supabase: {job['job_id']}")
+            except Exception as e:
+                logger.warning(f"{worker_name}: Failed to claim job from Supabase: {e}")
+        
+        # Fallback to memory queue (non-blocking check with timeout)
+        if not job:
+            try:
+                task = _upload_job_queue.get(timeout=poll_interval)
+                job_id = task.get('job_id') if isinstance(task, dict) else None
+                if job_id:
+                    # Get job details from memory or Supabase
+                    if storage:
+                        try:
+                            job = storage.get_upload_job(job_id)
+                            if job:
+                                from_supabase = True
+                        except Exception:
+                            pass
+                    
+                    if not job:
+                        with _upload_jobs_lock:
+                            job = _upload_jobs.get(job_id)
+                    
+                    if job:
+                        logger.info(f"{worker_name}: Picked up job from memory queue: {job_id}")
+                    else:
+                        logger.warning(f"{worker_name}: Job {job_id} not found")
+                        _upload_job_queue.task_done()
+                        continue
+            except queue.Empty:
+                # No jobs in memory queue, continue to next iteration (will poll Supabase again)
                 continue
-            _process_async_upload_job(job_id)
-        except Exception as e:
-            logger.error(f"Unhandled upload worker error ({worker_name}): {e}", exc_info=True)
-        finally:
-            _upload_job_queue.task_done()
+        
+        # Process the job
+        if job:
+            try:
+                job_id = job.get('job_id')
+                if job_id:
+                    # If job was claimed from Supabase, it's already marked as 'processing'
+                    # If from memory queue, we need to mark it
+                    if not from_supabase:
+                        if storage:
+                            try:
+                                storage.update_upload_job_status(job_id, 'processing')
+                            except Exception:
+                                pass
+                        else:
+                            with _upload_jobs_lock:
+                                mem_job = _upload_jobs.get(job_id)
+                                if mem_job:
+                                    mem_job['status'] = 'processing'
+                                    mem_job['started_at'] = datetime.now().isoformat()
+                    
+                    # Process the CV
+                    try:
+                        pipeline_result = process_source_cv(
+                            cv_path=Path(job['upload_path']),
+                            job_description=job.get('job_description'),
+                            force_reprocess=bool(job.get('force_reprocess')),
+                            llm_runtime_config=job.get('llm_runtime_config') or {}
+                        )
+                        
+                        # Update job status
+                        if storage:
+                            try:
+                                if pipeline_result.get('success'):
+                                    storage.update_upload_job_status(
+                                        job_id, 'completed',
+                                        pipeline_result=pipeline_result
+                                    )
+                                else:
+                                    storage.update_upload_job_status(
+                                        job_id, 'failed',
+                                        error=pipeline_result.get('error', 'CV processing failed')
+                                    )
+                            except Exception as e:
+                                logger.error(f"Failed to update job in Supabase: {e}")
+                        else:
+                            with _upload_jobs_lock:
+                                mem_job = _upload_jobs.get(job_id)
+                                if mem_job:
+                                    if pipeline_result.get('success'):
+                                        mem_job['status'] = 'completed'
+                                        mem_job['pipeline_result'] = pipeline_result
+                                        mem_job['error'] = None
+                                    else:
+                                        mem_job['status'] = 'failed'
+                                        mem_job['error'] = pipeline_result.get('error', 'CV processing failed')
+                                    mem_job['completed_ts'] = time.time()
+                                    mem_job['completed_at'] = datetime.now().isoformat()
+                        
+                        logger.info(f"{worker_name}: Completed job {job_id}")
+                        
+                    except Exception as e:
+                        logger.error(f"{worker_name}: Job {job_id} failed: {e}", exc_info=True)
+                        
+                        if storage:
+                            try:
+                                storage.update_upload_job_status(job_id, 'failed', error=str(e))
+                            except Exception as update_error:
+                                logger.error(f"Failed to update failed job in Supabase: {update_error}")
+                        else:
+                            with _upload_jobs_lock:
+                                mem_job = _upload_jobs.get(job_id)
+                                if mem_job:
+                                    mem_job['status'] = 'failed'
+                                    mem_job['error'] = str(e)
+                                    mem_job['completed_ts'] = time.time()
+                                    mem_job['completed_at'] = datetime.now().isoformat()
+                        
+            except Exception as e:
+                logger.error(f"Unhandled upload worker error ({worker_name}): {e}", exc_info=True)
+            finally:
+                # Mark task as done if it came from memory queue
+                if not from_supabase:
+                    try:
+                        _upload_job_queue.task_done()
+                    except ValueError:
+                        pass
 
 
 def _ensure_upload_workers_started() -> None:

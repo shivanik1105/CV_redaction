@@ -1291,6 +1291,48 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             logger.error(f"Error getting queued jobs: {e}")
             return []
     
+    def claim_upload_job(self, worker_id: str) -> Optional[Dict]:
+        """
+        Atomically claim a queued job for processing (prevents duplicate processing)
+        
+        Args:
+            worker_id: Identifier for the worker claiming the job
+            
+        Returns:
+            Claimed job record or None if no jobs available
+        """
+        try:
+            # Get oldest queued job
+            response = self.client.table('upload_jobs').select('*').eq(
+                'status', 'queued'
+            ).order('submitted_at').limit(1).execute()
+            
+            if not response.data:
+                return None
+            
+            job = response.data[0]
+            job_id = job['job_id']
+            
+            # Try to claim it by updating status to 'processing'
+            # This is atomic at the database level
+            update_response = self.client.table('upload_jobs').update({
+                'status': 'processing',
+                'started_at': datetime.now().isoformat()
+            }).eq('job_id', job_id).eq('status', 'queued').execute()
+            
+            # If update succeeded, we claimed the job
+            if update_response.data:
+                logger.info(f"Worker {worker_id} claimed job: {job_id}")
+                return update_response.data[0]
+            else:
+                # Another worker claimed it first
+                logger.debug(f"Worker {worker_id} failed to claim job {job_id} (already claimed)")
+                return None
+            
+        except Exception as e:
+            logger.error(f"Error claiming job: {e}")
+            return None
+    
     def cleanup_old_upload_jobs(self) -> int:
         """
         Cleanup old completed/failed jobs (older than 1 hour)
