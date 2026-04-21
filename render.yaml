@@ -1,12 +1,13 @@
 services:
   - type: web
-    name: cv-matcher
+    name: cv-redactor
     env: python
-    runtime: python
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --workers 1 --threads 2 --timeout 120 --bind 0.0.0.0:$PORT app:app
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.9
-      - key: PYTHONUNBUFFERED
+      - key: UPLOAD_WORKER_COUNT
         value: 1
+      - key: LLM_MAX_CONCURRENT_REQUESTS
+        value: 1
+      - key: PYTHON_VERSION
+        value: 3.11.0
