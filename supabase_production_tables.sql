@@ -134,52 +134,72 @@ WITH (m = 16, ef_construction = 64);
 -- SET hnsw.ef_search = 64;
 
 -- ============================================================================
--- 4. Row Level Security (Multi-Tenant Isolation)
+-- 4. Add org_id Column (Multi-Tenant Support)
 -- ============================================================================
 
+-- Add org_id column if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'cv_intelligence' 
+        AND column_name = 'org_id'
+    ) THEN
+        ALTER TABLE cv_intelligence ADD COLUMN org_id TEXT DEFAULT 'default_org';
+        CREATE INDEX idx_cv_intelligence_org_id ON cv_intelligence(org_id);
+    END IF;
+END $$;
+
+-- ============================================================================
+-- 5. Row Level Security (Multi-Tenant Isolation) - OPTIONAL
+-- ============================================================================
+
+-- IMPORTANT: Only enable RLS if you're deploying for multiple organizations
+-- For single-org deployment, skip this section
+
 -- Enable RLS on cv_intelligence table
-ALTER TABLE cv_intelligence ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE cv_intelligence ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies if they exist
-DROP POLICY IF EXISTS "org_isolation" ON cv_intelligence;
-DROP POLICY IF EXISTS "service_role_full_access" ON cv_intelligence;
+-- DROP POLICY IF EXISTS "org_isolation" ON cv_intelligence;
+-- DROP POLICY IF EXISTS "service_role_full_access" ON cv_intelligence;
 
 -- Service role has full access (for backend operations)
-CREATE POLICY "service_role_full_access"
-ON cv_intelligence
-FOR ALL
-TO service_role
-USING (true)
-WITH CHECK (true);
+-- CREATE POLICY "service_role_full_access"
+-- ON cv_intelligence
+-- FOR ALL
+-- TO service_role
+-- USING (true)
+-- WITH CHECK (true);
 
 -- Recruiters only see their org's candidates
 -- Note: You need to set app.org_id in your Python code before queries
 -- Example: storage.client.rpc('set_config', {'setting': 'app.org_id', 'value': org_id})
-CREATE POLICY "org_isolation"
-ON cv_intelligence
-FOR ALL
-TO authenticated
-USING (org_id = current_setting('app.org_id', true))
-WITH CHECK (org_id = current_setting('app.org_id', true));
+-- CREATE POLICY "org_isolation"
+-- ON cv_intelligence
+-- FOR ALL
+-- TO authenticated
+-- USING (org_id = current_setting('app.org_id', true))
+-- WITH CHECK (org_id = current_setting('app.org_id', true));
 
 -- Enable RLS on audit_log
-ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "audit_org_isolation" ON audit_log;
-DROP POLICY IF EXISTS "audit_service_role_full_access" ON audit_log;
+-- DROP POLICY IF EXISTS "audit_org_isolation" ON audit_log;
+-- DROP POLICY IF EXISTS "audit_service_role_full_access" ON audit_log;
 
-CREATE POLICY "audit_service_role_full_access"
-ON audit_log
-FOR ALL
-TO service_role
-USING (true)
-WITH CHECK (true);
+-- CREATE POLICY "audit_service_role_full_access"
+-- ON audit_log
+-- FOR ALL
+-- TO service_role
+-- USING (true)
+-- WITH CHECK (true);
 
-CREATE POLICY "audit_org_isolation"
-ON audit_log
-FOR SELECT
-TO authenticated
-USING (org_id = current_setting('app.org_id', true));
+-- CREATE POLICY "audit_org_isolation"
+-- ON audit_log
+-- FOR SELECT
+-- TO authenticated
+-- USING (org_id = current_setting('app.org_id', true));
 
 -- ============================================================================
 -- 5. Utility Functions
