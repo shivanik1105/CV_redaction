@@ -1109,6 +1109,15 @@ def _upload_worker_loop(worker_name: str) -> None:
                             mem_job['status'] = 'completed'
                             mem_job['pipeline_result'] = pipeline_result
                             mem_job['error'] = None
+                            
+                            # Invalidate search cache when new candidate is added
+                            try:
+                                from redis_cache import invalidate_search_cache
+                                deleted = invalidate_search_cache()
+                                if deleted > 0:
+                                    logger.info(f"✓ Invalidated {deleted} search cache entries after new candidate upload")
+                            except Exception as cache_err:
+                                logger.warning(f"Could not invalidate search cache: {cache_err}")
                         else:
                             mem_job['status'] = 'failed'
                             mem_job['error'] = pipeline_result.get('error', 'CV processing failed')
@@ -1846,6 +1855,15 @@ def upload_file():
 
             if not pipeline_result.get('success'):
                 return jsonify({'error': pipeline_result.get('error', 'CV processing failed')}), 500
+
+            # Invalidate search cache when new candidate is added
+            try:
+                from redis_cache import invalidate_search_cache
+                deleted = invalidate_search_cache()
+                if deleted > 0:
+                    logger.info(f"✓ Invalidated {deleted} search cache entries after new candidate upload")
+            except Exception as cache_err:
+                logger.warning(f"Could not invalidate search cache: {cache_err}")
 
             response = _build_upload_success_payload(pipeline_result, mode='synchronous')
 
@@ -2598,6 +2616,11 @@ def quick_search_api():
     try:
         import time
         from vector_search import get_vector_search_engine
+        from redis_cache import (
+            get_search_results_from_cache,
+            cache_search_results,
+            REDIS_AVAILABLE
+        )
         
         data = request.get_json() or {}
         job_description = data.get('job_description', '')
@@ -2612,6 +2635,14 @@ def quick_search_api():
         
         if not job_description:
             return jsonify({'error': 'job_description required'}), 400
+        
+        # Check Redis cache for search results
+        if REDIS_AVAILABLE:
+            cached_results = get_search_results_from_cache(job_description, limit)
+            if cached_results is not None:
+                logger.info(f"✓ Returning cached search results ({cached_results.get('total_matches', 0)} matches)")
+                cached_results['cache_hit'] = True
+                return jsonify(cached_results)
         
         start_time = time.time()
         data_source = 'supabase'
@@ -2723,7 +2754,7 @@ def quick_search_api():
         
         elapsed = time.time() - start_time
         
-        return jsonify({
+        result = {
             'success': True,
             'matches': top_matches,
             'total_candidates_searched': len(candidate_rows),
@@ -2734,8 +2765,15 @@ def quick_search_api():
             'supabase_only': True,
             'ranking_method': 'pure_semantic_similarity',
             'embedding_model': engine.embedding_provider,
-            'embedding_dimensions': engine.dimensions
-        })
+            'embedding_dimensions': engine.dimensions,
+            'cache_hit': False
+        }
+        
+        # Cache the search results in Redis (5 minute TTL)
+        if REDIS_AVAILABLE:
+            cache_search_results(job_description, limit, result, ttl_seconds=300)
+        
+        return jsonify(result)
         
     except Exception as e:
         logger.error(f"Error in quick search: {e}", exc_info=True)

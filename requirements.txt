@@ -40,3 +40,6 @@ requests==2.31.0
 celery==5.3.4
 redis==5.0.1
 kombu==5.3.4
+
+# Authentication (Phase 2 - Security)
+PyJWT==2.8.0

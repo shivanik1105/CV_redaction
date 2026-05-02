@@ -1,6 +1,6 @@
 """
 Vector Search Engine for Semantic Candidate Matching
-Implements embedding generation and pgvector-based similarity search
+Implements embedding generation and pgvector-based similarity search with Redis caching
 """
 import os
 import logging
@@ -8,6 +8,13 @@ import numpy as np
 from typing import List, Dict, Optional, Tuple
 from pathlib import Path
 import json
+
+# Import Redis cache
+from redis_cache import (
+    get_embedding_from_cache,
+    cache_embedding,
+    REDIS_AVAILABLE
+)
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +104,7 @@ class VectorSearchEngine:
     
     def generate_embedding(self, text: str) -> List[float]:
         """
-        Generate embedding vector for text
+        Generate embedding vector for text with Redis caching
         
         Args:
             text: Input text to embed
@@ -109,11 +116,19 @@ class VectorSearchEngine:
             logger.warning("Empty text provided for embedding")
             return [0.0] * self.dimensions
         
+        # Check Redis cache first
+        if REDIS_AVAILABLE:
+            cached_embedding = get_embedding_from_cache(text)
+            if cached_embedding is not None:
+                logger.debug(f"✓ Using cached embedding ({len(cached_embedding)} dims)")
+                return cached_embedding
+        
         try:
+            # Generate new embedding
             if self.embedding_provider == "local":
                 # Use sentence-transformers
                 embedding = self.model.encode(text, convert_to_numpy=True)
-                return embedding.tolist()
+                embedding_list = embedding.tolist()
             
             elif self.embedding_provider == "openai":
                 # Use OpenAI API
@@ -121,7 +136,13 @@ class VectorSearchEngine:
                     model=self.model_name,
                     input=text
                 )
-                return response.data[0].embedding
+                embedding_list = response.data[0].embedding
+            
+            # Cache the new embedding
+            if REDIS_AVAILABLE:
+                cache_embedding(text, embedding_list)
+            
+            return embedding_list
         
         except Exception as e:
             logger.error(f"Error generating embedding: {e}")
