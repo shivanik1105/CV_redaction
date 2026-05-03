@@ -505,7 +505,6 @@
         <div class="tabs">
             <button class="tab active" data-tab="search" onclick="showTab('search', this)">Search</button>
             <button class="tab" data-tab="upload" onclick="showTab('upload', this)">Upload CV</button>
-            <button class="tab" data-tab="process" onclick="showTab('process', this)">Process CVs</button>
         </div>
 
         <!-- Search Tab -->
@@ -654,27 +653,6 @@
             <div id="uploadResults"></div>
         </div>
 
-        <!-- Process CVs Tab -->
-        <div id="process" class="tab-content">
-            <div class="card">
-                <h3>Bulk Process CVs</h3>
-                <div class="alert alert-warning">
-                    ⚠️ This processes all sample CVs through redaction, intelligence extraction, embeddings, and storage.
-                </div>
-
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="forceReprocess"> Force re-process (ignore cached results)
-                    </label>
-                </div>
-
-                <button class="btn btn-primary" id="btnProcess" onclick="processAllCVs()">
-                    📂 Process All Sample CVs
-                </button>
-            </div>
-
-            <div id="processResults"></div>
-        </div>
     </div>
 
     <script>
@@ -1034,71 +1012,6 @@
             } finally {
                 button.disabled = false;
                 button.textContent = 'Upload CV';
-            }
-        }
-
-        // Process all CVs
-        async function processAllCVs() {
-            const forceReprocess = document.getElementById('forceReprocess').checked;
-            
-            const btn = document.getElementById('btnProcess');
-            const resultsDiv = document.getElementById('processResults');
-            
-            btn.disabled = true;
-            btn.textContent = '⏳ Processing...';
-            
-            resultsDiv.innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <span>Processing CVs... This may take several minutes.</span>
-                </div>
-            `;
-            
-            try {
-                const response = await fetch('/api/process-samples', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        force_reprocess: forceReprocess
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    let message = `✅ Done! ${data.successful}/${data.total_originals} CVs processed.`;
-                    if (data.embeddings_generated > 0) {
-                        message += ` 🔗 ${data.embeddings_generated} embeddings generated.`;
-                    }
-                    if (data.stored_in_supabase > 0) {
-                        message += ` ☁️ ${data.stored_in_supabase} stored in Supabase.`;
-                    }
-                    if (data.skipped > 0) {
-                        message += ` ⚠️ ${data.skipped} skipped (quota exhausted).`;
-                    }
-                    
-                    resultsDiv.innerHTML = `
-                        <div class="alert alert-success">
-                            ${message}
-                        </div>
-                    `;
-
-                } else {
-                    resultsDiv.innerHTML = `
-                        <div class="alert alert-error">
-                            ❌ Error: ${data.error}
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                resultsDiv.innerHTML = `
-                    <div class="alert alert-error">
-                        ❌ Error: ${error.message}
-                    </div>
-                `;
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '📂 Process All Sample CVs';
             }
         }
 
