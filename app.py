@@ -64,7 +64,7 @@ app.config['UPLOAD_FOLDER'] = str(_RUNTIME_DATA_ROOT / 'uploads')
 app.config['OUTPUT_FOLDER'] = str(_RUNTIME_DATA_ROOT / 'redacted_output')
 app.config['INTELLIGENCE_FOLDER'] = str(_RUNTIME_DATA_ROOT / 'llm_analysis')
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-app.config['ASSET_VERSION'] = os.getenv('ASSET_VERSION', datetime.utcnow().strftime('%Y%m%d%H%M%S'))
+app.config['ASSET_VERSION'] = os.getenv('ASSET_VERSION', datetime.utcnow().strftime('%Y%m%d%H%M%S%f'))
 app.secret_key = 'cv-redaction-secret-key-2024'
 
 # Configure logging
@@ -401,23 +401,22 @@ def probe_llm_provider() -> Dict[str, Any]:
     status = {
         'provider': provider,
         'model': model,
-        'configured': False,
+        'configured': True,
         'reachable': False,
         'message': ''
     }
 
-    provider_key_map = {
-        'groq': 'GROQ_API_KEY',
-        'openai': 'OPENAI_API_KEY',
-        'anthropic': 'ANTHROPIC_API_KEY',
-        'gemini': 'GOOGLE_API_KEY'
-    }
-    key_name = provider_key_map.get(provider)
-    status['configured'] = _has_real_secret(key_name) if key_name else provider == 'ollama'
+    if provider == 'groq':
+        status['configured'] = _has_real_secret('GROQ_API_KEY')
+
+    if not status['configured']:
+        status['message'] = 'not configured'
+        return status
 
     try:
         if provider == 'groq':
             from groq import Groq
+
             client = Groq(api_key=os.getenv('GROQ_API_KEY'))
             response = client.chat.completions.create(
                 model=model or 'llama-3.3-70b-versatile',
@@ -425,17 +424,19 @@ def probe_llm_provider() -> Dict[str, Any]:
                 temperature=0,
                 max_tokens=5
             )
-            status['reachable'] = response.choices[0].message.content.strip().upper().startswith('OK')
+            content = response.choices[0].message.content if response and response.choices else ''
+            status['reachable'] = str(content).strip().upper().startswith('OK')
             status['message'] = 'live Groq probe succeeded'
         elif provider == 'ollama':
             import ollama
+
             response = ollama.chat(
                 model=model or 'qwen2.5:7b',
                 messages=[{'role': 'user', 'content': 'Reply with exactly OK'}],
                 options={'temperature': 0, 'num_predict': 5}
             )
             content = response.get('message', {}).get('content', '')
-            status['reachable'] = content.strip().upper().startswith('OK')
+            status['reachable'] = str(content).strip().upper().startswith('OK')
             status['message'] = 'live Ollama probe succeeded'
         else:
             status['message'] = f'live probe not implemented for provider: {provider}'
@@ -1167,7 +1168,9 @@ def _ensure_upload_workers_started() -> None:
         _upload_workers_started = True
 
 
-_ensure_upload_workers_started()
+@app.before_request
+def _lazy_start_upload_workers():
+    _ensure_upload_workers_started()
 
 
 def compute_local_keyword_match(cv_text: str, job_description: str) -> Dict[str, Any]:
@@ -1229,9 +1232,15 @@ _KNOWN_TECH_SKILLS = {
     # Languages
     'python', 'typescript', 'javascript', 'java', 'c++', 'c#', 'go', 'golang', 'rust', 'php',
     'ruby', 'scala', 'kotlin', 'swift', 'r',
-    # Web frameworks
-    'django', 'flask', 'fastapi', 'node', 'nodejs', 'react', 'angular', 'vue',
-    'next.js', 'express', 'spring', 'spring boot', '.net',
+    # Frontend / Web
+    'html', 'css', 'sass', 'scss', 'less', 'tailwind', 'bootstrap',
+    'react', 'angular', 'vue', 'svelte', 'next.js', 'nuxt', 'gatsby',
+    'webpack', 'vite', 'jquery', 'redux', 'zustand', 'responsive design',
+    # Backend frameworks
+    'django', 'flask', 'fastapi', 'node', 'nodejs', 'express',
+    'spring', 'spring boot', '.net', 'rails',
+    # Mobile
+    'react native', 'flutter', 'ionic', 'xamarin', 'android', 'ios',
     # Databases
     'sql', 'postgresql', 'mysql', 'mongodb', 'redis', 'elasticsearch', 'nosql',
     'cassandra', 'dynamodb', 'sqlite', 'oracle',
@@ -1241,12 +1250,58 @@ _KNOWN_TECH_SKILLS = {
     # Data Science / ML
     'pandas', 'numpy', 'scikit-learn', 'spark', 'airflow', 'mlflow',
     'tensorflow', 'pytorch', 'keras', 'power bi', 'tableau',
-    'machine learning', 'deep learning', 'data science', 'nlp',
+    'machine learning', 'deep learning', 'data science', 'nlp', 'llm', 'openai',
     # Architecture
     'system design', 'rest api', 'restful', 'microservices', 'graphql',
+    # QA
+    'selenium',
+    # Product tooling
+    'jira',
+    # Integration / Middleware
+    'mulesoft', 'salesforce', 'sap', 'anypoint', 'tibco', 'informatica',
     # Other
-    'kafka', 'rabbitmq', 'linux', 'nginx', 'apache',
+    'kafka', 'rabbitmq', 'linux', 'nginx', 'apache', 'figma',
 }
+
+# Common abbreviations and aliases that should map to canonical skill names
+_SKILL_ALIASES = {
+    'js': 'javascript',
+    'ts': 'typescript',
+    'py': 'python',
+    'k8s': 'kubernetes',
+    'tf': 'terraform',
+    'node.js': 'nodejs',
+    'react.js': 'react',
+    'vue.js': 'vue',
+    'angular.js': 'angular',
+    'angularjs': 'angular',
+    'pg': 'postgresql',
+    'postgres': 'postgresql',
+    'mongo': 'mongodb',
+    'es': 'elasticsearch',
+}
+
+
+# Some JDs list paired platform/framework options using "and" even when they
+# clearly mean either/or. Collapse these into OR-groups to avoid overly strict
+# critical-skill gating (especially when len(critical_skills) <= 2).
+_CRITICAL_SKILL_OR_GROUPS = [
+    {'ios', 'android'},
+    {'swift', 'kotlin'},
+    {'react native', 'flutter'},
+    {'tensorflow', 'pytorch'},
+]
+
+
+def _skills_share_or_group(skill_a: str, skill_b: str) -> bool:
+    a = (skill_a or '').strip().lower()
+    b = (skill_b or '').strip().lower()
+    if not a or not b or a == b:
+        return False
+    for group in _CRITICAL_SKILL_OR_GROUPS:
+        if a in group and b in group:
+            return True
+    return False
 
 
 def _extract_critical_jd_skills(job_description: str) -> List[str]:
@@ -1255,10 +1310,32 @@ def _extract_critical_jd_skills(job_description: str) -> List[str]:
         return []
 
     jd_lower = job_description.lower()
+
+    # Prefer extracting from *required* clauses only.
+    # This prevents "preferred/bonus/good-to-have" terms from becoming hard gates.
+    optional_markers = [
+        'good to have', 'nice to have', 'preferred', 'preference', 'bonus', 'plus', 'a plus'
+    ]
+    required_markers = [
+        'must', 'must have', 'required', 'need', 'looking for', 'should', 'strong in',
+        'experience in', 'hands-on', 'hands on', 'proficient in'
+    ]
+    parts = [p.strip() for p in re.split(r'[\n\r\.]+', jd_lower) if p.strip()]
+    required_parts = [
+        p for p in parts
+        if any(m in p for m in required_markers) and not any(m in p for m in optional_markers)
+    ]
+    jd_required = ' '.join(required_parts) if required_parts else jd_lower
     found: List[str] = []
 
+    # First pass: resolve aliases (e.g. JS -> javascript, TS -> typescript)
+    for alias, canonical in _SKILL_ALIASES.items():
+        if re.search(rf'\b{re.escape(alias)}\b', jd_required):
+            found.append(canonical)
+
+    # Second pass: match known tech skills directly
     for skill in sorted(_KNOWN_TECH_SKILLS, key=len, reverse=True):
-        if re.search(rf'\b{re.escape(skill)}\b', jd_lower):
+        if re.search(rf'\b{re.escape(skill)}\b', jd_required):
             found.append(skill)
 
     phrase_patterns = [
@@ -1267,14 +1344,17 @@ def _extract_critical_jd_skills(job_description: str) -> List[str]:
     ]
     splitter = re.compile(r',|/|\band\b|\bor\b|&', re.IGNORECASE)
     for pattern in phrase_patterns:
-        for match in re.finditer(pattern, jd_lower):
+        for match in re.finditer(pattern, jd_required):
             phrase = (match.group(1) or '').strip()
             if not phrase:
                 continue
             for chunk in splitter.split(phrase):
                 token = re.sub(r'[^a-z0-9+#./\-\s]', ' ', chunk).strip()
                 token = re.sub(r'\s+', ' ', token)
-                if token in _KNOWN_TECH_SKILLS:
+                # Check aliases first
+                if token in _SKILL_ALIASES:
+                    found.append(_SKILL_ALIASES[token])
+                elif token in _KNOWN_TECH_SKILLS:
                     found.append(token)
 
     deduped: List[str] = []
@@ -1286,7 +1366,60 @@ def _extract_critical_jd_skills(job_description: str) -> List[str]:
         seen.add(key)
         deduped.append(key)
 
-    return deduped[:8]
+    # Remove shadowed shorter skills when a more specific multi-word skill exists.
+    # Example: avoid extracting both "react native" and "react" as separate critical skills.
+    deduped_sorted = sorted(deduped, key=len, reverse=True)
+    kept: List[str] = []
+    for skill in deduped_sorted:
+        shadowed = False
+        for longer in kept:
+            if ' ' not in longer:
+                continue
+            if re.search(rf'(?<!\w){re.escape(skill)}(?!\w)', longer):
+                shadowed = True
+                break
+        if not shadowed:
+            kept.append(skill)
+    deduped = kept
+
+    # Collapse common "A/B" or "A or B" patterns into a single OR-group token.
+    # Also handle select "A and B" pairings that are commonly used to mean either/or.
+    # Example: "iOS and Android" or "Swift and Kotlin" often mean mobile coverage,
+    # not that every candidate must have both.
+    collapsed: List[str] = []
+    used = set()
+    for idx, s1 in enumerate(deduped):
+        if s1 in used:
+            continue
+
+        grouped = False
+        for s2 in deduped[idx + 1:]:
+            if s2 in used:
+                continue
+
+            # Only collapse when the JD explicitly expresses an alternative.
+            # For "and/&", only treat as alternative if the pair belongs to a known OR-group.
+            if (
+                re.search(rf'\b{re.escape(s1)}\b\s*(?:/|\bor\b)\s*\b{re.escape(s2)}\b', jd_required)
+                or re.search(rf'\b{re.escape(s2)}\b\s*(?:/|\bor\b)\s*\b{re.escape(s1)}\b', jd_required)
+                or (
+                    _skills_share_or_group(s1, s2)
+                    and (
+                        re.search(rf'\b{re.escape(s1)}\b\s*(?:\band\b|&)\s*\b{re.escape(s2)}\b', jd_required)
+                        or re.search(rf'\b{re.escape(s2)}\b\s*(?:\band\b|&)\s*\b{re.escape(s1)}\b', jd_required)
+                    )
+                )
+            ):
+                collapsed.append(f"{s1}|{s2}")
+                used.add(s1)
+                used.add(s2)
+                grouped = True
+                break
+
+        if not grouped:
+            collapsed.append(s1)
+
+    return collapsed[:8]
 
 
 def _extract_domain_terms_from_jd(job_description: str) -> List[str]:
@@ -1420,29 +1553,7 @@ def _capability_focus_score(jd_text: str, strength_text: str) -> float:
     jd = jd_text.lower()
     strengths = strength_text.lower()
 
-    focus_map = {
-        'case_study': ['case study', 'hypothesis', 'ab test', 'experiment', 'analytics', 'business problem'],
-        'problem_solving': ['problem solving', 'complex problem', 'reasoning', 'debugging', 'troubleshooting'],
-        'dsa': ['dsa', 'data structure', 'algorithm', 'leetcode', 'competitive programming'],
-        'ml_data': ['machine learning', 'deep learning', 'modeling', 'statistics', 'data science',
-                    'feature engineering', 'predictive model', 'neural network', 'nlp', 'computer vision'],
-        'backend_platform': ['backend', 'api', 'microservice', 'system design', 'scalability',
-                             'restful', 'rest api', 'server-side', 'server side'],
-        'frontend_ui': ['frontend', 'front-end', 'front end', 'ui development', 'user interface',
-                        'responsive design', 'single page', 'spa', 'component', 'css', 'html'],
-        'fullstack': ['full stack', 'full-stack', 'fullstack', 'end-to-end', 'end to end'],
-        'data_viz': ['data visualization', 'dashboard', 'power bi', 'tableau', 'reporting',
-                     'business intelligence', 'bi tool', 'charts', 'grafana'],
-        'devops_infra': ['devops', 'ci/cd', 'ci cd', 'pipeline', 'infrastructure', 'deployment',
-                         'containerization', 'orchestration', 'monitoring'],
-        'database': ['database', 'sql', 'nosql', 'data modeling', 'schema design',
-                     'query optimization', 'data extraction', 'etl', 'data pipeline'],
-        'cloud': ['cloud', 'aws', 'azure', 'gcp', 'serverless', 'lambda', 'cloud platform'],
-        'mobile': ['mobile', 'android', 'ios', 'react native', 'flutter', 'swift', 'kotlin'],
-        'security': ['security', 'authentication', 'authorization', 'encryption', 'vulnerability',
-                     'penetration testing', 'compliance'],
-        'leadership': ['leadership', 'mentoring', 'team management', 'stakeholder', 'cross-functional']
-    }
+    focus_map = _FOCUS_KEYWORDS
 
     jd_hits = []
     candidate_hits = []
@@ -1457,6 +1568,85 @@ def _capability_focus_score(jd_text: str, strength_text: str) -> float:
 
     overlap = len(set(jd_hits).intersection(candidate_hits))
     return round((overlap / len(set(jd_hits))) * 100.0, 2)
+
+
+# Focus/role keywords used for lightweight intent gating and capability scoring.
+_FOCUS_KEYWORDS = {
+    'case_study': ['case study', 'hypothesis', 'ab test', 'a/b test', 'experiment', 'analytics', 'business problem'],
+    'problem_solving': ['problem solving', 'complex problem', 'reasoning', 'debugging', 'troubleshooting'],
+    'dsa': ['dsa', 'data structure', 'algorithm', 'leetcode', 'competitive programming'],
+    'ml_data': [
+        'machine learning', 'deep learning', 'modeling', 'model building', 'statistics', 'data science',
+        'feature engineering', 'predictive model', 'neural network', 'nlp', 'computer vision',
+        'pytorch', 'tensorflow', 'mlops', 'model deployment', 'model optimization'
+    ],
+    'backend_platform': ['backend', 'api', 'apis', 'microservice', 'microservices', 'system design', 'scalability',
+                         'restful', 'rest api', 'server-side', 'server side'],
+    'frontend_ui': ['frontend', 'front-end', 'front end', 'ui development', 'user interface',
+                    'responsive design', 'single page', 'spa', 'component', 'css', 'html', 'react', 'angular', 'vue'],
+    'fullstack': ['full stack', 'full-stack', 'fullstack', 'end-to-end', 'end to end'],
+    'data_viz': ['data visualization', 'dashboard', 'power bi', 'tableau', 'reporting',
+                 'business intelligence', 'bi tool', 'charts', 'grafana', 'excel'],
+    'devops_infra': ['devops', 'ci/cd', 'ci cd', 'pipeline', 'pipelines', 'infrastructure', 'deployment',
+                     'containerization', 'orchestration', 'docker', 'kubernetes', 'terraform',
+                     'observability'],
+    'database': ['database', 'sql', 'nosql', 'data modeling', 'schema design',
+                 'query optimization', 'data extraction', 'etl', 'data pipeline'],
+    'cloud': ['cloud', 'aws', 'azure', 'gcp', 'serverless', 'lambda', 'cloud platform', 'scaling'],
+    'mobile': ['mobile', 'android', 'ios', 'react native', 'flutter', 'swift', 'kotlin'],
+    'security': [
+        'cybersecurity', 'security analyst', 'vulnerability', 'vulnerabilities', 'vulnerability testing',
+        'penetration testing', 'incident response', 'siem', 'soc analyst'
+    ],
+    'qa_testing': ['qa', 'qa tester', 'tester', 'test automation', 'automation testing', 'manual testing',
+                   'selenium', 'test case', 'test cases', 'quality assurance'],
+    'recruiting': ['recruiter', 'recruitment', 'sourcing', 'screening', 'linkedin', 'job portal', 'coordination', 'talent acquisition'],
+    'product': ['product manager', 'product management', 'roadmap', 'backlog',
+                'user story', 'user stories', 'prd', 'product strategy', 'prioritize features', 'prioritise features'],
+    'leadership': ['leadership', 'mentoring', 'team management', 'stakeholder', 'cross-functional']
+}
+
+
+# Focus keys that represent concrete roles/capabilities for gating.
+# Avoid using broad buckets like leadership/problem-solving as gates.
+_ROLE_FOCUS_KEYS = {
+    'ml_data', 'backend_platform', 'frontend_ui', 'fullstack', 'data_viz',
+    'devops_infra', 'database', 'cloud', 'mobile', 'security', 'qa_testing',
+    'recruiting', 'product'
+}
+
+
+# Some roles are especially prone to semantic leakage (e.g., embedded/infra candidates
+# matching “security” or “product” JDs due to one generic phrase). Require stronger
+# evidence (multiple distinct phrase hits) before treating them as true focus overlap.
+_FOCUS_MIN_DISTINCT_PHRASE_HITS: Dict[str, int] = {
+    'security': 2,
+    'product': 2,
+    'recruiting': 2,
+}
+
+
+def _extract_focus_hit_counts(text: str) -> Dict[str, int]:
+    """Return focus keys mapped to the number of distinct phrases matched in text."""
+    if not text:
+        return {}
+    lower = text.lower()
+    counts: Dict[str, int] = {}
+    for key, phrases in _FOCUS_KEYWORDS.items():
+        matched = 0
+        for phrase in phrases:
+            if re.search(rf'(?<!\w){re.escape(phrase)}(?!\w)', lower):
+                matched += 1
+        if matched:
+            counts[key] = matched
+    return counts
+
+
+def _extract_focus_hits(text: str) -> List[str]:
+    """Return focus keys that appear in the given text (lowercased substring match)."""
+    if not text:
+        return []
+    return list(_extract_focus_hit_counts(text).keys())
 
 
 def compute_semantic_candidate_match(
@@ -1515,101 +1705,103 @@ def compute_semantic_candidate_match(
     
     all_skills_lower = [str(s).lower() for s in candidate_skills if str(s).strip()]
     all_skill_blob = " ".join(all_skills_lower)
+
+    # Candidate text used for critical-skill matching should include domains and summaries,
+    # not only structured skills, because extraction quality varies per CV.
+    candidate_skill_match_blob = " ".join(
+        [
+            all_skill_blob,
+            str(candidate.get('primary_domain') or ''),
+            " ".join([str(d) for d in (candidate.get('secondary_domains') or [])]),
+            " ".join([str(d) for d in (candidate.get('domain_expertise') or [])]),
+            str(candidate.get('cleaned_narrative') or ''),
+            str(candidate.get('verdict_reason') or ''),
+            " ".join([str(s) for s in (candidate.get('key_strengths') or [])]),
+        ]
+    ).lower()
     
-    matched_critical = [
-        skill for skill in critical_skills
-        if re.search(rf'\b{re.escape(skill)}\b', all_skill_blob)
-    ]
+    matched_critical = []
+    for skill in critical_skills:
+        if '|' in skill:
+            alts = [s.strip() for s in skill.split('|') if s.strip()]
+            if any(re.search(rf'\b{re.escape(alt)}\b', candidate_skill_match_blob) for alt in alts):
+                matched_critical.append(skill)
+        else:
+            if re.search(rf'\b{re.escape(skill)}\b', candidate_skill_match_blob):
+                matched_critical.append(skill)
     
-    critical_coverage = (
-        round((len(matched_critical) / len(critical_skills)) * 100.0, 2)
-        if critical_skills else 100.0
-    )
+    if critical_skills:
+        critical_coverage = round((len(matched_critical) / len(critical_skills)) * 100.0, 2)
+    else:
+        # No explicit critical skills found in the JD. Treat as "no critical gating",
+        # and avoid inflating scores by pretending coverage is 100%.
+        critical_coverage = None
     
     # Determine minimum critical coverage threshold
     if len(critical_skills) <= 2:
-        minimum_critical_coverage = 100.0 if critical_skills else 0.0
+        if critical_skills and any('|' in s for s in critical_skills):
+            # If the JD expresses alternatives (OR-groups), don't require matching *every*
+            # OR-group. Matching at least one is often a valid fit for terse JDs.
+            minimum_critical_coverage = 50.0
+        else:
+            minimum_critical_coverage = 100.0 if critical_skills else 0.0
     else:
-        minimum_critical_coverage = 67.0
+        # Messy JDs often list many skills; keep gating realistic.
+        minimum_critical_coverage = 60.0
     
-    # Blend semantic similarity with critical skills
-    # 70% semantic understanding + 30% critical skills
-    final_score = round(
-        0.70 * semantic_score +
-        0.30 * critical_coverage,
-        2
-    )
+    # Blend semantic similarity with critical skills *only if* we extracted explicit
+    # critical skills from the JD. Otherwise, use pure semantic score.
+    if critical_skills and critical_coverage is not None:
+        # Keep semantic dominant; critical skills nudge ranking but shouldn't zero out.
+        final_score = round(
+            0.70 * semantic_score +
+            0.30 * critical_coverage,
+            2
+        )
+    else:
+        final_score = semantic_score
     
     missing_critical = [s for s in critical_skills if s not in matched_critical]
+    if critical_skills and critical_coverage is not None and critical_coverage <= 25.0:
+        # Mild downweight when we extracted clear critical skills and the candidate matches almost none.
+        final_score = round(final_score * 0.80, 2)
     
     selection_basis = (
         f"Semantic match with {len(matched_critical)}/{len(critical_skills)} critical skills"
         if critical_skills
         else "Semantic contextual match"
     )
-    
-    # --- Compute multi-dimensional sub-scores for UI breakdown ---
-    # Skill score: JD skill terms matched against candidate skills
-    jd_tokens = set(_tokenize_for_matching(job_description))
-    jd_skill_terms = [token for token in jd_tokens if len(token) >= 3]
-    if jd_skill_terms:
-        exact_skill_hits = sum(1 for term in jd_skill_terms if any(term == skill for skill in all_skills_lower))
-        fuzzy_skill_hits = sum(1 for term in jd_skill_terms if any(term in skill for skill in all_skills_lower))
-        skill_score = round(((2 * exact_skill_hits + fuzzy_skill_hits) / (3 * len(jd_skill_terms))) * 100.0, 2)
-        skill_score = min(skill_score, 100.0)
-    else:
-        skill_score = critical_coverage
 
-    # Capability score: how well candidate strengths match JD role intent
-    strength_bits = [
-        candidate.get('verdict_reason') or '',
-        " ".join(candidate.get('key_strengths') or []),
-        " ".join(candidate.get('matched_requirements') or []),
-        " ".join([str(s) for s in (candidate.get('core_technical_skills') or [])]),
-        " ".join([str(s) for s in (candidate.get('secondary_technical_skills') or [])]),
-        candidate.get('cleaned_narrative') or '',
-    ]
-    fitment = candidate.get('fitment_analysis') or []
-    if isinstance(fitment, list):
-        for entry in fitment:
-            if isinstance(entry, dict):
-                strength_bits.append(str(entry.get('category') or ''))
-                strength_bits.append(str(entry.get('candidate_profile') or ''))
-    strength_text = " ".join(strength_bits)
-    capability_score = _capability_focus_score(job_description, strength_text)
-
-    # Experience score: years match against JD requirement
-    min_years = _extract_min_years_requirement(job_description)
-    years = candidate.get('years_experience')
-    if years is None:
-        years = candidate.get('years_of_experience')
-    years = float(years or 0)
-    if min_years is None:
-        experience_score = min(100.0, 45.0 + (years * 5.0)) if years > 0 else 25.0
-    elif years >= min_years:
-        experience_score = min(100.0, 80.0 + ((years - min_years) * 4.0))
-    else:
-        experience_score = max(0.0, (years / max(min_years, 0.5)) * 55.0)
-
-    # Domain score: dynamically extract domain terms from JD instead of hardcoded list
-    domain_text = " ".join(
-        [
-            str(candidate.get('primary_domain') or ''),
-            " ".join([str(d) for d in (candidate.get('secondary_domains') or [])]),
-            " ".join([str(d) for d in (candidate.get('domain_expertise') or [])]),
-            " ".join([str(s).lower() for s in (candidate.get('core_technical_skills') or [])]),
-            " ".join([str(s).lower() for s in (candidate.get('secondary_technical_skills') or [])]),
-            candidate.get('cleaned_narrative') or '',
-        ]
-    ).lower()
-    jd_domain_terms = _extract_domain_terms_from_jd(job_description)
-    if not jd_domain_terms:
-        domain_score = 45.0
-    else:
-        domain_score = round(
-            (sum(1 for term in jd_domain_terms if term in domain_text) / len(jd_domain_terms)) * 100.0,
-            2
+    # --- Role-intent sanity check (prevents generic JDs returning random roles) ---
+    # If the JD has a clear intent (e.g., security/recruiting/product/qa/devops/etc),
+    # require the candidate profile to show *some* overlapping intent signal.
+    jd_focus_counts = _extract_focus_hit_counts(job_description)
+    jd_focus = set(jd_focus_counts.keys()).intersection(_ROLE_FOCUS_KEYS)
+    if jd_focus:
+        candidate_focus_text = " ".join(
+            [
+                str(candidate.get('primary_domain') or ''),
+                " ".join([str(d) for d in (candidate.get('secondary_domains') or [])]),
+                " ".join([str(d) for d in (candidate.get('domain_expertise') or [])]),
+                all_skill_blob,
+                candidate.get('cleaned_narrative') or '',
+                candidate.get('verdict_reason') or '',
+                " ".join(candidate.get('key_strengths') or []),
+            ]
         )
+        candidate_focus_counts = _extract_focus_hit_counts(candidate_focus_text)
+        candidate_focus = set(candidate_focus_counts.keys()).intersection(_ROLE_FOCUS_KEYS)
+
+        # Apply per-role minimum distinct phrase hits before considering a key as true overlap.
+        candidate_focus_strong = {
+            k
+            for k in candidate_focus
+            if candidate_focus_counts.get(k, 0) >= _FOCUS_MIN_DISTINCT_PHRASE_HITS.get(k, 1)
+        }
+
+        if jd_focus.isdisjoint(candidate_focus_strong):
+            # Heavy penalty: off-role candidates should drop below UI thresholds.
+            final_score = round(final_score * 0.45, 2)
 
     return {
         'match_percentage': final_score,
@@ -1623,15 +1815,6 @@ def compute_semantic_candidate_match(
         'selection_basis': selection_basis,
         'best_knowledge': _best_knowledge_summary(candidate),
         'reason': f"Semantic similarity: {semantic_score}%, Critical skills: {critical_coverage}%",
-        'score_breakdown': {
-            'semantic_score': semantic_score,
-            'critical_skill_coverage': critical_coverage,
-            'final_blended_score': final_score,
-            'skill_score': skill_score,
-            'capability_score': capability_score,
-            'experience_score': round(experience_score, 2),
-            'domain_score': domain_score
-        }
     }
 
 
@@ -1652,10 +1835,15 @@ def compute_intelligent_candidate_match(candidate: Dict[str, Any], job_descripti
     all_skill_blob = " ".join(all_skills_lower)
 
     critical_skills = _extract_critical_jd_skills(jd_text)
-    matched_critical_skills = [
-        skill for skill in critical_skills
-        if re.search(rf'\b{re.escape(skill)}\b', all_skill_blob)
-    ]
+    matched_critical_skills = []
+    for skill in critical_skills:
+        if '|' in skill:
+            alts = [s.strip() for s in skill.split('|') if s.strip()]
+            if any(re.search(rf'\b{re.escape(alt)}\b', all_skill_blob) for alt in alts):
+                matched_critical_skills.append(skill)
+        else:
+            if re.search(rf'\b{re.escape(skill)}\b', all_skill_blob):
+                matched_critical_skills.append(skill)
     critical_coverage = round((len(matched_critical_skills) / len(critical_skills)) * 100.0, 2) if critical_skills else 0.0
     if len(critical_skills) <= 2:
         minimum_critical_coverage = 100.0 if critical_skills else 0.0
@@ -1764,16 +1952,7 @@ def compute_intelligent_candidate_match(candidate: Dict[str, Any], job_descripti
         'critical_skills_missing': missing_critical_skills,
         'critical_skill_coverage': critical_coverage,
         'critical_skill_min_required': minimum_critical_coverage,
-        'best_knowledge': _best_knowledge_summary(candidate),
-        'score_breakdown': {
-            'critical_skill_score': critical_coverage if critical_skills else skill_score,
-            'skill_score': skill_score,
-            'capability_score': capability_score,
-            'token_score': token_score,
-            'experience_score': round(experience_score, 2),
-            'seniority_score': round(seniority_score, 2),
-            'domain_score': domain_score
-        }
+        'best_knowledge': _best_knowledge_summary(candidate)
     }
 
 
@@ -2937,15 +3116,20 @@ def quick_search_api():
             match_percentage = ranked['match_percentage']
             matched_keywords = ranked.get('matched_keywords', [])
             reason = ranked['reason']
-            critical_coverage = float(ranked.get('critical_skill_coverage') or 0.0)
+            critical_coverage_raw = ranked.get('critical_skill_coverage')
+            critical_coverage = (
+                float(critical_coverage_raw)
+                if isinstance(critical_coverage_raw, (int, float))
+                else None
+            )
             min_required_coverage = float(ranked.get('critical_skill_min_required') or 0.0)
             critical_required = ranked.get('critical_skills_required') or []
             semantic_score = ranked.get('semantic_score', 0)
 
-            # Semantic threshold: 30% minimum
-            if match_percentage < 30:
+            # Semantic threshold: 50% minimum (stricter filtering)
+            if match_percentage < 50:
                 continue
-            if critical_required and critical_coverage < min_required_coverage:
+            if critical_required and (critical_coverage is None or critical_coverage < min_required_coverage):
                 continue
             
             match_data = {
@@ -2953,12 +3137,10 @@ def quick_search_api():
                 'match_percentage': match_percentage,
                 'semantic_score': semantic_score,
                 'matched_keywords': matched_keywords,
-                'score_breakdown': ranked.get('score_breakdown', {}),
                 'selection_basis': ranked.get('selection_basis', ''),
                 'critical_skills_required': critical_required,
                 'critical_skills_matched': ranked.get('critical_skills_matched', []),
                 'critical_skills_missing': ranked.get('critical_skills_missing', []),
-                'critical_skill_coverage': critical_coverage,
                 'best_knowledge': ranked.get('best_knowledge') or intel.get('best_knowledge_summary', ''),
                 'verdict': intel.get('verdict'),
                 'confidence_score': intel.get('confidence_score', 0),
@@ -2969,6 +3151,9 @@ def quick_search_api():
                 'verdict_reason': intel.get('verdict_reason', ''),
                 'match_reason': reason
             }
+
+            if critical_coverage is not None:
+                match_data['critical_skill_coverage'] = critical_coverage
             
             matches.append(match_data)
         

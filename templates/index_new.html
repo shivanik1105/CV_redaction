@@ -444,22 +444,7 @@
             color: #324543;
         }
 
-        .score-breakdown {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 10px;
-        }
 
-        .breakdown-item {
-            background: #eef5f3;
-            color: #2b5150;
-            border: 1px solid #d5e4df;
-            padding: 3px 8px;
-            border-radius: 999px;
-            font-size: 0.8em;
-            font-weight: 600;
-        }
 
         .stat-number {
             font-size: 2.5em;
@@ -1135,7 +1120,7 @@
                 const seniority = rawSeniority && rawSeniority !== 'N/A' ? rawSeniority : 'Not classified';
                 const domain = rawDomain && rawDomain !== 'N/A' ? rawDomain : 'Not extracted';
                 const skills = candidate.core_technical_skills || candidate.key_skills || [];
-                const breakdown = candidate.score_breakdown || {};
+
                 
                 card.innerHTML = `
                     <div class="candidate-header">
@@ -1169,14 +1154,6 @@
                     ${showMatch && candidate.best_knowledge ? `
                         <div class="candidate-info">
                             <strong>Best Knowledge:</strong> ${candidate.best_knowledge}
-                        </div>
-                    ` : ''}
-                    ${showMatch && Object.keys(breakdown).length ? `
-                        <div class="score-breakdown">
-                            <span class="breakdown-item">Skills ${Math.round(breakdown.skill_score || 0)}</span>
-                            <span class="breakdown-item">Capability ${Math.round(breakdown.capability_score || 0)}</span>
-                            <span class="breakdown-item">Experience ${Math.round(breakdown.experience_score || 0)}</span>
-                            <span class="breakdown-item">Domain ${Math.round(breakdown.domain_score || 0)}</span>
                         </div>
                     ` : ''}
                     <div class="skills-list">

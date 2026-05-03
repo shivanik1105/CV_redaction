@@ -598,6 +598,9 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
         Convert a Supabase DB record back to the app's expected format.
         First tries to restore from the full JSON backup in llm_raw_response,
         then falls back to mapping from the 18 DB columns.
+        
+        IMPORTANT: Always use the embedding from the database column, not from JSON backup,
+        because the embedding column may have been regenerated with a new model.
         """
         # Try to restore full data from JSON backup
         raw = record.get("llm_raw_response", "")
@@ -611,6 +614,11 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
                 full_data["confidence_score"] = record.get("confidence_score", full_data.get("confidence_score", 0))
                 full_data["years_experience"] = record.get("years_of_experience", full_data.get("years_experience", 0))
                 full_data["seniority_level"] = record.get("career_level", full_data.get("seniority_level", "")) or ""
+                
+                # CRITICAL: Always use embedding from database column, not from JSON backup
+                # The embedding column may have been regenerated with a new model (384d -> 768d)
+                full_data["embedding"] = record.get("embedding")
+                
                 return full_data
             except (json.JSONDecodeError, TypeError):
                 pass

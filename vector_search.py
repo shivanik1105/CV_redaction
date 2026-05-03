@@ -41,8 +41,8 @@ class VectorSearchEngine:
     """
     
     # Model configurations
-    LOCAL_MODEL = "all-MiniLM-L6-v2"  # 384 dimensions, fast, local
-    LOCAL_DIMENSIONS = 384
+    LOCAL_MODEL = "all-mpnet-base-v2"  # 768 dimensions, better accuracy, local
+    LOCAL_DIMENSIONS = 768
     
     OPENAI_MODEL = "text-embedding-3-small"  # 1536 dimensions, API-based
     OPENAI_DIMENSIONS = 1536

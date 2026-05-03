@@ -1,6 +1,8 @@
-"""
-Quick test: verify score_breakdown now contains skill_score, capability_score,
-experience_score, domain_score for the two real JDs that were returning all zeros.
+"""test_jd_scoring_fix.py
+
+This project no longer emits sub-score breakdowns (skill/capability/experience/domain)
+in API payloads. This script remains as a quick sanity check that the match function
+still returns an overall score and critical-skill signal for two representative JDs.
 """
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -80,51 +82,32 @@ def test_jd(label, jd_text):
     min_years = _extract_min_years_requirement(jd_text)
     print(f"  Min years requirement:    {min_years}")
 
-    # 5. Full intelligent match (the function that WAS used before semantic switch)
+    # 5. Full intelligent match (legacy weighted matcher)
     result = compute_intelligent_candidate_match(CANDIDATE, jd_text, CANDIDATE_CV_TEXT)
-    breakdown = result.get('score_breakdown', {})
     print(f"\n  Overall match_percentage: {result['match_percentage']}%")
-    print(f"  Score breakdown:")
-    for key, val in breakdown.items():
-        status = "OK" if val > 0 else "X STILL ZERO"
-        print(f"    {key:30s} = {val:6.1f}  {status}")
 
-    # Check the keys the UI needs
-    ui_keys = ['skill_score', 'capability_score', 'experience_score', 'domain_score']
-    missing = [k for k in ui_keys if k not in breakdown]
-    if missing:
-        print(f"\n  ⚠ MISSING UI KEYS: {missing}")
+    breakdown = result.get('score_breakdown')
+    if breakdown is None:
+        print("  ✓ score_breakdown not present (expected)")
     else:
-        all_nonzero = all(breakdown.get(k, 0) > 0 for k in ui_keys)
-        if all_nonzero:
-            print(f"\n  [OK] All UI breakdown scores are non-zero!")
-        else:
-            zero_keys = [k for k in ui_keys if breakdown.get(k, 0) == 0]
-            print(f"\n  [WARN] Some UI keys still zero: {zero_keys}")
+        print("  ⚠ score_breakdown present (unexpected)")
 
-    return breakdown
+    return result
 
 
 if __name__ == '__main__':
     print("Testing JD scoring fixes with real-world job descriptions...\n")
 
-    b1 = test_jd("Data Scientist", JD_DATA_SCIENTIST)
-    b2 = test_jd("Full Stack Developer", JD_FULLSTACK)
+    r1 = test_jd("Data Scientist", JD_DATA_SCIENTIST)
+    r2 = test_jd("Full Stack Developer", JD_FULLSTACK)
 
     print(f"\n{'='*70}")
     print("  FINAL VERDICT")
     print(f"{'='*70}")
 
-    ui_keys = ['skill_score', 'capability_score', 'experience_score', 'domain_score']
-    ds_ok = all(b1.get(k, 0) > 0 for k in ui_keys)
-    fs_ok = all(b2.get(k, 0) > 0 for k in ui_keys)
-
-    if ds_ok and fs_ok:
-        print("\n  [PASS] Both JDs now produce non-zero breakdown scores!")
+    if isinstance(r1, dict) and isinstance(r2, dict):
+        print("\n  [PASS] Both JDs produced match results")
     else:
-        if not ds_ok:
-            print(f"\n  [FAIL] Data Scientist still has zero scores: {[k for k in ui_keys if b1.get(k,0)==0]}")
-        if not fs_ok:
-            print(f"\n  [FAIL] Full Stack still has zero scores: {[k for k in ui_keys if b2.get(k,0)==0]}")
+        print("\n  [FAIL] One or more JDs did not produce results")
 
     print()
