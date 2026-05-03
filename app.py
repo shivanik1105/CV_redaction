@@ -979,13 +979,30 @@ def process_source_cv(
 
 def _build_upload_success_payload(pipeline_result: Dict[str, Any], mode: str = 'synchronous') -> Dict[str, Any]:
     """Build a stable API response from a completed pipeline result."""
+    if not isinstance(pipeline_result, dict):
+        return {
+            'success': False,
+            'mode': mode,
+            'message': 'Invalid pipeline result',
+            'error': 'pipeline_result_not_object'
+        }
+
+    redacted_filename = pipeline_result.get('redacted_filename')
+    if not redacted_filename:
+        return {
+            'success': False,
+            'mode': mode,
+            'message': 'Pipeline result missing redacted filename',
+            'error': 'missing_redacted_filename'
+        }
+
     response = {
         'success': True,
         'mode': mode,
         'message': 'CV processed successfully',
-        'output_filename': pipeline_result['redacted_filename'],
+        'output_filename': redacted_filename,
         'preview': pipeline_result.get('preview', ''),
-        'download_url': url_for('download_file', filename=pipeline_result['redacted_filename'])
+        'download_url': url_for('download_file', filename=redacted_filename)
     }
 
     intelligence = pipeline_result.get('intelligence')
@@ -2216,6 +2233,14 @@ def upload_file():
             'llm_model': request.form.get('llm_model')
         })
 
+        # Upload CV must use the user's own LLM API key. Do not fall back to server defaults.
+        if not llm_runtime_config.get('api_key'):
+            return jsonify({
+                'success': False,
+                'error': 'LLM API key is required for Upload CV. Provide it in the LLM API Key field.',
+                'code': 'LLM_API_KEY_REQUIRED'
+            }), 400
+
         if async_requested:
             job_id = _create_async_upload_job(
                 upload_path=upload_path,
@@ -2300,58 +2325,70 @@ def upload_file():
 @app.route('/api/upload-jobs/<job_id>', methods=['GET'])
 def get_upload_job_status(job_id):
     """Poll asynchronous upload job status and retrieve final result when completed."""
-    # Try Supabase first
-    storage = get_supabase_storage()
-    job = None
-    
-    if storage:
-        try:
-            job = storage.get_upload_job(job_id)
-            if job:
-                logger.debug(f"Job {job_id} found in Supabase: status={job.get('status')}")
-        except Exception as e:
-            logger.warning(f"Failed to get job from Supabase: {e}")
-    
-    # Fallback to memory
-    if not job:
-        with _upload_jobs_lock:
-            _cleanup_upload_jobs_locked()
-            job = _upload_jobs.get(job_id)
-            if job:
-                logger.debug(f"Job {job_id} found in memory: status={job.get('status')}")
-    
-    if not job:
-        logger.warning(f"Job not found: {job_id}")
-        # Check if there are any jobs in memory for debugging
-        with _upload_jobs_lock:
-            memory_jobs = list(_upload_jobs.keys())
-        logger.warning(f"Available jobs in memory: {memory_jobs}")
-        return jsonify({'success': False, 'error': 'Job not found'}), 404
+    try:
+        # Try Supabase first
+        storage = get_supabase_storage()
+        job = None
 
-    status = job.get('status', 'queued')
-    base_payload = {
-        'success': status != 'failed',
-        'mode': 'asynchronous',
-        'job_id': job_id,
-        'status': status,
-        'submitted_at': job.get('submitted_at'),
-        'started_at': job.get('started_at'),
-        'completed_at': job.get('completed_at'),
-        'job_description_provided': bool(job.get('job_description_provided')),
-        'queue_size': _upload_job_queue.qsize()
-    }
+        if storage:
+            try:
+                job = storage.get_upload_job(job_id)
+                if job:
+                    logger.debug(f"Job {job_id} found in Supabase: status={job.get('status')}")
+            except Exception as e:
+                logger.warning(f"Failed to get job from Supabase: {e}")
 
-    if status == 'completed':
-        pipeline_result = job.get('pipeline_result') or {}
-        final_payload = _build_upload_success_payload(pipeline_result, mode='asynchronous')
-        final_payload.update(base_payload)
-        return jsonify(final_payload)
+        # Fallback to memory
+        if not job:
+            with _upload_jobs_lock:
+                _cleanup_upload_jobs_locked()
+                job = _upload_jobs.get(job_id)
+                if job:
+                    logger.debug(f"Job {job_id} found in memory: status={job.get('status')}")
 
-    if status == 'failed':
-        base_payload['error'] = job.get('error', 'Upload processing failed')
-        return jsonify(base_payload), 500
+        if not job:
+            logger.warning(f"Job not found: {job_id}")
+            with _upload_jobs_lock:
+                memory_jobs = list(_upload_jobs.keys())
+            logger.warning(f"Available jobs in memory: {memory_jobs}")
+            # Return 404 for correctness, but keep response JSON-shaped for UI.
+            return jsonify({'success': False, 'mode': 'asynchronous', 'job_id': job_id, 'status': 'not_found', 'error': 'Job not found'}), 404
 
-    return jsonify(base_payload)
+        status = job.get('status', 'queued')
+        base_payload = {
+            'success': status != 'failed',
+            'mode': 'asynchronous',
+            'job_id': job_id,
+            'status': status,
+            'submitted_at': job.get('submitted_at'),
+            'started_at': job.get('started_at'),
+            'completed_at': job.get('completed_at'),
+            'job_description_provided': bool(job.get('job_description_provided')),
+            'queue_size': _upload_job_queue.qsize()
+        }
+
+        if status == 'completed':
+            pipeline_result = job.get('pipeline_result') or {}
+            if isinstance(pipeline_result, str):
+                try:
+                    pipeline_result = json.loads(pipeline_result)
+                except Exception:
+                    pipeline_result = {'redacted_filename': None, 'error': 'pipeline_result_not_json'}
+
+            final_payload = _build_upload_success_payload(pipeline_result, mode='asynchronous')
+            final_payload.update(base_payload)
+            return jsonify(final_payload)
+
+        if status == 'failed':
+            base_payload['error'] = job.get('error', 'Upload processing failed')
+            # Return 200 so polling UI can handle job failure gracefully.
+            return jsonify(base_payload)
+
+        return jsonify(base_payload)
+
+    except Exception as e:
+        logger.error(f"Error retrieving upload job status for {job_id}: {e}", exc_info=True)
+        return jsonify({'success': False, 'mode': 'asynchronous', 'job_id': job_id, 'status': 'error', 'error': str(e)}), 500
 
 @app.route('/download/<filename>')
 def download_file(filename):

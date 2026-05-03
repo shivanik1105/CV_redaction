@@ -638,7 +638,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label>LLM API Key (Optional per-user key)</label>
+                        <label>LLM API Key (Required)</label>
                         <input id="uploadLLMApiKey" type="password" placeholder="Only sent with this request">
                     </div>
                 </div>
@@ -971,6 +971,12 @@
                 return;
             }
 
+            const apiKey = document.getElementById('uploadLLMApiKey').value.trim();
+            if (!apiKey) {
+                renderUploadStatus('LLM API key is required for Upload CV.', 'warning');
+                return;
+            }
+
             const button = document.getElementById('btnUploadCV');
             button.disabled = true;
             button.textContent = 'Uploading...';
@@ -984,11 +990,9 @@
 
                 const provider = document.getElementById('uploadLLMProvider').value;
                 const model = document.getElementById('uploadLLMModel').value.trim();
-                const apiKey = document.getElementById('uploadLLMApiKey').value.trim();
-
                 if (provider) formData.append('llm_provider', provider);
                 if (model) formData.append('llm_model', model);
-                if (apiKey) formData.append('llm_api_key', apiKey);
+                formData.append('llm_api_key', apiKey);
 
                 renderUploadStatus('Submitting upload request...', 'info');
                 const response = await fetch('/upload', { method: 'POST', body: formData });
