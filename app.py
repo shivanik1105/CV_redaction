@@ -1,4 +1,4 @@
-﻿"""
+"""
 Flask Web UI for CV Redaction Pipeline with Intelligence Extraction
 Allows users to upload CVs, redact PII, extract intelligence, and search candidates
 Supports both Supabase and local JSON-based storage with automatic fallback
@@ -939,9 +939,10 @@ def process_source_cv(
         with open(existing_redacted_path, 'r', encoding='utf-8') as f:
             redacted_text = f.read()
     else:
-        safe_name = secure_filename(original_filename)
         source_hash = _sha256_for_file(cv_path)[:16]
-        redacted_filename = f"REDACTED_{source_hash}_{safe_name}.txt"
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        # Use only hash and timestamp - NO original filename for privacy
+        redacted_filename = f"REDACTED_{timestamp}_{source_hash}.txt"
         redacted_path = Path(app.config['OUTPUT_FOLDER']) / redacted_filename
 
         redaction_lock = _get_named_lock(_redaction_lock_registry, source_hash)
@@ -1225,12 +1226,26 @@ def _extract_min_years_requirement(job_description: str) -> Optional[float]:
 
 
 _KNOWN_TECH_SKILLS = {
+    # Languages
     'python', 'typescript', 'javascript', 'java', 'c++', 'c#', 'go', 'golang', 'rust', 'php',
+    'ruby', 'scala', 'kotlin', 'swift', 'r',
+    # Web frameworks
     'django', 'flask', 'fastapi', 'node', 'nodejs', 'react', 'angular', 'vue',
-    'sql', 'postgresql', 'mysql', 'mongodb', 'redis', 'elasticsearch',
-    'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'terraform',
+    'next.js', 'express', 'spring', 'spring boot', '.net',
+    # Databases
+    'sql', 'postgresql', 'mysql', 'mongodb', 'redis', 'elasticsearch', 'nosql',
+    'cassandra', 'dynamodb', 'sqlite', 'oracle',
+    # Cloud / DevOps
+    'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'terraform', 'jenkins', 'github',
+    'git', 'ci/cd',
+    # Data Science / ML
     'pandas', 'numpy', 'scikit-learn', 'spark', 'airflow', 'mlflow',
-    'machine learning', 'data science', 'system design', 'rest api', 'microservices'
+    'tensorflow', 'pytorch', 'keras', 'power bi', 'tableau',
+    'machine learning', 'deep learning', 'data science', 'nlp',
+    # Architecture
+    'system design', 'rest api', 'restful', 'microservices', 'graphql',
+    # Other
+    'kafka', 'rabbitmq', 'linux', 'nginx', 'apache',
 }
 
 
@@ -1272,6 +1287,64 @@ def _extract_critical_jd_skills(job_description: str) -> List[str]:
         deduped.append(key)
 
     return deduped[:8]
+
+
+def _extract_domain_terms_from_jd(job_description: str) -> List[str]:
+    """Dynamically extract domain/industry terms from a JD for matching against candidate domains.
+
+    Instead of a tiny hardcoded list, this scans for a comprehensive set of domain
+    phrases that appear in real-world JDs and returns only those present.
+    """
+    if not job_description:
+        return []
+
+    jd_lower = job_description.lower()
+
+    # Comprehensive domain vocabulary covering common industry sectors
+    _DOMAIN_VOCABULARY = [
+        # Data & AI
+        'data science', 'data analytics', 'data engineering', 'machine learning',
+        'deep learning', 'artificial intelligence', 'natural language processing',
+        'computer vision', 'big data', 'business intelligence',
+        # Web / Software
+        'web development', 'frontend', 'front-end', 'backend', 'back-end',
+        'full stack', 'full-stack', 'software engineering', 'software development',
+        # Mobile
+        'mobile development', 'android', 'ios',
+        # Cloud & Infra
+        'cloud', 'cloud computing', 'devops', 'site reliability',
+        'infrastructure', 'platform engineering',
+        # Databases
+        'database', 'data management', 'data warehousing', 'etl',
+        # Security
+        'cybersecurity', 'information security', 'network security',
+        # Industry verticals
+        'fintech', 'healthcare', 'e-commerce', 'ecommerce', 'banking',
+        'insurance', 'automotive', 'embedded systems', 'iot',
+        'telecommunications', 'media', 'gaming', 'edtech', 'logistics',
+        'supply chain', 'manufacturing', 'retail', 'real estate',
+        # General tech domains
+        'api development', 'microservices', 'distributed systems',
+        'enterprise', 'saas', 'erp', 'crm',
+        'testing', 'quality assurance', 'automation',
+        'ui/ux', 'user experience', 'product development',
+        'blockchain', 'web3',
+        # Python ecosystem common in JDs
+        'python', 'analytics',
+    ]
+
+    found = [term for term in _DOMAIN_VOCABULARY if term in jd_lower]
+
+    # Deduplicate overlapping terms (e.g. "data science" and "data")
+    deduped: List[str] = []
+    seen = set()
+    for term in found:
+        key = term.strip()
+        if key not in seen:
+            seen.add(key)
+            deduped.append(key)
+
+    return deduped
 
 
 def _extract_target_seniority(job_description: str) -> Optional[int]:
@@ -1349,10 +1422,26 @@ def _capability_focus_score(jd_text: str, strength_text: str) -> float:
 
     focus_map = {
         'case_study': ['case study', 'hypothesis', 'ab test', 'experiment', 'analytics', 'business problem'],
-        'problem_solving': ['problem solving', 'complex problem', 'reasoning', 'debugging'],
+        'problem_solving': ['problem solving', 'complex problem', 'reasoning', 'debugging', 'troubleshooting'],
         'dsa': ['dsa', 'data structure', 'algorithm', 'leetcode', 'competitive programming'],
-        'ml_data': ['machine learning', 'modeling', 'statistics', 'data science', 'feature engineering'],
-        'backend_platform': ['backend', 'api', 'microservice', 'system design', 'scalability']
+        'ml_data': ['machine learning', 'deep learning', 'modeling', 'statistics', 'data science',
+                    'feature engineering', 'predictive model', 'neural network', 'nlp', 'computer vision'],
+        'backend_platform': ['backend', 'api', 'microservice', 'system design', 'scalability',
+                             'restful', 'rest api', 'server-side', 'server side'],
+        'frontend_ui': ['frontend', 'front-end', 'front end', 'ui development', 'user interface',
+                        'responsive design', 'single page', 'spa', 'component', 'css', 'html'],
+        'fullstack': ['full stack', 'full-stack', 'fullstack', 'end-to-end', 'end to end'],
+        'data_viz': ['data visualization', 'dashboard', 'power bi', 'tableau', 'reporting',
+                     'business intelligence', 'bi tool', 'charts', 'grafana'],
+        'devops_infra': ['devops', 'ci/cd', 'ci cd', 'pipeline', 'infrastructure', 'deployment',
+                         'containerization', 'orchestration', 'monitoring'],
+        'database': ['database', 'sql', 'nosql', 'data modeling', 'schema design',
+                     'query optimization', 'data extraction', 'etl', 'data pipeline'],
+        'cloud': ['cloud', 'aws', 'azure', 'gcp', 'serverless', 'lambda', 'cloud platform'],
+        'mobile': ['mobile', 'android', 'ios', 'react native', 'flutter', 'swift', 'kotlin'],
+        'security': ['security', 'authentication', 'authorization', 'encryption', 'vulnerability',
+                     'penetration testing', 'compliance'],
+        'leadership': ['leadership', 'mentoring', 'team management', 'stakeholder', 'cross-functional']
     }
 
     jd_hits = []
@@ -1379,10 +1468,19 @@ def compute_semantic_candidate_match(
     Compute semantic similarity between candidate and JD using vector embeddings.
     This provides TRUE contextual understanding, not just keyword matching.
     """
+    import json
     from vector_search import get_vector_search_engine
     
     # Get candidate embedding
     candidate_embedding = candidate.get('embedding')
+    
+    # Parse embedding if it's stored as JSON string
+    if candidate_embedding and isinstance(candidate_embedding, str):
+        try:
+            candidate_embedding = json.loads(candidate_embedding)
+        except Exception as e:
+            logger.warning(f"Could not parse embedding string: {e}")
+            candidate_embedding = None
     
     if not candidate_embedding:
         # Generate embedding from candidate data (NO fallback to keyword matching)
@@ -1450,6 +1548,69 @@ def compute_semantic_candidate_match(
         else "Semantic contextual match"
     )
     
+    # --- Compute multi-dimensional sub-scores for UI breakdown ---
+    # Skill score: JD skill terms matched against candidate skills
+    jd_tokens = set(_tokenize_for_matching(job_description))
+    jd_skill_terms = [token for token in jd_tokens if len(token) >= 3]
+    if jd_skill_terms:
+        exact_skill_hits = sum(1 for term in jd_skill_terms if any(term == skill for skill in all_skills_lower))
+        fuzzy_skill_hits = sum(1 for term in jd_skill_terms if any(term in skill for skill in all_skills_lower))
+        skill_score = round(((2 * exact_skill_hits + fuzzy_skill_hits) / (3 * len(jd_skill_terms))) * 100.0, 2)
+        skill_score = min(skill_score, 100.0)
+    else:
+        skill_score = critical_coverage
+
+    # Capability score: how well candidate strengths match JD role intent
+    strength_bits = [
+        candidate.get('verdict_reason') or '',
+        " ".join(candidate.get('key_strengths') or []),
+        " ".join(candidate.get('matched_requirements') or []),
+        " ".join([str(s) for s in (candidate.get('core_technical_skills') or [])]),
+        " ".join([str(s) for s in (candidate.get('secondary_technical_skills') or [])]),
+        candidate.get('cleaned_narrative') or '',
+    ]
+    fitment = candidate.get('fitment_analysis') or []
+    if isinstance(fitment, list):
+        for entry in fitment:
+            if isinstance(entry, dict):
+                strength_bits.append(str(entry.get('category') or ''))
+                strength_bits.append(str(entry.get('candidate_profile') or ''))
+    strength_text = " ".join(strength_bits)
+    capability_score = _capability_focus_score(job_description, strength_text)
+
+    # Experience score: years match against JD requirement
+    min_years = _extract_min_years_requirement(job_description)
+    years = candidate.get('years_experience')
+    if years is None:
+        years = candidate.get('years_of_experience')
+    years = float(years or 0)
+    if min_years is None:
+        experience_score = min(100.0, 45.0 + (years * 5.0)) if years > 0 else 25.0
+    elif years >= min_years:
+        experience_score = min(100.0, 80.0 + ((years - min_years) * 4.0))
+    else:
+        experience_score = max(0.0, (years / max(min_years, 0.5)) * 55.0)
+
+    # Domain score: dynamically extract domain terms from JD instead of hardcoded list
+    domain_text = " ".join(
+        [
+            str(candidate.get('primary_domain') or ''),
+            " ".join([str(d) for d in (candidate.get('secondary_domains') or [])]),
+            " ".join([str(d) for d in (candidate.get('domain_expertise') or [])]),
+            " ".join([str(s).lower() for s in (candidate.get('core_technical_skills') or [])]),
+            " ".join([str(s).lower() for s in (candidate.get('secondary_technical_skills') or [])]),
+            candidate.get('cleaned_narrative') or '',
+        ]
+    ).lower()
+    jd_domain_terms = _extract_domain_terms_from_jd(job_description)
+    if not jd_domain_terms:
+        domain_score = 45.0
+    else:
+        domain_score = round(
+            (sum(1 for term in jd_domain_terms if term in domain_text) / len(jd_domain_terms)) * 100.0,
+            2
+        )
+
     return {
         'match_percentage': final_score,
         'semantic_score': semantic_score,
@@ -1465,7 +1626,11 @@ def compute_semantic_candidate_match(
         'score_breakdown': {
             'semantic_score': semantic_score,
             'critical_skill_coverage': critical_coverage,
-            'final_blended_score': final_score
+            'final_blended_score': final_score,
+            'skill_score': skill_score,
+            'capability_score': capability_score,
+            'experience_score': round(experience_score, 2),
+            'domain_score': domain_score
         }
     }
 
@@ -1548,10 +1713,12 @@ def compute_intelligent_candidate_match(candidate: Dict[str, Any], job_descripti
             str(candidate.get('primary_domain') or ''),
             " ".join([str(d) for d in (candidate.get('secondary_domains') or [])]),
             " ".join([str(d) for d in (candidate.get('domain_expertise') or [])]),
+            " ".join([str(s).lower() for s in (candidate.get('core_technical_skills') or [])]),
+            " ".join([str(s).lower() for s in (candidate.get('secondary_technical_skills') or [])]),
+            candidate.get('cleaned_narrative') or '',
         ]
     ).lower()
-    domain_terms = ['data science', 'analytics', 'machine learning', 'backend', 'platform', 'cloud', 'python']
-    jd_domain_hits = [term for term in domain_terms if term in jd_text.lower()]
+    jd_domain_hits = _extract_domain_terms_from_jd(jd_text)
     if not jd_domain_hits:
         domain_score = 45.0
     else:
@@ -1752,6 +1919,50 @@ def semantic_search_page():
     """Render the semantic search page"""
     return render_template('semantic_search.html')
 
+def _check_duplicate_upload(file_content: bytes, filename: str) -> dict:
+    """
+    Check if this file was already uploaded by computing its hash.
+    Returns dict with 'is_duplicate', 'existing_candidate', 'hash'
+    """
+    import hashlib
+    
+    # Compute file hash
+    file_hash = hashlib.sha256(file_content).hexdigest()
+    
+    # Check if this hash exists in database
+    storage = get_supabase_storage()
+    if not storage:
+        # If Supabase is down, allow upload (better than blocking)
+        return {'is_duplicate': False, 'hash': file_hash}
+    
+    try:
+        # Query for existing candidate with this hash
+        response = storage.client.table('cv_intelligence').select(
+            'anonymized_id, created_at, years_experience, primary_domain, core_technical_skills'
+        ).eq('original_cv_hash', file_hash).limit(1).execute()
+        
+        if response.data and len(response.data) > 0:
+            existing = response.data[0]
+            return {
+                'is_duplicate': True,
+                'hash': file_hash,
+                'existing_candidate': {
+                    'anonymized_id': existing.get('anonymized_id'),
+                    'created_at': existing.get('created_at'),
+                    'years_experience': existing.get('years_experience'),
+                    'primary_domain': existing.get('primary_domain'),
+                    'core_skills': existing.get('core_technical_skills', [])[:3]
+                }
+            }
+        
+        return {'is_duplicate': False, 'hash': file_hash}
+        
+    except Exception as e:
+        logger.warning(f"Duplicate check failed: {e}")
+        # On error, allow upload (better than blocking)
+        return {'is_duplicate': False, 'hash': file_hash}
+
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     """Handle file upload; queue async processing by default and support optional sync mode."""
@@ -1769,6 +1980,34 @@ def upload_file():
         # Check if file is allowed
         if not allowed_file(file.filename):
             return jsonify({'error': 'Invalid file type. Please upload PDF or DOCX files'}), 400
+        
+        # Read file content for duplicate check
+        file_content = file.read()
+        file.seek(0)  # Reset file pointer for later save
+        
+        # Check for duplicates (unless force_reprocess is enabled)
+        force_reprocess = _parse_bool(request.form.get('force_reprocess'), default=False)
+        
+        if not force_reprocess:
+            duplicate_check = _check_duplicate_upload(file_content, file.filename)
+            
+            if duplicate_check['is_duplicate']:
+                existing = duplicate_check['existing_candidate']
+                logger.info(f"Duplicate upload detected: {file.filename} -> {existing['anonymized_id']}")
+                
+                return jsonify({
+                    'success': False,
+                    'error': 'Duplicate CV detected',
+                    'is_duplicate': True,
+                    'existing_candidate': {
+                        'anonymized_id': existing['anonymized_id'],
+                        'uploaded_at': existing.get('created_at', 'Unknown')[:19],
+                        'years_experience': existing.get('years_experience', 'N/A'),
+                        'primary_domain': existing.get('primary_domain', 'N/A'),
+                        'core_skills': existing.get('core_skills', [])
+                    },
+                    'message': f"This CV was already uploaded as {existing['anonymized_id']}. Use 'force_reprocess' to upload anyway."
+                }), 409  # 409 Conflict
         
         # Save uploaded file
         filename = secure_filename(file.filename)

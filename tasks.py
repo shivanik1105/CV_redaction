@@ -125,9 +125,10 @@ def process_cv_task(
         
         redacted_text, redaction_stats = redact_cv_text(cv_text)
         
-        # Save redacted CV
+        # Save redacted CV with anonymous filename (no original filename for privacy)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        redacted_filename = f"REDACTED_{timestamp}_{original_filename}.txt"
+        # Use only job_id and timestamp - NO original filename
+        redacted_filename = f"REDACTED_{timestamp}_{job_id[:8]}.txt"
         output_folder = Path(os.getenv('OUTPUT_FOLDER', 'redacted_output'))
         output_folder.mkdir(exist_ok=True)
         redacted_path = output_folder / redacted_filename

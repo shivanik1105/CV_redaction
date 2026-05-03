@@ -627,6 +627,13 @@
                     </label>
                 </div>
 
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="uploadForceReprocess">
+                        Force Reprocess (upload even if duplicate detected)
+                    </label>
+                </div>
+
                 <div class="upload-meta-grid">
                     <div class="form-group">
                         <label>LLM Provider (Optional per-user override)</label>
@@ -988,6 +995,7 @@
                 formData.append('cv_file', file);
                 formData.append('job_description', document.getElementById('uploadJD').value.trim());
                 formData.append('async', document.getElementById('uploadAsync').checked ? 'true' : 'false');
+                formData.append('force_reprocess', document.getElementById('uploadForceReprocess').checked ? 'true' : 'false');
 
                 const provider = document.getElementById('uploadLLMProvider').value;
                 const model = document.getElementById('uploadLLMModel').value.trim();
@@ -1000,6 +1008,25 @@
                 renderUploadStatus('Submitting upload request...', 'info');
                 const response = await fetch('/upload', { method: 'POST', body: formData });
                 const data = await response.json();
+
+                // Handle duplicate detection (409 Conflict)
+                if (response.status === 409 && data.is_duplicate) {
+                    const existing = data.existing_candidate;
+                    const skills = existing.core_skills ? existing.core_skills.join(', ') : 'N/A';
+                    
+                    renderUploadStatus(
+                        `⚠️ Duplicate CV Detected!\n\n` +
+                        `This CV was already uploaded:\n` +
+                        `• ID: ${existing.anonymized_id}\n` +
+                        `• Uploaded: ${existing.uploaded_at}\n` +
+                        `• Experience: ${existing.years_experience} years\n` +
+                        `• Domain: ${existing.primary_domain}\n` +
+                        `• Skills: ${skills}\n\n` +
+                        `To upload anyway, enable "Force Reprocess" option.`,
+                        'warning'
+                    );
+                    return;
+                }
 
                 if (!response.ok || !data.success) {
                     throw new Error(data.error || 'Upload failed');
