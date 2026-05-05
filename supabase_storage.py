@@ -35,6 +35,8 @@ def _as_clean_text(value: Any, max_len: int = 1200) -> str:
     text = str(value).strip()
     if not text:
         return ""
+    # Postgres TEXT cannot store NUL bytes; strip to avoid 22P05 errors.
+    text = text.replace("\x00", "")
     text = re.sub(r"\s+", " ", text)
     return text[:max_len]
 

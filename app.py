@@ -13,6 +13,9 @@ import time
 import threading
 import queue
 import uuid
+import io
+import zipfile
+import mimetypes
 from typing import Any, Dict, List, Optional
 from flask import Flask, render_template, request, send_file, jsonify, url_for
 from werkzeug.utils import secure_filename
@@ -33,6 +36,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # Import our pipeline
 from universal_pipeline_engine import PipelineOrchestrator
 from cv_intelligence_extractor import CVIntelligenceExtractor
+from filename_mapping_manager import FilenameMappingManager
 
 # Import Supabase storage (optional)
 try:
@@ -106,6 +110,215 @@ _DEFAULT_PROFILE_JD = (
     "General candidate profiling for recruiter search: extract skills, years of experience, "
     "seniority level, domain expertise, strengths, and evidence-based summary for ranking."
 )
+
+_filename_mapping_manager = FilenameMappingManager(local_mapping_file=str(_RUNTIME_DATA_ROOT / 'filename_mappings.json'))
+
+
+def _get_filename_mapping(anonymized_id: str, storage) -> Optional[Dict[str, Any]]:
+    """Resolve filename mapping for a candidate from Supabase or local fallback."""
+    try:
+        return _filename_mapping_manager.get_mapping(anonymized_id=anonymized_id, supabase_storage=storage)
+    except Exception as e:
+        logger.warning(f"Failed to resolve filename mapping for {anonymized_id}: {e}")
+        return None
+
+
+def _find_latest_upload_for_original_filename(original_filename: str) -> Optional[Path]:
+    """Find the most recently uploaded file matching an original filename."""
+    if not original_filename:
+        return None
+
+    raw_basename = Path(original_filename).name
+    safe_original = secure_filename(raw_basename)
+    if not safe_original:
+        return None
+
+    upload_dir = Path(app.config['UPLOAD_FOLDER'])
+    candidates = list(upload_dir.glob(f"*_{safe_original}"))
+    if not candidates:
+        direct = upload_dir / safe_original
+        if direct.exists():
+            return direct
+        return None
+
+    # Pick the newest by mtime
+    candidates.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+    return candidates[0]
+
+
+def _find_original_cv_anywhere(original_filename: str) -> Optional[Path]:
+    """Best-effort lookup for original CV across known runtime folders."""
+    upload_hit = _find_latest_upload_for_original_filename(original_filename)
+    if upload_hit and upload_hit.exists():
+        return upload_hit
+
+    raw_basename = Path(original_filename).name
+    safe_original = secure_filename(raw_basename)
+    if not safe_original:
+        return None
+
+    # Common local test-data locations.
+    search_roots = [
+        _RUNTIME_DATA_ROOT / 'archive' / 'samples',
+        _RUNTIME_DATA_ROOT / 'samples',
+    ]
+
+    best: Optional[Path] = None
+    best_mtime = -1.0
+    for root in search_roots:
+        if not root.exists():
+            continue
+
+        try:
+            for path in root.rglob('*'):
+                if not path.is_file():
+                    continue
+                if path.suffix.lower() not in {'.pdf', '.doc', '.docx'}:
+                    continue
+                if path.name == raw_basename or secure_filename(path.name) == safe_original:
+                    mtime = path.stat().st_mtime
+                    if mtime > best_mtime:
+                        best = path
+                        best_mtime = mtime
+        except Exception:
+            continue
+
+    return best
+
+
+def _supabase_get_original_filenames(storage, anonymized_ids: List[str]) -> Dict[str, Optional[str]]:
+    """Best-effort batch lookup of original filenames from Supabase cv_intelligence."""
+    if not storage or not anonymized_ids:
+        return {}
+
+    ids = [str(x).strip() for x in anonymized_ids if str(x).strip()]
+    if not ids:
+        return {}
+
+    def _query():
+        try:
+            resp = (
+                storage.client.table('cv_intelligence')
+                .select('anonymized_id, original_filename')
+                .in_('anonymized_id', ids)
+                .execute()
+            )
+        except Exception as e:
+            # Some deployments may not have original_filename column.
+            msg = str(e)
+            if "Could not find the 'original_filename' column" in msg or 'original_filename' in msg:
+                logger.warning("Supabase cv_intelligence.original_filename not available; falling back to local-only resolution")
+                return {}
+            raise
+
+        rows = resp.data or []
+        result: Dict[str, Optional[str]] = {}
+        for row in rows:
+            anon = row.get('anonymized_id')
+            if not anon:
+                continue
+            result[str(anon)] = row.get('original_filename')
+        return result
+
+    # Use timeout wrapper for network safety; query itself handles schema mismatches.
+    return try_supabase_operation(_query, fallback_result={}, timeout_seconds=10) or {}
+
+
+def _redact_cv_text_only(cv_path: Path) -> str:
+    """Run redaction pipeline only (no LLM) and return redacted text."""
+    orchestrator = PipelineOrchestrator(config_dir='config')
+    redacted_text, _profile = orchestrator.process_cv(str(cv_path))
+    return redacted_text
+
+
+def _parse_archive_source_rel_path(best_knowledge_summary: Any) -> Optional[str]:
+    """Extract archive relative path from strings like 'Source: foo/bar.pdf'."""
+    if not best_knowledge_summary:
+        return None
+    text = str(best_knowledge_summary).strip()
+    if not text:
+        return None
+    match = re.search(r"\bSource:\s*([^\r\n]+)", text)
+    if not match:
+        return None
+    rel_path = match.group(1).strip().strip('"\'')
+    if not rel_path:
+        return None
+    # Normalize slashes.
+    rel_path = rel_path.replace('\\', '/')
+    # Prevent traversal.
+    rel_path = rel_path.lstrip('/').replace('..', '')
+    return rel_path or None
+
+
+def _safe_join_under(root: Path, rel_path: str) -> Optional[Path]:
+    """Resolve rel_path under root; return None if it escapes root."""
+    if not rel_path:
+        return None
+    candidate = (root / rel_path).resolve()
+    try:
+        root_resolved = root.resolve()
+        if str(candidate).startswith(str(root_resolved)):
+            return candidate
+    except Exception:
+        return None
+    return None
+
+
+def _supabase_get_candidate_fields(storage, anonymized_ids: List[str]) -> Dict[str, Dict[str, Any]]:
+    """Batch fetch a few fields needed for downloads (cleaned_text, best_knowledge_summary, etc.)."""
+    if not storage or not anonymized_ids:
+        return {}
+    ids = [str(x).strip() for x in anonymized_ids if str(x).strip()]
+    if not ids:
+        return {}
+
+    def _query():
+        resp = (
+            storage.client.table('cv_intelligence')
+            .select('anonymized_id, cleaned_text, best_knowledge_summary, original_filename')
+            .in_('anonymized_id', ids)
+            .execute()
+        )
+        rows = resp.data or []
+        result: Dict[str, Dict[str, Any]] = {}
+        for row in rows:
+            anon = row.get('anonymized_id')
+            if not anon:
+                continue
+            result[str(anon)] = row
+        return result
+
+    return try_supabase_operation(_query, fallback_result={}, timeout_seconds=12) or {}
+
+
+def _fallback_filenames_from_local_intelligence(anonymized_id: str) -> Dict[str, Optional[str]]:
+    """Best-effort local fallback to recover filenames from intelligence JSON."""
+    result = {
+        'original_filename': None,
+        'redacted_filename': None
+    }
+
+    if not anonymized_id:
+        return result
+
+    intelligence_dir = Path(app.config['INTELLIGENCE_FOLDER'])
+    try:
+        for json_file in intelligence_dir.glob('*_intelligence.json'):
+            try:
+                with open(json_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                if data.get('anonymized_id') != anonymized_id:
+                    continue
+                result['original_filename'] = data.get('original_filename')
+                result['redacted_filename'] = data.get('redacted_filename')
+                return result
+            except Exception:
+                continue
+    except Exception as e:
+        logger.debug(f"Local intelligence fallback scan failed: {e}")
+
+    return result
 
 
 def _get_named_lock(lock_registry: Dict[str, threading.Lock], key: str) -> threading.Lock:
@@ -2408,6 +2621,240 @@ def download_file(filename):
         logger.error(f"Error downloading file: {str(e)}", exc_info=True)
         return jsonify({'error': f'Error downloading file: {str(e)}'}), 500
 
+
+@app.route('/download/original/<anonymized_id>')
+def download_original_cv(anonymized_id: str):
+    """Download the original uploaded CV for a candidate by anonymized ID."""
+    try:
+        if not anonymized_id:
+            return jsonify({'error': 'anonymized_id required'}), 400
+
+        storage = get_supabase_storage()
+        mapping = _get_filename_mapping(anonymized_id=anonymized_id, storage=storage)
+        original_filename = (mapping or {}).get('original_filename')
+
+        # Fallback to candidate record when mapping is missing
+        if not original_filename and storage:
+            raw_candidate = try_supabase_operation(
+                lambda: storage.get_candidate(anonymized_id),
+                fallback_result=None,
+                timeout_seconds=10
+            )
+            if isinstance(raw_candidate, dict):
+                original_filename = raw_candidate.get('original_filename')
+
+        if not original_filename:
+            fallback = _fallback_filenames_from_local_intelligence(anonymized_id)
+            original_filename = fallback.get('original_filename')
+
+        if not original_filename:
+            return jsonify({'error': f'Original filename not found for {anonymized_id}'}), 404
+
+        upload_path = _find_original_cv_anywhere(original_filename)
+
+        # If we still can't find it by name, try archive path derived from Supabase ingest metadata.
+        if (not upload_path or not upload_path.exists()) and storage:
+            raw_candidate = try_supabase_operation(
+                lambda: storage.get_candidate(anonymized_id),
+                fallback_result=None,
+                timeout_seconds=10
+            )
+            if isinstance(raw_candidate, dict):
+                rel_path = _parse_archive_source_rel_path(raw_candidate.get('best_knowledge_summary'))
+                if rel_path:
+                    archive_root = _RUNTIME_DATA_ROOT / 'archive' / 'samples'
+                    archive_candidate = _safe_join_under(archive_root, rel_path)
+                    if archive_candidate and archive_candidate.exists():
+                        upload_path = archive_candidate
+
+        if not upload_path or not upload_path.exists():
+            return jsonify({
+                'error': f'Original CV file not found on server for {anonymized_id}',
+                'anonymized_id': anonymized_id,
+                'expected_original_filename': Path(original_filename).name,
+                'hint': 'This server can only open originals that exist on disk. For archive-ingested candidates, ensure archive/samples is present on this machine; otherwise upload the CV again on this instance.'
+            }), 404
+
+        ext = upload_path.suffix.lower()
+        guessed_mime, _ = mimetypes.guess_type(str(upload_path))
+        mimetype = guessed_mime or 'application/octet-stream'
+        if ext == '.pdf':
+            mimetype = 'application/pdf'
+        elif ext == '.docx':
+            mimetype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        elif ext == '.doc':
+            mimetype = 'application/msword'
+
+        # PDFs should open inline in the browser; user can still download from the viewer.
+        if ext == '.pdf':
+            response = send_file(
+                str(upload_path),
+                as_attachment=False,
+                mimetype=mimetype
+            )
+            response.headers['Content-Disposition'] = f'inline; filename="{Path(original_filename).name}"'
+            response.headers['X-CV-Inline'] = '1'
+            response.headers['X-CV-Ext'] = ext
+            return response
+
+        response = send_file(
+            str(upload_path),
+            as_attachment=True,
+            download_name=Path(original_filename).name,
+            mimetype=mimetype
+        )
+        response.headers['X-CV-Ext'] = ext
+        return response
+
+    except Exception as e:
+        logger.error(f"Error downloading original CV for {anonymized_id}: {e}", exc_info=True)
+        return jsonify({'error': f'Error downloading original CV: {str(e)}'}), 500
+
+
+@app.route('/api/download-redacted-zip', methods=['POST'])
+def download_redacted_zip():
+    """Download a single ZIP containing redacted CVs for the provided anonymized IDs."""
+    try:
+        payload = request.get_json() or {}
+        candidate_ids = payload.get('candidate_ids')
+        if not isinstance(candidate_ids, list) or not candidate_ids:
+            return jsonify({'error': 'candidate_ids (non-empty list) required'}), 400
+
+        normalized_ids = []
+        for raw in candidate_ids:
+            if not raw:
+                continue
+            text = str(raw).strip()
+            if text:
+                normalized_ids.append(text)
+
+        if not normalized_ids:
+            return jsonify({'error': 'candidate_ids contained no valid IDs'}), 400
+
+        storage = get_supabase_storage()
+        output_dir = Path(app.config['OUTPUT_FOLDER'])
+
+        # Batch pull candidate fields from Supabase (fast path for redacted text).
+        supabase_candidates = _supabase_get_candidate_fields(storage, normalized_ids)
+        supabase_originals = {k: v.get('original_filename') for k, v in supabase_candidates.items() if isinstance(v, dict)}
+
+        missing: List[Dict[str, Any]] = []
+        zip_items: List[Dict[str, Any]] = []
+        redaction_errors: List[Dict[str, Any]] = []
+
+        for anonymized_id in normalized_ids:
+            # 1) Prefer an existing cached redaction named by anonymized_id.
+            cached_by_id = output_dir / f"{anonymized_id}.txt"
+            if cached_by_id.exists():
+                zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': cached_by_id})
+                continue
+
+            # 1b) If Supabase has cleaned_text, use it directly (no local files needed).
+            supa_row = supabase_candidates.get(anonymized_id) if isinstance(supabase_candidates, dict) else None
+            supa_text = supa_row.get('cleaned_text') if isinstance(supa_row, dict) else None
+            if isinstance(supa_text, str) and supa_text.strip():
+                try:
+                    with open(cached_by_id, 'w', encoding='utf-8') as f:
+                        f.write(supa_text)
+                    zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': cached_by_id})
+                    continue
+                except Exception as e:
+                    redaction_errors.append({'anonymized_id': anonymized_id, 'reason': f'cache_write_failed:{e}'})
+
+            # 2) Try mapping -> redacted filename (legacy).
+            mapping = _get_filename_mapping(anonymized_id=anonymized_id, storage=storage)
+            mapped_redacted = (mapping or {}).get('anonymized_filename')
+            if mapped_redacted:
+                mapped_redacted = Path(str(mapped_redacted)).name
+                mapped_path = output_dir / mapped_redacted
+                if mapped_path.exists():
+                    zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': mapped_path})
+                    continue
+
+            # 3) Generate missing redaction from original CV (uploads/ or archive/samples/).
+            original_filename = (mapping or {}).get('original_filename') or supabase_originals.get(anonymized_id)
+            if not original_filename:
+                fallback = _fallback_filenames_from_local_intelligence(anonymized_id)
+                original_filename = fallback.get('original_filename')
+
+            if not original_filename:
+                missing.append({'anonymized_id': anonymized_id, 'reason': 'missing_original_filename'})
+                continue
+
+            original_path = _find_original_cv_anywhere(original_filename)
+
+            # For archive-ingested candidates, prefer rel_path from Supabase metadata.
+            if (not original_path or not original_path.exists()) and isinstance(supa_row, dict):
+                rel_path = _parse_archive_source_rel_path(supa_row.get('best_knowledge_summary'))
+                if rel_path:
+                    archive_root = _RUNTIME_DATA_ROOT / 'archive' / 'samples'
+                    archive_candidate = _safe_join_under(archive_root, rel_path)
+                    if archive_candidate and archive_candidate.exists():
+                        original_path = archive_candidate
+            if not original_path or not original_path.exists():
+                missing.append({'anonymized_id': anonymized_id, 'reason': 'original_file_missing_on_server'})
+                continue
+
+            try:
+                source_hash = _sha256_for_file(original_path)[:16]
+                redaction_lock = _get_named_lock(_redaction_lock_registry, source_hash)
+                with redaction_lock:
+                    # Another request may have generated it while we waited.
+                    if cached_by_id.exists():
+                        zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': cached_by_id})
+                        continue
+
+                    redacted_text = _redact_cv_text_only(original_path)
+                    if not redacted_text:
+                        raise ValueError('empty_redacted_text')
+                    # Cache as anonymized_id-named file for deterministic bulk downloads.
+                    with open(cached_by_id, 'w', encoding='utf-8') as f:
+                        f.write(redacted_text)
+
+                zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': cached_by_id})
+            except Exception as e:
+                redaction_errors.append({'anonymized_id': anonymized_id, 'reason': f'redaction_failed:{e}'})
+
+        if not zip_items:
+            return jsonify({
+                'error': 'No redacted CVs could be generated or resolved for download',
+                'missing': missing,
+                'redaction_errors': redaction_errors
+            }), 404
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', compression=zipfile.ZIP_DEFLATED) as zipf:
+            for item in zip_items:
+                anonymized_id = item['anonymized_id']
+                path = item.get('path')
+                arcname = f"{anonymized_id}.txt"
+                zipf.write(str(path), arcname=arcname)
+
+            missing_all = []
+            missing_all.extend(missing)
+            missing_all.extend(redaction_errors)
+            if missing_all:
+                missing_lines = [
+                    'Some candidates could not be included in this ZIP:',
+                    ''
+                ]
+                for item in missing_all:
+                    missing_lines.append(f"- {item.get('anonymized_id')}: {item.get('reason')}")
+                zipf.writestr('MISSING.txt', "\n".join(missing_lines) + "\n")
+
+        zip_buffer.seek(0)
+        download_name = 'recommended_redacted_cvs.zip'
+        return send_file(
+            zip_buffer,
+            as_attachment=True,
+            download_name=download_name,
+            mimetype='application/zip'
+        )
+
+    except Exception as e:
+        logger.error(f"Error creating redacted ZIP: {e}", exc_info=True)
+        return jsonify({'error': f'Error creating ZIP: {str(e)}'}), 500
+
 @app.route('/health')
 def health():
     """Health check endpoint with connection status"""
@@ -2990,7 +3437,13 @@ def search_candidates():
     """Search candidates using filters from Supabase only."""
     try:
         data = request.get_json() or {}
-        limit = int(data.get('limit', 5000) or 5000)
+        limit_raw = data.get('limit', 5000)
+        try:
+            limit = int(limit_raw) if limit_raw is not None else 5000
+        except Exception:
+            limit = 5000
+        if limit <= 0:
+            limit = 5000
         
         storage = get_supabase_storage()
         if not storage:
@@ -3085,15 +3538,21 @@ def quick_search_api():
             requested_limit = int(requested_limit)
         except Exception:
             requested_limit = 15
-        # Keep quick-search focused on strongest matches only.
-        limit = max(10, min(50, requested_limit))  # Allow up to 50 results
+
+        # If limit is <= 0, treat it as "return all matches".
+        # Otherwise, honor the requested limit without an artificial cap.
+        limit = None
+        cache_limit_key = 0
+        if requested_limit and requested_limit > 0:
+            limit = requested_limit
+            cache_limit_key = requested_limit
         
         if not job_description:
             return jsonify({'error': 'job_description required'}), 400
         
         # Check Redis cache for search results
         if REDIS_AVAILABLE:
-            cached_results = get_search_results_from_cache(job_description, limit)
+            cached_results = get_search_results_from_cache(job_description, cache_limit_key)
             if cached_results is not None:
                 logger.info(f"✓ Returning cached search results ({cached_results.get('total_matches', 0)} matches)")
                 cached_results['cache_hit'] = True
@@ -3162,12 +3621,6 @@ def quick_search_api():
             min_required_coverage = float(ranked.get('critical_skill_min_required') or 0.0)
             critical_required = ranked.get('critical_skills_required') or []
             semantic_score = ranked.get('semantic_score', 0)
-
-            # Semantic threshold: 50% minimum (stricter filtering)
-            if match_percentage < 50:
-                continue
-            if critical_required and (critical_coverage is None or critical_coverage < min_required_coverage):
-                continue
             
             match_data = {
                 'anonymized_id': intel.get('anonymized_id', 'UNKNOWN'),
@@ -3211,7 +3664,7 @@ def quick_search_api():
             ),
             reverse=True
         )
-        top_matches = matches[:limit]
+        top_matches = matches if limit is None else matches[:limit]
         
         elapsed = time.time() - start_time
         
@@ -3232,7 +3685,7 @@ def quick_search_api():
         
         # Cache the search results in Redis (5 minute TTL)
         if REDIS_AVAILABLE:
-            cache_search_results(job_description, limit, result, ttl_seconds=300)
+            cache_search_results(job_description, cache_limit_key, result, ttl_seconds=300)
         
         return jsonify(result)
         

@@ -143,6 +143,7 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            text-decoration: none;
         }
 
         .btn-primary {
@@ -512,11 +513,10 @@
             <div class="card">
                 <h3>Search and Filter Candidates</h3>
                 <div class="alert alert-info">
-                    ⚡ Instant search with advanced filters. Results in <1 second. Use filters below to narrow down candidates.
                 </div>
 
                 <div class="form-group">
-                    <label>📝 Job Description (Optional - for matching top candidates)</label>
+                    <label>📝 Job Description (For matching top candidates)</label>
                     <textarea id="searchJD" rows="4" placeholder="Paste job description here to find top matching candidates..."></textarea>
                     <small style="color: #666;">Leave empty to search all candidates without JD matching</small>
                 </div>
@@ -545,8 +545,10 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Top Candidates (10-15)</label>
-                        <input type="number" id="filterTopLimit" value="15" min="10" max="15">
+                        <label>Results</label>
+                        <div style="padding: 12px; border: 2px solid var(--line); border-radius: 8px; background: #f8f9fa; color: #6c757d;">
+                            Shows all matched candidates (ranked).
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -694,7 +696,8 @@
                     <span class="runtime-chip">Upload workers: ${escapeHtml(data.async_upload.worker_count)} | Queue: ${escapeHtml(data.async_upload.queue_size)}</span>
                 `;
             } catch (error) {
-                statusNode.innerHTML = `<span class="runtime-chip">Runtime status unavailable: ${escapeHtml(error.message)}</span>`;
+                console.error('Runtime status check failed:', error);
+                statusNode.innerHTML = `<span class="runtime-chip" style="background: rgba(234, 127, 70, 0.2); border-color: var(--accent);">⚠️ Runtime status unavailable</span>`;
             }
         }
 
@@ -709,14 +712,12 @@
                 seniority_level: document.getElementById('filterSeniority').value,
                 min_match_score: document.getElementById('filterMinScore').value ? parseInt(document.getElementById('filterMinScore').value) : null,
                 min_confidence_score: document.getElementById('filterMinConfidence').value ? parseInt(document.getElementById('filterMinConfidence').value) : null,
-                top_limit: document.getElementById('filterTopLimit').value ? parseInt(document.getElementById('filterTopLimit').value) : 15,
                 min_years_experience: document.getElementById('filterMinYears').value ? parseFloat(document.getElementById('filterMinYears').value) : null,
                 max_years_experience: document.getElementById('filterMaxYears').value ? parseFloat(document.getElementById('filterMaxYears').value) : null,
                 required_skills: document.getElementById('filterSkills').value ? 
                     document.getElementById('filterSkills').value.split(',').map(s => s.trim()) : null,
                 primary_domain: document.getElementById('filterDomain').value || null
             };
-            filters.top_limit = Math.max(10, Math.min(15, filters.top_limit || 15));
             
             const resultsDiv = document.getElementById('searchResults');
             resultsDiv.innerHTML = `
@@ -734,7 +735,7 @@
                     response = await fetch('/api/quick-search', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ job_description: jd, limit: filters.top_limit })
+                        body: JSON.stringify({ job_description: jd, limit: 0 })
                     });
                     data = await response.json();
                     
@@ -773,15 +774,25 @@
                         }
                         
                         if (matches.length > 0) {
+                            const pageSize = 15;
+                            window.__allRecommendedMatches = matches;
+                            window.__recommendedCandidateIds = matches.map(m => m.anonymized_id);
+                            window.__recommendedPageSize = pageSize;
+                            window.__recommendedPage = 1;
+
                             resultsDiv.innerHTML = `
                                 <div class="card">
                                     <h3>Search Results (${matches.length} matches)</h3>
                                     <div class="alert alert-success">
                                         ✓ Found ${matches.length} matches in ${data.search_time} (source: ${data.data_source || 'unknown'})
                                     </div>
+                                    <div style="margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap;">
+                                        <a class="btn btn-primary" href="#" onclick="downloadRecommendedRedacted(event)">⬇️ Download all redacted CVs (recommended)</a>
+                                    </div>
+                                    <div id="resultsPager" style="margin-top: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;"></div>
                                 </div>
                             `;
-                            displayCandidates(matches, 'searchResults', true, true);
+                            renderRecommendedPage(1);
                         } else {
                             resultsDiv.innerHTML = `
                                 <div class="card">
@@ -806,20 +817,26 @@
                     response = await fetch('/api/search-candidates', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ...filters, limit: filters.top_limit })
+                        body: JSON.stringify({ ...filters, limit: 0 })
                     });
                     data = await response.json();
                     
                     if (data.success && data.candidates.length > 0) {
+                        const pageSize = 15;
+                        window.__allNonJdMatches = data.candidates;
+                        window.__nonJdPageSize = pageSize;
+                        window.__nonJdPage = 1;
+
                         resultsDiv.innerHTML = `
                             <div class="card">
                                 <h3>Search Results (${data.candidates.length} matches)</h3>
                                 <div class="alert alert-success">
                                         ✓ Found ${data.candidates.length} matches (source: ${data.data_source || 'unknown'})
                                 </div>
+                                <div id="resultsPager" style="margin-top: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;"></div>
                             </div>
                         `;
-                        displayCandidates(data.candidates, 'searchResults', false, true);
+                        renderNonJdPage(1);
                     } else if (data.success) {
                         resultsDiv.innerHTML = `
                             <div class="card">
@@ -848,6 +865,58 @@
             }
         }
 
+        function renderRecommendedPage(page) {
+            const all = window.__allRecommendedMatches || [];
+            const pageSize = window.__recommendedPageSize || 15;
+            const totalPages = Math.max(1, Math.ceil(all.length / pageSize));
+
+            const nextPage = Math.max(1, Math.min(totalPages, parseInt(page || 1)));
+            window.__recommendedPage = nextPage;
+
+            const start = (nextPage - 1) * pageSize;
+            const pageItems = all.slice(start, start + pageSize);
+
+            // Render pager controls inside the header card
+            const pager = document.getElementById('resultsPager');
+            if (pager) {
+                const prevDisabled = nextPage <= 1 ? 'disabled' : '';
+                const nextDisabled = nextPage >= totalPages ? 'disabled' : '';
+                pager.innerHTML = `
+                    <button class="btn btn-secondary btn-small" ${prevDisabled} onclick="renderRecommendedPage(${nextPage - 1})">← Prev</button>
+                    <span style="color: #6c757d; font-weight: 600;">Page ${nextPage} / ${totalPages}</span>
+                    <button class="btn btn-secondary btn-small" ${nextDisabled} onclick="renderRecommendedPage(${nextPage + 1})">Next →</button>
+                `;
+            }
+
+            // Render candidate cards
+            displayCandidates(pageItems, 'searchResults', true, true);
+        }
+
+        function renderNonJdPage(page) {
+            const all = window.__allNonJdMatches || [];
+            const pageSize = window.__nonJdPageSize || 15;
+            const totalPages = Math.max(1, Math.ceil(all.length / pageSize));
+
+            const nextPage = Math.max(1, Math.min(totalPages, parseInt(page || 1)));
+            window.__nonJdPage = nextPage;
+
+            const start = (nextPage - 1) * pageSize;
+            const pageItems = all.slice(start, start + pageSize);
+
+            const pager = document.getElementById('resultsPager');
+            if (pager) {
+                const prevDisabled = nextPage <= 1 ? 'disabled' : '';
+                const nextDisabled = nextPage >= totalPages ? 'disabled' : '';
+                pager.innerHTML = `
+                    <button class="btn btn-secondary btn-small" ${prevDisabled} onclick="renderNonJdPage(${nextPage - 1})">← Prev</button>
+                    <span style="color: #6c757d; font-weight: 600;">Page ${nextPage} / ${totalPages}</span>
+                    <button class="btn btn-secondary btn-small" ${nextDisabled} onclick="renderNonJdPage(${nextPage + 1})">Next →</button>
+                `;
+            }
+
+            displayCandidates(pageItems, 'searchResults', false, true);
+        }
+
         // Clear filters
         function clearFilters() {
             document.getElementById('searchJD').value = '';
@@ -855,12 +924,50 @@
             document.getElementById('filterSeniority').value = '';
             document.getElementById('filterMinScore').value = '';
             document.getElementById('filterMinConfidence').value = '';
-            document.getElementById('filterTopLimit').value = '15';
             document.getElementById('filterMinYears').value = '';
             document.getElementById('filterMaxYears').value = '';
             document.getElementById('filterSkills').value = '';
             document.getElementById('filterDomain').value = '';
             document.getElementById('searchResults').innerHTML = '';
+        }
+
+        async function downloadRecommendedRedacted(event) {
+            if (event) event.preventDefault();
+
+            const ids = window.__recommendedCandidateIds || [];
+            if (!ids.length) {
+                alert('No recommended candidates available to download.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/download-redacted-zip', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ candidate_ids: ids })
+                });
+
+                if (!response.ok) {
+                    let errText = `Download failed (${response.status})`;
+                    try {
+                        const err = await response.json();
+                        errText = err.error || errText;
+                    } catch (e) {}
+                    throw new Error(errText);
+                }
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'recommended_redacted_cvs.zip';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                alert(error.message || 'Download failed.');
+            }
         }
 
         function renderUploadStatus(message, type = 'info') {
@@ -1021,6 +1128,9 @@
             const container = document.getElementById(containerId);
             if (!preserveExisting) {
                 container.innerHTML = '';
+            } else {
+                // Keep the header card(s), but replace any existing grids.
+                container.querySelectorAll('.results-grid').forEach(node => node.remove());
             }
             const grid = document.createElement('div');
             grid.className = 'results-grid';
@@ -1077,6 +1187,9 @@
                         ${skills.slice(0, 5).map(skill => 
                             `<span class="skill-tag">${skill}</span>`
                         ).join('')}
+                    </div>
+                    <div class="review-actions">
+                        <a class="btn btn-secondary btn-small" href="/download/original/${encodeURIComponent(candidate.anonymized_id)}" target="_blank" rel="noopener">Original CV</a>
                     </div>
                 `;
                 
