@@ -31,6 +31,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable, Optional
 
+from dotenv import load_dotenv
+
 from supabase_storage import SupabaseStorage
 from universal_pipeline_engine import PipelineOrchestrator, UniversalRedactionEngine
 from vector_search import get_vector_search_engine
@@ -163,6 +165,9 @@ def _build_minimal_intelligence(
 
 
 def main() -> int:
+    # Load env vars from .env early (Supabase creds, embedding provider, etc.)
+    load_dotenv()
+
     parser = argparse.ArgumentParser(description="Ingest archive/samples into Supabase")
     parser.add_argument(
         "--root",

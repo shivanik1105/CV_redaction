@@ -276,7 +276,7 @@ def _supabase_get_candidate_fields(storage, anonymized_ids: List[str]) -> Dict[s
     def _query():
         resp = (
             storage.client.table('cv_intelligence')
-            .select('anonymized_id, cleaned_text, best_knowledge_summary, original_filename')
+            .select('anonymized_id, cleaned_text, best_knowledge_summary')
             .in_('anonymized_id', ids)
             .execute()
         )
@@ -2693,8 +2693,6 @@ def download_original_cv(anonymized_id: str):
                 mimetype=mimetype
             )
             response.headers['Content-Disposition'] = f'inline; filename="{Path(original_filename).name}"'
-            response.headers['X-CV-Inline'] = '1'
-            response.headers['X-CV-Ext'] = ext
             return response
 
         response = send_file(
@@ -2703,7 +2701,6 @@ def download_original_cv(anonymized_id: str):
             download_name=Path(original_filename).name,
             mimetype=mimetype
         )
-        response.headers['X-CV-Ext'] = ext
         return response
 
     except Exception as e:
@@ -2779,6 +2776,7 @@ def download_redacted_zip():
 
             if not original_filename:
                 missing.append({'anonymized_id': anonymized_id, 'reason': 'missing_original_filename'})
+                zip_items.append({'anonymized_id': anonymized_id, 'mode': 'missing', 'reason': 'missing_original_filename'})
                 continue
 
             original_path = _find_original_cv_anywhere(original_filename)
@@ -2793,6 +2791,7 @@ def download_redacted_zip():
                         original_path = archive_candidate
             if not original_path or not original_path.exists():
                 missing.append({'anonymized_id': anonymized_id, 'reason': 'original_file_missing_on_server'})
+                zip_items.append({'anonymized_id': anonymized_id, 'mode': 'missing', 'reason': 'original_file_missing_on_server'})
                 continue
 
             try:
@@ -2814,6 +2813,7 @@ def download_redacted_zip():
                 zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': cached_by_id})
             except Exception as e:
                 redaction_errors.append({'anonymized_id': anonymized_id, 'reason': f'redaction_failed:{e}'})
+                zip_items.append({'anonymized_id': anonymized_id, 'mode': 'missing', 'reason': f'redaction_failed:{e}'})
 
         if not zip_items:
             return jsonify({
@@ -2826,9 +2826,13 @@ def download_redacted_zip():
         with zipfile.ZipFile(zip_buffer, 'w', compression=zipfile.ZIP_DEFLATED) as zipf:
             for item in zip_items:
                 anonymized_id = item['anonymized_id']
-                path = item.get('path')
                 arcname = f"{anonymized_id}.txt"
-                zipf.write(str(path), arcname=arcname)
+                if item.get('mode') == 'file':
+                    path = item.get('path')
+                    zipf.write(str(path), arcname=arcname)
+                else:
+                    reason = item.get('reason') or 'missing'
+                    zipf.writestr(arcname, f"[MISSING REDACTED CV]\nCandidate: {anonymized_id}\nReason: {reason}\n")
 
             missing_all = []
             missing_all.extend(missing)
