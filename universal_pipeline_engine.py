@@ -3585,8 +3585,26 @@ class PipelineOrchestrator:
             CVType.DOCX_FORMAT: DocxPipeline(debug)
         }
     
-    def process_cv(self, pdf_path: str) -> Tuple[str, CVProfile]:
-        """Process a single CV"""
+    def extract_text_from_cv(self, cv_path) -> str:
+        """Extract and post-process CV text without applying redaction rules.
+
+        This is useful when the input document is already anonymized/masked
+        (e.g., a PDF that has had PII removed via true PDF redaction).
+        """
+
+        path_str = str(cv_path)
+        profile = self.detector.analyze(path_str)
+        pipeline = self.pipelines.get(profile.cv_type, self.pipelines[CVType.STANDARD_ATS])
+        processed_text = pipeline.process(path_str)
+        final_text = self._final_cleanup(processed_text)
+
+        if not final_text.strip():
+            final_text = "[ERROR: No text extracted. The document may be a scanned image, an empty file, or a binary format (like .doc) that cannot be read directly. Please use OCR or convert to .docx/PDF.]"
+
+        return final_text
+
+    def process_cv(self, pdf_path: str, redact: bool = True) -> Tuple[str, CVProfile]:
+        """Process a single CV (extract + optional redaction)."""
         logger.info(f"{'='*80}\nProcessing: {Path(pdf_path).name}\n{'='*80}")
         
         profile = self.detector.analyze(pdf_path)
@@ -3595,10 +3613,11 @@ class PipelineOrchestrator:
         pipeline = self.pipelines.get(profile.cv_type, self.pipelines[CVType.STANDARD_ATS])
         processed_text = pipeline.process(pdf_path)
         
-        filename = Path(pdf_path).name
-        redacted_text = self.redactor.redact(processed_text, filename)
-        
-        final_text = self._final_cleanup(redacted_text)
+        if redact:
+            filename = Path(pdf_path).name
+            processed_text = self.redactor.redact(processed_text, filename)
+
+        final_text = self._final_cleanup(processed_text)
         
         if not final_text.strip():
             final_text = "[ERROR: No text extracted. The document may be a scanned image, an empty file, or a binary format (like .doc) that cannot be read directly. Please use OCR or convert to .docx/PDF.]"

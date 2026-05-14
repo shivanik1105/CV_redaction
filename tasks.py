@@ -13,7 +13,13 @@ from celery import Task
 from celery_app import celery
 
 # Import pipeline components
-from cv_redaction_pipeline import redact_cv_text
+from redaction_runner import (
+    default_config_dir,
+    extract_cv_text_no_redaction,
+    mask_document_to_pdf,
+    redact_pdf_to_file,
+    scrub_pii_text,
+)
 from cv_intelligence_extractor import CVIntelligenceExtractor
 from vector_search import get_vector_search_engine
 from supabase_storage import SupabaseStorage
@@ -108,22 +114,33 @@ def process_cv_task(
         update_processing_status(job_id, 'processing', stage='extracting')
         
         from universal_pipeline_engine import PipelineOrchestrator
-        orchestrator = PipelineOrchestrator()
+        orchestrator = PipelineOrchestrator(config_dir=str(default_config_dir()))
         
         cv_path = Path(upload_path)
         if not cv_path.exists():
             raise FileNotFoundError(f"CV file not found: {upload_path}")
         
-        # Extract text
-        cv_text = orchestrator.extract_text_from_cv(cv_path)
+        # Extract text (for PDFs and DOCX we prefer masked-PDF extraction)
+        if cv_path.suffix.lower() in {'.pdf', '.docx'}:
+            output_folder = Path(os.getenv('OUTPUT_FOLDER', 'redacted_output'))
+            output_folder.mkdir(exist_ok=True)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            masked_pdf_path = output_folder / f"MASKED_{timestamp}_{job_id[:8]}.pdf"
+            mask_document_to_pdf(cv_path, output_path=masked_pdf_path, config_dir=default_config_dir())
+            cv_text = extract_cv_text_no_redaction(masked_pdf_path, config_dir=default_config_dir())
+            cv_text = scrub_pii_text(cv_text, config_dir=default_config_dir(), add_marker=False, replacement_style='remove')
+        else:
+            cv_text = orchestrator.extract_text_from_cv(str(cv_path))
         if not cv_text or len(cv_text.strip()) < 100:
             raise ValueError("CV text extraction failed or too short")
         
         # Stage 2: PII Redaction
         update_processing_status(job_id, 'processing', stage='redacting')
         logger.info(f"Redacting PII for job {job_id}")
-        
-        redacted_text, redaction_stats = redact_cv_text(cv_text)
+
+        # For masked-PDF path we already scrubbed PII; keep stats minimal.
+        redacted_text = cv_text
+        redaction_stats = {'mode': 'masked_pdf' if cv_path.suffix.lower() in {'.pdf', '.docx'} else 'text_only'}
         
         # Save redacted CV with anonymous filename (no original filename for privacy)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')

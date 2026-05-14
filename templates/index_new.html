@@ -690,10 +690,18 @@
                     throw new Error(data.error || 'Health check failed');
                 }
 
+                const asyncUpload = (data && data.async_upload) ? data.async_upload : {};
+                const workerCount = (asyncUpload.worker_count !== undefined && asyncUpload.worker_count !== null)
+                    ? asyncUpload.worker_count
+                    : 'n/a';
+                const queueSize = (asyncUpload.queue_size !== undefined && asyncUpload.queue_size !== null)
+                    ? asyncUpload.queue_size
+                    : 'n/a';
+
                 statusNode.innerHTML = `
                     <span class="runtime-chip">Supabase: ${escapeHtml(data.supabase)}</span>
                     <span class="runtime-chip">LLM: ${escapeHtml(data.llm_provider)} (${data.llm_reachable ? 'reachable' : 'check'})</span>
-                    <span class="runtime-chip">Upload workers: ${escapeHtml(data.async_upload.worker_count)} | Queue: ${escapeHtml(data.async_upload.queue_size)}</span>
+                    <span class="runtime-chip">Upload workers: ${escapeHtml(workerCount)} | Queue: ${escapeHtml(queueSize)}</span>
                 `;
             } catch (error) {
                 console.error('Runtime status check failed:', error);
@@ -960,7 +968,7 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'recommended_redacted_cvs.zip';
+                a.download = 'recommended_masked_cvs.zip';
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
@@ -995,19 +1003,29 @@
                 ? `<a class="btn btn-primary" href="${escapeHtml(data.download_url)}" target="_blank" rel="noopener">Download Redacted Output</a>`
                 : `<button class="btn btn-secondary" disabled>Download unavailable</button>`;
 
+            const redactionMode = data.redaction_mode ? escapeHtml(data.redaction_mode) : 'unknown';
+            const maskedPdfName = data.masked_pdf_filename ? escapeHtml(data.masked_pdf_filename) : null;
+            const maskedPdfUrl = data.masked_pdf_download_url ? escapeHtml(data.masked_pdf_download_url) : null;
+            const maskedPdfSection = maskedPdfUrl
+                ? `<a class="btn btn-secondary" href="${maskedPdfUrl}" target="_blank" rel="noopener">Download Masked PDF</a>`
+                : '';
+
             document.getElementById('uploadResults').innerHTML = `
                 <div class="card">
                     <h3>Upload Result</h3>
                     <div class="alert alert-success">${escapeHtml(modeLabel)}</div>
                     <div class="candidate-info"><strong>Pipeline:</strong> ${escapeHtml(data.pipeline_executed || 'unknown')}</div>
+                    <div class="candidate-info"><strong>Redaction mode:</strong> ${redactionMode}</div>
                     <div class="candidate-info"><strong>Stored in Supabase:</strong> ${data.stored_in_supabase ? 'yes' : 'no'}</div>
                     <div class="candidate-info"><strong>Output File:</strong> ${escapeHtml(data.output_filename || 'N/A')}</div>
+                    ${maskedPdfName ? `<div class="candidate-info"><strong>Masked PDF:</strong> ${maskedPdfName}</div>` : ''}
                     <div class="upload-result-preview">
                         <h4>Redacted Content</h4>
                         <pre>${preview}</pre>
                     </div>
                     <div style="margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap;">
                         ${downloadSection}
+                        ${maskedPdfSection}
                     </div>
                 </div>
             `;

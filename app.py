@@ -10,6 +10,7 @@ import glob
 import hashlib
 import re
 import time
+import shutil
 import threading
 import queue
 import uuid
@@ -37,6 +38,16 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from universal_pipeline_engine import PipelineOrchestrator
 from cv_intelligence_extractor import CVIntelligenceExtractor
 from filename_mapping_manager import FilenameMappingManager
+from redaction_runner import (
+    ensure_runtime_config,
+    extract_cv_text_no_redaction,
+    mask_document_to_pdf,
+    redact_cv_file,
+    redact_cv_text_only,
+    redact_pdf_to_file,
+    render_text_to_pdf,
+    scrub_pii_text,
+)
 
 # Import Supabase storage (optional)
 try:
@@ -79,6 +90,9 @@ logger = logging.getLogger(__name__)
 Path(app.config['UPLOAD_FOLDER']).mkdir(exist_ok=True)
 Path(app.config['OUTPUT_FOLDER']).mkdir(exist_ok=True)
 Path(app.config['INTELLIGENCE_FOLDER']).mkdir(exist_ok=True)
+
+# Ensure config exists in packaged (PyInstaller) builds.
+ensure_runtime_config(_RUNTIME_DATA_ROOT / 'config', runtime_root=_RUNTIME_DATA_ROOT)
 
 # Initialize intelligence extractor (lazy load)
 _intelligence_extractor = None
@@ -226,9 +240,7 @@ def _supabase_get_original_filenames(storage, anonymized_ids: List[str]) -> Dict
 
 def _redact_cv_text_only(cv_path: Path) -> str:
     """Run redaction pipeline only (no LLM) and return redacted text."""
-    orchestrator = PipelineOrchestrator(config_dir='config')
-    redacted_text, _profile = orchestrator.process_cv(str(cv_path))
-    return redacted_text
+    return redact_cv_text_only(cv_path, config_dir=_RUNTIME_DATA_ROOT / 'config')
 
 
 def _parse_archive_source_rel_path(best_knowledge_summary: Any) -> Optional[str]:
@@ -1141,6 +1153,8 @@ def process_source_cv(
 ) -> Dict[str, Any]:
     """Execute the full architecture for an original CV file starting from redaction."""
     original_filename = cv_path.name
+    masked_pdf_filename: Optional[str] = None
+    redaction_mode: str = 'pipeline_redactor'
     # Upload handler prefixes stored filenames with a timestamp; recover the user-facing
     # source filename so extraction logic receives stable inputs.
     timestamp_prefix_match = re.match(r'^\d{8}_\d{6}_(.+)$', original_filename)
@@ -1165,8 +1179,33 @@ def process_source_cv(
                 with open(redacted_path, 'r', encoding='utf-8') as f:
                     redacted_text = f.read()
             else:
-                orchestrator = PipelineOrchestrator(config_dir='config')
-                redacted_text, profile = orchestrator.process_cv(str(cv_path))
+                # For PDFs and DOCX: first create a masked (true-redacted) PDF, then extract text from it.
+                # This ensures the LLM only ever sees text derived from the anonymized PDF.
+                if cv_path.suffix.lower() in {'.pdf', '.docx'}:
+                    redaction_mode = 'masked_pdf'
+                    masked_pdf_path = Path(app.config['OUTPUT_FOLDER']) / f"MASKED_{timestamp}_{source_hash}.pdf"
+                    mask_document_to_pdf(
+                        cv_path,
+                        output_path=masked_pdf_path,
+                        config_dir=_RUNTIME_DATA_ROOT / 'config',
+                        debug=False,
+                    )
+                    masked_pdf_filename = masked_pdf_path.name
+                    extracted_text = extract_cv_text_no_redaction(
+                        masked_pdf_path,
+                        config_dir=_RUNTIME_DATA_ROOT / 'config',
+                        debug=False,
+                    )
+                    # Safety net: lightweight PII scrub (no heavy redaction).
+                    redacted_text = scrub_pii_text(
+                        extracted_text,
+                        config_dir=_RUNTIME_DATA_ROOT / 'config',
+                        add_marker=False,
+                        replacement_style='remove',
+                    )
+                else:
+                    redaction_mode = 'pipeline_redactor'
+                    redacted_text, profile = redact_cv_file(cv_path, config_dir=_RUNTIME_DATA_ROOT / 'config')
                 with open(redacted_path, 'w', encoding='utf-8') as f:
                     f.write(redacted_text)
 
@@ -1187,6 +1226,27 @@ def process_source_cv(
         llm_runtime_config=llm_runtime_config
     )
     result['preview'] = redacted_text
+    result['redaction_mode'] = redaction_mode
+    if masked_pdf_filename:
+        result['masked_pdf_filename'] = masked_pdf_filename
+
+        # Best-effort: cache a stable masked PDF name by anonymized_id so bulk ZIP
+        # downloads can always prefer true masked PDFs.
+        try:
+            intelligence = result.get('intelligence') if isinstance(result, dict) else None
+            anonymized_id = None
+            if isinstance(intelligence, dict):
+                anonymized_id = intelligence.get('anonymized_id')
+            if anonymized_id:
+                output_dir = Path(app.config['OUTPUT_FOLDER'])
+                src = output_dir / masked_pdf_filename
+                dst = output_dir / f"{anonymized_id}.pdf"
+                if src.exists() and not dst.exists():
+                    shutil.copy2(str(src), str(dst))
+                if dst.exists():
+                    result['masked_pdf_cached_by_id'] = dst.name
+        except Exception as e:
+            logger.warning(f"Failed caching masked PDF by anonymized_id: {e}")
     return result
 
 
@@ -1217,6 +1277,15 @@ def _build_upload_success_payload(pipeline_result: Dict[str, Any], mode: str = '
         'preview': pipeline_result.get('preview', ''),
         'download_url': url_for('download_file', filename=redacted_filename)
     }
+
+    # Provide clarity on which anonymization method was used.
+    if pipeline_result.get('redaction_mode'):
+        response['redaction_mode'] = pipeline_result.get('redaction_mode')
+
+    masked_pdf_filename = pipeline_result.get('masked_pdf_filename')
+    if masked_pdf_filename:
+        response['masked_pdf_filename'] = masked_pdf_filename
+        response['masked_pdf_download_url'] = url_for('download_file', filename=masked_pdf_filename)
 
     intelligence = pipeline_result.get('intelligence')
     if intelligence:
@@ -2306,9 +2375,9 @@ def landing_page():
     return html
 
 
-@app.route('/health')
+@app.route('/health-basic')
 def health_check():
-    """Health check endpoint"""
+    """Basic health check endpoint (legacy). Use /health for full runtime status."""
     return jsonify({
         'status': 'healthy',
         'version': '1.0.0',
@@ -2607,13 +2676,20 @@ def get_upload_job_status(job_id):
 def download_file(filename):
     """Download the redacted CV"""
     try:
-        file_path = os.path.join(app.config['OUTPUT_FOLDER'], filename)
+        safe_name = os.path.basename(filename)
+        file_path = os.path.join(app.config['OUTPUT_FOLDER'], safe_name)
         if os.path.exists(file_path):
+            ext = os.path.splitext(safe_name)[1].lower()
+            mimetype = {
+                '.txt': 'text/plain',
+                '.json': 'application/json',
+                '.pdf': 'application/pdf',
+            }.get(ext, 'application/octet-stream')
             return send_file(
                 file_path,
                 as_attachment=True,
-                download_name=filename,
-                mimetype='text/plain'
+                download_name=safe_name,
+                mimetype=mimetype
             )
         else:
             return jsonify({'error': 'File not found'}), 404
@@ -2710,7 +2786,7 @@ def download_original_cv(anonymized_id: str):
 
 @app.route('/api/download-redacted-zip', methods=['POST'])
 def download_redacted_zip():
-    """Download a single ZIP containing redacted CVs for the provided anonymized IDs."""
+    """Download a single ZIP containing true masked PDFs for the provided anonymized IDs."""
     try:
         payload = request.get_json() or {}
         candidate_ids = payload.get('candidate_ids')
@@ -2740,35 +2816,17 @@ def download_redacted_zip():
         redaction_errors: List[Dict[str, Any]] = []
 
         for anonymized_id in normalized_ids:
-            # 1) Prefer an existing cached redaction named by anonymized_id.
-            cached_by_id = output_dir / f"{anonymized_id}.txt"
-            if cached_by_id.exists():
-                zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': cached_by_id})
+            cached_pdf_by_id = output_dir / f"{anonymized_id}.pdf"
+            supa_row = supabase_candidates.get(anonymized_id) if isinstance(supabase_candidates, dict) else None
+
+            # 1) Prefer an existing cached masked PDF (best privacy) named by anonymized_id.
+            if cached_pdf_by_id.exists():
+                zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': cached_pdf_by_id, 'arcname': f"{anonymized_id}.pdf"})
                 continue
 
-            # 1b) If Supabase has cleaned_text, use it directly (no local files needed).
-            supa_row = supabase_candidates.get(anonymized_id) if isinstance(supabase_candidates, dict) else None
-            supa_text = supa_row.get('cleaned_text') if isinstance(supa_row, dict) else None
-            if isinstance(supa_text, str) and supa_text.strip():
-                try:
-                    with open(cached_by_id, 'w', encoding='utf-8') as f:
-                        f.write(supa_text)
-                    zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': cached_by_id})
-                    continue
-                except Exception as e:
-                    redaction_errors.append({'anonymized_id': anonymized_id, 'reason': f'cache_write_failed:{e}'})
-
-            # 2) Try mapping -> redacted filename (legacy).
+            # 2) Try mapping -> original filename.
             mapping = _get_filename_mapping(anonymized_id=anonymized_id, storage=storage)
-            mapped_redacted = (mapping or {}).get('anonymized_filename')
-            if mapped_redacted:
-                mapped_redacted = Path(str(mapped_redacted)).name
-                mapped_path = output_dir / mapped_redacted
-                if mapped_path.exists():
-                    zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': mapped_path})
-                    continue
-
-            # 3) Generate missing redaction from original CV (uploads/ or archive/samples/).
+            # 3) Generate missing masked PDF from original CV (uploads/ or archive/samples/).
             original_filename = (mapping or {}).get('original_filename') or supabase_originals.get(anonymized_id)
             if not original_filename:
                 fallback = _fallback_filenames_from_local_intelligence(anonymized_id)
@@ -2799,23 +2857,41 @@ def download_redacted_zip():
                 redaction_lock = _get_named_lock(_redaction_lock_registry, source_hash)
                 with redaction_lock:
                     # Another request may have generated it while we waited.
-                    if cached_by_id.exists():
-                        zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': cached_by_id})
+                    if cached_pdf_by_id.exists():
+                        zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': cached_pdf_by_id, 'arcname': f"{anonymized_id}.pdf"})
                         continue
 
-                    redacted_text = _redact_cv_text_only(original_path)
-                    if not redacted_text:
-                        raise ValueError('empty_redacted_text')
-                    # Cache as anonymized_id-named file for deterministic bulk downloads.
-                    with open(cached_by_id, 'w', encoding='utf-8') as f:
-                        f.write(redacted_text)
+                    # If this candidate was previously processed by the masked-PDF pipeline,
+                    # prefer reusing that true-masked artifact.
+                    try:
+                        prior_masked = sorted(output_dir.glob(f"MASKED_*_{source_hash}.pdf"))
+                        if prior_masked:
+                            shutil.copy2(str(prior_masked[-1]), str(cached_pdf_by_id))
+                            if cached_pdf_by_id.exists():
+                                zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': cached_pdf_by_id, 'arcname': f"{anonymized_id}.pdf"})
+                                continue
+                    except Exception:
+                        pass
 
-                zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': cached_by_id})
+                    # Prefer generating a masked PDF even if a cached TXT exists.
+                    if original_path.suffix.lower() in {'.pdf', '.docx'}:
+                        mask_document_to_pdf(
+                            original_path,
+                            output_path=cached_pdf_by_id,
+                            config_dir=_RUNTIME_DATA_ROOT / 'config',
+                            debug=False,
+                        )
+                        zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': cached_pdf_by_id, 'arcname': f"{anonymized_id}.pdf"})
+                        continue
+
+                    raise ValueError('original_not_pdf_or_docx_cannot_generate_true_masked_pdf')
+
+                zip_items.append({'anonymized_id': anonymized_id, 'mode': 'file', 'path': cached_pdf_by_id, 'arcname': f"{anonymized_id}.pdf"})
             except Exception as e:
                 redaction_errors.append({'anonymized_id': anonymized_id, 'reason': f'redaction_failed:{e}'})
                 zip_items.append({'anonymized_id': anonymized_id, 'mode': 'missing', 'reason': f'redaction_failed:{e}'})
 
-        if not zip_items:
+        if not any(item.get('mode') == 'file' for item in zip_items):
             return jsonify({
                 'error': 'No redacted CVs could be generated or resolved for download',
                 'missing': missing,
@@ -2826,13 +2902,13 @@ def download_redacted_zip():
         with zipfile.ZipFile(zip_buffer, 'w', compression=zipfile.ZIP_DEFLATED) as zipf:
             for item in zip_items:
                 anonymized_id = item['anonymized_id']
-                arcname = f"{anonymized_id}.txt"
                 if item.get('mode') == 'file':
                     path = item.get('path')
-                    zipf.write(str(path), arcname=arcname)
+                    arcname = item.get('arcname') or f"{anonymized_id}{Path(str(path)).suffix.lower() or '.pdf'}"
+                    zipf.write(str(path), arcname=str(arcname))
                 else:
-                    reason = item.get('reason') or 'missing'
-                    zipf.writestr(arcname, f"[MISSING REDACTED CV]\nCandidate: {anonymized_id}\nReason: {reason}\n")
+                    # Keep ZIP clean: no per-candidate placeholder files.
+                    continue
 
             missing_all = []
             missing_all.extend(missing)
@@ -2847,7 +2923,7 @@ def download_redacted_zip():
                 zipf.writestr('MISSING.txt', "\n".join(missing_lines) + "\n")
 
         zip_buffer.seek(0)
-        download_name = 'recommended_redacted_cvs.zip'
+        download_name = 'recommended_masked_cvs.zip'
         return send_file(
             zip_buffer,
             as_attachment=True,
@@ -3987,3 +4063,4 @@ if __name__ == '__main__':
     
     # Threaded mode improves local concurrency behavior during load tests.
     app.run(debug=False, host='0.0.0.0', port=5000, threaded=True)
+
