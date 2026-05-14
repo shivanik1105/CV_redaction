@@ -841,7 +841,8 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
         self, 
         cv_text: str, 
         job_description: str = None,
-        original_filename: str = None
+        original_filename: str = None,
+        trust_source: bool = False
     ) -> Dict:
         """
         Extract structured intelligence from a CV with deep analysis and audit trail.
@@ -853,13 +854,14 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
             cv_text: Anonymized CV content (must contain [REDACTED_...] markers)
             job_description: Optional job description to match against (if None, only extracts skills/experience)
             original_filename: Original filename (for backend tracking only)
+            trust_source: If True, skip the is_cv_anonymized check (used when text is derived from a masked PDF)
             
         Returns:
             Dictionary with structured CV intelligence + full audit trail
         """
         try:
             # CRITICAL: Verify CV is anonymized before processing
-            if not is_cv_anonymized(cv_text):
+            if not trust_source and not is_cv_anonymized(cv_text):
                 logger.error("CV is not anonymized. Cannot process non-anonymized CVs.")
                 return {
                     "error": "CV_NOT_ANONYMIZED",

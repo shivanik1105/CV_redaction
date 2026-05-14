@@ -634,18 +634,20 @@ def mask_document_to_pdf(
 
             # No words -> safest is to render redacted text to PDF.
             redacted_text, _profile = redact_cv_file(input_path, config_dir=config_dir)
+            clean_text = cleanse_redacted_tags(redacted_text)
             return _render_text_to_pdf(
-                redacted_text,
+                clean_text,
                 output_pdf=output_path,
-                title="MASKED OUTPUT (DOCX conversion produced non-extractable PDF)",
+                title="MASKED OUTPUT",
             )
         except Exception as e:
             # Fallback: produce a safe masked PDF that contains only already-redacted text.
             redacted_text, _profile = redact_cv_file(input_path, config_dir=config_dir)
+            clean_text = cleanse_redacted_tags(redacted_text)
             return _render_text_to_pdf(
-                redacted_text,
+                clean_text,
                 output_pdf=output_path,
-                title=f"MASKED OUTPUT (conversion unavailable: {type(e).__name__})",
+                title="MASKED OUTPUT",
             )
         finally:
             try:
@@ -763,6 +765,14 @@ def scrub_pii_text(
                 any_replacement = True
             processed = new_processed
 
+        # Extra safety-net patterns beyond the config file (covers edge-case phones/emails).
+        if style == "tags":
+            processed = re.sub(r"\b\+?\d{1,3}[-.\s]?\d{3,4}[-.\s]?\d{3,4}[-.\s]?\d{0,4}\b", "[REDACTED_PHONE]", processed)
+            processed = re.sub(r"\b\d{5,}\s+\d{5,}\b", "[REDACTED_PHONE]", processed)
+        else:
+            processed = re.sub(r"\b\+?\d{1,3}[-.\s]?\d{3,4}[-.\s]?\d{3,4}[-.\s]?\d{0,4}\b", "", processed)
+            processed = re.sub(r"\b\d{5,}\s+\d{5,}\b", "", processed)
+
         if _is_contact_line(processed):
             processed = "[REDACTED_CONTACT_LINE]" if style == "tags" else ""
             any_replacement = True
@@ -795,3 +805,21 @@ def scrub_pii_text(
         any_replacement = True
 
     return output
+
+
+def cleanse_redacted_tags(text: str) -> str:
+    """Remove any visible [REDACTED_*] markers and clean up empty lines.
+
+    Use this before showing text in the UI or before rendering a fallback PDF
+    so the user never sees [REDACTED_NAME], [REDACTED_EMAIL], etc.
+    """
+    if not text:
+        return text
+    # Remove all [REDACTED_...] tokens
+    cleaned = re.sub(r"\[REDACTED[^\]]*\]", "", text)
+    # Remove lines that became empty or just whitespace
+    cleaned = "\n".join(line for line in cleaned.splitlines() if line.strip())
+    # Collapse excessive blank lines
+    cleaned = re.sub(r"\n\s*\n\s*\n+", "\n\n", cleaned)
+    cleaned = re.sub(r"[ \t]+\n", "\n", cleaned)
+    return cleaned.strip()
