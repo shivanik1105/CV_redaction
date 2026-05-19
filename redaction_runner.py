@@ -470,36 +470,57 @@ def redact_pdf_to_file(
                 # This catches cases where the candidate name is present but the filename
                 # doesn't include it (common when uploads are renamed).
                 try:
-                    top_threshold = page.rect.height * 0.22
+                    top_threshold = page.rect.height * 0.15  # Reduced from 0.22 to 0.15 - only very top
                     in_top_band = float(line_union.y1) <= float(top_threshold)
                 except Exception:
                     in_top_band = False
 
                 if in_top_band:
                     lt = line_text.strip()
-                    # Avoid masking generic headings
-                    if not re.search(r"(?i)\b(resume|curriculum\s+vitae|cv|profile|summary|objective)\b", lt):
+                    # Avoid masking generic headings, job titles, company names, and technical terms
+                    skip_patterns = [
+                        r"(?i)\b(resume|curriculum\s+vitae|cv|profile|summary|objective)\b",
+                        r"(?i)\b(engineer|developer|architect|manager|consultant|analyst|lead|senior|junior|principal)\b",
+                        r"(?i)\b(pvt|ltd|limited|inc|corporation|corp|llc|llp|international|global|solutions|technologies|systems)\b",
+                        r"(?i)\b(software|system|technical|project|product|data|web|mobile|cloud|devops)\b",
+                        r"(?i)\b(experience|skills|education|certification|projects|achievements)\b",
+                    ]
+                    if not any(re.search(pat, lt) for pat in skip_patterns):
                         # Name-like: handle honorifics and punctuation.
                         cleaned = re.sub(r"[^A-Za-z\s]", " ", lt)
                         cleaned = re.sub(r"\s+", " ", cleaned).strip()
                         honorific = r"(?:Mr|Mrs|Ms|Miss|Dr|Prof|Shri|Smt)"
-                        name_pat = rf"(?:{honorific}\s+)?[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){{1,4}}"
-                        if re.fullmatch(name_pat, cleaned) and not re.search(r"\d", cleaned):
+                        # More restrictive: only 2-3 words, no long phrases
+                        name_pat = rf"(?:{honorific}\s+)?[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){{1,2}}"
+                        if re.fullmatch(name_pat, cleaned) and not re.search(r"\d", cleaned) and len(cleaned.split()) <= 3:
                             rects_to_redact.append(line_union + (-2, -1, 2, 1))
                             continue
 
                     # Also redact address-ish lines near the top (often immediate PII).
-                    if _is_addressish_line(lt):
+                    # But skip if it contains job-related keywords
+                    if _is_addressish_line(lt) and not any(re.search(pat, lt) for pat in skip_patterns):
                         rects_to_redact.append(line_union + (-2, -1, 2, 1))
                         continue
 
                 # Address PII can appear outside the header band as well.
                 # If the line includes a zip/pincode-like sequence, redact the full line.
-                if re.search(r"\b\d{6}\b", line_text) or re.search(r"\b\d{5}(?:-\d{4})?\b", line_text):
-                    rects_to_redact.append(line_union + (-2, -1, 2, 1))
-                    continue
+                # BUT: Skip if the line contains job-related content (dates, job titles, companies)
+                has_postal_code = bool(re.search(r"\b\d{6}\b", line_text) or re.search(r"\b\d{5}(?:-\d{4})?\b", line_text))
+                if has_postal_code:
+                    # Check if this looks like a job description line (has dates, job titles, etc.)
+                    job_indicators = [
+                        r"\d{4}\s*[-–]\s*\d{4}",  # Date ranges like 2018-2021
+                        r"(?i)\b(engineer|developer|architect|manager|consultant|analyst|lead)\b",
+                        r"(?i)\b(pvt|ltd|limited|inc|corporation|corp)\b",
+                        r"(?i)\b(experience|project|role|position|responsibilities)\b",
+                    ]
+                    is_job_line = any(re.search(pat, line_text) for pat in job_indicators)
+                    if not is_job_line:
+                        rects_to_redact.append(line_union + (-2, -1, 2, 1))
+                        continue
 
                 # If the line contains explicit PII patterns, redact the entire line.
+                # BUT: Be more selective - don't redact if it's clearly job content
                 line_has_direct_pii = bool(
                     pii_res["email"].search(line_text)
                     or pii_res["url"].search(line_text)
@@ -507,13 +528,27 @@ def redact_pdf_to_file(
                     or any(r.search(line_text) for r in pii_res["phone"])
                 )
 
+                # Check if this is a contact line OR has direct PII
+                # BUT: Skip redaction if it's clearly part of job description
                 if _is_contact_line(line_text) or line_has_direct_pii:
-                    union = items_sorted[0][0]
-                    for r, _w in items_sorted[1:]:
-                        union |= r
-                    # Pad a bit to cover separators
-                    rects_to_redact.append(union + (-2, -1, 2, 1))
-                    continue
+                    # Check if this line contains job-related content that should be preserved
+                    job_content_indicators = [
+                        r"(?i)\b(build|develop|design|implement|manage|lead|create|maintain|optimize|proficient|experienced|skilled)\b",
+                        r"(?i)\b(application|system|software|platform|service|api|database|framework|technology|technologies)\b",
+                        r"(?i)\b(experience|project|role|responsibilities|achievements|skills|expertise|knowledge)\b",
+                        r"(?i)\b(c\+\+|python|java|javascript|react|angular|node|sql|aws|azure|docker|kubernetes|android|ios|kotlin)\b",
+                        r"\d{4}\s*[-–]\s*\d{4}",  # Date ranges
+                    ]
+                    has_job_content = any(re.search(pat, line_text) for pat in job_content_indicators)
+                    
+                    # Only redact if it's truly a contact line and doesn't have job content
+                    if not has_job_content:
+                        union = items_sorted[0][0]
+                        for r, _w in items_sorted[1:]:
+                            union |= r
+                        # Pad a bit to cover separators
+                        rects_to_redact.append(union + (-2, -1, 2, 1))
+                        continue
 
                 # Otherwise, try to find multi-word matches (e.g., split phone numbers)
                 pii_matches_word_idxs: List[int] = []
