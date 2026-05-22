@@ -192,6 +192,99 @@ def _normalize_skill(skill: str) -> str:
     return s
 
 
+def _coerce_list(value) -> List[str]:
+    """Coerce a value into a list of strings (best-effort, order-preserving)."""
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(x).strip() for x in value if str(x).strip()]
+    if isinstance(value, str):
+        s = value.strip()
+        if not s:
+            return []
+        # Try JSON list first
+        if s.startswith('[') and s.endswith(']'):
+            try:
+                parsed = json.loads(s)
+                if isinstance(parsed, list):
+                    return [str(x).strip() for x in parsed if str(x).strip()]
+            except Exception:
+                pass
+        return [s]
+    return [str(value).strip()] if str(value).strip() else []
+
+
+def _dedupe_case_insensitive(items, max_items: int = 30) -> List[str]:
+    """Deduplicate a list of strings case-insensitively, preserving order."""
+    out: List[str] = []
+    seen: set = set()
+    for item in items:
+        s = str(item).strip()
+        if not s:
+            continue
+        key = s.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(s)
+        if len(out) >= max_items:
+            break
+    return out
+
+
+def _split_list_block(text: str) -> List[str]:
+    """Split a free-form list block into items.
+
+    Handles comma-separated, newline-separated, and bullet-separated outputs.
+    """
+    if not text:
+        return []
+    s = str(text).strip()
+    if not s:
+        return []
+
+    # Normalize bullets to newlines
+    s = s.replace('•', '\n').replace('·', '\n').replace('\u2022', '\n')
+    # If it looks like a JSON list, attempt to parse.
+    if s.startswith('[') and s.endswith(']'):
+        try:
+            parsed = json.loads(s)
+            if isinstance(parsed, list):
+                return [str(x).strip() for x in parsed if str(x).strip()]
+        except Exception:
+            pass
+
+    # Strip surrounding brackets if present
+    s = s.strip().strip('[]')
+
+    # Split on comma or newline or semicolon
+    raw_parts = re.split(r'[\n,;]+', s)
+
+    items: List[str] = []
+    seen = set()
+    for part in raw_parts:
+        item = str(part).strip().strip('"\'').strip()
+        # Remove leading bullet markers/dashes
+        item = re.sub(r'^[\-\*\u2022\s]+', '', item).strip()
+        if not item:
+            continue
+        if item.lower() in {'not specified', 'n/a', 'na', 'none'}:
+            continue
+        key = item.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        items.append(item)
+    return items
+
+
+def _get_first_present(mapping: dict, keys: List[str]):
+    for k in keys:
+        if k in mapping and mapping.get(k) is not None:
+            return mapping.get(k)
+    return None
+
+
 # Soft skills that LLMs commonly add but are never literally in CV text
 _SOFT_SKILL_PATTERNS = {
     'adaptability', 'communication', 'teamwork', 'leadership', 'problem solving',
@@ -609,8 +702,26 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                         years_experience_range = "Not specified"
 
                     seniority_level = str(section5.get("Seniority Level", "MID")).upper().strip() or "MID"
-                    core_technical_skills = section5.get("Core Technical Skills") or []
-                    secondary_technical_skills = section5.get("Secondary Skills") or []
+                    core_technical_skills = _get_first_present(
+                        section5,
+                        [
+                            "Core Technical Skills",
+                            "Core technical skills",
+                            "Core Skills",
+                            "Technical Skills",
+                            "Key Skills",
+                        ],
+                    ) or []
+                    secondary_technical_skills = _get_first_present(
+                        section5,
+                        [
+                            "Secondary Skills",
+                            "Secondary Technical Skills",
+                            "Tools and Frameworks",
+                            "Tools & Frameworks",
+                            "Frameworks & Tools",
+                        ],
+                    ) or []
                     leadership_indicators = section5.get("Leadership Indicators") or []
                     primary_domain = str(section5.get("Primary Domain", "")).strip()
 
@@ -621,6 +732,10 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
 
                     reason = str(final_assessment.get("Reason", "")).strip()
 
+                    key_skills_combined = _dedupe_case_insensitive(
+                        _coerce_list(core_technical_skills) + _coerce_list(secondary_technical_skills),
+                        max_items=30
+                    )
                     return {
                         "anonymized_id": anonymized_id,
                         "analysis_date": datetime.now().isoformat(),
@@ -631,8 +746,9 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                         "years_experience": years_experience,
                         "years_experience_range": years_experience_range,
                         "seniority_level": seniority_level,
-                        "core_technical_skills": core_technical_skills if isinstance(core_technical_skills, list) else [],
-                        "secondary_technical_skills": secondary_technical_skills if isinstance(secondary_technical_skills, list) else [],
+                        "core_technical_skills": _coerce_list(core_technical_skills),
+                        "secondary_technical_skills": _coerce_list(secondary_technical_skills),
+                        "key_skills": key_skills_combined,
                         "leadership_indicators": leadership_indicators if isinstance(leadership_indicators, list) else [],
                         "primary_domain": primary_domain,
                         "secondary_domains": [],
@@ -690,24 +806,35 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
             seniority_match = re.search(r'Seniority Level:\s*\[?(ENTRY|MID|SENIOR|LEAD|EXECUTIVE)\]?', prose_response, re.IGNORECASE)
             seniority_level = seniority_match.group(1).upper() if seniority_match else "MID"
             
-            # Extract core technical skills (with or without brackets)
-            skills_section = re.search(r'Core Technical Skills:\s*\[?(.+?)\]?\s*(?:\n|$)', prose_response, re.DOTALL)
-            if skills_section:
-                skills_text = skills_section.group(1).strip()
-                # Handle multi-line or comma-separated skills
-                core_technical_skills = [s.strip().strip('"\'[]') for s in skills_text.split(',') if s.strip() and s.strip() not in ['[', ']']]
-                core_technical_skills = [s for s in core_technical_skills if s]  # Remove empty
-            else:
-                core_technical_skills = []
-            
-            # Extract secondary skills (with or without brackets)
-            secondary_section = re.search(r'Secondary Skills:\s*\[?(.+?)\]?\s*(?:\n|$)', prose_response, re.DOTALL)
-            if secondary_section:
-                sec_text = secondary_section.group(1).strip()
-                secondary_technical_skills = [s.strip().strip('"\'[]') for s in sec_text.split(',') if s.strip() and s.strip() not in ['[', ']']]
-                secondary_technical_skills = [s for s in secondary_technical_skills if s]
-            else:
-                secondary_technical_skills = []
+            # Scope parsing to SECTION 5 when available (providers sometimes vary labels/casing).
+            section5_block = prose_response
+            section5_match = re.search(
+                r'(?:SECTION\s*5)[^\n]*\n(.+?)(?=\n\s*(?:FINAL\s+(?:ASSESSMENT|RECOMMENDATION)|SECTION\s*\d)|\Z)',
+                prose_response,
+                re.IGNORECASE | re.DOTALL,
+            )
+            if section5_match:
+                section5_block = section5_match.group(1)
+
+            def _extract_field(block: str, label_pattern: str) -> str:
+                m = re.search(
+                    rf'(?:^|\n)\s*{label_pattern}\s*(?:\([^\n\)]*\))?\s*:\s*(.+?)(?=\n\s*(?:Years\s+of\s+Experience|Seniority\s+Level|Core\s+(?:Technical\s+)?Skills|Technical\s+Skills|Key\s+Skills|Secondary\s+Skills|Primary\s+Domain|Leadership\s+Indicators)\s*(?:\([^\n\)]*\))?\s*:|\Z)',
+                    block,
+                    re.IGNORECASE | re.DOTALL,
+                )
+                return (m.group(1).strip() if m else "")
+
+            core_block = (
+                _extract_field(section5_block, r'(?:Core\s+(?:Technical\s+)?Skills|Technical\s+Skills|Key\s+Skills)')
+                or _extract_field(prose_response, r'(?:Core\s+(?:Technical\s+)?Skills|Technical\s+Skills|Key\s+Skills)')
+            )
+            secondary_block = (
+                _extract_field(section5_block, r'(?:Secondary\s+Skills|Secondary\s+Technical\s+Skills|Tools\s*(?:and|&)\s*Frameworks|Frameworks\s*(?:and|&)\s*Tools)')
+                or _extract_field(prose_response, r'(?:Secondary\s+Skills|Secondary\s+Technical\s+Skills|Tools\s*(?:and|&)\s*Frameworks|Frameworks\s*(?:and|&)\s*Tools)')
+            )
+
+            core_technical_skills = _split_list_block(core_block)
+            secondary_technical_skills = _split_list_block(secondary_block)
             
             # Extract primary domain
             domain_match = re.search(r'Primary Domain:\s*\[?([^\]\n]+)\]?', prose_response, re.IGNORECASE)
@@ -795,6 +922,7 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
                 # Skills
                 "core_technical_skills": core_technical_skills,
                 "secondary_technical_skills": secondary_technical_skills,
+                "key_skills": _dedupe_case_insensitive(core_technical_skills + secondary_technical_skills, max_items=30),
                 "leadership_indicators": leadership_indicators,
                 
                 # Domain

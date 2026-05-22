@@ -620,7 +620,24 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
                 # CRITICAL: Always use embedding from database column, not from JSON backup
                 # The embedding column may have been regenerated with a new model (384d -> 768d)
                 full_data["embedding"] = record.get("embedding")
-                
+
+                # Ensure key_skills is present (computed from core + secondary if missing)
+                if not full_data.get("key_skills"):
+                    core = _as_clean_list(full_data.get("core_technical_skills"), max_items=20, max_len=80)
+                    sec = _as_clean_list(full_data.get("secondary_technical_skills"), max_items=20, max_len=80)
+                    combined = []
+                    seen = set()
+                    for s in core + sec:
+                        key = s.lower()
+                        if key not in seen:
+                            seen.add(key)
+                            combined.append(s)
+                    full_data["key_skills"] = combined[:30]
+
+                # Ensure secondary_technical_skills is present
+                if not full_data.get("secondary_technical_skills"):
+                    full_data["secondary_technical_skills"] = []
+
                 return full_data
             except (json.JSONDecodeError, TypeError):
                 pass
@@ -628,7 +645,9 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
         # Fallback: map DB columns back to app format
         domains = record.get("domain_expertise", []) or []
         skills = record.get("key_skills", []) or []
-        
+        core_skills = record.get("core_technical_skills", []) or []
+        sec_skills = record.get("secondary_technical_skills", []) or []
+
         return {
             "anonymized_id": record.get("anonymized_id", "UNKNOWN"),
             "verdict": record.get("verdict", "REVIEW"),
@@ -638,7 +657,8 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
             "years_of_experience": record.get("years_of_experience", 0),  # Both formats
             "seniority_level": record.get("career_level", "") or "",
             "career_level": record.get("career_level", "") or "",  # Both formats
-            "core_technical_skills": skills,
+            "core_technical_skills": core_skills if core_skills else skills,
+            "secondary_technical_skills": sec_skills,
             "key_skills": skills,  # Both formats
             "primary_domain": domains[0] if domains else "",
             "domain_expertise": domains,  # Both formats
