@@ -200,7 +200,7 @@ def main() -> int:
     rows = (
         client.table("cv_intelligence")
         .select(
-            "anonymized_id,cleaned_text,best_knowledge_summary,llm_provider,created_at,key_skills,core_technical_skills,secondary_technical_skills"
+            "anonymized_id,cleaned_text,llm_raw_response,llm_provider,created_at,key_skills,core_technical_skills,secondary_technical_skills"
         )
         .limit(1000)
         .execute()
@@ -230,7 +230,15 @@ def main() -> int:
         if not (_is_error_text(row.get("cleaned_text")) or _is_too_short(row.get("cleaned_text"), args.min_cleaned_length)):
             continue
 
-        rel_path = _parse_archive_source_rel_path(row.get("best_knowledge_summary"))
+        # best_knowledge_summary may have been dropped from DB; try JSON backup
+        raw_backup = row.get("llm_raw_response", "")
+        bks = ""
+        if raw_backup and isinstance(raw_backup, str) and raw_backup.startswith("{"):
+            try:
+                bks = json.loads(raw_backup).get("best_knowledge_summary", "")
+            except Exception:
+                pass
+        rel_path = _parse_archive_source_rel_path(bks)
         if not rel_path:
             continue
 

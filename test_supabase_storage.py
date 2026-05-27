@@ -29,12 +29,12 @@ def test_fetch_candidates(storage):
     print("=" * 60)
     
     try:
-        response = storage.client.table(storage.table_name).select("anonymized_id, verdict, years_of_experience").limit(5).execute()
+        response = storage.client.table(storage.table_name).select("anonymized_id, years_of_experience").limit(5).execute()
         
         if response.data:
             print(f"✅ Found {len(response.data)} candidates in database")
             for candidate in response.data:
-                print(f"   - {candidate.get('anonymized_id')}: {candidate.get('verdict')} ({candidate.get('years_of_experience')} years)")
+                print(f"   - {candidate.get('anonymized_id')}: {candidate.get('years_of_experience')} years")
             return True
         else:
             print("⚠️  No candidates found in database")
@@ -53,7 +53,6 @@ def test_store_dummy_candidate(storage):
     
     dummy_intelligence = {
         "anonymized_id": "TEST_12345678",
-        "verdict": "SHORTLIST",
         "confidence_score": 85,
         "years_experience": 5,
         "seniority_level": "MID",
@@ -64,13 +63,13 @@ def test_store_dummy_candidate(storage):
         "llm_provider": "test",
         "llm_model": "test-model"
     }
-    
+
     try:
         print("Attempting to store test candidate...")
         result = storage.store_intelligence(dummy_intelligence)
         print(f"✅ Successfully stored test candidate")
         print(f"   Anonymized ID: {result.get('anonymized_id')}")
-        print(f"   Verdict: {result.get('verdict')}")
+        print(f"   Confidence: {result.get('confidence_score')}")
         return True
         
     except Exception as e:

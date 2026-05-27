@@ -305,7 +305,7 @@ def _supabase_get_candidate_fields(storage, anonymized_ids: List[str]) -> Dict[s
     def _query():
         resp = (
             storage.client.table('cv_intelligence')
-            .select('anonymized_id, cleaned_text, best_knowledge_summary')
+            .select('anonymized_id, cleaned_text')
             .in_('anonymized_id', ids)
             .execute()
         )

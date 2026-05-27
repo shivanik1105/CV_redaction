@@ -65,9 +65,9 @@ def _is_llm_eligible_fast(cleaned_text: str) -> bool:
 def _fetch_archive_placeholder_rows(storage: SupabaseStorage, limit: int) -> List[Dict]:
     resp = (
         storage.client.table("cv_intelligence")
-        .select("anonymized_id,cleaned_text,best_knowledge_summary", count="exact")
-        .eq("llm_provider", "none")
-        .like("best_knowledge_summary", "Source:%")
+        .select("anonymized_id,cleaned_text", count="exact")
+        .eq("llm_provider", "archive_ingest")
+        .eq("llm_model", "none")
         .limit(limit)
         .execute()
     )

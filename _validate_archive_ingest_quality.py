@@ -12,11 +12,10 @@ def main() -> int:
     resp = (
         client.table("cv_intelligence")
         .select(
-            "anonymized_id,llm_provider,llm_model,core_technical_skills,years_experience,years_of_experience,cleaned_text,cleaned_narrative,primary_domain,embedding,best_knowledge_summary,created_at",
+            "anonymized_id,llm_provider,llm_model,core_technical_skills,years_experience,years_of_experience,cleaned_text,cleaned_narrative,primary_domain,embedding,created_at",
             count="exact",
         )
         .eq("llm_provider", "none")
-        .like("best_knowledge_summary", "Source:%")
         .limit(1000)
         .execute()
     )
@@ -35,7 +34,7 @@ def main() -> int:
         or len((r.get("cleaned_text") or "").strip()) < 200
     ]
 
-    print("Archive-ingested rows (llm_provider=none, best_knowledge_summary like Source:%)")
+    print("Archive-ingested rows (llm_provider=none)")
     print("- count:", total_archive)
     print("- with embedding:", len(with_embedding), "/", len(rows))
     print("- empty core_technical_skills:", len(empty_skills), "/", len(rows))
@@ -48,8 +47,6 @@ def main() -> int:
             print(
                 "-",
                 r.get("anonymized_id"),
-                "|",
-                (r.get("best_knowledge_summary") or "")[:90],
                 "| len=",
                 len(cleaned),
             )
@@ -61,8 +58,6 @@ def main() -> int:
             print(
                 "-",
                 r.get("anonymized_id"),
-                "|",
-                (r.get("best_knowledge_summary") or "")[:90],
             )
 
     return 0
