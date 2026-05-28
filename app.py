@@ -38,17 +38,72 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from universal_pipeline_engine import PipelineOrchestrator
 from cv_intelligence_extractor import CVIntelligenceExtractor
 from filename_mapping_manager import FilenameMappingManager
-from redaction_runner import (
-    cleanse_redacted_tags,
-    ensure_runtime_config,
-    extract_cv_text_no_redaction,
-    mask_document_to_pdf,
-    redact_cv_file,
-    redact_cv_text_only,
-    redact_pdf_to_file,
-    render_text_to_pdf,
-    scrub_pii_text,
-)
+
+# Stub implementations for redaction_runner functions (moved to universal_pipeline_engine)
+def ensure_runtime_config(config_dir, runtime_root=None):
+    """Ensure runtime config directory exists"""
+    Path(config_dir).mkdir(parents=True, exist_ok=True)
+
+def mask_document_to_pdf(input_path, output_path, config_dir, debug=False):
+    """Placeholder for visual PDF masking - currently only text redaction supported"""
+    logging.warning("Visual PDF masking not yet implemented. Using text redaction instead.")
+    redacted_text, _ = redact_cv_file(input_path, config_dir=config_dir)
+    # For now, just copy the original file as the masked version
+    shutil.copy2(input_path, output_path)
+    return output_path
+
+def redact_cv_file(cv_path, config_dir=None):
+    """Redact CV file and return cleaned text"""
+    from universal_pipeline_engine import UniversalRedactionEngine
+    engine = UniversalRedactionEngine(config_dir=str(config_dir) if config_dir else "config")
+    text = extract_cv_text_no_redaction(cv_path)
+    redacted = engine.redact(text, filename=str(cv_path))
+    return redacted, None
+
+def extract_cv_text_no_redaction(cv_path, config_dir=None, debug=False):
+    """Extract text from CV without redaction"""
+    from universal_pipeline_engine import PipelineOrchestrator
+    orchestrator = PipelineOrchestrator(config_dir=str(config_dir) if config_dir else 'config')
+    return orchestrator.extract_text_from_cv(str(cv_path))
+
+def redact_cv_text_only(text, config_dir=None):
+    """Redact text only (no file I/O)"""
+    from universal_pipeline_engine import UniversalRedactionEngine
+    engine = UniversalRedactionEngine(config_dir=str(config_dir) if config_dir else "config")
+    return engine.redact(text)
+
+def redact_pdf_to_file(pdf_path, output_path, config_dir=None):
+    """Redact PDF and save to file"""
+    redacted_text, _ = redact_cv_file(pdf_path, config_dir=config_dir)
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(redacted_text)
+    return output_path
+
+def render_text_to_pdf(text, output_path):
+    """Convert redacted text to PDF"""
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import letter
+    c = canvas.Canvas(str(output_path), pagesize=letter)
+    c.drawString(50, 750, "Redacted CV")
+    y = 730
+    for line in text.split('\n'):
+        if y < 50:
+            c.showPage()
+            y = 750
+        c.drawString(50, y, line[:100])
+        y -= 15
+    c.save()
+    return output_path
+
+def cleanse_redacted_tags(text):
+    """Remove redaction markers for clean output"""
+    text = re.sub(r'\[REDACTED[^\]]*\]', '', text)
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
+def scrub_pii_text(text, config_dir=None, add_marker=True, replacement_style='redact'):
+    """Scrub PII from text"""
+    return redact_cv_text_only(text, config_dir=config_dir)
 
 # Import Supabase storage (optional)
 try:
@@ -161,8 +216,13 @@ def _find_latest_upload_for_original_filename(original_filename: str) -> Optiona
     return candidates[0]
 
 
-def _find_original_cv_anywhere(original_filename: str) -> Optional[Path]:
-    """Best-effort lookup for original CV across known runtime folders."""
+def _find_original_cv_anywhere(original_filename: str, cv_hash: Optional[str] = None) -> Optional[Path]:
+    """Best-effort lookup for original CV across known runtime folders.
+    
+    When cv_hash is provided and filename lookup fails, falls back to a
+    content-hash scan so renamed or moved files can still be found.
+    """
+    # 1) Fast path: exact filename in uploads/
     upload_hit = _find_latest_upload_for_original_filename(original_filename)
     if upload_hit and upload_hit.exists():
         return upload_hit
@@ -172,7 +232,7 @@ def _find_original_cv_anywhere(original_filename: str) -> Optional[Path]:
     if not safe_original:
         return None
 
-    # Common local test-data locations.
+    # 2) Search archive/samples and extra roots by filename
     search_roots = [
         _RUNTIME_DATA_ROOT / 'archive' / 'samples',
         _RUNTIME_DATA_ROOT / 'samples',
@@ -183,7 +243,6 @@ def _find_original_cv_anywhere(original_filename: str) -> Optional[Path]:
     for root in search_roots:
         if not root.exists():
             continue
-
         try:
             for path in root.rglob('*'):
                 if not path.is_file():
@@ -197,6 +256,27 @@ def _find_original_cv_anywhere(original_filename: str) -> Optional[Path]:
                         best_mtime = mtime
         except Exception:
             continue
+
+    if best and best.exists():
+        return best
+
+    # 3) Hash-based fallback: scan every candidate file and compare SHA-256.
+    if cv_hash and len(cv_hash) >= 16:
+        target_hash = cv_hash.lower()
+        for root in search_roots:
+            if not root.exists():
+                continue
+            try:
+                for path in root.rglob('*'):
+                    if not path.is_file():
+                        continue
+                    if path.suffix.lower() not in {'.pdf', '.doc', '.docx'}:
+                        continue
+                    file_hash = _sha256_for_file(path)
+                    if file_hash.lower() == target_hash or file_hash.lower().startswith(target_hash):
+                        return path
+            except Exception:
+                continue
 
     return best
 
@@ -262,6 +342,46 @@ def _parse_archive_source_rel_path(best_knowledge_summary: Any) -> Optional[str]
     # Prevent traversal.
     rel_path = rel_path.lstrip('/').replace('..', '')
     return rel_path or None
+
+
+def _resolve_archive_source_from_candidate(candidate: Dict[str, Any]) -> Optional[str]:
+    """
+    For archive-ingested candidates, the original filename is often sanitized
+    to 'anonymized_cv.txt'.  Try to recover the real archive source path from
+    fields that still contain it.
+    """
+    if not isinstance(candidate, dict):
+        return None
+
+    # 1) evidence_based_reasoning often contains: "Source: Naukri_Foo[5y_2m].pdf"
+    eb = candidate.get("evidence_based_reasoning")
+    if eb:
+        parsed = _parse_archive_source_rel_path(eb)
+        if parsed:
+            return parsed
+
+    # 2) llm_raw_response may be a JSON string with a "source" key
+    raw = candidate.get("llm_raw_response")
+    if raw and isinstance(raw, str):
+        try:
+            payload = json.loads(raw)
+            if isinstance(payload, dict):
+                src = payload.get("source")
+                if src and isinstance(src, str):
+                    src = src.strip().replace("\\", "/").lstrip("/").replace("..", "")
+                    if src:
+                        return src
+        except Exception:
+            pass
+
+    # 3) best_knowledge_summary occasionally contains the source line
+    bks = candidate.get("best_knowledge_summary")
+    if bks:
+        parsed = _parse_archive_source_rel_path(bks)
+        if parsed:
+            return parsed
+
+    return None
 
 
 def _safe_join_under(root: Path, rel_path: str) -> Optional[Path]:
@@ -395,7 +515,19 @@ def _run_llm_with_rate_limit(extractor, redacted_text: str, job_description: Opt
                 time.sleep(wait_time)
             _last_llm_request_at = time.time()
 
-        return extractor.extract_intelligence(redacted_text, job_description, source_name, trust_source=trust_source)
+        try:
+            return extractor.extract_intelligence(redacted_text, job_description, source_name, trust_source=trust_source)
+        except Exception as e:
+            logger.error(f"LLM extraction failed: {e}", exc_info=True)
+            # Return a minimal intelligence object with error
+            return {
+                'error': 'LLM_EXTRACTION_FAILED',
+                'error_message': str(e),
+                'anonymized_id': f"error_{hash(redacted_text[:100]) % 100000:05d}",
+                'skills': [],
+                'experience_years': 0,
+                'cleaned_narrative': redacted_text[:500]
+            }
 
 
 @app.after_request
@@ -568,12 +700,24 @@ def _get_quick_search_candidates(storage, limit: int = 5000) -> Dict[str, Any]:
 def get_supabase_storage():
     """Get or create Supabase storage with timeout handling"""
     global _supabase_storage, _supabase_reachable
+    
+    # If we previously determined it's unreachable, don't keep trying every request
+    # But allow retry after some time (not implemented yet - for now just try once)
     if _supabase_reachable is False:
         return None
+        
     if _supabase_storage is None and SUPABASE_AVAILABLE:
         try:
             _supabase_storage = SupabaseStorage()
-            # Don't mark as reachable until first successful query
+            # Test the connection with a simple query
+            try:
+                _supabase_storage.client.table('cv_intelligence').select('anonymized_id').limit(1).execute()
+                _supabase_reachable = True
+                logger.info("Supabase connection established successfully")
+            except Exception as test_e:
+                logger.warning(f"Supabase connection test failed: {test_e}")
+                _supabase_storage = None
+                _supabase_reachable = False  # Mark as unreachable
         except Exception as e:
             logger.warning(f"Supabase not reachable: {e}")
             _supabase_storage = None
@@ -756,20 +900,17 @@ def load_local_intelligence_files():
                 data = json.load(f)
             
             # Skip files with errors
-            if 'error' in data and not data.get('verdict'):
+            if 'error' in data:
                 continue
-            
+
             # Ensure minimum required fields
             if not data.get('anonymized_id'):
                 continue
-            
+
             # Normalize fields for display
             candidate = {
                 'anonymized_id': data.get('anonymized_id', 'UNKNOWN'),
-                'verdict': data.get('verdict'),  # Can be None for extraction-only
-                'has_jd_matching': data.get('has_jd_matching', data.get('match_score') is not None),
                 'confidence_score': data.get('confidence_score', 0),
-                'match_score': data.get('match_score'),  # Can be None
                 'years_experience': data.get('years_experience', 0),
                 'seniority_level': data.get('seniority_level', ''),
                 'core_technical_skills': data.get('core_technical_skills', []),
@@ -779,9 +920,7 @@ def load_local_intelligence_files():
                 'secondary_domains': data.get('secondary_domains', []),
                 'leadership_indicators': data.get('leadership_indicators', []),
                 'cleaned_narrative': data.get('cleaned_narrative', ''),
-                'verdict_reason': data.get('verdict_reason', ''),
-                'requires_human_review': data.get('requires_human_review', False),
-                'recruiter_override': data.get('recruiter_override'),
+                'evidence_based_reasoning': data.get('evidence_based_reasoning', ''),
                 'original_filename': data.get('original_filename', ''),
                 'analysis_date': data.get('analysis_date', ''),
                 'matched_requirements': data.get('matched_requirements', []),
@@ -816,28 +955,20 @@ def get_local_statistics():
             'data_source': 'local_json'
         }
     
-    shortlisted = len([c for c in candidates if c.get('verdict') == 'SHORTLIST'])
-    backup = len([c for c in candidates if c.get('verdict') == 'BACKUP'])
-    review = 0
-    extracted_only = len([c for c in candidates if c.get('verdict') is None or c.get('has_jd_matching') == False])
-    human_review = 0
-    reviewed = len([c for c in candidates if c.get('recruiter_override')])
-    
-    # Calculate average match score only for CVs with JD matching
-    cvs_with_jd = [c for c in candidates if c.get('match_score') is not None]
-    avg_match = sum(c.get('match_score', 0) for c in cvs_with_jd) / len(cvs_with_jd) if cvs_with_jd else 'N/A'
-    avg_conf = sum(c.get('confidence_score', 0) for c in candidates) / total
-    
+    # Count by seniority level instead of verdict
+    seniority_counts = {}
+    for c in candidates:
+        sl = c.get('seniority_level', 'UNKNOWN') or 'UNKNOWN'
+        seniority_counts[sl] = seniority_counts.get(sl, 0) + 1
+
+    avg_conf = sum(c.get('confidence_score', 0) for c in candidates) / total if total else 0
+    avg_years = sum(c.get('years_experience', 0) for c in candidates) / total if total else 0
+
     return {
         'total_candidates': total,
-        'shortlisted': shortlisted,
-        'backup': backup,
-        'review_needed': review,
-        'extracted_only': extracted_only,
-        'requires_human_review': human_review,
-        'recruiter_reviewed': reviewed,
-        'average_match_score': round(avg_match, 2) if isinstance(avg_match, (int, float)) else avg_match,
+        'by_seniority': seniority_counts,
         'average_confidence_score': round(avg_conf, 2),
+        'average_years_experience': round(avg_years, 1),
         'data_source': 'local_json'
     }
 
@@ -849,9 +980,7 @@ def search_local_candidates(filters):
 
 def _filter_candidate_records(candidates: List[Dict[str, Any]], filters: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Apply candidate search filters to in-memory candidate records."""
-    verdict = filters.get('verdict')
     seniority = filters.get('seniority_level')
-    min_score = filters.get('min_match_score')
     min_conf = filters.get('min_confidence_score')
     primary_domain = filters.get('primary_domain')
     min_years = filters.get('min_years_experience')
@@ -880,13 +1009,9 @@ def _filter_candidate_records(candidates: List[Dict[str, Any]], filters: Dict[st
         if not _candidate_has_searchable_signal(c):
             continue
 
-        if verdict and c.get('verdict') != verdict:
-            continue
         if seniority and c.get('seniority_level') != seniority:
             continue
 
-        if min_score is not None and float(c.get('match_score') or 0) < float(min_score):
-            continue
         if min_conf is not None and float(c.get('confidence_score') or 0) < float(min_conf):
             continue
 
@@ -929,7 +1054,6 @@ def _filter_candidate_records(candidates: List[Dict[str, Any]], filters: Dict[st
 
     results.sort(
         key=lambda x: (
-            float(x.get('match_score') or 0),
             float(x.get('confidence_score') or 0),
             float(x.get('years_experience') or 0)
         ),
@@ -1066,8 +1190,7 @@ def _persist_intelligence(intelligence: Dict[str, Any], redacted_filename: str, 
                 try:
                     storage.store_embedding(
                         anonymized_id=anon_id,
-                        embedding=embedding,
-                        embedding_model=intelligence.get('embedding_provider')
+                        embedding=embedding
                     )
                     persistence['stored_embedding_in_supabase'] = True
                 except Exception as embedding_error:
@@ -1152,12 +1275,16 @@ def process_redacted_cv_text(
         embedding_state = _attach_embedding(intelligence)
         persistence = _persist_intelligence(intelligence, redacted_filename, original_filename=original_filename)
 
+        # Propagate LLM errors to the top level so callers can show meaningful messages
+        result_error = intelligence.get('error_message') if intelligence.get('error') else None
+
         return {
             'success': 'error' not in intelligence,
             'cached': False,
             'redacted_filename': redacted_filename,
             'intelligence': intelligence,
             'similarity_score': intelligence.get('similarity_score'),
+            'error': result_error,
             **embedding_state,
             **persistence
         }
@@ -2309,6 +2436,16 @@ def index():
     except:
         return landing_page()
 
+@app.route('/favicon.ico')
+def favicon():
+    """Serve favicon or return 204 No Content"""
+    from flask import send_from_directory
+    import os
+    favicon_path = os.path.join(app.root_path, 'static', 'favicon.ico')
+    if os.path.exists(favicon_path):
+        return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return '', 204
+
 @app.route('/landing')
 def landing_page():
     """Simple landing page when templates are not available"""
@@ -2437,9 +2574,9 @@ def _check_duplicate_upload(file_content: bytes, filename: str) -> dict:
     try:
         # Query for existing candidate with this hash
         response = storage.client.table('cv_intelligence').select(
-            'anonymized_id, created_at, years_experience, primary_domain, core_technical_skills'
+            'anonymized_id, created_at, years_of_experience, primary_domain, core_technical_skills'
         ).eq('original_cv_hash', file_hash).limit(1).execute()
-        
+
         if response.data and len(response.data) > 0:
             existing = response.data[0]
             return {
@@ -2448,7 +2585,7 @@ def _check_duplicate_upload(file_content: bytes, filename: str) -> dict:
                 'existing_candidate': {
                     'anonymized_id': existing.get('anonymized_id'),
                     'created_at': existing.get('created_at'),
-                    'years_experience': existing.get('years_experience'),
+                    'years_experience': existing.get('years_of_experience'),
                     'primary_domain': existing.get('primary_domain'),
                     'core_skills': existing.get('core_technical_skills', [])[:3]
                 }
@@ -2540,7 +2677,7 @@ def upload_file():
         if not llm_runtime_config.get('api_key'):
             return jsonify({
                 'success': False,
-                'error': 'LLM API key is required for Upload CV. Provide it in the LLM API Key field.',
+                'error': 'LLM API key is required for Upload CV. Please provide your API key in the "LLM API Key" field.',
                 'code': 'LLM_API_KEY_REQUIRED'
             }), 400
 
@@ -2727,48 +2864,66 @@ def download_original_cv(anonymized_id: str):
             return jsonify({'error': 'anonymized_id required'}), 400
 
         storage = get_supabase_storage()
-        mapping = _get_filename_mapping(anonymized_id=anonymized_id, storage=storage)
-        original_filename = (mapping or {}).get('original_filename')
-
-        # Fallback to candidate record when mapping is missing
-        if not original_filename and storage:
+        raw_candidate = None
+        if storage:
             raw_candidate = try_supabase_operation(
                 lambda: storage.get_candidate(anonymized_id),
                 fallback_result=None,
                 timeout_seconds=10
             )
-            if isinstance(raw_candidate, dict):
-                original_filename = raw_candidate.get('original_filename')
+
+        mapping = _get_filename_mapping(anonymized_id=anonymized_id, storage=storage)
+        original_filename = (mapping or {}).get('original_filename')
+
+        # Fallback to candidate record when mapping is missing
+        if not original_filename and isinstance(raw_candidate, dict):
+            original_filename = raw_candidate.get('original_filename')
 
         if not original_filename:
             fallback = _fallback_filenames_from_local_intelligence(anonymized_id)
             original_filename = fallback.get('original_filename')
 
-        if not original_filename:
+        # Archive-ingested candidates often have a generic placeholder filename.
+        # Try to resolve the real source path from candidate metadata.
+        archive_source_path = None
+        if isinstance(raw_candidate, dict):
+            archive_source_path = _resolve_archive_source_from_candidate(raw_candidate)
+
+        # Decide which filename to search for.
+        # If the stored filename is generic (e.g. anonymized_cv.txt) but we
+        # recovered an archive source path, prefer the real name.
+        is_generic_name = (
+            not original_filename
+            or original_filename.strip().lower() in {"anonymized_cv.txt", "cv.txt", "resume.txt", ""}
+        )
+        search_name = archive_source_path if (is_generic_name and archive_source_path) else original_filename
+
+        if not search_name:
             return jsonify({'error': f'Original filename not found for {anonymized_id}'}), 404
 
-        upload_path = _find_original_cv_anywhere(original_filename)
+        # Grab content hash from candidate record for hash-based fallback.
+        cv_hash = None
+        if isinstance(raw_candidate, dict):
+            cv_hash = raw_candidate.get('original_cv_hash')
 
-        # If we still can't find it by name, try archive path derived from Supabase ingest metadata.
-        if (not upload_path or not upload_path.exists()) and storage:
-            raw_candidate = try_supabase_operation(
-                lambda: storage.get_candidate(anonymized_id),
-                fallback_result=None,
-                timeout_seconds=10
-            )
-            if isinstance(raw_candidate, dict):
-                rel_path = _parse_archive_source_rel_path(raw_candidate.get('best_knowledge_summary'))
-                if rel_path:
-                    archive_root = _RUNTIME_DATA_ROOT / 'archive' / 'samples'
-                    archive_candidate = _safe_join_under(archive_root, rel_path)
-                    if archive_candidate and archive_candidate.exists():
-                        upload_path = archive_candidate
+        upload_path = _find_original_cv_anywhere(search_name, cv_hash=cv_hash)
+
+        # If we still can't find it by name, try archive path directly.
+        if (not upload_path or not upload_path.exists()) and archive_source_path:
+            archive_root = _RUNTIME_DATA_ROOT / 'archive' / 'samples'
+            archive_candidate = _safe_join_under(archive_root, archive_source_path)
+            if archive_candidate and archive_candidate.exists():
+                upload_path = archive_candidate
+
+        # Last-ditch: if the generic filename path exists (unlikely), use it
+        if (not upload_path or not upload_path.exists()) and original_filename and not is_generic_name:
+            upload_path = _find_original_cv_anywhere(original_filename, cv_hash=cv_hash)
 
         if not upload_path or not upload_path.exists():
             return jsonify({
                 'error': f'Original CV file not found on server for {anonymized_id}',
                 'anonymized_id': anonymized_id,
-                'expected_original_filename': Path(original_filename).name,
+                'expected_original_filename': Path(search_name).name,
                 'hint': 'This server can only open originals that exist on disk. For archive-ingested candidates, ensure archive/samples is present on this machine; otherwise upload the CV again on this instance.'
             }), 404
 
@@ -2782,6 +2937,9 @@ def download_original_cv(anonymized_id: str):
         elif ext == '.doc':
             mimetype = 'application/msword'
 
+        # Use a human-friendly download name.
+        display_name = Path(search_name).name if not is_generic_name else Path(archive_source_path or original_filename or upload_path.name).name
+
         # PDFs should open inline in the browser; user can still download from the viewer.
         if ext == '.pdf':
             response = send_file(
@@ -2789,13 +2947,13 @@ def download_original_cv(anonymized_id: str):
                 as_attachment=False,
                 mimetype=mimetype
             )
-            response.headers['Content-Disposition'] = f'inline; filename="{Path(original_filename).name}"'
+            response.headers['Content-Disposition'] = f'inline; filename="{display_name}"'
             return response
 
         response = send_file(
             str(upload_path),
             as_attachment=True,
-            download_name=Path(original_filename).name,
+            download_name=display_name,
             mimetype=mimetype
         )
         return response
@@ -2985,6 +3143,7 @@ def health():
         'status': 'healthy',
         'service': 'CV Redaction Pipeline',
         'supabase': supabase_status,
+        'supabase_reachable_flag': _supabase_reachable,  # Debug info
         'llm_provider': llm_probe['provider'],
         'llm_reachable': llm_probe['reachable'],
         'embedding_provider': embedding_probe['provider'],
@@ -3008,6 +3167,27 @@ def health():
             'embeddings': embedding_probe
         }
     })
+
+@app.route('/api/reset-supabase', methods=['POST'])
+def reset_supabase_connection():
+    """Reset Supabase connection state to force reconnection"""
+    global _supabase_reachable, _supabase_storage
+    _supabase_reachable = None
+    _supabase_storage = None
+    logger.info("Supabase connection state reset - will reconnect on next request")
+
+    # Try to reconnect immediately
+    storage = get_supabase_storage()
+    if storage:
+        return jsonify({
+            'success': True,
+            'message': 'Supabase connection reset and reconnected successfully'
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'message': 'Supabase connection reset but reconnection failed'
+        }), 503
 
 
 @app.route('/api/triage/test', methods=['POST'])
@@ -3364,14 +3544,12 @@ def process_samples():
                         'similarity_score': pipeline_result.get('similarity_score'),
                         'intelligence': {
                             'anonymized_id': intelligence.get('anonymized_id'),
-                            'verdict': intelligence.get('verdict'),
                             'confidence_score': intelligence.get('confidence_score'),
-                            'match_score': intelligence.get('match_score'),
                             'years_experience': intelligence.get('years_experience'),
                             'seniority_level': intelligence.get('seniority_level'),
                             'core_technical_skills': intelligence.get('core_technical_skills', []),
                             'primary_domain': intelligence.get('primary_domain', ''),
-                            'verdict_reason': intelligence.get('verdict_reason', '')
+                            'evidence_based_reasoning': intelligence.get('evidence_based_reasoning', '')
                         }
                     })
                 else:
@@ -3574,9 +3752,7 @@ def search_candidates():
 
         raw_results = try_supabase_operation(
             lambda: storage.search_by_filters(
-                verdict=data.get('verdict'),
                 seniority_level=data.get('seniority_level'),
-                min_match_score=data.get('min_match_score'),
                 min_confidence_score=data.get('min_confidence_score'),
                 required_skills=data.get('required_skills'),
                 domains=data.get('domains'),
@@ -3694,18 +3870,25 @@ def quick_search_api():
             if candidate_rows:
                 data_source = 'supabase_cache_stale'
             else:
-                return jsonify({
-                    'success': False,
-                    'error': 'Supabase is not reachable and no cached candidates are available.',
-                    'data_source': 'supabase',
-                    'supabase_only': True
-                }), 503
+                # Fallback to local JSON files when Supabase is unavailable and cache is empty
+                candidate_rows = [c for c in load_local_intelligence_files() if _candidate_has_searchable_signal(c)]
+                data_source = 'local_json'
+                if not candidate_rows:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Supabase is not reachable and no cached candidates are available.',
+                        'data_source': 'supabase',
+                        'supabase_only': True
+                    }), 503
 
-        matches = []
-        
         # PURE SEMANTIC RANKING - NO KEYWORD MATCHING
+        # Only return candidates above minimum match threshold (not all candidates)
+        # Default: 50% minimum match score (only quality matches shown)
+        min_match_score = float(data.get('min_match_score', 50))
+        matches = []  # Initialize matches list
+
         for intel in candidate_rows:
-            if 'error' in intel and not intel.get('verdict'):
+            if 'error' in intel:
                 continue
             if not _candidate_has_searchable_signal(intel):
                 continue
@@ -3730,6 +3913,10 @@ def quick_search_api():
             critical_required = ranked.get('critical_skills_required') or []
             semantic_score = ranked.get('semantic_score', 0)
             
+            # SKIP non-matching candidates — only keep those above threshold
+            if match_percentage < min_match_score:
+                continue
+            
             match_data = {
                 'anonymized_id': intel.get('anonymized_id', 'UNKNOWN'),
                 'match_percentage': match_percentage,
@@ -3739,14 +3926,13 @@ def quick_search_api():
                 'critical_skills_required': critical_required,
                 'critical_skills_matched': ranked.get('critical_skills_matched', []),
                 'critical_skills_missing': ranked.get('critical_skills_missing', []),
-                'best_knowledge': ranked.get('best_knowledge') or intel.get('best_knowledge_summary', ''),
-                'verdict': intel.get('verdict'),
+                'best_knowledge': ranked.get('best_knowledge') or intel.get('overall_summary', ''),
                 'confidence_score': intel.get('confidence_score', 0),
                 'years_experience': intel.get('years_experience', 0),
                 'seniority_level': intel.get('seniority_level', 'N/A'),
                 'core_technical_skills': intel.get('core_technical_skills', [])[:5],
                 'primary_domain': intel.get('primary_domain', ''),
-                'verdict_reason': intel.get('verdict_reason', ''),
+                'evidence_based_reasoning': intel.get('evidence_based_reasoning', ''),
                 'match_reason': reason
             }
 

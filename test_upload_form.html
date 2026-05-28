@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload CV Test Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="file"],
+        input[type="password"],
+        input[type="text"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .required {
+            color: red;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .debug {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload CV Test Form</h1>
+        <p class="subtitle">This form tests if your browser correctly sends the API key to the server</p>
+        
+        <div class="note">
+            <strong>⚠️ Important:</strong> You MUST enter your LLM API key in the field below. 
+            The server will NOT use its own API key as a fallback.
+        </div>
+
+        <form id="uploadForm">
+            <div class="form-group">
+                <label>CV File <span class="required">*</span></label>
+                <input type="file" id="cvFile" accept=".pdf,.docx" required>
+            </div>
+
+            <div class="form-group">
+                <label>LLM API Key <span class="required">* REQUIRED</span></label>
+                <input type="password" id="apiKey" placeholder="Enter your API key (e.g., gsk_... for Groq)" required>
+                <small style="color: #666;">Your API key is only sent with this request and is NOT stored on the server</small>
+            </div>
+
+            <div class="form-group">
+                <label>LLM Provider (Optional)</label>
+                <select id="provider">
+                    <option value="">Use server default</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="anthropic">Anthropic</option>
+                    <option value="gemini">Gemini</option>
+                    <option value="groq">Groq</option>
+                    <option value="ollama">Ollama</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>LLM Model (Optional)</label>
+                <input type="text" id="model" placeholder="e.g., gpt-4o-mini, llama-3.3-70b-versatile">
+            </div>
+
+            <div class="form-group">
+                <label>Job Description (Optional)</label>
+                <textarea id="jobDescription" placeholder="Paste job description for JD-specific matching"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="async" checked>
+                    Process asynchronously (recommended)
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="forceReprocess">
+                    Force Reprocess (upload even if duplicate)
+                </label>
+            </div>
+
+            <button type="submit" id="submitBtn">Upload CV</button>
+            <button type="button" class="btn-secondary" onclick="resetForm()">Reset</button>
+        </form>
+
+        <div id="result"></div>
+        <div id="debug" class="debug" style="display: none;"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const resultDiv = document.getElementById('result');
+        const debugDiv = document.getElementById('debug');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const file = document.getElementById('cvFile').files[0];
+            const apiKey = document.getElementById('apiKey').value.trim();
+
+            // Validate
+            if (!file) {
+                showResult('Please select a CV file', 'error');
+                return;
+            }
+
+            if (!apiKey) {
+                showResult('LLM API key is required! Please enter your API key.', 'error');
+                return;
+            }
+
+            // Show what we're sending
+            const debugInfo = {
+                file: {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type
+                },
+                apiKey: apiKey.substring(0, 10) + '...' + apiKey.substring(apiKey.length - 4),
+                apiKeyLength: apiKey.length,
+                provider: document.getElementById('provider').value || '(server default)',
+                model: document.getElementById('model').value || '(not specified)',
+                async: document.getElementById('async').checked,
+                forceReprocess: document.getElementById('forceReprocess').checked
+            };
+
+            debugDiv.textContent = 'Sending request with:\n' + JSON.stringify(debugInfo, null, 2);
+            debugDiv.style.display = 'block';
+
+            // Disable button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Uploading...';
+            showResult('Uploading... Please wait.', 'info');
+
+            try {
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('cv_file', file);
+                formData.append('job_description', document.getElementById('jobDescription').value.trim());
+                formData.append('async', document.getElementById('async').checked ? 'true' : 'false');
+                formData.append('force_reprocess', document.getElementById('forceReprocess').checked ? 'true' : 'false');
+                
+                const provider = document.getElementById('provider').value;
+                const model = document.getElementById('model').value.trim();
+                
+                if (provider) formData.append('llm_provider', provider);
+                if (model) formData.append('llm_model', model);
+                formData.append('llm_api_key', apiKey);
+
+                // Send request
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                // Show result
+                if (response.ok && data.success) {
+                    showResult('✅ Upload successful! ' + (data.message || ''), 'success');
+                    debugDiv.textContent += '\n\nResponse:\n' + JSON.stringify(data, null, 2);
+                } else {
+                    const errorMsg = data.error || 'Upload failed';
+                    const errorCode = data.code || '';
+                    
+                    if (errorCode === 'LLM_API_KEY_REQUIRED') {
+                        showResult('❌ ERROR: Backend did not receive the API key!\n\n' +
+                                 'This means the browser is not sending the API key correctly.\n' +
+                                 'Check the debug info below to see what was sent.', 'error');
+                    } else {
+                        showResult('❌ ' + errorMsg, 'error');
+                    }
+                    
+                    debugDiv.textContent += '\n\nError Response:\n' + JSON.stringify(data, null, 2);
+                }
+
+            } catch (error) {
+                showResult('❌ Request failed: ' + error.message, 'error');
+                debugDiv.textContent += '\n\nException:\n' + error.toString();
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Upload CV';
+            }
+        });
+
+        function showResult(message, type) {
+            resultDiv.textContent = message;
+            resultDiv.className = type;
+            resultDiv.style.display = 'block';
+        }
+
+        function resetForm() {
+            form.reset();
+            resultDiv.style.display = 'none';
+            debugDiv.style.display = 'none';
+        }
+
+        // Show API key length as user types (for debugging)
+        document.getElementById('apiKey').addEventListener('input', (e) => {
+            const len = e.target.value.length;
+            console.log('API key length:', len);
+        });
+    </script>
+</body>
+</html>

@@ -829,6 +829,44 @@ class SupabaseStorage:
             logger.error(f"Error getting candidate: {e}")
             return None
 
+    def get_all_candidates(self, limit: int = 500, offset: int = 0) -> List[Dict]:
+        """Get all candidates from Supabase with pagination."""
+        try:
+            response = self.client.table(self.table_name).select('*').order('created_at', desc=True).limit(limit).offset(offset).execute()
+            return response.data or []
+        except Exception as e:
+            logger.error(f"Error getting all candidates: {e}")
+            return []
+
+    def _db_record_to_app_format(self, record: Dict) -> Dict:
+        """Convert database record to application format for frontend display."""
+        if not record:
+            return {}
+        
+        return {
+            'anonymized_id': record.get('anonymized_id', 'UNKNOWN'),
+            'years_of_experience': record.get('years_of_experience', 0),
+            'seniority_level': record.get('seniority_level') or record.get('career_level', 'UNKNOWN'),
+            'primary_domain': record.get('primary_domain') or record.get('domain_expertise', ['Unknown'])[0] if record.get('domain_expertise') else 'Unknown',
+            'core_technical_skills': record.get('core_technical_skills', []),
+            'secondary_technical_skills': record.get('secondary_technical_skills', []),
+            'key_skills': record.get('key_skills', []),
+            'confidence_score': record.get('confidence_score', 0),
+            'match_score': record.get('match_score', 0),
+            'soft_skills': record.get('soft_skills', []),
+            'leadership_indicators': record.get('leadership_indicators', []),
+            'certifications': record.get('certifications', []),
+            'domain_expertise': record.get('domain_expertise', [record.get('primary_domain', 'Unknown')]),
+            'cleaned_narrative': record.get('cleaned_narrative', ''),
+            'key_strengths': record.get('key_strengths', []),
+            'matched_requirements': record.get('matched_requirements', []),
+            'missing_requirements': record.get('missing_requirements', []),
+            'created_at': record.get('created_at'),
+            'llm_provider': record.get('llm_provider', 'unknown'),
+            'llm_model': record.get('llm_model', 'unknown'),
+            'embedding': record.get('embedding'),  # CRITICAL: Pre-computed embedding for semantic search
+        }
+
     def batch_store(self, intelligence_list: List[Dict]) -> List[Dict]:
         """Store multiple CV intelligence records in batch."""
         results = []
@@ -863,6 +901,15 @@ class SupabaseStorage:
             return response.data[0]["original_filename"] if response.data else None
         except Exception as e:
             logger.error(f"Error retrieving filename: {e}")
+            return None
+
+    def get_upload_job(self, job_id: str) -> Optional[Dict]:
+        """Get upload job status from job tracking table."""
+        try:
+            response = self.client.table("upload_jobs").select("*").eq("job_id", job_id).execute()
+            return response.data[0] if response.data else None
+        except Exception as e:
+            logger.warning(f"Could not retrieve upload job {job_id}: {e}")
             return None
 
     def get_dashboard_stats(self) -> Dict:

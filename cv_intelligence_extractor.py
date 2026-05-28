@@ -15,8 +15,63 @@ from pathlib import Path
 import logging
 from datetime import datetime
 
-# Import LLM batch processor for API calls
-from llm_batch_processor import LLMBatchProcessor, QuotaExhaustedException
+# Import LLM batch processor for API calls (optional - fallback to Groq)
+try:
+    from llm_batch_processor import LLMBatchProcessor, QuotaExhaustedException
+except ImportError:
+    # Fallback: LLMBatchProcessor was deleted during cleanup
+    # App uses direct Groq API calls instead
+    class LLMBatchProcessor:
+        def __init__(self, api_provider=None, api_key=None, model=None):
+            from groq import Groq
+            self.client = Groq(api_key=api_key or os.getenv('GROQ_API_KEY'))
+            self.model = model or 'llama-3.1-70b-versatile'
+            self.api_provider = api_provider or 'groq'
+        
+        def generate_analysis(self, prompt):
+            """Generate LLM analysis from prompt with proper UTF-8 encoding."""
+            # Ensure prompt is a proper UTF-8 string
+            if isinstance(prompt, bytes):
+                try:
+                    prompt = prompt.decode('utf-8')
+                except UnicodeDecodeError:
+                    prompt = prompt.decode('utf-8', errors='replace')
+            elif not isinstance(prompt, str):
+                prompt = str(prompt)
+            
+            # Ensure the string is valid UTF-8 by encoding and decoding
+            try:
+                prompt = prompt.encode('utf-8').decode('utf-8')
+            except (UnicodeDecodeError, UnicodeEncodeError) as e:
+                logger.warning(f"Encoding issue in prompt, replacing invalid chars: {e}")
+                prompt = prompt.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+            
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.3,
+                    max_tokens=4000
+                )
+                response_text = response.choices[0].message.content
+                
+                # Ensure response is properly UTF-8 encoded
+                if isinstance(response_text, bytes):
+                    response_text = response_text.decode('utf-8', errors='replace')
+                else:
+                    # Validate UTF-8 encoding
+                    try:
+                        response_text.encode('utf-8').decode('utf-8')
+                    except (UnicodeDecodeError, UnicodeEncodeError):
+                        response_text = response_text.encode('utf-8', errors='replace').decode('utf-8')
+                
+                return response_text
+            except Exception as e:
+                logger.error(f"Error calling Groq API: {e}")
+                raise
+    
+    class QuotaExhaustedException(Exception):
+        pass
 
 # Similarity scoring — sentence embeddings + sklearn cosine similarity
 try:
@@ -637,6 +692,20 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
         Parse detailed prose LLM response into structured JSON.
         Extracts ALL fields required by the production DB schema.
         """
+        # Ensure prose_response is properly UTF-8 encoded
+        if isinstance(prose_response, bytes):
+            try:
+                prose_response = prose_response.decode('utf-8')
+            except UnicodeDecodeError:
+                prose_response = prose_response.decode('utf-8', errors='replace')
+        elif not isinstance(prose_response, str):
+            prose_response = str(prose_response)
+        
+        # Validate and fix any encoding issues
+        try:
+            prose_response = prose_response.encode('utf-8').decode('utf-8')
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            prose_response = prose_response.encode('utf-8', errors='replace').decode('utf-8')
         def _extract_bullets(block: str) -> List[str]:
             """Extract bullet list items from a text block."""
             items = []
@@ -1013,9 +1082,16 @@ ANALYSIS DATE: {datetime.now().isoformat()}"""
         except QuotaExhaustedException:
             raise
         except Exception as e:
-            logger.error(f"Error extracting intelligence: {e}")
+            logger.error(f"Error extracting intelligence: {e}", exc_info=True)
+            # Ensure error message is properly UTF-8 encoded
+            error_msg = str(e)
+            try:
+                error_msg = error_msg.encode('utf-8').decode('utf-8')
+            except (UnicodeDecodeError, UnicodeEncodeError):
+                error_msg = error_msg.encode('utf-8', errors='replace').decode('utf-8')
+            
             return {
-                "error": str(e),
+                "error": error_msg,
                 "anonymized_id": self._generate_anonymized_id(cv_text),
                 "original_filename": original_filename or "unknown"
             }
