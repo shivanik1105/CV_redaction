@@ -698,31 +698,37 @@ def _get_quick_search_candidates(storage, limit: int = 5000) -> Dict[str, Any]:
         }
 
 def get_supabase_storage():
-    """Get or create Supabase storage with timeout handling"""
+    """Get or create Supabase storage with timeout handling and retry logic"""
     global _supabase_storage, _supabase_reachable
     
-    # If we previously determined it's unreachable, don't keep trying every request
-    # But allow retry after some time (not implemented yet - for now just try once)
-    if _supabase_reachable is False:
-        return None
+    # Allow retry even if previously unreachable - Supabase might have recovered
+    # Don't cache unreachable state permanently
+    if _supabase_storage is not None and _supabase_reachable:
+        return _supabase_storage
         
-    if _supabase_storage is None and SUPABASE_AVAILABLE:
+    if SUPABASE_AVAILABLE:
         try:
-            _supabase_storage = SupabaseStorage()
-            # Test the connection with a simple query
+            if _supabase_storage is None:
+                _supabase_storage = SupabaseStorage()
+            
+            # Always test the connection to ensure it's still working
             try:
                 _supabase_storage.client.table('cv_intelligence').select('anonymized_id').limit(1).execute()
                 _supabase_reachable = True
-                logger.info("Supabase connection established successfully")
+                logger.debug("Supabase connection verified")
+                return _supabase_storage
             except Exception as test_e:
                 logger.warning(f"Supabase connection test failed: {test_e}")
+                _supabase_reachable = False
                 _supabase_storage = None
-                _supabase_reachable = False  # Mark as unreachable
+                return None
         except Exception as e:
-            logger.warning(f"Supabase not reachable: {e}")
-            _supabase_storage = None
+            logger.debug(f"Supabase unavailable (expected if credentials missing): {type(e).__name__}")
             _supabase_reachable = False
-    return _supabase_storage
+            _supabase_storage = None
+            return None
+    
+    return None
 
 def try_supabase_operation(operation, fallback_result=None, timeout_seconds=5):
     """
@@ -2832,10 +2838,12 @@ def get_upload_job_status(job_id):
 
 @app.route('/download/<filename>')
 def download_file(filename):
-    """Download the redacted CV"""
+    """Download file (redacted text, masked PDF, or intelligence JSON)"""
     try:
         safe_name = os.path.basename(filename)
         file_path = os.path.join(app.config['OUTPUT_FOLDER'], safe_name)
+        
+        # Check if file exists in output folder
         if os.path.exists(file_path):
             ext = os.path.splitext(safe_name)[1].lower()
             mimetype = {
@@ -2843,14 +2851,32 @@ def download_file(filename):
                 '.json': 'application/json',
                 '.pdf': 'application/pdf',
             }.get(ext, 'application/octet-stream')
+            
+            # For masked PDFs, use proper display name
+            download_name = safe_name
+            if 'MASKED_' in safe_name:
+                # Extract anonymized_id from filename if available, otherwise use as-is
+                download_name = safe_name.replace('MASKED_', 'Redacted_CV_')
+            
             return send_file(
                 file_path,
                 as_attachment=True,
-                download_name=safe_name,
+                download_name=download_name,
                 mimetype=mimetype
             )
-        else:
-            return jsonify({'error': 'File not found'}), 404
+        
+        # Try intelligence folder as fallback
+        intel_path = os.path.join(app.config['INTELLIGENCE_FOLDER'], safe_name)
+        if os.path.exists(intel_path):
+            return send_file(
+                intel_path,
+                as_attachment=True,
+                download_name=safe_name,
+                mimetype='application/json'
+            )
+        
+        logger.warning(f"Download requested for missing file: {safe_name}")
+        return jsonify({'error': f'File not found: {safe_name}'}), 404
     except Exception as e:
         logger.error(f"Error downloading file: {str(e)}", exc_info=True)
         return jsonify({'error': f'Error downloading file: {str(e)}'}), 500
@@ -3720,7 +3746,7 @@ def batch_extract_intelligence():
 
 @app.route('/api/search-candidates', methods=['POST'])
 def search_candidates():
-    """Search candidates using filters from Supabase only."""
+    """Search candidates with fallback to local files if Supabase unavailable."""
     try:
         data = request.get_json() or {}
         limit_raw = data.get('limit', 5000)
@@ -3733,6 +3759,19 @@ def search_candidates():
         
         storage = get_supabase_storage()
         if not storage:
+            # Fallback to local candidates from JSON files
+            local_candidates = load_local_intelligence_files()
+            if local_candidates:
+                filtered = _filter_candidate_records(local_candidates, data)[:limit]
+                return jsonify({
+                    'success': True,
+                    'count': len(filtered),
+                    'candidates': filtered,
+                    'data_source': 'local_files',
+                    'message': 'Supabase unavailable - using local candidate data'
+                })
+            
+            # Try cache as last resort
             cached_candidates = _get_quick_search_cache_snapshot()
             if cached_candidates:
                 filtered = _filter_candidate_records(cached_candidates, data)[:limit]
@@ -3740,14 +3779,15 @@ def search_candidates():
                     'success': True,
                     'count': len(filtered),
                     'candidates': filtered,
-                    'data_source': 'supabase_cache_stale',
-                    'supabase_only': True
+                    'data_source': 'cache',
+                    'message': 'Supabase unavailable - using cached data'
                 })
+            
             return jsonify({
                 'success': False,
-                'error': 'Supabase is not reachable. Supabase-only mode is enabled.',
-                'data_source': 'supabase',
-                'supabase_only': True
+                'error': 'Supabase is not reachable and no local candidates found.',
+                'message': 'Please upload CVs first or check Supabase connection',
+                'data_source': 'none'
             }), 503
 
         raw_results = try_supabase_operation(
