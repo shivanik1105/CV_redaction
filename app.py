@@ -45,11 +45,63 @@ def ensure_runtime_config(config_dir, runtime_root=None):
     Path(config_dir).mkdir(parents=True, exist_ok=True)
 
 def mask_document_to_pdf(input_path, output_path, config_dir, debug=False):
-    """Create a true redacted PDF by extracting text, removing PII, and rendering clean text to PDF."""
-    redacted_text, _ = redact_cv_file(input_path, config_dir=config_dir)
-    # Generate a clean redacted PDF from the anonymized text
-    render_text_to_pdf(redacted_text, output_path)
-    return output_path
+    """Create a visually masked PDF with black boxes over PII."""
+    try:
+        import fitz  # PyMuPDF
+        from universal_pipeline_engine import UniversalRedactionEngine
+        
+        # Open the PDF
+        doc = fitz.open(str(input_path))
+        
+        # Get PII patterns to redact
+        engine = UniversalRedactionEngine(config_dir=str(config_dir) if config_dir else "config")
+        
+        # Extract text to find PII locations
+        full_text = extract_cv_text_no_redaction(input_path, config_dir=config_dir)
+        
+        # Get redacted text to identify what needs masking
+        redacted_text, _ = redact_cv_file(input_path, config_dir=config_dir)
+        
+        # Find all PII markers in redacted text
+        import re
+        pii_markers = re.findall(r'\[REDACTED[^\]]*\]|\[NAME\]|\[REDACTED_[A-Z_]+\]', redacted_text)
+        
+        # For each page, search for PII and add black rectangles
+        for page_num in range(len(doc)):
+            page = doc[page_num]
+            
+            # Common PII patterns to search and mask
+            pii_patterns = [
+                r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',  # Email
+                r'\b\d{10}\b',  # 10-digit phone
+                r'\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b',  # Phone with separators
+                r'\b\+\d{1,3}[-.\s]?\d{10}\b',  # International phone
+                r'\bhttps?://[^\s]+\b',  # URLs
+                r'\bwww\.[^\s]+\b',  # www URLs
+                r'\blinkedin\.com/[^\s]+\b',  # LinkedIn
+                r'\bgithub\.com/[^\s]+\b',  # GitHub
+            ]
+            
+            # Search and redact each pattern
+            for pattern in pii_patterns:
+                text_instances = page.search_for(pattern, flags=fitz.TEXT_PRESERVE_WHITESPACE)
+                for inst in text_instances:
+                    # Draw black rectangle over the text
+                    page.draw_rect(inst, color=(0, 0, 0), fill=(0, 0, 0))
+        
+        # Save the masked PDF
+        doc.save(str(output_path))
+        doc.close()
+        
+        logger.info(f"Created visually masked PDF: {output_path}")
+        return output_path
+        
+    except Exception as e:
+        logger.warning(f"Visual PDF masking failed: {e}. Falling back to text-based redaction.")
+        # Fallback to text-based redaction
+        redacted_text, _ = redact_cv_file(input_path, config_dir=config_dir)
+        render_text_to_pdf(redacted_text, output_path)
+        return output_path
 
 def redact_cv_file(cv_path, config_dir=None):
     """Redact CV file and return cleaned text"""
