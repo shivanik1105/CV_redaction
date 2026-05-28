@@ -45,11 +45,10 @@ def ensure_runtime_config(config_dir, runtime_root=None):
     Path(config_dir).mkdir(parents=True, exist_ok=True)
 
 def mask_document_to_pdf(input_path, output_path, config_dir, debug=False):
-    """Placeholder for visual PDF masking - currently only text redaction supported"""
-    logging.warning("Visual PDF masking not yet implemented. Using text redaction instead.")
+    """Create a true redacted PDF by extracting text, removing PII, and rendering clean text to PDF."""
     redacted_text, _ = redact_cv_file(input_path, config_dir=config_dir)
-    # For now, just copy the original file as the masked version
-    shutil.copy2(input_path, output_path)
+    # Generate a clean redacted PDF from the anonymized text
+    render_text_to_pdf(redacted_text, output_path)
     return output_path
 
 def redact_cv_file(cv_path, config_dir=None):
@@ -631,7 +630,6 @@ def _get_quick_search_candidates(storage, limit: int = 5000) -> Dict[str, Any]:
     """Get candidates for quick-search using Supabase with TTL cache and stale fallback."""
     global _quick_search_cache_refreshing
     now = time.time()
-    should_refresh = False
 
     with _quick_search_cache_lock:
         cached_candidates = list(_quick_search_candidate_cache.get('candidates') or [])
@@ -657,45 +655,46 @@ def _get_quick_search_candidates(storage, limit: int = 5000) -> Dict[str, Any]:
             }
 
         _quick_search_cache_refreshing = True
-        should_refresh = True
 
-    raw_candidates = try_supabase_operation(
-        lambda: storage.get_all_candidates(limit=limit),
-        fallback_result=None,
-        timeout_seconds=10
-    )
+    try:
+        raw_candidates = try_supabase_operation(
+            lambda: storage.get_all_candidates(limit=limit),
+            fallback_result=None,
+            timeout_seconds=10
+        )
 
-    if raw_candidates is not None:
-        candidate_rows = [
-            storage._db_record_to_app_format(record)
-            for record in raw_candidates
-        ]
+        if raw_candidates is not None:
+            candidate_rows = [
+                storage._db_record_to_app_format(record)
+                for record in raw_candidates
+            ]
+            with _quick_search_cache_lock:
+                _quick_search_candidate_cache['candidates'] = list(candidate_rows)
+                _quick_search_candidate_cache['updated_at'] = time.time()
+                return {
+                    'candidates': candidate_rows,
+                    'source': 'supabase_live',
+                    'cache_age_seconds': 0.0
+                }
+
         with _quick_search_cache_lock:
-            _quick_search_candidate_cache['candidates'] = list(candidate_rows)
-            _quick_search_candidate_cache['updated_at'] = time.time()
+            cached_candidates = list(_quick_search_candidate_cache.get('candidates') or [])
+            cache_age = time.time() - float(_quick_search_candidate_cache.get('updated_at') or 0.0)
+            if cached_candidates:
+                return {
+                    'candidates': cached_candidates,
+                    'source': 'supabase_cache_stale',
+                    'cache_age_seconds': round(cache_age, 3)
+                }
+
+            return {
+                'candidates': [],
+                'source': 'supabase_unavailable',
+                'cache_age_seconds': None
+            }
+    finally:
+        with _quick_search_cache_lock:
             _quick_search_cache_refreshing = False
-            return {
-                'candidates': candidate_rows,
-                'source': 'supabase_live',
-                'cache_age_seconds': 0.0
-            }
-
-    with _quick_search_cache_lock:
-        _quick_search_cache_refreshing = False
-        cached_candidates = list(_quick_search_candidate_cache.get('candidates') or [])
-        cache_age = time.time() - float(_quick_search_candidate_cache.get('updated_at') or 0.0)
-        if cached_candidates:
-            return {
-                'candidates': cached_candidates,
-                'source': 'supabase_cache_stale',
-                'cache_age_seconds': round(cache_age, 3)
-            }
-
-        return {
-            'candidates': [],
-            'source': 'supabase_unavailable',
-            'cache_age_seconds': None
-        }
 
 def get_supabase_storage():
     """Get or create Supabase storage with timeout handling and retry logic"""
@@ -3905,6 +3904,11 @@ def quick_search_api():
             candidate_rows = candidate_payload.get('candidates', [])
             data_source = candidate_payload.get('source', 'supabase')
             cache_age_seconds = candidate_payload.get('cache_age_seconds')
+            # If Supabase returned empty because it's actually unavailable, fall back to local JSON
+            if not candidate_rows and data_source in ('supabase_unavailable', 'supabase_refresh_in_progress'):
+                candidate_rows = [c for c in load_local_intelligence_files() if _candidate_has_searchable_signal(c)]
+                if candidate_rows:
+                    data_source = 'local_json'
         else:
             candidate_rows = _get_quick_search_cache_snapshot()
             if candidate_rows:
