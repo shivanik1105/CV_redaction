@@ -1208,6 +1208,7 @@
                     </div>
                     <div class="review-actions">
                         <a class="btn btn-secondary btn-small" href="/download/original/${encodeURIComponent(candidate.anonymized_id)}" target="_blank" rel="noopener">Original CV</a>
+                        ${candidate.masked_pdf_download_url ? `<a class="btn btn-primary btn-small" href="${encodeURIComponent(candidate.masked_pdf_download_url)}" target="_blank" rel="noopener">📄 Masked PDF</a>` : ''}
                     </div>
                 `;
                 

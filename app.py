@@ -182,6 +182,17 @@ _DEFAULT_PROFILE_JD = (
 
 _filename_mapping_manager = FilenameMappingManager(local_mapping_file=str(_RUNTIME_DATA_ROOT / 'filename_mappings.json'))
 
+# Load masked PDF mapping (tracks which candidates have masked PDFs)
+_masked_pdf_mapping = {}
+_masked_pdf_mapping_file = str(_RUNTIME_DATA_ROOT / 'masked_pdf_mapping.json')
+if os.path.exists(_masked_pdf_mapping_file):
+    try:
+        with open(_masked_pdf_mapping_file, 'r') as f:
+            _masked_pdf_mapping = json.load(f)
+        logger.info(f"Loaded masked PDF mapping for {len(_masked_pdf_mapping)} candidates")
+    except Exception as e:
+        logger.warning(f"Failed to load masked PDF mapping: {e}")
+
 
 def _get_filename_mapping(anonymized_id: str, storage) -> Optional[Dict[str, Any]]:
     """Resolve filename mapping for a candidate from Supabase or local fallback."""
@@ -2945,11 +2956,35 @@ def download_original_cv(anonymized_id: str):
             upload_path = _find_original_cv_anywhere(original_filename, cv_hash=cv_hash)
 
         if not upload_path or not upload_path.exists():
+            # File not found on disk - try to serve redacted text from database instead
+            logger.warning(f"Original file not found for {anonymized_id}, serving redacted text from database")
+            
+            try:
+                # Get the cleaned/redacted text from database
+                supabase_storage = get_supabase_storage()
+                if supabase_storage:
+                    candidate_data = supabase_storage.get_candidate_by_id(anonymized_id)
+                    if candidate_data and candidate_data.get('cleaned_text'):
+                        # Create a text file response with the redacted content
+                        from io import BytesIO
+                        text_content = candidate_data['cleaned_text']
+                        text_bytes = text_content.encode('utf-8')
+                        
+                        return send_file(
+                            BytesIO(text_bytes),
+                            as_attachment=True,
+                            download_name=f"{anonymized_id}_redacted.txt",
+                            mimetype='text/plain'
+                        )
+            except Exception as e:
+                logger.error(f"Could not serve redacted text from database: {e}")
+            
+            # If we still can't serve anything, return error
             return jsonify({
                 'error': f'Original CV file not found on server for {anonymized_id}',
                 'anonymized_id': anonymized_id,
                 'expected_original_filename': Path(search_name).name,
-                'hint': 'This server can only open originals that exist on disk. For archive-ingested candidates, ensure archive/samples is present on this machine; otherwise upload the CV again on this instance.'
+                'hint': 'The original file is not available on this server. You can re-upload this CV using the Upload CV feature.'
             }), 404
 
         ext = upload_path.suffix.lower()
@@ -3845,6 +3880,7 @@ def search_candidates():
 def quick_search_api():
     """Quick JD-to-candidate search using PURE SEMANTIC ranking (NO keyword matching)."""
     try:
+        logger.info("=== QUICK_SEARCH_API CALLED ===")
         import time
         from vector_search import get_vector_search_engine
         from redis_cache import (
@@ -3961,8 +3997,15 @@ def quick_search_api():
             if match_percentage < min_match_score:
                 continue
             
+            # Add masked PDF download URL if available
+            anonymized_id = intel.get('anonymized_id', 'UNKNOWN')
+            masked_pdf_filename = _masked_pdf_mapping.get(anonymized_id)
+            masked_pdf_download_url = None
+            if masked_pdf_filename:
+                masked_pdf_download_url = url_for('download_file', filename=masked_pdf_filename, _external=False)
+            
             match_data = {
-                'anonymized_id': intel.get('anonymized_id', 'UNKNOWN'),
+                'anonymized_id': anonymized_id,
                 'match_percentage': match_percentage,
                 'semantic_score': semantic_score,
                 'matched_keywords': matched_keywords,
@@ -3977,13 +4020,21 @@ def quick_search_api():
                 'core_technical_skills': intel.get('core_technical_skills', [])[:5],
                 'primary_domain': intel.get('primary_domain', ''),
                 'evidence_based_reasoning': intel.get('evidence_based_reasoning', ''),
-                'match_reason': reason
+                'match_reason': reason,
+                'masked_pdf_filename': masked_pdf_filename,
+                'masked_pdf_download_url': masked_pdf_download_url
             }
 
             if critical_coverage is not None:
                 match_data['critical_skill_coverage'] = critical_coverage
             
             matches.append(match_data)
+            
+            # Debug: Log first match to see if masked PDF fields are present
+            if len(matches) == 1:
+                logger.info(f"DEBUG: First match keys: {list(match_data.keys())}")
+                logger.info(f"DEBUG: masked_pdf_filename = {match_data.get('masked_pdf_filename')}")
+                logger.info(f"DEBUG: masked_pdf_download_url = {match_data.get('masked_pdf_download_url')}")
         
         # Deduplicate and sort by semantic similarity
         deduped_matches = {}

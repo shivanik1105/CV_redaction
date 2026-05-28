@@ -56,21 +56,15 @@ for idx, redacted_file in enumerate(sorted(redacted_files), 1):
         file_hash = hashlib.md5(redacted_file.name.encode()).hexdigest()[:8].upper()
         anonymized_id = f"CAND_{file_hash}"
         
-        # Check if already processed
+        # Check if already processed (always regenerate to add archive_source_path)
         output_file = Path('llm_analysis') / f"{redacted_file.stem}_intelligence.json"
-        if output_file.exists():
-            try:
-                with open(output_file, 'r') as f:
-                    existing = json.load(f)
-                if 'error' not in existing and existing.get('confidence_score', 0) > 0:
-                    print(f"{idx}. SKIP {redacted_file.name}: already processed")
-                    skipped_count += 1
-                    continue
-            except:
-                pass
+        force_regenerate = True  # Always regenerate to ensure archive_source_path is set
         
         # Create fallback intelligence (rule-based, no LLM to avoid rate limits)
         print(f"{idx}. Processing: {redacted_file.name}")
+        
+        # Store relative path for archive source lookup
+        archive_rel_path = str(redacted_file.relative_to(samples_dir)).replace("\\", "/")
         
         intelligence = {
             "anonymized_id": anonymized_id,
@@ -124,7 +118,9 @@ for idx, redacted_file in enumerate(sorted(redacted_files), 1):
             "extraction_timestamp": datetime.now().isoformat(),
             "extraction_mode": "sample_archive",
             "cleaned_text": redacted_text[:500],  # Store first 500 chars
-            "original_cv_hash": hashlib.sha256(redacted_text.encode()).hexdigest()
+            "original_cv_hash": hashlib.sha256(redacted_text.encode()).hexdigest(),
+            "archive_source_path": archive_rel_path,
+            "evidence_based_reasoning": f"Source: {redacted_file.name}"
         }
         
         # Save intelligence file

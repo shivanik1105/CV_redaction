@@ -106,16 +106,21 @@ failed_count = 0
 
 for i, anon_id in enumerate(to_delete):
     try:
-        # Delete from all tables
-        client.table('cv_intelligence').delete().eq('anonymized_id', anon_id).execute()
+        # Delete from child tables first (to avoid foreign key constraint violations)
+        # 1. Delete from cv_filename_mapping first
         try:
             client.table('cv_filename_mapping').delete().eq('anonymized_id', anon_id).execute()
         except:
             pass
+        
+        # 2. Delete from cv_embeddings
         try:
             client.table('cv_embeddings').delete().eq('anonymized_id', anon_id).execute()
         except:
             pass
+        
+        # 3. Finally delete from cv_intelligence (parent table)
+        client.table('cv_intelligence').delete().eq('anonymized_id', anon_id).execute()
         
         deleted_count += 1
         if (i + 1) % 50 == 0:
