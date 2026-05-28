@@ -1,0 +1,37 @@
+# Minimal requirements for Render deployment
+# Use this if full requirements.txt fails to build
+
+# Core Web Framework
+Flask==3.0.0
+Werkzeug==3.0.1
+python-dotenv==1.0.0
+gunicorn==21.2.0
+
+# PDF Processing (lightweight)
+pypdfium2==4.26.0
+PyMuPDF==1.24.0
+pdfplumber==0.10.3
+
+# Document Processing
+python-docx==1.1.0
+Pillow==10.0.0
+
+# PII Detection (minimal)
+presidio-analyzer==2.2.33
+presidio-anonymizer==2.2.33
+spacy==3.7.2
+
+# LLM Provider (only Groq - lightest)
+groq==1.4.0
+
+# Database & Storage
+supabase==2.28.0
+httpx==0.26.0
+
+# Vector Search (minimal)
+sentence-transformers==2.2.2
+numpy==1.24.0
+
+# Utilities
+requests==2.31.0
+phonenumbers==8.13.26

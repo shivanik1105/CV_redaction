@@ -1,112 +1,193 @@
-# 🎯 START HERE - Multi-Column CV Fix
+# 🚀 START HERE - CV Intelligence System
 
-## What Was Done
-
-Your 2-column CV redaction issue has been **FIXED**! ✓
-
-The system now reads CVs **row-by-row** (like humans read) instead of column-by-column, so sections appear in proper order.
-
-## Test It Now (30 seconds)
-
-```bash
-python quick_test.py "Resume-Sunil-Durgale.pdf"
-```
-
-This will:
-1. Process your CV
-2. Show you a preview
-3. Save the full output to `test_redaction_output.txt`
-
-## What to Check
-
-Open `test_redaction_output.txt` and verify:
-
-✓ Name appears at the top (not buried in the middle)  
-✓ Sections are in logical order  
-✓ No mixed content  
-✓ PII is redacted  
-
-## If It Looks Good
-
-Start the GUI:
-```bash
-python app_launcher.py
-```
-
-Upload your CV and verify it works in the web interface.
-
-## Need More Info?
-
-- **Quick overview:** [`README_TESTING.md`](README_TESTING.md)
-- **Visual explanation:** [`VISUAL_EXPLANATION.md`](VISUAL_EXPLANATION.md)
-- **All documentation:** [`INDEX_TESTING_DOCS.md`](INDEX_TESTING_DOCS.md)
-
-## Files Changed
-
-1. **`universal_pipeline_engine.py`** - Fixed the extraction logic
-2. **`app_launcher.py`** - Added test mode
-
-## Files Created (for you)
-
-### Test Scripts
-- `quick_test.py` - Easiest way to test
-- `test_cv_redaction.ps1` - PowerShell version
-- `test_cv_redaction.sh` - Bash version
-- `TEST_NOW.bat` - Windows double-click
-
-### Documentation
-- `README_TESTING.md` - Quick start
-- `HOW_TO_TEST_YOUR_CV.md` - Detailed guide
-- `VISUAL_EXPLANATION.md` - Visual diagrams
-- `MULTICOLUMN_FIX_SUMMARY.md` - Technical details
-- `TESTING_MULTICOLUMN_CV.md` - Comprehensive guide
-- `CHANGES_SUMMARY.md` - All changes
-- `INDEX_TESTING_DOCS.md` - Documentation index
-- `START_HERE.md` - This file
-
-## Quick Commands
-
-| What | Command |
-|------|---------|
-| Test your CV | `python quick_test.py "cv.pdf"` |
-| Test with details | `python app_launcher.py --test "cv.pdf"` |
-| Start GUI | `python app_launcher.py` |
-| Windows (double-click) | `TEST_NOW.bat` |
-
-## The Fix in One Picture
-
-**Before (Column-by-Column):**
-```
-Left Column:          Right Column:
-- Contact             - Name
-- Skills              - Summary
-- Education           - Experience
-
-Output: Contact, Skills, Education, Name, Summary, Experience
-❌ Name appears AFTER education!
-```
-
-**After (Row-by-Row):**
-```
-Row 1: Contact | Name
-Row 2: Skills  | Summary
-Row 3: Education | Experience
-
-Output: Contact, Name, Skills, Summary, Education, Experience
-✓ Name appears at the TOP!
-```
-
-## Ready?
-
-```bash
-python quick_test.py "Resume-Sunil-Durgale.pdf"
-```
-
-Check the output, and you're done! 🎉
+Welcome! This document will guide you to the right place based on what you want to do.
 
 ---
 
-**Status:** ✓ Fixed and tested  
-**Confidence:** High  
-**Time to test:** 30 seconds  
-**Documentation:** Complete
+## 👤 I'm a User (I want to use the application)
+
+**Read**: `USER_GUIDE.md`
+
+**Quick Start**:
+1. Open http://127.0.0.1:5000 in your browser
+2. Go to "Upload and Process Single CV" tab
+3. Get API key from https://console.groq.com/keys
+4. Upload a CV with your API key
+5. Search for candidates in "Search & Filter CVs" tab
+
+**Learn**:
+- How to upload CVs
+- How to search candidates
+- How to download results
+- Tips for best results
+
+---
+
+## 👨‍💻 I'm a Developer (I want to run/modify the code)
+
+**Read**: `SETUP_GUIDE.md`
+
+**Quick Start**:
+```bash
+# 1. Setup
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+
+# 2. Configure
+# Create .env file with API keys
+
+# 3. Run
+python app.py
+```
+
+**Learn**:
+- How to install dependencies
+- How to configure environment
+- How to run locally
+- How to troubleshoot issues
+- Project structure
+
+---
+
+## 🚀 I Want to Deploy to Production
+
+**Read**: `RENDER_DEPLOYMENT_GUIDE.md`
+
+**Quick Start**:
+```bash
+# 1. Push to GitHub
+git push origin main
+
+# 2. Create Render service
+# Go to https://render.com
+# Connect GitHub repo
+
+# 3. Add environment variables
+# SUPABASE_URL, SUPABASE_KEY, GROQ_API_KEY
+```
+
+**Learn**:
+- How to deploy to Render
+- Environment variables needed
+- Production configuration
+- File storage considerations
+
+---
+
+## 📖 I Want Complete Documentation
+
+**Read**: `README.md`
+
+**Covers**:
+- Project overview
+- Features
+- Installation
+- Configuration
+- Usage
+- Troubleshooting
+- System requirements
+
+---
+
+## 🎯 Quick Reference
+
+### For Users:
+```
+1. Get API key: https://console.groq.com/keys
+2. Open app: http://127.0.0.1:5000
+3. Upload CV with API key
+4. Search candidates
+5. Download results
+```
+
+### For Developers:
+```
+1. Clone repo
+2. Install: pip install -r requirements.txt
+3. Configure: Create .env file
+4. Run: python app.py
+5. Test: http://127.0.0.1:5000
+```
+
+### For Deployment:
+```
+1. Push to GitHub
+2. Create Render service
+3. Add environment variables
+4. Deploy automatically
+```
+
+---
+
+## 📚 All Documentation Files
+
+| File | Purpose | For |
+|------|---------|-----|
+| `START_HERE.md` | This file - navigation | Everyone |
+| `README.md` | Complete documentation | Everyone |
+| `USER_GUIDE.md` | How to use the app | Users |
+| `SETUP_GUIDE.md` | How to run locally | Developers |
+| `RENDER_DEPLOYMENT_GUIDE.md` | How to deploy | DevOps |
+| `VISUAL_MASKING_FIX.md` | Visual PDF masking details | Developers |
+| `UPLOAD_FIX_SUMMARY.md` | Upload feature fixes | Developers |
+| `CURRENT_STATUS.md` | Project status | Everyone |
+
+---
+
+## ❓ Common Questions
+
+### Q: How do I start using the application?
+**A**: Read `USER_GUIDE.md` → Get API key → Upload CVs → Search
+
+### Q: How do I run the application locally?
+**A**: Read `SETUP_GUIDE.md` → Install dependencies → Configure → Run
+
+### Q: How do I deploy to production?
+**A**: Read `RENDER_DEPLOYMENT_GUIDE.md` → Push to GitHub → Deploy on Render
+
+### Q: Where do I get API keys?
+**A**: 
+- Supabase: https://supabase.com
+- Groq (Free): https://console.groq.com/keys
+- OpenAI: https://platform.openai.com/api-keys
+
+### Q: What does this application do?
+**A**: 
+1. Uploads CVs and removes personal information
+2. Extracts skills, experience, and intelligence
+3. Searches candidates using AI matching
+4. Downloads anonymized CVs with visual black boxes
+
+---
+
+## 🆘 Need Help?
+
+1. **Check the relevant guide** (see table above)
+2. **Check troubleshooting sections** in each guide
+3. **Check application logs** in the terminal
+4. **Restart the application** - fixes many issues
+5. **Contact support** if nothing works
+
+---
+
+## 🎉 Quick Start for Everyone
+
+### Absolute Beginner:
+1. Read `USER_GUIDE.md`
+2. Get API key from Groq
+3. Use the application
+
+### Developer:
+1. Read `SETUP_GUIDE.md`
+2. Install and configure
+3. Run locally
+
+### DevOps:
+1. Read `RENDER_DEPLOYMENT_GUIDE.md`
+2. Deploy to Render
+3. Monitor and maintain
+
+---
+
+**Choose your path above and get started!** 🚀
