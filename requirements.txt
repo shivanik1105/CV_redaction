@@ -1,5 +1,4 @@
-# Ultra-minimal requirements for Render Free Tier (512MB RAM)
-# Removes heavy ML dependencies to fit in memory limit
+# Full requirements for Render Starter plan (1GB RAM)
 
 # Core Web Framework
 Flask==3.0.0
@@ -7,21 +6,33 @@ Werkzeug==3.0.1
 python-dotenv==1.0.0
 gunicorn==21.2.0
 
-# PDF Processing (lightweight)
+# PDF Processing
 pypdfium2==4.26.0
+pdfplumber==0.10.3
 PyMuPDF==1.24.0
 
 # Document Processing
 python-docx==1.1.0
 Pillow==10.0.0
 
-# LLM Provider (only Groq - lightest)
+# PII Detection
+phonenumbers==8.13.26
+
+# LLM Providers
 groq==1.4.0
+openai==1.54.0
+anthropic==0.39.0
+google-generativeai==0.8.3
 
 # Database & Storage
 supabase==2.28.0
+psycopg2-binary==2.9.9
 httpx==0.26.0
+
+# Vector Search & Embeddings (for semantic search)
+sentence-transformers==2.2.2
+numpy==1.24.0
 
 # Utilities
 requests==2.31.0
-phonenumbers==8.13.26
+redis==5.0.1
