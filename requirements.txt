@@ -1,5 +1,5 @@
-# Fully pinned requirements for fast Render deployment
-# All versions locked to avoid dependency resolution
+# Ultra-minimal requirements for Render Free Tier (512MB RAM)
+# Removes heavy ML dependencies to fit in memory limit
 
 # Core Web Framework
 Flask==3.0.0
@@ -7,36 +7,21 @@ Werkzeug==3.0.1
 python-dotenv==1.0.0
 gunicorn==21.2.0
 
-# PDF Processing
+# PDF Processing (lightweight)
 pypdfium2==4.26.0
-pdfplumber==0.10.3
 PyMuPDF==1.24.0
-PyMuPDFb==1.24.0
 
 # Document Processing
 python-docx==1.1.0
 Pillow==10.0.0
 
-# PII Detection (minimal - no spaCy to avoid long build)
-phonenumbers==8.13.26
-
-# LLM Providers
+# LLM Provider (only Groq - lightest)
 groq==1.4.0
-openai==1.54.0
-anthropic==0.39.0
-google-generativeai==0.8.3
 
 # Database & Storage
 supabase==2.28.0
-psycopg2-binary==2.9.9
 httpx==0.26.0
-
-# Vector Search (minimal)
-sentence-transformers==2.2.2
-numpy==1.24.0
 
 # Utilities
 requests==2.31.0
-
-# Redis (optional)
-redis==5.0.1
+phonenumbers==8.13.26
