@@ -795,7 +795,7 @@
                                         ✓ Found ${matches.length} matches in ${data.search_time} (source: ${data.data_source || 'unknown'})
                                     </div>
                                     <div style="margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap;">
-                                        <a class="btn btn-primary" href="#" onclick="downloadRecommendedRedacted(event)">⬇️ Download all redacted CVs (recommended)</a>
+                                        <a class="btn btn-primary" href="#" onclick="downloadRecommendedRedacted(event)">⬇️ Download all masked CVs (recommended)</a>
                                     </div>
                                     <div id="resultsPager" style="margin-top: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;"></div>
                                 </div>
@@ -1208,7 +1208,7 @@
                     </div>
                     <div class="review-actions">
                         <a class="btn btn-secondary btn-small" href="/download/original/${encodeURIComponent(candidate.anonymized_id)}" target="_blank" rel="noopener">Original CV</a>
-                        ${candidate.masked_pdf_download_url ? `<a class="btn btn-primary btn-small" href="${encodeURIComponent(candidate.masked_pdf_download_url)}" target="_blank" rel="noopener">📄 Masked PDF</a>` : ''}
+                        ${candidate.masked_pdf_download_url ? `<a class="btn btn-primary btn-small" href="${escapeHtml(candidate.masked_pdf_download_url)}" target="_blank" rel="noopener">📄 Masked PDF</a>` : ''}
                     </div>
                 `;
                 

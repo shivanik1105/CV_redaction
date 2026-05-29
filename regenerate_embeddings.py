@@ -3,8 +3,8 @@ Regenerate embeddings for all candidates in Supabase.
 Run this after fixing sentence-transformers to enable semantic search.
 
 Usage:
-  python regenerate_embeddings.py           # Only generate missing embeddings
-  python regenerate_embeddings.py --force   # Regenerate ALL embeddings (for model upgrades)
+python regenerate_embeddings.py           # Only generate missing embeddings
+python regenerate_embeddings.py --force   # Regenerate ALL embeddings (for model upgrades)
 """
 import sys
 import argparse
@@ -16,7 +16,7 @@ def regenerate_all_embeddings(force_regenerate=False):
     
     Args:
         force_regenerate: If True, regenerate ALL embeddings even if they exist.
-                         Use this when upgrading to a new embedding model.
+                        Use this when upgrading to a new embedding model.
     """
     print("=" * 60)
     if force_regenerate:
@@ -37,7 +37,7 @@ def regenerate_all_embeddings(force_regenerate=False):
     print("\nFetching candidates from database...")
     response = storage.client.table('cv_intelligence').select(
         'anonymized_id, cleaned_narrative, core_technical_skills, secondary_technical_skills, '
-        'primary_domain, secondary_domains, seniority_level, years_experience, key_strengths'
+        'primary_domain, secondary_domains, seniority_level, years_of_experience, key_strengths'
     ).execute()
     
     candidates = response.data
@@ -90,7 +90,7 @@ def regenerate_all_embeddings(force_regenerate=False):
                 'primary_domain': candidate.get('primary_domain', ''),
                 'secondary_domains': candidate.get('secondary_domains', []),
                 'seniority_level': candidate.get('seniority_level', ''),
-                'years_experience': candidate.get('years_experience', 0),
+                'years_of_experience': candidate.get('years_of_experience', 0),
                 'key_strengths': candidate.get('key_strengths', [])
             }
             

@@ -1,13 +1,13 @@
--- Fix the match_cv_embeddings RPC function
--- The issue is that similarity_score should be named 'similarity' to match Python code
+-- Fix the match_cv_embeddings RPC function for 768-dim embeddings (all-mpnet-base-v2)
 
 -- Step 1: Drop the existing function first
 DROP FUNCTION IF EXISTS match_cv_embeddings(vector, float, int);
 DROP FUNCTION IF EXISTS match_cv_embeddings(vector(384), float, int);
+DROP FUNCTION IF EXISTS match_cv_embeddings(vector(768), float, int);
 
--- Step 2: Create the corrected function
+-- Step 2: Create the corrected function with 768 dimensions
 CREATE OR REPLACE FUNCTION match_cv_embeddings(
-  query_embedding vector(384),
+  query_embedding vector(768),
   match_threshold float DEFAULT 0.7,
   match_count int DEFAULT 10
 )
@@ -21,7 +21,7 @@ RETURNS TABLE (
   domain_expertise jsonb,
   overall_summary text,
   similarity float,
-  embedding vector(384),
+  embedding vector(768),
   created_at timestamp,
   updated_at timestamp
 )

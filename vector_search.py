@@ -41,7 +41,7 @@ class VectorSearchEngine:
     """
     
     # Model configurations
-    LOCAL_MODEL = "all-mpnet-base-v2"  # 768 dimensions, better accuracy, local
+    LOCAL_MODEL = "all-mpnet-base-v2"  # 768 dimensions, higher quality
     LOCAL_DIMENSIONS = 768
     
     OPENAI_MODEL = "text-embedding-3-small"  # 1536 dimensions, API-based

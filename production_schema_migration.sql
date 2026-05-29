@@ -155,7 +155,7 @@ BEGIN
 
   -- Vector
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='cv_intelligence' AND column_name='embedding') THEN
-    ALTER TABLE public.cv_intelligence ADD COLUMN embedding vector(384);
+    ALTER TABLE public.cv_intelligence ADD COLUMN embedding vector(768);
   END IF;
 END $$;
 
